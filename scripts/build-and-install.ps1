@@ -43,6 +43,35 @@ if (-not (Test-Path $installed)) {
   exit 0
 }
 
+# What the profile holds decides whether a build here can reach the installed
+# copy at all:
+#  - `file:` — pnpm hardlinks the installed tree to this directory, so a rebuild
+#    lands in place, and the copy below only repairs the links tsdown's clean
+#    pass breaks.
+#  - anything else (`github:…`, a registry range) — the installed tree comes
+#    from the store, and nothing written here is visible to it. Copying anyway
+#    would make the running server diverge silently from what a fresh install
+#    gets, which is the opposite of what this script is for.
+$profileDir = Split-Path (Split-Path $installed -Parent) -Parent
+$spec = $null
+try {
+  $manifest = Get-Content (Join-Path $profileDir 'package.json') -Raw | ConvertFrom-Json
+  $spec = $manifest.dependencies.'dsh-session-sync'
+} catch {
+  # An unreadable manifest just means the guard below cannot confirm a local
+  # dependency; treat it as not-local and say so rather than guessing.
+}
+
+if (-not ($spec -like 'file:*')) {
+  Write-Host "built. the profile dependency is '$spec', not a local path, so nothing was copied."
+  Write-Host 'The installed copy comes from the store: a fresh install would not see these bytes.'
+  Write-Host 'To iterate against these sources, temporarily:'
+  Write-Host "  dsh plugin --profile web add file:$package"
+  Write-Host 'To publish instead, commit and push, then:'
+  Write-Host "  pnpm --dir `"$profileDir`" update dsh-session-sync"
+  exit 0
+}
+
 foreach ($directory in 'lib', 'client') {
   $root = Join-Path $package $directory
   if (-not (Test-Path $root)) { continue }

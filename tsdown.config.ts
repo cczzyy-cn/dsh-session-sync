@@ -102,8 +102,16 @@ function cssModulesPlugin(): NonNullable<UserConfig['plugins']>[number] {
         cssModules: { pattern: '[hash]_[local]' },
         minify: true,
       })
+      // Sorted because lightningcss hands the class map back in hash order,
+      // which is not stable between runs: the same stylesheet produced a
+      // different key order on each build, so the committed bundle differed
+      // from a fresh build of the same sources for no reason. Order is
+      // meaningless to the lookup, but it is not meaningless to a repository
+      // that commits its build output for a `github:` install.
       const classMap: Record<string, string> = {}
-      for (const [local, exported] of Object.entries(cssExports ?? {})) classMap[local] = exported.name
+      const entries = Object.entries(cssExports ?? {})
+        .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+      for (const [local, exported] of entries) classMap[local] = exported.name
       return styleInjectionModule(ID, fileId, code.toString(), classMap)
     },
   }

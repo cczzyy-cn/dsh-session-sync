@@ -165,7 +165,6 @@ src/client/api.ts        transport plus the one snapshot both surfaces read
 src/client/transcript.ts mirrored events projected onto readable rows
 src/client/ConfigSection.tsx  the settings page
 src/client/SyncPanel.tsx      the centre panel
-src/client/PanelIcon.tsx      the sidebar row's icon
 ```
 
 `src/host/dsh.ts` declares the consumed Host services structurally rather than
@@ -177,27 +176,28 @@ shell's `PLATFORM_MODULES` as `require()` calls.
 ## Build
 
 ```sh
-pnpm run build     # lib/index.js (Node half) + client/client.js (browser half)
-```
-
-The client bundle must be built before a running server serves it. pnpm's
-`file:` dependency **hardlinks** the installed tree to this directory, so a
-freshly linked artifact is already the build output — but `tsdown`'s clean pass
-breaks those links for whatever it rewrites, which is when the installed copy
-goes stale. This closes that gap in both cases:
-
-```sh
-pnpm run build                        # lib/index.js (Node half) + client/client.js (browser half)
 powershell -ExecutionPolicy Bypass -File scripts/build-and-install.ps1
 ```
 
-(`build-and-install.ps1` runs the build itself, so the first line is only needed
-to build without installing. `-ExecutionPolicy Bypass` is required on a host
-whose policy blocks script files.)
+Both halves are built from sources that depend on nothing but `tsdown` and
+`lightningcss`; the script also refreshes the profile's installed copy **when the
+profile holds this package as a local dependency**
+(`dsh plugin --profile web add file:<this directory>`). pnpm hardlinks a `file:`
+dependency to this directory, so a rebuild usually lands in place — the copy
+exists for the links `tsdown`'s clean pass breaks.
 
-Once the copy is refreshed, the HMR watcher stat-polls the installed bundle and
+When the profile holds the **published** dependency instead
+(`github:cczzyy-cn/dsh-session-sync`), the installed tree comes from pnpm's store
+and nothing written here reaches it. The script builds and then says so, rather
+than writing bytes a fresh install would never see. Two ways forward:
+
+- to iterate: `dsh plugin --profile web add file:<this directory>`
+- to publish: commit and push, then
+  `pnpm --dir <profile> update dsh-session-sync`
+
+Once the installed bundle is refreshed, the HMR watcher stat-polls it and
 hot-swaps the **browser** half within about half a second (reload the page). The
 **Host** half is read at boot, so a change there needs a server restart;
-`scripts/restart-server.ps1` performs one from outside the host, which is the
-only way it can work — the agent asking for the restart runs inside the process
-being restarted.
+`scripts/restart-server.ps1` performs one from outside the host — the only way it
+can work, because the agent asking for the restart runs inside the process being
+restarted.
