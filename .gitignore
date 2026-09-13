@@ -1,0 +1,7 @@
+# The build resolves tsdown/lightningcss through a junction or an install made
+# by scripts/build-and-install.ps1; never commit it.
+node_modules/
+
+# Local logs from the helper scripts.
+*.log
+dsh-url.txt

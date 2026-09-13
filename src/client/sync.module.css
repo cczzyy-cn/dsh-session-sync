@@ -1,0 +1,653 @@
+/*
+ * Both sync surfaces: the settings page and the centre panel.
+ *
+ * Shared sheet rather than one per component because the two render the same
+ * vocabulary (machine group, session row, status line) and a second copy of a
+ * row would be the thing that drifts.
+ *
+ * Every value is a semantic alias: no palette literal, no theme branch, no
+ * second global theme. Neutral hairlines draw at 0.5px; nothing here pairs a
+ * neutral border with an elevation.
+ */
+
+/* ── settings page ─────────────────────────────────────────────────────── */
+
+/*
+ * The settings shell gives every section one fixed-height panel whose content
+ * column scrolls. This page has to stay inside that height in the ordinary
+ * case: at the shell's rhythm it overran the panel by a couple of dozen pixels,
+ * which cut the last Session row off at the panel edge and read as a broken
+ * layout rather than as a scrollable one. The rhythm below is the shell's minus
+ * that margin, and the Session list keeps its own cap for the case where a
+ * machine has more Sessions than the panel could ever show.
+ */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px 0 8px;
+}
+
+.lede {
+  margin: 0;
+  color: var(--dsw-alias-label-secondary);
+  font: var(--dsw-font-xs-13);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.groupTitle {
+  margin: 0;
+  color: var(--dsw-alias-label-primary);
+  font: var(--dsw-font-xs-strong-13);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 0.5px solid var(--dsw-alias-border-l2);
+  border-radius: 10px;
+  background: var(--dsw-alias-bg-layer-1);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fieldRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.fieldText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.label {
+  color: var(--dsw-alias-label-primary);
+  font: var(--dsw-font-xs-13);
+}
+
+.hint {
+  color: var(--dsw-alias-label-tertiary);
+  font: var(--dsw-font-xxs-12);
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px;
+  gap: 10px;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.saved {
+  color: var(--dsw-alias-state-success-primary);
+  font: var(--dsw-font-xxs-12);
+}
+
+.dirty {
+  color: var(--dsw-alias-state-warn-primary);
+  font: var(--dsw-font-xxs-12);
+}
+
+.failed {
+  color: var(--dsw-alias-state-error-primary);
+  font: var(--dsw-font-xxs-12);
+}
+
+/* ── session list (settings page) ──────────────────────────────────────── */
+
+.sessionList {
+  display: flex;
+  flex-direction: column;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.sessionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 40px;
+  padding: 5px 2px;
+}
+
+.sessionRow + .sessionRow {
+  border-top: 0.5px solid var(--dsw-alias-border-l1);
+}
+
+.sessionText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sessionTitle {
+  overflow: hidden;
+  color: var(--dsw-alias-label-primary);
+  font: var(--dsw-font-xs-13);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sessionMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--dsw-alias-label-tertiary);
+  font: var(--dsw-font-xxs-12);
+}
+
+.empty {
+  padding: 12px 2px;
+  color: var(--dsw-alias-label-tertiary);
+  font: var(--dsw-font-xs-13);
+}
+
+/* ── status block ──────────────────────────────────────────────────────── */
+
+.status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+}
+
+.statusItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--dsw-alias-label-secondary);
+  font: var(--dsw-font-xxs-12);
+}
+
+.statusValue {
+  color: var(--dsw-alias-label-primary);
+}
+
+.statusBad {
+  color: var(--dsw-alias-state-error-primary);
+}
+
+.statusGood {
+  color: var(--dsw-alias-state-success-primary);
+}
+
+/* ── centre panel ──────────────────────────────────────────────────────── */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  color: var(--dsw-alias-label-primary);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 16px;
+  border-bottom: 0.5px solid var(--dsw-alias-border-l1);
+}
+
+.headerTitle {
+  margin: 0;
+  font: var(--dsw-font-s-strong-14);
+}
+
+.headerSpacer {
+  flex: 1;
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px 16px 16px;
+}
+
+.machine {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.machineHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.machineName {
+  font: var(--dsw-font-xs-strong-13);
+}
+
+.machineMeta {
+  color: var(--dsw-alias-label-tertiary);
+  font: var(--dsw-font-xxs-12);
+}
+
+.sessionButton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 0.5px solid var(--dsw-alias-border-l1);
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-layer-1);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--ds-transition-duration-fast) var(--ds-ease-in-out);
+}
+
+.sessionButton:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.sessionButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--dsw-alias-state-business-primary);
+}
+
+.sessionButtonText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+/* ── transcript ────────────────────────────────────────────────────────── */
+
+.turn {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.turnLabel {
+  color: var(--dsw-alias-label-tertiary);
+  font: var(--dsw-font-xxs-strong-12);
+}
+
+.turnUser .bubble {
+  background: var(--dsw-alias-bg-layer-2);
+}
+
+.bubble {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--dsw-alias-bg-layer-1);
+  font: var(--dsw-font-s-14);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.toolRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 0.5px solid var(--dsw-alias-border-l1);
+  border-radius: 8px;
+  color: var(--dsw-alias-label-secondary);
+  font: var(--dsw-font-xxs-12);
+}
+
+.toolName {
+  color: var(--dsw-alias-label-primary);
+  font: var(--dsw-font-xxs-strong-12);
+}
+
+.toolDetail {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toolError {
+  color: var(--dsw-alias-state-error-primary);
+}
+
+.reasoning {
+  color: var(--dsw-alias-label-tertiary);
+  font: var(--dsw-font-xxs-12);
+  white-space: pre-wrap;
+}
+
+/*
+ * The `Input` primitive owns its own chrome; this only makes it fill the column.
+ *
+ * `box-sizing` is load-bearing, not boilerplate: this repository sets no global
+ * `border-box`, and the primitive's wrapper carries its own padding and border.
+ * With the default `content-box`, `width: 100%` means 100% PLUS that padding and
+ * border — about 17px past the right edge of whatever this sits in. Every rule
+ * below that gives an element an explicit width or flex share while also
+ * padding it horizontally carries the same declaration for the same reason.
+ */
+.inputWrap {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── composer ──────────────────────────────────────────────────────────── */
+
+.composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 10px 16px 14px;
+  border-top: 0.5px solid var(--dsw-alias-border-l1);
+}
+
+.composerInput {
+  flex: 1;
+  box-sizing: border-box;
+  min-height: 36px;
+  max-height: 160px;
+  padding: 8px 10px;
+  border: 0.5px solid var(--dsw-alias-border-l2);
+  border-radius: 10px;
+  background: var(--dsw-alias-bg-layer-1);
+  color: var(--dsw-alias-label-primary);
+  font: var(--dsw-font-s-14);
+  resize: none;
+}
+
+.composerInput::placeholder {
+  color: var(--dsw-alias-placeholder);
+}
+
+.composerInput:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--dsw-alias-state-business-primary);
+}
+
+/* ── shared ────────────────────────────────────────────────────────────── */
+
+.error {
+  margin-bottom: 10px;
+  color: var(--dsw-alias-state-error-primary);
+  font: var(--dsw-font-xxs-12);
+}
+
+/* ── sidebar section (browsing region) ─────────────────────────────────── */
+
+/*
+ * Lives in `sidebar.region.section`, beneath the workspace browser. The
+ * browser above is `flex: 1`, so this takes its own bounded height and scrolls
+ * internally rather than pushing the sidebar's foot around.
+ */
+.sectionRoot {
+  /*
+   * Bounded three ways, because this is the lower half of a two-child column
+   * whose upper child is the whole workspace browser:
+   *  - `flex: 0 1 auto` lets it give height back when the column is short,
+   *    instead of taking the browser's space at the browser's expense;
+   *  - `max-height` is expressed in viewport units and pixels only, so it
+   *    resolves even if the parent's height is ever indefinite — a percentage
+   *    would silently become `none` and let this grow without limit;
+   *  - `overflow: hidden` means a failed cap clips this section rather than
+   *    spilling over the workspace list above it.
+   */
+  flex: 0 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: min(45vh, 320px);
+  overflow: hidden;
+  /*
+   * The browsing region cancels the sidebar's right padding with a negative
+   * margin so its scroller can reach the column edge, and every occupant has to
+   * put the inline inset back on its own content. The workspace browser does it
+   * with `--dsh-session-list-edge-inset`; this does it with the sidebar's own
+   * variable, which is where that one gets its value. Without it a row's hover
+   * fill runs flush to the window edge while the workspace rows above stop at
+   * the padding — which is exactly how the row first looked.
+   */
+  padding-right: var(--dsh-sidebar-inline-padding);
+}
+
+/*
+ * The row deliberately wears the workspace browser's own clothes — same
+ * folder-plus-chevron lead-in, same 32px row, same hover fill, same indented
+ * session rows with a trailing time — so the section reads as one more
+ * workspace in the column rather than as a plugin widget bolted beneath it.
+ * The classes are prefixed `ws` and kept separate from the settings page's row
+ * classes: the two surfaces look alike on purpose but must be free to change
+ * independently, and a shared class would couple them by accident.
+ */
+.wsRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  height: 32px;
+  box-sizing: border-box;
+  padding: 0 8px;
+  border-radius: 8px;
+  color: var(--dsw-alias-label-primary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.wsRow:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.wsRow:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--dsw-alias-state-business-primary);
+}
+
+.wsSlot {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 20px;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+.wsArrowOpen {
+  transform: rotate(90deg);
+}
+
+/*
+ * The shipped workspace rows show the folder at rest and swap it for the
+ * disclosure triangle on hover, which keeps the title aligned with every other
+ * workspace name instead of paying 16px for a permanent chevron. Matching that
+ * is the whole point of this section, so the swap is reproduced — extended to
+ * `:focus-visible` so the fold stays reachable from the keyboard.
+ */
+.wsRow .wsChevron {
+  display: none;
+}
+
+.wsRow:hover .wsChevron,
+.wsRow:focus-visible .wsChevron {
+  display: inline-flex;
+}
+
+.wsRow:hover .wsFolder,
+.wsRow:focus-visible .wsFolder {
+  display: none;
+}
+
+.wsText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wsTitle {
+  min-width: 0;
+  overflow: hidden;
+  font: var(--dsw-font-s-14);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/*
+ * Hover-revealed, as the workspace rows are — but kept reachable from the
+ * keyboard through `:focus-within`, and only faded rather than unmounted so the
+ * control never changes the row's metrics under the pointer.
+ */
+.wsActions {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity var(--ds-transition-duration-fast) var(--ds-ease-in-out);
+}
+
+.wsRow:hover .wsActions,
+.wsRow:focus-within .wsActions {
+  opacity: 1;
+}
+
+.wsIconButton {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  corner-shape: round;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  cursor: pointer;
+}
+
+.wsIconButton:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.wsIconButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--dsw-alias-state-business-primary);
+}
+
+.wsList {
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 6px;
+  /*
+   * Same cancellation the region itself uses: the scroller spans the full
+   * column so its scrollbar lands where the workspace browser's does, and the
+   * inset is applied to its content instead of to the scroll container.
+   */
+  margin-right: calc(-1 * var(--dsh-sidebar-inline-padding));
+  padding-right: var(--dsh-sidebar-inline-padding);
+}
+
+/* Only shown when more than one machine is publishing: with one, the section
+   is indistinguishable from a plain workspace, which is the point. */
+.wsMachine {
+  padding: 6px 8px 2px 30px;
+  overflow: hidden;
+  color: var(--dsw-alias-label-tertiary);
+  font: var(--dsw-font-xxs-strong-12);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wsSession {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex: none;
+  height: 32px;
+  box-sizing: border-box;
+  /* Indented past the workspace lead-in so titles line up with their group. */
+  padding: 0 8px 0 24px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dsw-alias-label-primary);
+  text-align: left;
+  cursor: pointer;
+}
+
+.wsSession:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.wsSession:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--dsw-alias-state-business-primary);
+}
+
+.wsSessionTitle {
+  flex: 1;
+  min-width: 0;
+  margin: 0 6px 0 4px;
+  overflow: hidden;
+  font: var(--dsw-font-s-14);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wsSessionTime {
+  flex: none;
+  color: var(--dsw-alias-label-tertiary);
+  font: var(--dsw-font-xxs-12);
+}
+
+/* Indented like a session title, so the two empty states sit in the list. */
+.sectionEmpty {
+  margin: 0;
+  padding: 2px 8px 8px 24px;
+  color: var(--dsw-alias-label-tertiary);
+  font: var(--dsw-font-xxs-12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sessionButton {
+    transition: none;
+  }
+
+  .wsActions {
+    transition: none;
+  }
+
+  .wsArrowOpen {
+    transition: none;
+  }
+}

@@ -1,0 +1,75 @@
+diff --git a/packages/client/ui-sidebar/src/client/SidebarRoot.tsx b/packages/client/ui-sidebar/src/client/SidebarRoot.tsx
+index 35fdee1..3f97954 100644
+--- a/packages/client/ui-sidebar/src/client/SidebarRoot.tsx
++++ b/packages/client/ui-sidebar/src/client/SidebarRoot.tsx
+@@ -262,6 +262,10 @@ export function SidebarRoot({
+           wide,
+           expandSidebar: () => { if (collapsed) toggleSidebar() },
+         })}
++        {/* A registrant-owned second section, laid out beneath the browser.
++            The browser above is `flex: 1`, so this occupies its own height at
++            the foot of the region and the occupant owns that height. */}
++        {renderSlot('sidebar.region.section', { wide })}
+       </div>
+ 
+       {/* Footer actions stack above Settings in both sidebar widths. */}
+diff --git a/packages/client/ui-sidebar/src/client/contract/slots.ts b/packages/client/ui-sidebar/src/client/contract/slots.ts
+index df29334..48b202f 100644
+--- a/packages/client/ui-sidebar/src/client/contract/slots.ts
++++ b/packages/client/ui-sidebar/src/client/contract/slots.ts
+@@ -48,6 +48,18 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
+      * package's 'sidebar' entry; each action receives only the column state.
+      */
+     'sidebar.footer.action': { kind: 'list'; scope: 'root'; owner: SidebarFooterActionOwnerProps }
++    /**
++     * A second section inside the browsing region, below the workspace browser.
++     * Declared by this package's 'sidebar' entry; a feature that browses its own
++     * grouped list contributes here.
++     *
++     * The seat exists so such a feature does not have to contend for
++     * `sidebar.workspaces`: that cell is `single` and its occupant is the whole
++     * session browser, so shadowing it would delete the session list and every
++     * dialog that browser declares. The region is already a column, so an
++     * occupant here is laid out beneath the browser and sizes itself.
++     */
++    'sidebar.region.section': { kind: 'single'; scope: 'root'; owner: SidebarRegionSectionOwnerProps }
+   }
+ }
+ 
+@@ -107,6 +119,16 @@ export interface SidebarFooterActionOwnerProps {
+   wide: boolean
+ }
+ 
++/**
++ * Owner share of the browsing region's second section: the column display
++ * state. The occupant owns its header, rows, height, and scrolling — the shell
++ * supplies only whether there is room to render it at all.
++ */
++export interface SidebarRegionSectionOwnerProps {
++  /** Whether the sidebar renders wide content (false = 56px rail). */
++  wide: boolean
++}
++
+ /**
+  * Registrant-private injected share (arrives via the register inject
+  * factory). The renderer binds the panel metadata source to usePanels.
+@@ -138,6 +160,7 @@ export type SidebarRootComponentProps =
+     | 'sidebar.brand.name'
+     | 'sidebar.panellist'
+     | 'sidebar.workspaces'
++    | 'sidebar.region.section'
+     | 'sidebar.settings'
+     | 'sidebar.footer.action'
+   >
+diff --git a/packages/client/ui-sidebar/src/client/index.ts b/packages/client/ui-sidebar/src/client/index.ts
+index 38c384f..c3e9752 100644
+--- a/packages/client/ui-sidebar/src/client/index.ts
++++ b/packages/client/ui-sidebar/src/client/index.ts
+@@ -76,6 +76,7 @@ export function apply(ctx: ClientContext): void {
+       'sidebar.brand.name': { kind: 'single', scope: 'root' },
+       'sidebar.panellist': { kind: 'list', scope: 'root' },
+       'sidebar.workspaces': { kind: 'single', scope: 'root' },
++      'sidebar.region.section': { kind: 'single', scope: 'root' },
+       'sidebar.settings': { kind: 'single', scope: 'root' },
+       'sidebar.footer.action': { kind: 'list', scope: 'root' },
+     },
