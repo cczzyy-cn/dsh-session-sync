@@ -37,28 +37,46 @@ pnpm --filter @deepseek-ai/dsh-client-ui-sidebar bundle
 ```
 
 Without it the section silently never appears — `ctx.slots.inject` waits for a
-declaration that never comes and contributes nothing. Everything else (the
-settings page, the centre panel, the sync engine) works without the patch.
+declaration that never comes and contributes nothing. The patch therefore costs
+you the *glance*, not the feature: the settings page, the sidebar panel row, the
+console, and the sync engine all work without it.
 
 ## What it adds
 
 | Surface | Slot | What it is |
 | --- | --- | --- |
 | Settings page | `settings.section` (id `session-sync`) | Machine name, server domain/IP, the server switch, the connection password, the listen address/port, and the per-Session publish list |
-| Left sidebar section | `sidebar.region.section` (see above) | **服务器同步工作区** — a workspace-styled group beside the workspace browser, whose rows are the connected machines' Sessions |
-| Centre panel | `main` (key `session-sync`) | The machine groups, each mirror's transcripts, and the takeover composer |
+| Sidebar panel row | `sidebar.panellist` (id `session-sync`) | The entry that opens the console, and the only one that survives the collapsed rail |
+| Left sidebar section | `sidebar.region.section` (see above) | **服务器同步工作区** — a glance beside the workspace browser: the fleet line, then each machine's running and most recent Sessions, then 查看全部 into the console |
+| Centre panel | `main` (key `session-sync`) | The console: machines, the selected machine's Sessions searched and grouped by directory, and one opened Session with its transcript and the takeover composer |
 
-All three are additive: no shipped cell is replaced, and the sidebar row and the
-centre panel share one id because the frame validates a selected panel against
-the registered `main` keys.
+All four are additive: no shipped cell is replaced, and the sidebar row, the
+section and the centre panel share one id because the frame validates a selected
+panel against the registered `main` keys.
 
-### Why the sidebar entry is a global panel row
+### Three ways in, and why they are three
 
-There is no additive slot for a group *inside* the sidebar's session-browsing
-region — `sidebar.workspaces` is a `single` cell occupied by `ui-workspace`, and
-shadowing it would delete the whole session browser with it. `sidebar.panellist`
-is the shipped seat for "a row in the left column with its own centre view",
-which is what a group of synced Sessions actually is.
+- **`sidebar.panellist` needs no host patch** and renders in both column widths,
+  so it is the console's real entry point. Without it the panel would be
+  reachable only from the browsing region, which is a wide-column surface:
+  collapsing the sidebar would hide the panel with no way back.
+- **`sidebar.region.section` is the glance.** There is no additive slot for a
+  group *inside* the sidebar's session-browsing region — `sidebar.workspaces` is
+  a `single` cell occupied by `ui-workspace`, and shadowing it would delete the
+  whole session browser with it. This section therefore sits beneath that browser
+  and wears its clothes: the same folder-plus-chevron lead-in, the same 32px
+  rows, the same indented Session rows with a trailing time.
+- A glance is all it holds, on purpose. The column's lower half cannot show every
+  Session of every machine without taking that height from the browser above it,
+  so it lists what a reader needs in order to decide whether to go look. Its rows
+  carry no machine name, so Sessions are grouped per machine there rather than
+  flattened into one list — a flat list would make another machine's Session read
+  as one of your own.
+- **The console is `main`.** Machines, Sessions, and the opened Session are three
+  panes of one panel, because that is what the job is: pick a machine, pick a
+  Session, read it or take it over. On a wide column all three are visible at
+  once; below 960px the same DOM becomes a drill-down with back buttons that only
+  exist in that mode.
 
 ## Configuration
 
@@ -94,6 +112,8 @@ normal way to edit it.
    ctx.sessionController.list()   ──POST /publish──▶  SyncHub index
    follow(sessionId) ──durable events──POST /frames──▶  SyncHub events
    prompt(sessionId, text)  ◀──SSE /stream──  DownstreamCommand
+        │                                            │
+        └────────POST /ack (ok | reason)─────────────▶│ command status
                                                      │
    browser: /dsh-session-sync/events ◀──SSE───────────┘
 ```
@@ -108,6 +128,29 @@ normal way to edit it.
 - Takeover prompts go down the origin's own SSE stream; the origin calls
   `ctx.sessionController.prompt`, which resumes a cold Session before admitting
   the message.
+
+### A prompt is a claim, so it is confirmed
+
+`POST /command` answers with a `commandId`, and the server then narrates what
+became of that command down the browser's own event stream:
+
+| State | Meaning |
+| --- | --- |
+| `queued` | Accepted; no origin stream is attached, so it waits |
+| `delivered` | Written to the owning machine's stream; nothing confirmed yet |
+| `accepted` | The machine admitted the prompt into its Session |
+| `failed` | The machine refused it, with its reason |
+| `expired` | The TTL passed before the machine confirmed it |
+
+- A command carries `expiresAt` (`COMMAND_TTL_MS`, two minutes). A prompt is a
+  human act addressed at a Session that may have moved on, so a command that sat
+  in a queue while the owning machine slept is retired rather than admitted later
+  as if it had just been typed. Both ends enforce it: the server sweeps on its
+  reconcile tick, and the origin refuses an expired command even if that sweep
+  has not run yet.
+- The queue per machine is bounded (`PENDING_LIMIT`, 32 commands); what does not
+  fit is retired with that reason rather than growing the server's memory.
+- The browser narrates only the commands it sent, matched by `commandId`.
 
 ### Two listeners, two purposes
 
@@ -146,8 +189,13 @@ normal way to edit it.
   trimmed. Remote history paging is not implemented.
 - **One origin per machine name.** Two origins configured with the same
   `本机名称` will overwrite each other's mirror.
-- **Transcript rendering is plain text.** Reasoning blocks collapse behind a
-  detail row, and tool rows are single-line excerpts.
+- **A takeover prompt expires after two minutes**, and at most 32 may wait for
+  one machine at a time. Both limits are deliberate; a queued prompt that
+  outlives them is reported as `expired` rather than delivered late.
+- **Assistant text is rendered as Markdown and each tool call is one folded row**
+  with its arguments and result, but tool-specific cards (diff, terminal, read)
+  are not implemented: the mirrored event carries no trusted presentation
+  payload, so every result renders as text.
 - The mirror is lost on server restart; origins re-publish on their next
   reconcile tick (within 10 s) plus their follow snapshots.
 
@@ -157,14 +205,16 @@ normal way to edit it.
 src/shared/protocol.ts   wire and persisted shapes, shared by both halves
 src/host/dsh.ts          structural declarations of the Host capabilities used
 src/host/config.ts       atomic JSON configuration document
-src/host/hub.ts          server-side mirror and fan-out
+src/host/hub.ts          server-side mirror, fan-out, and the command lifecycle
 src/host/transport.ts    the sync listener and the origin link
 src/host/service.ts      the engine: config, follow set, publish, takeover
 src/index.ts             Host plugin entry and the browser routes
-src/client/api.ts        transport plus the one snapshot both surfaces read
+src/client/api.ts        transport plus the one snapshot every surface reads
 src/client/transcript.ts mirrored events projected onto readable rows
 src/client/ConfigSection.tsx  the settings page
-src/client/SyncPanel.tsx      the centre panel
+src/client/PanelIcon.tsx      the sidebar panel row's glyph
+src/client/SyncPanel.tsx      the console: machines, Sessions, takeover
+src/client/SyncSection.tsx    the sidebar glance
 ```
 
 `src/host/dsh.ts` declares the consumed Host services structurally rather than

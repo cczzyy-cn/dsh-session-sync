@@ -9,8 +9,10 @@
  */
 import { createSnapshotStore, type SnapshotStore } from '@deepseek-ai/dsh-client-store'
 import {
+  COMMAND_TTL_MS,
   ROUTE_PREFIX,
   defaultConfig,
+  type CommandState,
   type ConfigPatch,
   type LocalSessionRow,
   type MirrorEvent,
@@ -29,6 +31,20 @@ export interface OpenSession {
   sessionId: string
 }
 
+/**
+ * What became of the last takeover prompt this browser sent.
+ *
+ * The server answers the POST with an id and then narrates the rest over the
+ * event stream, so "sent" is only the first of five states and the composer is
+ * only honest if it renders the ones that follow.
+ */
+export interface CommandDelivery {
+  commandId: string
+  state: CommandState
+  expiresAt: number
+  error?: string
+}
+
 /** Everything the two surfaces render. */
 export interface SyncClientSnapshot {
   /** False until the first successful read, so a blank panel is never shown as a state. */
@@ -40,6 +56,8 @@ export interface SyncClientSnapshot {
   open?: OpenSession
   transcript?: MirrorTranscript
   loadingTranscript: boolean
+  /** The last takeover prompt's progress, cleared when another Session is opened. */
+  delivery?: CommandDelivery
   /** Last failure text, cleared by the next successful action. */
   error?: string
 }
@@ -184,7 +202,14 @@ export class SyncClient {
    * @param sessionId - published Session.
    */
   async openSession(machineName: string, sessionId: string): Promise<void> {
-    this.update({ open: { machineName, sessionId }, transcript: undefined, loadingTranscript: true })
+    this.update({
+      open: { machineName, sessionId },
+      transcript: undefined,
+      loadingTranscript: true,
+      // Delivery belongs to the prompt that was sent, not to the panel: another
+      // Session's composer must not inherit the previous one's outcome.
+      delivery: undefined,
+    })
     try {
       const { transcript } = await getJson<{ transcript: MirrorTranscript }>(
         `${ROUTE_PREFIX}/transcript?machine=${encodeURIComponent(machineName)}&session=${encodeURIComponent(sessionId)}`,
@@ -197,7 +222,7 @@ export class SyncClient {
 
   /** Leave the open remote Session. */
   closeSession(): void {
-    this.update({ open: undefined, transcript: undefined })
+    this.update({ open: undefined, transcript: undefined, delivery: undefined })
   }
 
   /**
@@ -209,12 +234,21 @@ export class SyncClient {
     const open = this.store.getSnapshot().open
     if (open === undefined) return false
     try {
-      await postJson(`${ROUTE_PREFIX}/command`, {
+      const result = await postJson<{ ok: true; commandId: string }>(`${ROUTE_PREFIX}/command`, {
         machineName: open.machineName,
         sessionId: open.sessionId,
         text,
       })
-      this.update({ error: undefined })
+      this.update({
+        error: undefined,
+        // Optimistic only in its timestamp: the state is the server's own word
+        // for a command it has accepted but not yet handed over.
+        delivery: {
+          commandId: result.commandId,
+          state: 'queued',
+          expiresAt: Date.now() + COMMAND_TTL_MS,
+        },
+      })
       return true
     } catch (error: unknown) {
       this.update({ error: describe(error) })
@@ -266,6 +300,22 @@ export class SyncClient {
       if (transcript === undefined) return
       this.update({
         transcript: { ...transcript, events: [...transcript.events, ...frame.events] },
+      })
+      return
+    }
+    if (frame.type === 'command') {
+      const delivery = this.store.getSnapshot().delivery
+      // Only the prompt this browser sent is narrated here. A command another
+      // browser issued is that browser's business, and a frame that arrives
+      // after this one was already superseded must not resurrect it.
+      if (delivery === undefined || delivery.commandId !== frame.command.commandId) return
+      this.update({
+        delivery: {
+          commandId: delivery.commandId,
+          state: frame.command.state,
+          expiresAt: frame.command.expiresAt,
+          ...(frame.command.error === undefined ? {} : { error: frame.command.error }),
+        },
       })
       return
     }

@@ -8,7 +8,11 @@
  * origin machine.
  */
 import {
+  COMMAND_TTL_MS,
   OFFLINE_AFTER_MS,
+  type CommandAckPayload,
+  type CommandState,
+  type CommandStatus,
   type DownstreamCommand,
   type MirrorEvent,
   type MirrorTranscript,
@@ -21,6 +25,15 @@ import {
 
 /** Upper bound on the events retained per mirrored Session. */
 const EVENT_LIMIT = 4_000
+
+/** Upper bound on commands held for a machine whose origin stream is down. */
+const PENDING_LIMIT = 32
+
+/** Upper bound on retained command states per machine, newest kept. */
+const STATUS_LIMIT = 64
+
+/** States a command never leaves; the expiry sweep and acks ignore these. */
+const TERMINAL_STATES: readonly CommandState[] = ['accepted', 'failed', 'expired']
 
 /** One mirrored Session. */
 interface SessionRecord {
@@ -52,6 +65,8 @@ interface MachineRecord {
   origin?: OriginSink
   /** Commands issued while no origin stream was attached. */
   readonly pending: DownstreamCommand[]
+  /** Every command this machine was sent, by id, so an ack can retire it. */
+  readonly commands: Map<string, CommandStatus>
 }
 
 /** The server-role mirror and its subscribers. */
@@ -150,8 +165,19 @@ export class SyncHub {
     const record = this.machine(machineName)
     record.lastSeen = Date.now()
     record.origin = sink
+    const now = Date.now()
     const queued = record.pending.splice(0, record.pending.length)
-    for (const command of queued) sink.send(command)
+    for (const command of queued) {
+      // A command that outlived its TTL while the machine was away is reported
+      // as expired rather than delivered late: the human who typed it has long
+      // stopped watching for it, and the Session has moved on.
+      if (command.expiresAt <= now) {
+        this.transition(record, command, 'expired')
+        continue
+      }
+      sink.send(command)
+      this.transition(record, command, 'delivered')
+    }
     this.broadcastState()
     return () => {
       if (record.origin !== sink) return
@@ -166,14 +192,14 @@ export class SyncHub {
    * @param sessionId - the published Session.
    * @param text - the prompt text.
    * @param from - the requesting machine's display name.
-   * @returns whether the command was accepted, or why not.
+   * @returns the accepted command's id, or why it was refused.
    */
   submitCommand(
     machineName: string,
     sessionId: string,
     text: string,
     from: string,
-  ): { ok: true } | { ok: false; reason: string } {
+  ): { ok: true; commandId: string } | { ok: false; reason: string } {
     const record = this.records.get(machineName)
     if (record === undefined) return { ok: false, reason: 'unknown machine' }
     if (!record.sessions.has(sessionId)) return { ok: false, reason: 'session is not published' }
@@ -185,10 +211,64 @@ export class SyncHub {
       kind: 'prompt',
       text: trimmed,
       from,
+      expiresAt: Date.now() + COMMAND_TTL_MS,
     }
-    if (record.origin === undefined) record.pending.push(command)
-    else record.origin.send(command)
-    return { ok: true }
+    if (record.origin === undefined) {
+      record.pending.push(command)
+      this.transition(record, command, 'queued')
+      if (record.pending.length > PENDING_LIMIT) {
+        // Bounded so a machine that never comes back cannot grow the server's
+        // memory, and honest about what it dropped.
+        for (const dropped of record.pending.splice(0, record.pending.length - PENDING_LIMIT)) {
+          this.transition(record, dropped, 'expired', 'the queue for this machine was full')
+        }
+      }
+    } else {
+      record.origin.send(command)
+      this.transition(record, command, 'delivered')
+    }
+    return { ok: true, commandId: command.commandId }
+  }
+
+  /**
+   * Retire one command with the owning machine's own outcome.
+   * @param machineName - the machine that answered.
+   * @param payload - the command id and whether it was admitted.
+   */
+  ackCommand(machineName: string, payload: CommandAckPayload): void {
+    const record = this.records.get(machineName)
+    if (record === undefined) return
+    // An ack is proof of life, so the machine stops looking offline at once.
+    record.lastSeen = Date.now()
+    const status = record.commands.get(payload.commandId)
+    if (status === undefined) return
+    if (TERMINAL_STATES.includes(status.state)) return
+    if (payload.ok) this.transition(record, status, 'accepted')
+    else this.transition(record, status, 'failed', payload.error ?? 'the owning machine refused the prompt')
+  }
+
+  /**
+   * Retire every command that outlived its TTL, queued or already sent.
+   *
+   * A command written to an origin's stream is not confirmed by that write: if
+   * the link died in the same instant, nothing else would ever move it out of
+   * `delivered`. The origin refuses an expired prompt on its own, so this is the
+   * server's half of the same rule, and the half that tells the browser.
+   */
+  expireCommands(): void {
+    const now = Date.now()
+    for (const record of this.records.values()) {
+      for (const status of [...record.commands.values()]) {
+        if (TERMINAL_STATES.includes(status.state)) continue
+        if (status.expiresAt > now) continue
+        this.transition(record, status, 'expired')
+      }
+      const kept = record.pending.filter(command => command.expiresAt > now)
+      if (kept.length !== record.pending.length) {
+        record.pending.length = 0
+        record.pending.push(...kept)
+      }
+    }
   }
 
   /**
@@ -239,9 +319,52 @@ export class SyncHub {
   private machine(machineName: string): MachineRecord {
     const existing = this.records.get(machineName)
     if (existing !== undefined) return existing
-    const created: MachineRecord = { machineName, sessions: new Map(), lastSeen: Date.now(), pending: [] }
+    const created: MachineRecord = {
+      machineName,
+      sessions: new Map(),
+      lastSeen: Date.now(),
+      pending: [],
+      commands: new Map(),
+    }
     this.records.set(machineName, created)
     return created
+  }
+
+  /**
+   * Move one command to a new state and tell every watching browser.
+   *
+   * The seed only needs the three fields every command carries, so a live
+   * `DownstreamCommand`, an existing status, and a status being replaced are all
+   * accepted without a second code path.
+   * @param record - the owning machine.
+   * @param seed - command identity, Session, and TTL.
+   * @param state - the state to record.
+   * @param error - optional human-readable reason.
+   */
+  private transition(
+    record: MachineRecord,
+    seed: { commandId: string; sessionId: string; expiresAt: number },
+    state: CommandState,
+    error?: string,
+  ): void {
+    const status: CommandStatus = {
+      commandId: seed.commandId,
+      machineName: record.machineName,
+      sessionId: seed.sessionId,
+      state,
+      expiresAt: seed.expiresAt,
+      ...(error === undefined ? {} : { error }),
+      time: Date.now(),
+    }
+    record.commands.set(status.commandId, status)
+    while (record.commands.size > STATUS_LIMIT) {
+      // The map keeps insertion order and every transition re-inserts, so the
+      // first key is the least recently changed command in this machine.
+      const oldest = record.commands.keys().next()
+      if (oldest.done === true || oldest.value === status.commandId) break
+      record.commands.delete(oldest.value)
+    }
+    this.broadcast({ type: 'command', command: status })
   }
 
   private broadcast(frame: SyncStreamFrame): void {

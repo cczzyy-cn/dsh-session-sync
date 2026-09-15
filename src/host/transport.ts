@@ -116,6 +116,24 @@ export async function startSyncServer(options: SyncServerOptions): Promise<SyncS
       return
     }
 
+    if (request.method === 'POST' && url.pathname === '/ack') {
+      const body = await readJson(request)
+      const commandId = typeof body?.['commandId'] === 'string' ? body['commandId'] : ''
+      const sessionId = typeof body?.['sessionId'] === 'string' ? body['sessionId'] : ''
+      if (commandId === '' || sessionId === '') {
+        sendJson(response, 400, { error: 'commandId and sessionId are required' })
+        return
+      }
+      options.hub.ackCommand(machineName, {
+        commandId,
+        sessionId,
+        ok: body?.['ok'] === true,
+        ...(typeof body?.['error'] === 'string' ? { error: body['error'] } : {}),
+      })
+      sendJson(response, 200, { ok: true })
+      return
+    }
+
     if (request.method === 'GET' && url.pathname === '/stream') {
       response.writeHead(200, {
         'content-type': 'text/event-stream',
@@ -281,6 +299,26 @@ export class OriginLink {
   publishFrames(sessionId: string, events: readonly MirrorEvent[]): void {
     if (events.length === 0) return
     void this.post('/frames', { sessionId, events })
+  }
+
+  /**
+   * Report what became of one downstream command.
+   *
+   * Sent for both outcomes: the server holds the command as `delivered` until
+   * this arrives, and a refusal that is never reported is indistinguishable
+   * from a machine that went away mid-prompt.
+   * @param commandId - the command being answered.
+   * @param sessionId - its Session, echoed so the server can check the pairing.
+   * @param ok - whether the prompt was admitted into the Session.
+   * @param error - why not, when `ok` is false.
+   */
+  ackCommand(commandId: string, sessionId: string, ok: boolean, error?: string): void {
+    void this.post('/ack', {
+      commandId,
+      sessionId,
+      ok,
+      ...(error === undefined ? {} : { error }),
+    })
   }
 
   private async post(path: string, body: unknown): Promise<void> {

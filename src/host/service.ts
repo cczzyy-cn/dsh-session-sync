@@ -88,7 +88,13 @@ export class SessionSyncService {
 
   /** Begin reconciling and bring the configured role up. */
   start(): void {
-    this.reconcileTimer = setInterval(() => { void this.reconcile() }, RECONCILE_MS)
+    this.reconcileTimer = setInterval(() => {
+      // Swept here rather than on its own timer: a command's TTL is two
+      // minutes, so a ten-second granularity costs the operator nothing, and
+      // one periodic pass over the mirror is one place to reason about.
+      this.hub.expireCommands()
+      void this.reconcile()
+    }, RECONCILE_MS)
     this.flushTimer = setInterval(() => { this.flush() }, FLUSH_MS)
     void this.applyRole()
   }
@@ -197,13 +203,13 @@ export class SessionSyncService {
    * @param machineName - the machine that owns the Session.
    * @param sessionId - the published Session.
    * @param text - the prompt text.
-   * @returns whether the command was accepted, or why not.
+   * @returns the accepted command's id, or why the command was refused.
    */
   submitCommand(
     machineName: string,
     sessionId: string,
     text: string,
-  ): { ok: true } | { ok: false; reason: string } {
+  ): { ok: true; commandId: string } | { ok: false; reason: string } {
     if (!this.config.isServer) return { ok: false, reason: 'this instance is not the sync server' }
     return this.hub.submitCommand(machineName, sessionId, text, this.config.machineName)
   }
@@ -372,8 +378,19 @@ export class SessionSyncService {
   private async runCommand(command: DownstreamCommand): Promise<void> {
     const controller = this.controller()
     if (controller === undefined) return
+    const link = this.link
     // A machine must not be able to drive a Session it stopped publishing.
-    if (this.config.syncSessions[command.sessionId] !== true) return
+    if (this.config.syncSessions[command.sessionId] !== true) {
+      link?.ackCommand(command.commandId, command.sessionId, false, 'this Session is no longer published')
+      return
+    }
+    // The server retires an expired command on its own sweep, but the sweep is
+    // periodic: this is the check that makes the rule true at the instant the
+    // prompt would otherwise reach the Session.
+    if (Date.now() > command.expiresAt) {
+      link?.ackCommand(command.commandId, command.sessionId, false, 'the prompt expired before it arrived')
+      return
+    }
     try {
       await controller.prompt({
         requestId: mintRequestId(),
@@ -381,8 +398,11 @@ export class SessionSyncService {
         mode: 'queue',
         content: [{ type: 'text', text: command.text }],
       }, new AbortController().signal)
+      link?.ackCommand(command.commandId, command.sessionId, true)
     } catch (error: unknown) {
-      this.ctx.logger.warn(`dsh-session-sync: takeover prompt failed: ${describe(error)}`)
+      const reason = describe(error)
+      this.ctx.logger.warn(`dsh-session-sync: takeover prompt failed: ${reason}`)
+      link?.ackCommand(command.commandId, command.sessionId, false, reason)
     }
   }
 

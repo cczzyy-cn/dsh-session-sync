@@ -1,18 +1,19 @@
 /**
  * `dsh-session-sync` — browser half.
  *
- * Three additive contributions, none of which replaces a shipped cell:
+ * Four additive contributions, none of which replaces a shipped cell:
  *
  *  - `settings.section` — the configuration page (machine name, server
  *    address, the server switch, the password, and the per-Session publish
  *    list).
- *  - `sidebar.region.section` — **服务器同步工作区**, a section of the sidebar's
- *    browsing region, beside the workspace browser. It is a section rather than
- *    a global panel row because it is a grouped list to browse, and a row in
- *    the panel list would swap the whole centre column instead of expanding
- *    where it stands.
- *  - `main` — the centre column for one opened Session: its transcript and the
- *    takeover composer.
+ *  - `sidebar.panellist` — the panel row that opens the console. It is what
+ *    makes the panel reachable in the collapsed rail, where a grouped list has
+ *    no room and the sidebar section below renders nothing.
+ *  - `sidebar.region.section` — **服务器同步工作区**, a glance at the connected
+ *    machines beside the workspace browser, whose header row is the second way
+ *    into the console.
+ *  - `main` — the console itself: machines, their Sessions, and one opened
+ *    Session with the takeover composer.
  *
  * Cross-plugin collaboration is through Cordis services only: `slots`,
  * `locale`, and `layout` are the three this half needs, and `ui-primitives`
@@ -21,6 +22,7 @@
 import type { Context as ClientContext } from '@deepseek-ai/cordis'
 import type { ConfigPatch } from '../shared/protocol.ts'
 import { ConfigSection } from './ConfigSection.tsx'
+import { PanelIcon } from './PanelIcon.tsx'
 import { SyncPanel } from './SyncPanel.tsx'
 import { SyncSection } from './SyncSection.tsx'
 import { SyncClient } from './api.ts'
@@ -70,6 +72,18 @@ export function apply(ctx: ClientContext): void {
       setSessionSync: (sessionId: string, synced: boolean) => client.setSessionSync(sessionId, synced),
     }),
   }, ConfigSection))
+
+  // The row the sidebar draws above the browsing region. Without it the panel
+  // would only be reachable from the section below, which is a wide-column
+  // surface: the rail would have no way in at all.
+  ctx.slots.inject('sidebar.panellist', () => ctx.slots.register({
+    name: 'sidebar.panellist',
+    id: PANEL_ID,
+    // After the shipped panel rows and this plugin's own settings section: the
+    // console is an addition to the column, not a new primary destination.
+    order: 40,
+    label: () => t('panelTitle'),
+  }, PanelIcon))
 
   ctx.slots.inject('sidebar.region.section', () => ctx.slots.register({
     name: 'sidebar.region.section',

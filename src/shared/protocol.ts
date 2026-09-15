@@ -22,6 +22,17 @@ export const OFFLINE_AFTER_MS = 45_000
 /** Heartbeat/keepalive cadence for both SSE directions. */
 export const KEEPALIVE_MS = 15_000
 
+/**
+ * How long a takeover command stays deliverable after the server accepted it.
+ *
+ * A prompt is a human act addressed at a Session that may have moved on: a
+ * command that sat in a queue while the owning machine was asleep must not be
+ * admitted hours later as if it had just been typed. Both ends enforce this —
+ * the server retires it and says so, and the origin refuses it even if the
+ * server's sweep has not run yet.
+ */
+export const COMMAND_TTL_MS = 120_000
+
 /** Persisted plugin configuration — the five settings the user asked for, plus the listener. */
 export interface SyncConfig {
   /** This machine's display name, shown to every peer. */
@@ -113,13 +124,50 @@ export interface MirrorTranscript {
 
 /** Server → origin: one instruction to act on a published Session. */
 export interface DownstreamCommand {
-  /** Server-minted identity, echoed back so the server can retire the pending echo. */
+  /** Server-minted identity, echoed back in the origin's ack. */
   commandId: string
   sessionId: string
   kind: 'prompt'
   text: string
   /** Who asked, for the origin's own presentation. */
   from: string
+  /** Epoch ms after which the origin must refuse this prompt. */
+  expiresAt: number
+}
+
+/** Where one takeover command stands, as the server knows it. */
+export type CommandState =
+  /** Accepted by the server, not yet handed to the owning machine. */
+  | 'queued'
+  /** Written down the owning machine's stream; nothing confirmed yet. */
+  | 'delivered'
+  /** The owning machine admitted the prompt into its Session. */
+  | 'accepted'
+  /** The owning machine refused it, or the attempt threw. */
+  | 'failed'
+  /** The TTL passed before the owning machine confirmed it. */
+  | 'expired'
+
+/** One takeover command's current state, for the composer's feedback. */
+export interface CommandStatus {
+  commandId: string
+  machineName: string
+  sessionId: string
+  state: CommandState
+  /** Epoch ms after which this command is no longer deliverable. */
+  expiresAt: number
+  /** Human-readable reason, present for `failed` (and `expired` when explained). */
+  error?: string
+  /** Epoch ms of the last transition. */
+  time: number
+}
+
+/** Origin → server: the outcome of one downstream command. */
+export interface CommandAckPayload {
+  commandId: string
+  sessionId: string
+  ok: boolean
+  error?: string
 }
 
 /** Origin → server: the identity and Session index this machine publishes. */
@@ -171,6 +219,7 @@ export interface ConfigPatch {
 export type SyncStreamFrame =
   | { type: 'state'; state: SyncState }
   | { type: 'events'; machineName: string; sessionId: string; events: MirrorEvent[] }
+  | { type: 'command'; command: CommandStatus }
   | { type: 'error'; message: string }
 
 /** Build the config a fresh install starts from. */

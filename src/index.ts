@@ -128,7 +128,10 @@ async function dispatch(
       sendJson(response, 409, { ok: false, reason: outcome.reason })
       return
     }
-    sendJson(response, 200, { ok: true })
+    // The id is what lets the composer follow this prompt's delivery over the
+    // same event stream it already holds open; without it the panel can only
+    // say "accepted" and hope.
+    sendJson(response, 200, { ok: true, commandId: outcome.commandId })
     return
   }
 
