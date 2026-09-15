@@ -691,23 +691,88 @@ function ToolCallRow({ t, row }: {
   row: ToolRow
 }): React.ReactElement {
   const [open, setOpen] = React.useState(false)
+  const [resultOpen, setResultOpen] = React.useState(false)
   const presentation = toolPresentation(row.name, row.request)
-  // A family row is titled with the family's word and its own gist below; a
-  // generic row is titled 工具调用 and carries the wire name in that gist, which
-  // is how the shipped client falls back for a tool it has no view for.
+  const generic = presentation.glyph === 'generic' && presentation.wire !== undefined
+
+  // A family row is titled with the family's word and its own gist below, and
+  // keeps the request and the result in one card. The shipped client's generic
+  // card instead spends two rows — the call, then its result — so this does the
+  // same for a tool no family claims, and only then.
   const label = presentation.labelKey === undefined
     ? (row.name === '' ? t('toolResult') : row.name)
     : t(presentation.labelKey)
   const summary = presentation.wire === undefined
     ? row.summary
     : [presentation.wire, row.summary].filter(part => part !== '').join(' · ')
+
+  const glyph = (): React.ReactElement => (
+    <span className={row.isError ? `${css.toolGlyph} ${css.toolGlyphError}` : css.toolGlyph}>
+      <ToolGlyphIcon glyph={presentation.glyph} path={presentation.path} />
+    </span>
+  )
+  const argumentsCard = row.argumentsText === '' ? undefined : (
+    <div className={css.ioCard}>
+      <div className={css.ioSection}>
+        <span className={css.ioLabel}>{t('toolArguments')}</span>
+        <span className={css.ioText}>{row.argumentsText}</span>
+      </div>
+    </div>
+  )
+
+  if (generic) {
+    return (
+      <>
+        <DisclosureRow
+          icon={glyph()}
+          title={label}
+          open={open}
+          expandable
+          expandOnRowClick
+          onToggle={() => { setOpen(current => !current) }}
+          className={css.toolRow}
+          titleClassName={css.toolName}
+          collapsedContent={<span className={css.toolSummary}>{summary}</span>}
+        >
+          {argumentsCard}
+        </DisclosureRow>
+        {row.pending
+          ? null
+          : (
+            <DisclosureRow
+              icon={<span className={css.toolGlyph}><StateDot state={row.isError ? 'error' : 'done'} /></span>}
+              title={t('toolResult')}
+              open={resultOpen}
+              expandable
+              expandOnRowClick
+              onToggle={() => { setResultOpen(current => !current) }}
+              className={css.toolRow}
+              titleClassName={css.toolName}
+              collapsedContent={(
+                <span className={css.toolSummary}>{timeLabel(row.time, t)}</span>
+              )}
+            >
+              <div className={css.ioCard}>
+                <div className={css.ioSection}>
+                  <span className={css.ioLabel}>{t('toolResult')}</span>
+                  {row.resultText === ''
+                    ? <span className={css.ioText}>{t('toolNoOutput')}</span>
+                    : (
+                      <span className={row.isError ? `${css.ioText} ${css.ioTextError}` : css.ioText}>
+                        {row.resultText}
+                      </span>
+                    )}
+                </div>
+              </div>
+            </DisclosureRow>
+          )}
+      </>
+    )
+  }
+
   return (
     <DisclosureRow
-      icon={(
-        <span className={row.isError ? `${css.toolGlyph} ${css.toolGlyphError}` : css.toolGlyph}>
-          <ToolGlyphIcon glyph={presentation.glyph} path={presentation.path} />
-        </span>
-      )}
+      icon={glyph()}
       title={label}
       open={open}
       expandable

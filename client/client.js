@@ -2558,17 +2558,84 @@ window.__ModuleLoader__.load({
 		/** One tool call and its result, folded into a single row with an IN/OUT card. */
 		function ToolCallRow({ t, row }) {
 			const [open, setOpen] = react.useState(false);
+			const [resultOpen, setResultOpen] = react.useState(false);
 			const presentation = toolPresentation(row.name, row.request);
+			const generic = presentation.glyph === "generic" && presentation.wire !== void 0;
 			const label = presentation.labelKey === void 0 ? row.name === "" ? t("toolResult") : row.name : t(presentation.labelKey);
 			const summary = presentation.wire === void 0 ? row.summary : [presentation.wire, row.summary].filter((part) => part !== "").join(" · ");
-			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.DisclosureRow, {
-				icon: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-					className: row.isError ? `${sync_module_css_default.toolGlyph} ${sync_module_css_default.toolGlyphError}` : sync_module_css_default.toolGlyph,
-					children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(ToolGlyphIcon, {
-						glyph: presentation.glyph,
-						path: presentation.path
-					})
+			const glyph = () => /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+				className: row.isError ? `${sync_module_css_default.toolGlyph} ${sync_module_css_default.toolGlyphError}` : sync_module_css_default.toolGlyph,
+				children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(ToolGlyphIcon, {
+					glyph: presentation.glyph,
+					path: presentation.path
+				})
+			});
+			const argumentsCard = row.argumentsText === "" ? void 0 : /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+				className: sync_module_css_default.ioCard,
+				children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+					className: sync_module_css_default.ioSection,
+					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+						className: sync_module_css_default.ioLabel,
+						children: t("toolArguments")
+					}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+						className: sync_module_css_default.ioText,
+						children: row.argumentsText
+					})]
+				})
+			});
+			if (generic) return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.DisclosureRow, {
+				icon: glyph(),
+				title: label,
+				open,
+				expandable: true,
+				expandOnRowClick: true,
+				onToggle: () => {
+					setOpen((current) => !current);
+				},
+				className: sync_module_css_default.toolRow,
+				titleClassName: sync_module_css_default.toolName,
+				collapsedContent: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+					className: sync_module_css_default.toolSummary,
+					children: summary
 				}),
+				children: argumentsCard
+			}), row.pending ? null : /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.DisclosureRow, {
+				icon: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+					className: sync_module_css_default.toolGlyph,
+					children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.StateDot, { state: row.isError ? "error" : "done" })
+				}),
+				title: t("toolResult"),
+				open: resultOpen,
+				expandable: true,
+				expandOnRowClick: true,
+				onToggle: () => {
+					setResultOpen((current) => !current);
+				},
+				className: sync_module_css_default.toolRow,
+				titleClassName: sync_module_css_default.toolName,
+				collapsedContent: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+					className: sync_module_css_default.toolSummary,
+					children: timeLabel(row.time, t)
+				}),
+				children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+					className: sync_module_css_default.ioCard,
+					children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+						className: sync_module_css_default.ioSection,
+						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+							className: sync_module_css_default.ioLabel,
+							children: t("toolResult")
+						}), row.resultText === "" ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+							className: sync_module_css_default.ioText,
+							children: t("toolNoOutput")
+						}) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+							className: row.isError ? `${sync_module_css_default.ioText} ${sync_module_css_default.ioTextError}` : sync_module_css_default.ioText,
+							children: row.resultText
+						})]
+					})
+				})
+			})] });
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.DisclosureRow, {
+				icon: glyph(),
 				title: label,
 				open,
 				expandable: true,
