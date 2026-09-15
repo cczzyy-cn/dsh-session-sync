@@ -1482,6 +1482,41 @@
 
 /* The 16px leading box a tool row reserves, with its glyph at 14 (ui-tool
    GenericToolCard's own figure). */
+.toolRow {
+  position: relative;
+  overflow: hidden;
+}
+
+/*
+ * A running call reads as a moving glare band passing over the row — the
+ * shipped ToolRow's own treatment, copied to its figure: a 300px band gliding
+ * left to right over 2.6s, ease-out, with a beat before the next pass.
+ * `prefers-reduced-motion` drops the animation at the end of this sheet.
+ */
+.toolRowRunning::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 300px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--dsw-alias-bg-base) 60%, transparent) 55%,
+    transparent 100%
+  );
+  animation: tool-row-sweep 2.6s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes tool-row-sweep {
+  0% { left: -300px; }
+
+  90%,
+  100% { left: 100%; }
+}
+
 .toolGlyph {
   display: inline-flex;
   align-items: center;
@@ -1715,5 +1750,9 @@
   .treeChevron svg,
   .sendButton {
     transition: none;
+  }
+
+  .toolRowRunning::after {
+    animation: none;
   }
 }

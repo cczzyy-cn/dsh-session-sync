@@ -730,7 +730,7 @@ function ToolCallRow({ t, row }: {
           expandable
           expandOnRowClick
           onToggle={() => { setOpen(current => !current) }}
-          className={css.toolRow}
+          className={toolRowClass(row.pending)}
           titleClassName={css.toolName}
           collapsedContent={<span className={css.toolSummary}>{summary}</span>}
         >
@@ -778,12 +778,10 @@ function ToolCallRow({ t, row }: {
       expandable
       expandOnRowClick
       onToggle={() => { setOpen(current => !current) }}
-      className={css.toolRow}
+      className={toolRowClass(row.pending)}
       titleClassName={css.toolName}
       collapsedContent={(
         <>
-          {/* Work in flight is the one state the glyph does not carry. */}
-          {row.pending && <StateDot state="ongoing" />}
           <span className={css.toolSep} />
           <span className={css.toolSummary}>
             {summary !== '' ? summary : timeLabel(row.time, t)}
@@ -814,6 +812,16 @@ function ToolCallRow({ t, row }: {
       </div>
     </DisclosureRow>
   )
+}
+
+/**
+ * A tool row's class: a call in flight carries the sweep the shipped row uses
+ * for the same state, and every other row carries the plain one.
+ * @param running - whether the call is still waiting for its result.
+ * @returns the row's class names.
+ */
+function toolRowClass(running: boolean): string {
+  return running ? `${css.toolRow} ${css.toolRowRunning}` : css.toolRow
 }
 
 /**
