@@ -20,6 +20,7 @@ import * as React from 'react'
 import {
   Button,
   DisclosureRow,
+  FishLogo,
   Input,
   MarkdownText,
   StateDot,
@@ -200,7 +201,7 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
 
       <section className={css.viewPane} aria-label={t('panelTitle')}>
         {open === undefined || session === undefined
-          ? <p className={css.empty}>{t('selectSession')}</p>
+          ? <HeroPlaceholder t={t} />
           : (
             <Conversation
               t={t}
@@ -379,6 +380,39 @@ function Conversation(props: {
         </form>
       </div>
     </>
+  )
+}
+
+/**
+ * What the talk column shows before something is open.
+ *
+ * It is the client's own new-session hero — the fish, the headline, the preview
+ * badge — copied to the figure (ui-conversation HeroShell), because an empty
+ * column in this product already has a face and inventing a second one would
+ * make the console look like a different application. The one addition is the
+ * hint line: unlike a new session, this column is not waiting for a draft, it is
+ * waiting for a row to be picked in the list beside it.
+ *
+ * The hover swim morph is not copied: it is three baked path variants and an
+ * SMIL interpolation, all decoration for a placeholder that is about to be
+ * replaced by a conversation.
+ */
+function HeroPlaceholder({ t }: { t: (key: SessionSyncKey) => string }): React.ReactElement {
+  return (
+    <div className={css.heroRoot}>
+      <div className={css.heroStack}>
+        <div className={css.heroHeadline}>
+          <span className={css.heroFish} aria-hidden="true">
+            <FishLogo size={34} />
+          </span>
+          <span className={css.heroTitleGroup}>
+            <span>{t('heroHeadline')}</span>
+            <span className={css.heroBadge}>{t('heroPreview')}</span>
+          </span>
+        </div>
+        <p className={css.heroHint}>{t('selectSession')}</p>
+      </div>
+    </div>
   )
 }
 

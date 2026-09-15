@@ -68,6 +68,8 @@ export const zh = {
   machineNoSessions: '这台机器还没有发布会话。',
   selectSession: '从列表打开一个会话，即可阅读并接管。',
   noCwd: '未记录目录',
+  heroHeadline: '探索未至之境',
+  heroPreview: '预览版',
 
   back: '返回',
   transcriptEmpty: '该会话在服务器侧还没有可显示的内容。',
@@ -156,6 +158,8 @@ export const en: Record<SessionSyncKey, string> = {
   machineNoSessions: 'This machine has published no Sessions.',
   selectSession: 'Open a Session from the list to read it and take it over.',
   noCwd: 'No directory recorded',
+  heroHeadline: 'Into the Unknown',
+  heroPreview: 'Preview',
 
   back: 'Back',
   transcriptEmpty: 'This Session has nothing to show on the server yet.',
