@@ -110,6 +110,10 @@ async function dispatch(
 
   if (method === 'POST' && route === '/config') {
     const body = await readJsonBody(request)
+    if (body === undefined) {
+      sendJson(response, 400, { error: 'malformed JSON body' })
+      return
+    }
     const patch = body as ConfigPatch
     const config = await service.patch(patch)
     sendJson(response, 200, {
@@ -136,6 +140,10 @@ async function dispatch(
 
   if (method === 'POST' && route === '/command') {
     const body = await readJsonBody(request)
+    if (body === undefined) {
+      sendJson(response, 400, { error: 'malformed JSON body' })
+      return
+    }
     const machineName = typeof body['machineName'] === 'string' ? body['machineName'] : ''
     const sessionId = typeof body['sessionId'] === 'string' ? body['sessionId'] : ''
     const text = typeof body['text'] === 'string' ? body['text'] : ''
@@ -214,8 +222,16 @@ function openStream(service: SessionSyncService, response: NodeResponseLike): vo
   })
 }
 
-/** Read one JSON request body, bounded. */
-async function readJsonBody(request: NodeRequestLike): Promise<Record<string, unknown>> {
+/**
+ * Read one JSON request body, bounded.
+ *
+ * @param request - the request being read.
+ * @returns the parsed object, an empty object when there is no body at all, or
+ *   undefined when the bytes are not a JSON object. The caller answers 400 for
+ *   undefined: a malformed body is the caller's mistake, and reporting it as a
+ *   server error both lies to them and hides the real cause in the log.
+ */
+async function readJsonBody(request: NodeRequestLike): Promise<Record<string, unknown> | undefined> {
   const chunks: Buffer[] = []
   let total = 0
   await new Promise<void>((resolve, reject) => {
@@ -232,10 +248,15 @@ async function readJsonBody(request: NodeRequestLike): Promise<Record<string, un
     request.on('error', (error: unknown) => { reject(error instanceof Error ? error : new Error(String(error))) })
   })
   if (chunks.length === 0) return {}
-  const parsed: unknown = JSON.parse(Buffer.concat(chunks).toString('utf8'))
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(Buffer.concat(chunks).toString('utf8'))
+  } catch {
+    return undefined
+  }
   return typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)
     ? parsed as Record<string, unknown>
-    : {}
+    : undefined
 }
 
 /** Write one JSON response. */
