@@ -39,14 +39,15 @@ import type { MirroredMachine, MirroredSession } from '../shared/protocol.ts'
 import type { CommandDelivery, SyncClientSnapshot } from './api.ts'
 import type { SessionSyncKey } from './locales.ts'
 import {
+  compactTokens,
   sessionChrome,
   trajectoryCells,
   type SessionChrome,
   type SessionContext,
   type SessionStats,
-  type TrajectoryCell,
   type TrajectoryKind,
 } from './session-chrome.ts'
+import { TrajectoryView } from './TrajectoryView.tsx'
 import { toRows, type ToolRow, type TranscriptRow } from './transcript.ts'
 import css from './sync.module.css'
 
@@ -375,7 +376,7 @@ function Conversation(props: {
         </div>
       </header>
       {tab === 'trajectory'
-        ? <Ledger t={t} cells={cells} />
+        ? <TrajectoryView t={t} cells={cells} stats={chrome.stats} labels={labels} />
         : (
           <div className={css.viewScroll} ref={body}>
             <div className={css.viewColumn}>
@@ -557,95 +558,12 @@ function StatusRow({ t, stats }: {
 }
 
 /**
- * The trajectory ledger: one row per mirrored event, in the shipped table's
- * shape — a 122px event column carrying the turn label and the kind tag, and a
- * content column that draws a tool call's request beside its result.
- */
-function Ledger({ t, cells }: {
-  t: (key: SessionSyncKey) => string
-  cells: readonly TrajectoryCell[]
-}): React.ReactElement {
-  if (cells.length === 0) return <p className={css.empty}>{t('ledgerEmpty')}</p>
-  return (
-    <div className={css.ledger}>
-      <table className={css.ledgerTable}>
-        <thead>
-          <tr>
-            <th className={css.ledgerEventHead}>{t('ledgerEvent')}</th>
-            <th>{t('ledgerContent')}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {cells.map(cell => (
-            <tr
-              key={cell.key}
-              data-kind={cell.kind}
-              data-turn-start={cell.turnStart ? 'true' : undefined}
-              data-error={cell.isError ? 'true' : undefined}
-            >
-              <td className={css.ledgerEventCell}>
-                <span className={css.ledgerRail} aria-hidden="true" />
-                {cell.turnStart && cell.turn !== undefined && (
-                  <span className={css.ledgerTurnLabel}>{`T${String(cell.turn)}`}</span>
-                )}
-                <span className={css.ledgerKindSlot}>
-                  <span className={`${css.ledgerKind} ${css[`kind_${cell.kind}`] ?? ''}`}>{cell.label}</span>
-                </span>
-              </td>
-              <td className={css.ledgerContentCell}>
-                {cell.request === undefined
-                  ? (
-                    <span className={cell.mono ? css.ledgerMono : css.ledgerText}>{cell.title}</span>
-                  )
-                  : (
-                    <span className={css.ledgerResult}>
-                      <span className={css.ledgerMono}>
-                        {cell.title}
-                        {cell.request === '' ? '' : ` ${cell.request}`}
-                      </span>
-                      <span className={css.ledgerArrow} aria-hidden="true">→</span>
-                      <span className={cell.isError ? `${css.ledgerMono} ${css.ledgerErrorText}` : css.ledgerMono}>
-                        {cell.result === undefined || cell.result === ''
-                          ? (cell.durationMs === undefined ? t('toolRunning') : t('toolNoOutput'))
-                          : oneLine(cell.result)}
-                      </span>
-                    </span>
-                  )}
-                {cell.durationMs !== undefined && cell.durationMs > 0 && (
-                  <span className={css.ledgerDuration}>{`${String(cell.durationMs)} ms`}</span>
-                )}
-                {cell.tokens !== undefined && <span className={css.ledgerDuration}>{`${String(cell.tokens)} tok`}</span>}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
-}
-
-/** One compact token count: K and M, one decimal below 100. */
-function compactTokens(value: number): string {
-  const scaled = (candidate: number): string => candidate >= 100
-    ? String(Math.round(candidate))
-    : String(Math.round(candidate * 10) / 10)
-  if (value < 1_000) return String(value)
-  if (value < 1_000_000) return `${scaled(value / 1_000)}K`
-  return `${scaled(value / 1_000_000)}M`
-}
-
-/**
  * The ledger's kind-tag text, from the dictionaries.
  * @param t - the localized copy lookup.
  * @returns a lookup from a projected kind to its tag.
  */
 function kindLabel(t: (key: SessionSyncKey) => string): (kind: TrajectoryKind) => string {
   return kind => t(`kind${kind.charAt(0).toUpperCase()}${kind.slice(1)}` as SessionSyncKey)
-}
-
-/** Collapse whitespace so one excerpt fits a single ledger cell. */
-function oneLine(value: string): string {
-  return value.replace(/\s+/g, ' ').trim()
 }
 
 /**

@@ -447,6 +447,475 @@
   text-align: center;
 }
 
+/* ── console: the trajectory view ──────────────────────────────────────── */
+
+.tjRoot {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+  color: var(--dsw-alias-label-primary);
+  background: var(--dsw-alias-bg-layer-1);
+}
+
+/* 32px, the shipped toolbar's own height (ui-trajectory views.module.css). */
+.tjToolbar {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  box-sizing: border-box;
+  flex: none;
+  height: 32px;
+  padding: 0 6px;
+  border-bottom: 0.5px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-bg-layer-1);
+}
+
+.tjToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  height: 20px;
+  padding: 0 7px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--dsw-alias-label-tertiary);
+  font: var(--dsw-font-xxs-12);
+  cursor: pointer;
+}
+
+.tjToggleIcon {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  stroke: currentColor;
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.tjToggle:hover,
+.tjToggle[aria-pressed='true'],
+.tjAction:hover {
+  color: var(--dsw-alias-label-primary);
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.tjToggle:focus-visible,
+.tjAction:focus-visible {
+  outline: 1px solid var(--dsw-alias-state-business-primary);
+  outline-offset: 1px;
+}
+
+.tjAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  height: 20px;
+  padding: 0 5px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--dsw-alias-label-tertiary);
+  font: var(--dsw-font-xxs-12);
+  cursor: pointer;
+}
+
+.tjActionIcon {
+  color: var(--dsw-alias-label-tertiary);
+  font: 14px/14px var(--ds-font-family-code);
+}
+
+.tjSearch {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 1 164px;
+  min-width: 84px;
+  height: 22px;
+  margin-left: auto;
+  padding: 0 6px;
+  border: 0.5px solid var(--dsw-alias-border-l4);
+  border-radius: 4px;
+  background: var(--dsw-alias-bg-layer-2);
+  color: var(--dsw-alias-label-caption);
+}
+
+.tjSearch:focus-within {
+  border-color: var(--dsw-alias-state-business-primary);
+  background: var(--dsw-alias-bg-layer-1);
+}
+
+.tjSearchIcon {
+  flex: none;
+}
+
+.tjSearchInput {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--dsw-alias-label-primary);
+  font: var(--dsw-font-xxs-12);
+}
+
+.tjSearchInput::placeholder {
+  color: var(--dsw-alias-label-caption);
+}
+
+/* The 50px strip: a 44px label gutter and three 8px-tall lanes. */
+.tjStrip {
+  flex: none;
+  border-bottom: 0.5px solid var(--dsw-alias-border-l2);
+}
+
+.tjPlot {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  height: 50px;
+  overflow: hidden;
+  background: var(--dsw-alias-bg-layer-2);
+}
+
+.tjLaneLabels {
+  position: relative;
+  border-right: 0.5px solid var(--dsw-alias-border-l1);
+  color: var(--dsw-alias-label-caption);
+  font-size: 10px;
+  line-height: 1;
+}
+
+.tjLaneLabels span {
+  position: absolute;
+  right: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  height: 8px;
+}
+
+.tjLaneLabels span:nth-child(1) {
+  top: 7px;
+}
+
+.tjLaneLabels span:nth-child(2) {
+  top: 21px;
+}
+
+.tjLaneLabels span:nth-child(3) {
+  top: 35px;
+}
+
+.tjTrack {
+  position: relative;
+  overflow: hidden;
+}
+
+.tjLanes,
+.tjTurnBoundaries {
+  position: absolute;
+  top: 7px;
+  bottom: 7px;
+  left: 0;
+  right: 0;
+}
+
+.tjSpan {
+  position: absolute;
+  top: calc(var(--tj-span-lane) * 14px);
+  left: var(--tj-span-left);
+  width: max(2px, var(--tj-span-width));
+  height: 8px;
+  min-width: 2px;
+  padding: 0;
+  border: 0;
+  border-radius: 1px;
+  background: var(--dsw-alias-label-secondary);
+  opacity: 0.78;
+  cursor: pointer;
+}
+
+.tjSpan[data-kind='user'] {
+  background: var(--dsw-alias-state-business-primary);
+}
+
+.tjSpan[data-kind='assistant'],
+.tjSpan[data-kind='think'] {
+  background: var(--dsw-alias-label-primary);
+  opacity: 1;
+}
+
+.tjSpan[data-kind='tool'] {
+  background: var(--dsw-alias-state-warn-label);
+  opacity: 1;
+}
+
+.tjSpan[data-kind='context'] {
+  background: var(--dsw-alias-state-success-primary);
+}
+
+.tjSpan[data-error='true'] {
+  background: var(--dsw-alias-state-error-primary);
+}
+
+.tjSpan[data-selected='false'] {
+  opacity: 0.14;
+}
+
+.tjSpan[data-current='true'] {
+  z-index: 1;
+  box-shadow: 0 0 0 2px var(--dsw-alias-state-business-primary);
+}
+
+/* Where a turn begins, a hairline down the strip. */
+.tjTurnBoundary {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0.5px;
+  background: var(--dsw-alias-border-l2);
+}
+
+/* Table beside the inspector, the shipped split. */
+.tjSplit {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--dsw-alias-bg-layer-1);
+}
+
+.tjTablePane {
+  flex: 1;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Row states the shipped ledger defines: selected, folded, and dimmed by a
+   search that does not match. */
+.ledgerTable tbody tr[data-selected='true'] {
+  background: var(--dsw-alias-interactive-bg-active);
+}
+
+.ledgerTable tbody tr[data-dimmed='true'] {
+  opacity: 0.3;
+}
+
+.ledgerTable tbody tr[data-folded='true'] {
+  cursor: pointer;
+}
+
+.ledgerTable tbody tr[data-folded='true'] td {
+  height: 20px;
+}
+
+.tjFolded {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.tjFoldedEllipsis {
+  flex: none;
+  color: var(--dsw-alias-label-tertiary);
+  font-weight: 600;
+}
+
+.tjFoldedText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The inspector: clamp(320px, 38%, 440px), its own 42px header and 34px tabs
+   (ui-trajectory TrajectoryTable.module.css). */
+.tjDetails {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  width: clamp(320px, 38%, 440px);
+  min-width: 0;
+  min-height: 0;
+  border-left: 0.5px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-bg-layer-1);
+}
+
+.tjDetailsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  flex: none;
+  height: 42px;
+  padding: 0 8px 0 12px;
+  border-bottom: 0.5px solid var(--dsw-alias-border-l2);
+}
+
+.tjDetailsTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.tjDetailsDot {
+  flex: none;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  corner-shape: round;
+  background: var(--dsw-alias-label-secondary);
+}
+
+.tjDetailsName {
+  flex: none;
+  font: 500 12px/16px var(--ds-font-family-code);
+}
+
+.tjDetailsLocation {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--dsw-alias-label-tertiary);
+  font: 11px/16px var(--ds-font-family-code);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tjClose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 18px;
+  line-height: 18px;
+  cursor: pointer;
+}
+
+.tjClose:hover {
+  color: var(--dsw-alias-label-primary);
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.tjDetailTabs {
+  display: flex;
+  gap: 1px;
+  box-sizing: border-box;
+  flex: none;
+  width: 100%;
+  height: 34px;
+  padding: 0 8px;
+  overflow-x: auto;
+  border-bottom: 0.5px solid var(--dsw-alias-border-l2);
+  white-space: nowrap;
+}
+
+.tjDetailTab {
+  position: relative;
+  flex: none;
+  padding: 0 9px;
+  border: 0;
+  background: transparent;
+  color: var(--dsw-alias-label-tertiary);
+  font: var(--dsw-font-xs-13);
+  cursor: pointer;
+}
+
+.tjDetailTab:hover {
+  color: var(--dsw-alias-label-primary);
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.tjDetailTabActive {
+  color: var(--dsw-alias-state-business-primary);
+}
+
+.tjDetailTabActive::after {
+  position: absolute;
+  right: 9px;
+  bottom: 0;
+  left: 9px;
+  height: 2px;
+  border-radius: 1px 1px 0 0;
+  background: var(--dsw-alias-state-business-primary);
+  content: '';
+}
+
+.tjDetailBody {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* The shipped overview grid: a 94px term column and a two-digit row height. */
+.tjOverview {
+  margin: 0;
+  padding: 8px 0;
+  font: var(--dsw-font-xs-13);
+}
+
+.tjOverview > div {
+  display: grid;
+  grid-template-columns: 94px minmax(0, 1fr);
+  align-items: center;
+  min-height: 22px;
+  padding: 0 14px;
+}
+
+.tjOverview dt {
+  color: var(--dsw-alias-label-tertiary);
+}
+
+.tjOverview dd {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--dsw-alias-label-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tjPayload {
+  box-sizing: border-box;
+  min-height: 100%;
+  margin: 0;
+  padding: 14px;
+  overflow-wrap: anywhere;
+  background: var(--dsw-alias-markdown-code-block);
+  color: var(--dsw-alias-label-primary);
+  font: 12px/19px var(--ds-font-family-code);
+  tab-size: 2;
+  white-space: pre-wrap;
+}
+
+.tjMarkdown {
+  padding: 6px 14px 8px;
+}
+
 /* ── console: the conversation ─────────────────────────────────────────── */
 
 .viewPane {

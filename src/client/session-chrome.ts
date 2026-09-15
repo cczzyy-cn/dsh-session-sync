@@ -446,6 +446,147 @@ function kindOf(type: string, data: Record<string, unknown>): TrajectoryKind {
   }
 }
 
+/** One timeline bar: a ledger row projected into the strip's domain. */
+export interface TrajectorySpan {
+  key: string
+  /** Index into the cell list, so a bar can select its row. */
+  index: number
+  start: number
+  end: number
+  /** The shipped strip's three lanes: bookkeeping, messages, tools. */
+  lane: 0 | 1 | 2
+  kind: TrajectoryKind
+  isError: boolean
+  label: string
+}
+
+/** The timeline strip's model. */
+export interface TrajectoryTimeline {
+  start: number
+  end: number
+  spans: TrajectorySpan[]
+  /** Where each turn begins, in the same domain as the spans. */
+  turns: { turn: number; at: number }[]
+}
+
+/** How the strip distributes its width: one slot per row, or recorded time. */
+export type TrajectoryScale = 'sequence' | 'duration'
+
+/**
+ * Project the ledger's rows onto the timeline strip.
+ *
+ * `sequence` gives every row one equal slot — the strip as an index of the
+ * ledger. `duration` places each row at its recorded time and removes the idle
+ * gaps between rows, so the strip shows where the time actually went without a
+ * single long wait flattening everything else (ui-trajectory timeline.ts).
+ * @param cells - the ledger's rows, in order.
+ * @param scale - which projection to build.
+ * @returns the strip's model, or null when there is nothing to draw.
+ */
+export function trajectoryTimeline(
+  cells: readonly TrajectoryCell[],
+  scale: TrajectoryScale,
+): TrajectoryTimeline | null {
+  if (cells.length === 0) return null
+  if (scale === 'sequence') {
+    const spans = cells.map((cell, index): TrajectorySpan => ({
+      key: cell.key,
+      index,
+      start: index,
+      end: index + 1,
+      lane: laneOf(cell.kind),
+      kind: cell.kind,
+      isError: cell.isError,
+      label: cell.title === '' ? cell.label : cell.title,
+    }))
+    return { start: 0, end: spans.length, spans, turns: turnBoundaries(cells, spans) }
+  }
+
+  const raw = cells.map((cell, index) => ({
+    cell,
+    index,
+    start: cell.time,
+    end: cell.time + (cell.durationMs ?? 0),
+  }))
+  // Idle compression: walk the rows in time order and subtract every gap that
+  // no row covers, so the domain is the work rather than the wall clock.
+  let coveredUntil: number | null = null
+  let removed = 0
+  const offsets = new Map<number, number>()
+  for (const row of [...raw].sort((left, right) => left.start - right.start || left.end - right.end)) {
+    if (coveredUntil !== null && row.start > coveredUntil) removed += row.start - coveredUntil
+    offsets.set(row.index, removed)
+    coveredUntil = coveredUntil === null ? row.end : Math.max(coveredUntil, row.end)
+  }
+  const spans = raw.map((row): TrajectorySpan => {
+    const offset = offsets.get(row.index) ?? 0
+    return {
+      key: row.cell.key,
+      index: row.index,
+      start: row.start - offset,
+      end: Math.max(row.end - offset, row.start - offset),
+      lane: laneOf(row.cell.kind),
+      kind: row.cell.kind,
+      isError: row.cell.isError,
+      label: row.cell.title === '' ? row.cell.label : row.cell.title,
+    }
+  })
+  const start = Math.min(...spans.map(span => span.start))
+  const end = Math.max(...spans.map(span => span.end))
+  return {
+    start,
+    end: end === start ? start + 1 : end,
+    spans,
+    turns: turnBoundaries(cells, spans),
+  }
+}
+
+/** Where each turn's first row sits in the strip's domain. */
+function turnBoundaries(
+  cells: readonly TrajectoryCell[],
+  spans: readonly TrajectorySpan[],
+): { turn: number; at: number }[] {
+  const boundaries: { turn: number; at: number }[] = []
+  const seen = new Set<number>()
+  for (const [index, cell] of cells.entries()) {
+    if (cell.turn === undefined || seen.has(cell.turn)) continue
+    const span = spans[index]
+    if (span === undefined) continue
+    seen.add(cell.turn)
+    boundaries.push({ turn: cell.turn, at: span.start })
+  }
+  return boundaries
+}
+
+/** The shipped strip's lane for one kind: tools out, messages mid, rest in. */
+function laneOf(kind: TrajectoryKind): 0 | 1 | 2 {
+  if (kind === 'tool') return 2
+  if (kind === 'assistant' || kind === 'think') return 1
+  return 0
+}
+
+/** One compact token count: K and M, one decimal below 100. */
+export function compactTokens(value: number): string {
+  const scaled = (candidate: number): string => candidate >= 100
+    ? String(Math.round(candidate))
+    : String(Math.round(candidate * 10) / 10)
+  if (value < 1_000) return String(value)
+  if (value < 1_000_000) return `${scaled(value / 1_000)}K`
+  return `${scaled(value / 1_000_000)}M`
+}
+
+/** Collapse whitespace so one value fits a single row. */
+export function collapseWhitespace(value: string): string {
+  return value.replace(/\s+/g, ' ').trim()
+}
+
+/** One local wall-clock label, from an epoch millisecond. */
+export function clockLabel(at: number): string {
+  const date = new Date(at)
+  const pad = (value: number): string => String(value).padStart(2, '0')
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+}
+
 /** Build one cell with the fields every row shares. */
 function base(
   key: string,
