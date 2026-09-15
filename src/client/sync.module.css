@@ -1475,8 +1475,24 @@
  */
 .toolName {
   color: var(--dsw-alias-label-primary);
-  font: var(--dsw-font-xs-13);
+  font-size: 13px;
+  line-height: 24px;
   font-weight: 400;
+}
+
+/* The 16px leading box a tool row reserves, with its glyph at 14 (ui-tool
+   GenericToolCard's own figure). */
+.toolGlyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.toolGlyphError {
+  color: var(--dsw-alias-state-error-primary);
 }
 
 .toolSep {
@@ -1493,7 +1509,8 @@
   min-width: 0;
   overflow: hidden;
   color: var(--dsw-alias-label-tertiary);
-  font: var(--dsw-font-xs-13);
+  font-size: 13px;
+  line-height: 24px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }

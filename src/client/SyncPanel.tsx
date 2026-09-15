@@ -20,17 +20,24 @@ import * as React from 'react'
 import {
   Button,
   DisclosureRow,
+  FileTypeIcon,
   FishLogo,
   Input,
   MarkdownText,
   StateDot,
   Tooltip,
+  IconChecklistOutline14,
   IconChevronLeftOutline14,
+  IconCodeOutline16,
+  IconEditOutline16,
   IconFolderClose16,
   IconFolderOpen16,
+  IconFolderOpenOutline16,
   IconGlobeOutline14,
+  IconListPenOutline16,
   IconRightUpOutline16,
   IconSearchOutline16,
+  IconShareOutline16,
   IconThinkOutline14,
   IconTriangleRightFill14,
   relativeTime,
@@ -50,6 +57,7 @@ import {
 } from './session-chrome.ts'
 import { TrajectoryView } from './TrajectoryView.tsx'
 import { toRows, type ToolRow, type TranscriptRow } from './transcript.ts'
+import { toolPresentation, type ToolGlyph } from './tool-presentation.ts'
 import css from './sync.module.css'
 
 /** Props the renderer binds for the `main` cell. */
@@ -682,10 +690,19 @@ function ToolCallRow({ t, row }: {
   row: ToolRow
 }): React.ReactElement {
   const [open, setOpen] = React.useState(false)
-  const label = row.name === '' ? t('toolResult') : row.name
+  const presentation = toolPresentation(row.name, row.request)
+  // An unrecognised tool keeps its wire name; a known family gets the same word
+  // the shipped client uses for it.
+  const label = presentation.labelKey === undefined
+    ? (row.name === '' ? t('toolResult') : row.name)
+    : t(presentation.labelKey)
   return (
     <DisclosureRow
-      icon={<StateDot state={row.pending ? 'ongoing' : row.isError ? 'error' : 'done'} />}
+      icon={(
+        <span className={row.isError ? `${css.toolGlyph} ${css.toolGlyphError}` : css.toolGlyph}>
+          <ToolGlyphIcon glyph={presentation.glyph} path={presentation.path} />
+        </span>
+      )}
       title={label}
       open={open}
       expandable
@@ -695,6 +712,8 @@ function ToolCallRow({ t, row }: {
       titleClassName={css.toolName}
       collapsedContent={(
         <>
+          {/* Work in flight is the one state the glyph does not carry. */}
+          {row.pending && <StateDot state="ongoing" />}
           <span className={css.toolSep} />
           <span className={css.toolSummary}>
             {row.summary !== '' ? row.summary : timeLabel(row.time, t)}
@@ -725,6 +744,43 @@ function ToolCallRow({ t, row }: {
       </div>
     </DisclosureRow>
   )
+}
+
+/**
+ * The glyph a tool family leads with.
+ *
+ * File families classify the path the call named, so a `.ts` read shows the same
+ * file-type mark the shipped client draws; everything else uses the closest
+ * shipped outline at 14px inside the row's 16px leading box (ui-tool
+ * GenericToolCard's own figure).
+ */
+function ToolGlyphIcon({ glyph, path }: {
+  glyph: ToolGlyph
+  path?: string
+}): React.ReactElement {
+  if (glyph === 'file' || glyph === 'edit') {
+    return path === undefined
+      ? (glyph === 'edit' ? <IconEditOutline16 size={14} /> : <IconFolderOpenOutline16 size={14} />)
+      : <FileTypeIcon path={path} size={14} />
+  }
+  switch (glyph) {
+    case 'search':
+      return <IconSearchOutline16 size={14} />
+    case 'code':
+      return <IconCodeOutline16 size={14} />
+    case 'web':
+      return <IconGlobeOutline14 size={14} />
+    case 'subagent':
+      return <IconShareOutline16 size={14} />
+    case 'plan':
+      return <IconChecklistOutline14 size={14} />
+    case 'ask':
+      return <IconListPenOutline16 size={14} />
+    default:
+      // Unknown tool: the status dot the console has always used, which claims
+      // nothing about what the tool does.
+      return <StateDot state="idle" />
+  }
 }
 
 /** The role and link line under the list's search box. */
