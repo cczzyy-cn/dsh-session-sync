@@ -32,7 +32,7 @@ window.__ModuleLoader__.load({
 		let react_jsx_runtime = require("react/jsx-runtime");
 		let _deepseek_ai_dsh_client_store = require("@deepseek-ai/dsh-client-store");
 		//#region \0dsh-css:C:\Users\14339\Desktop\git\AI\dsh-session-sync\src\client\sync.module.css.mjs
-		const css = ".exFxyG_section{flex-direction:column;gap:14px;padding:4px 0 8px;display:flex}.exFxyG_lede{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xs-13);margin:0}.exFxyG_group{flex-direction:column;gap:10px;display:flex}.exFxyG_groupTitle{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-strong-13);margin:0}.exFxyG_card{border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);border-radius:10px;flex-direction:column;gap:10px;padding:12px 14px;display:flex}.exFxyG_field{flex-direction:column;gap:4px;display:flex}.exFxyG_fieldRow{justify-content:space-between;align-items:center;gap:12px;display:flex}.exFxyG_fieldText{flex-direction:column;gap:2px;min-width:0;display:flex}.exFxyG_label{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13)}.exFxyG_hint{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12)}.exFxyG_pair{grid-template-columns:minmax(0,1fr) 120px;gap:10px;display:grid}.exFxyG_actions{align-items:center;gap:8px;display:flex}.exFxyG_saved{color:var(--dsw-alias-state-success-primary);font:var(--dsw-font-xxs-12)}.exFxyG_dirty{color:var(--dsw-alias-state-warn-primary);font:var(--dsw-font-xxs-12)}.exFxyG_failed{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12)}.exFxyG_sessionList{flex-direction:column;max-height:280px;display:flex;overflow-y:auto}.exFxyG_sessionRow{justify-content:space-between;align-items:center;gap:12px;min-height:40px;padding:5px 2px;display:flex}.exFxyG_sessionRow+.exFxyG_sessionRow{border-top:.5px solid var(--dsw-alias-border-l1)}.exFxyG_sessionText{flex-direction:column;gap:2px;min-width:0;display:flex}.exFxyG_sessionTitle{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.exFxyG_sessionMeta{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);align-items:center;gap:6px;display:flex}.exFxyG_empty{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);padding:12px 2px}.exFxyG_status{flex-wrap:wrap;gap:6px 18px;display:flex}.exFxyG_statusItem{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12);align-items:center;gap:6px;display:flex}.exFxyG_statusValue{color:var(--dsw-alias-label-primary)}.exFxyG_statusBad{color:var(--dsw-alias-state-error-primary)}.exFxyG_statusGood{color:var(--dsw-alias-state-success-primary)}.exFxyG_panel{height:100%;min-height:0;color:var(--dsw-alias-label-primary);display:flex}.exFxyG_listPane{background:var(--dsw-specific-sidebar-fill);border-right:.5px solid var(--dsw-alias-border-l3);flex-direction:column;flex:none;width:280px;min-height:0;display:flex}.exFxyG_listHead{flex-direction:column;flex:none;gap:6px;padding:10px 10px 8px;display:flex}.exFxyG_listStatus{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.exFxyG_list{flex-direction:column;flex:1;min-height:0;margin-right:2px;padding:0 6px 8px;display:flex;overflow-y:auto}.exFxyG_treeRow,.exFxyG_treeSession{box-sizing:border-box;width:100%;color:var(--dsw-alias-label-primary);text-align:left;cursor:pointer;user-select:none;transition:background var(--ds-transition-duration-fast) var(--ds-ease-in-out);background:0 0;border:0;border-radius:8px;align-items:center;gap:6px;padding:0 8px;display:flex}.exFxyG_treeRow{height:34px}.exFxyG_treeSession{gap:0;height:32px}.exFxyG_treeRow:hover,.exFxyG_treeSession:hover,.exFxyG_treeSessionSelected{background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_treeRow:focus-visible,.exFxyG_treeSession:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.exFxyG_panel [data-level=\"1\"]{padding-left:24px}.exFxyG_panel [data-level=\"2\"]{padding-left:40px}.exFxyG_treeSlot{width:16px;height:20px;color:var(--dsw-alias-label-tertiary);flex:none;justify-content:center;align-items:center;display:inline-flex}.exFxyG_treeChevron{color:var(--dsw-alias-label-caption);display:none}.exFxyG_treeRow:hover .exFxyG_treeFolder,.exFxyG_treeRow:focus-visible .exFxyG_treeFolder{display:none}.exFxyG_treeRow:hover .exFxyG_treeChevron,.exFxyG_treeRow:focus-visible .exFxyG_treeChevron{display:inline-flex}.exFxyG_arrowOpen{transform:rotate(90deg)}.exFxyG_treeChevron svg{transition:transform .15s var(--ds-ease-in-out)}.exFxyG_rowTitle{min-width:0;font:var(--dsw-font-s-14);text-overflow:ellipsis;white-space:nowrap;flex:1;overflow:hidden}.exFxyG_treeSession .exFxyG_rowTitle{margin:0 6px 0 4px}.exFxyG_rowTime{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);flex:none}.exFxyG_treeRowDim .exFxyG_rowTitle,.exFxyG_treeRowDim .exFxyG_rowTime{color:var(--dsw-alias-label-secondary)}.exFxyG_heroRoot{justify-content:center;align-items:center;min-width:0;height:100%;padding:0 24px;display:flex}.exFxyG_heroStack{flex-direction:column;align-items:center;gap:12px;width:100%;max-width:calc(min(920px,100%) + 32px);display:flex}.exFxyG_heroHeadline{color:var(--dsw-alias-label-primary);flex-wrap:wrap;justify-content:center;align-items:center;gap:12px 10px;font-size:26px;font-weight:500;line-height:32px;display:flex}.exFxyG_heroFish{color:var(--dsw-alias-label-primary);flex:none;justify-content:center;align-items:center;display:inline-flex}.exFxyG_heroTitleGroup{flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 7px;min-width:0;display:flex}.exFxyG_heroBadge{border:.5px solid var(--dsw-alias-interactive-bg-hover);background:var(--dsw-alias-state-business-tertiary);color:var(--dsw-alias-label-primary-bluish);font-family:var(--ds-font-family-code);white-space:nowrap;border-radius:24px;align-self:flex-start;margin-top:2px;padding:1px 7px 0;font-size:12px;font-weight:500;line-height:18px}.exFxyG_heroHint{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);text-align:center;margin:0}.exFxyG_viewPane{background:var(--dsw-alias-bg-base);flex-direction:column;flex:1;min-width:0;min-height:0;display:flex}.exFxyG_viewHeader{border-bottom:.5px solid var(--dsw-alias-border-l3);flex:none;align-items:center;gap:8px;min-height:52px;padding:0 20px;display:flex}.exFxyG_viewTitle{min-width:0;font:var(--dsw-font-s-strong-14);text-overflow:ellipsis;white-space:nowrap;flex:0 auto;margin:0;overflow:hidden}.exFxyG_viewMachine{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);white-space:nowrap;flex:none}.exFxyG_viewScroll{flex:1;min-height:0;margin-right:2px;padding:16px 32px;overflow-y:auto}.exFxyG_viewColumn{flex-direction:column;width:100%;max-width:min(920px,100%);margin:0 auto;display:flex}.exFxyG_viewColumn>*+*{margin-top:16px}.exFxyG_userRow{flex-direction:column;align-items:flex-end;display:flex}.exFxyG_bubble{background:var(--dsw-specific-bubble);max-width:min(82%,640px);color:var(--dsw-alias-label-primary);font:var(--dsw-font-s-14);white-space:pre-wrap;word-break:break-word;border-radius:22px;padding:10px 16px}.exFxyG_assistantRow{flex-direction:column;gap:6px;min-width:0;display:flex}.exFxyG_reasoning{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);white-space:pre-wrap}.exFxyG_thinkRow{border-bottom:.5px solid var(--dsw-alias-border-l2)}.exFxyG_thinkTitle{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xs-13)}.exFxyG_toolName{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13);font-weight:400}.exFxyG_toolSep{background:var(--dsw-alias-label-caption);border-radius:1px;flex:none;width:2px;height:2px;margin:0 8px}.exFxyG_toolSummary{min-width:0;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);text-overflow:ellipsis;white-space:nowrap;flex:auto;overflow:hidden}.exFxyG_ioCard{border:.5px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-markdown-code-block);font:var(--dsw-font-markdown-code-block-small);border-radius:12px;flex-direction:column;margin:4px 0 4px 4px;display:flex}.exFxyG_ioSection{grid-template-columns:max-content 1fr;align-items:baseline;column-gap:14px;max-height:150px;padding:12px 16px;display:grid;overflow-y:auto}.exFxyG_ioLabel{color:var(--dsw-alias-label-caption);align-self:start;position:sticky;top:0}.exFxyG_ioDivider{background:var(--dsw-alias-border-l2);flex:none;height:.5px}.exFxyG_ioText{min-width:0;color:var(--dsw-alias-label-secondary);white-space:pre-wrap;word-break:break-word}.exFxyG_ioTextError{color:var(--dsw-alias-state-error-primary)}.exFxyG_composerRoot{flex-direction:column;flex:none;align-items:center;padding:0 16px 8px;display:flex}.exFxyG_composerCard{box-sizing:border-box;--dsw-elevation-stroke-color:var(--dsw-alias-border-l2);background:var(--dsw-specific-input-major);width:100%;max-width:calc(min(920px,100%) + 32px);box-shadow:var(--dsw-elevation-soft);font:var(--dsw-font-s-14);border:0;border-radius:22px;flex-direction:column;gap:12px;padding-top:8px;display:flex}.exFxyG_composerText{box-sizing:border-box;width:100%;min-height:44px;max-height:200px;color:var(--dsw-alias-label-primary);font:inherit;resize:none;background:0 0;border:0;margin:0;padding:8px 16px 0}.exFxyG_composerText::placeholder{color:var(--dsw-alias-placeholder)}.exFxyG_composerText:focus-visible{outline:none}.exFxyG_composerBar{align-items:center;gap:8px;padding:0 10px 10px 16px;display:flex}.exFxyG_composerTarget{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);flex:none}.exFxyG_composerDelivery{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11)}.exFxyG_composerOffline{color:var(--dsw-alias-state-warn-label);font:var(--dsw-font-xxxs-11)}.exFxyG_composerSpacer{flex:1}.exFxyG_sendButton{corner-shape:round;background:var(--dsw-alias-button-info-fill);color:#fff;cursor:pointer;width:34px;height:34px;transition:background-color var(--ds-transition-duration-fast) var(--ds-ease-in-out);border:0;border-radius:999px;flex:none;place-items:center;display:grid}.exFxyG_sendButton:hover:not(:disabled){background:var(--dsw-alias-button-info-hover)}.exFxyG_sendButton:disabled{opacity:.4;cursor:default}.exFxyG_sendButton:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.exFxyG_error{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12);margin-bottom:10px}.exFxyG_narrowOnly{display:none}@media (width<=719px){.exFxyG_listPane{border-right:0;width:100%}.exFxyG_panel[data-open=true] .exFxyG_listPane,.exFxyG_panel[data-open=false] .exFxyG_viewPane{display:none}.exFxyG_narrowOnly{display:inline-flex}}@media (prefers-reduced-motion:reduce){.exFxyG_treeRow,.exFxyG_treeSession,.exFxyG_treeChevron svg,.exFxyG_sendButton{transition:none}}";
+		const css = ".exFxyG_section{flex-direction:column;gap:14px;padding:4px 0 8px;display:flex}.exFxyG_lede{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xs-13);margin:0}.exFxyG_group{flex-direction:column;gap:10px;display:flex}.exFxyG_groupTitle{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-strong-13);margin:0}.exFxyG_card{border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);border-radius:10px;flex-direction:column;gap:10px;padding:12px 14px;display:flex}.exFxyG_field{flex-direction:column;gap:4px;display:flex}.exFxyG_fieldRow{justify-content:space-between;align-items:center;gap:12px;display:flex}.exFxyG_fieldText{flex-direction:column;gap:2px;min-width:0;display:flex}.exFxyG_label{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13)}.exFxyG_hint{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12)}.exFxyG_pair{grid-template-columns:minmax(0,1fr) 120px;gap:10px;display:grid}.exFxyG_actions{align-items:center;gap:8px;display:flex}.exFxyG_saved{color:var(--dsw-alias-state-success-primary);font:var(--dsw-font-xxs-12)}.exFxyG_dirty{color:var(--dsw-alias-state-warn-primary);font:var(--dsw-font-xxs-12)}.exFxyG_failed{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12)}.exFxyG_sessionList{flex-direction:column;max-height:280px;display:flex;overflow-y:auto}.exFxyG_sessionRow{justify-content:space-between;align-items:center;gap:12px;min-height:40px;padding:5px 2px;display:flex}.exFxyG_sessionRow+.exFxyG_sessionRow{border-top:.5px solid var(--dsw-alias-border-l1)}.exFxyG_sessionText{flex-direction:column;gap:2px;min-width:0;display:flex}.exFxyG_sessionTitle{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.exFxyG_sessionMeta{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);align-items:center;gap:6px;display:flex}.exFxyG_empty{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);padding:12px 2px}.exFxyG_status{flex-wrap:wrap;gap:6px 18px;display:flex}.exFxyG_statusItem{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12);align-items:center;gap:6px;display:flex}.exFxyG_statusValue{color:var(--dsw-alias-label-primary)}.exFxyG_statusBad{color:var(--dsw-alias-state-error-primary)}.exFxyG_statusGood{color:var(--dsw-alias-state-success-primary)}.exFxyG_panel{height:100%;min-height:0;color:var(--dsw-alias-label-primary);display:flex}.exFxyG_listPane{background:var(--dsw-specific-sidebar-fill);border-right:.5px solid var(--dsw-alias-border-l3);flex-direction:column;flex:none;width:280px;min-height:0;display:flex}.exFxyG_listHead{flex-direction:column;flex:none;gap:6px;padding:10px 10px 8px;display:flex}.exFxyG_listStatus{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.exFxyG_list{flex-direction:column;flex:1;min-height:0;margin-right:2px;padding:0 6px 8px;display:flex;overflow-y:auto}.exFxyG_treeRow,.exFxyG_treeSession{box-sizing:border-box;width:100%;color:var(--dsw-alias-label-primary);text-align:left;cursor:pointer;user-select:none;transition:background var(--ds-transition-duration-fast) var(--ds-ease-in-out);background:0 0;border:0;border-radius:8px;align-items:center;gap:6px;padding:0 8px;display:flex}.exFxyG_treeRow{height:34px}.exFxyG_treeSession{gap:0;height:32px}.exFxyG_treeRow:hover,.exFxyG_treeSession:hover,.exFxyG_treeSessionSelected{background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_treeRow:focus-visible,.exFxyG_treeSession:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.exFxyG_panel [data-level=\"1\"]{padding-left:24px}.exFxyG_panel [data-level=\"2\"]{padding-left:40px}.exFxyG_treeSlot{width:16px;height:20px;color:var(--dsw-alias-label-tertiary);flex:none;justify-content:center;align-items:center;display:inline-flex}.exFxyG_treeChevron{color:var(--dsw-alias-label-caption);display:none}.exFxyG_treeRow:hover .exFxyG_treeFolder,.exFxyG_treeRow:focus-visible .exFxyG_treeFolder{display:none}.exFxyG_treeRow:hover .exFxyG_treeChevron,.exFxyG_treeRow:focus-visible .exFxyG_treeChevron{display:inline-flex}.exFxyG_arrowOpen{transform:rotate(90deg)}.exFxyG_treeChevron svg{transition:transform .15s var(--ds-ease-in-out)}.exFxyG_rowTitle{min-width:0;font:var(--dsw-font-s-14);text-overflow:ellipsis;white-space:nowrap;flex:1;overflow:hidden}.exFxyG_treeSession .exFxyG_rowTitle{margin:0 6px 0 4px}.exFxyG_rowTime{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);flex:none}.exFxyG_treeRowDim .exFxyG_rowTitle,.exFxyG_treeRowDim .exFxyG_rowTime{color:var(--dsw-alias-label-secondary)}.exFxyG_heroRoot{justify-content:center;align-items:center;min-width:0;height:100%;padding:0 24px;display:flex}.exFxyG_heroStack{flex-direction:column;align-items:center;gap:12px;width:100%;max-width:calc(min(920px,100%) + 32px);display:flex}.exFxyG_heroHeadline{color:var(--dsw-alias-label-primary);flex-wrap:wrap;justify-content:center;align-items:center;gap:12px 10px;font-size:26px;font-weight:500;line-height:32px;display:flex}.exFxyG_heroFish{color:var(--dsw-alias-label-primary);flex:none;justify-content:center;align-items:center;display:inline-flex}.exFxyG_heroTitleGroup{flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 7px;min-width:0;display:flex}.exFxyG_heroBadge{border:.5px solid var(--dsw-alias-interactive-bg-hover);background:var(--dsw-alias-state-business-tertiary);color:var(--dsw-alias-label-primary-bluish);font-family:var(--ds-font-family-code);white-space:nowrap;border-radius:24px;align-self:flex-start;margin-top:2px;padding:1px 7px 0;font-size:12px;font-weight:500;line-height:18px}.exFxyG_heroHint{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);text-align:center;margin:0}.exFxyG_viewPane{background:var(--dsw-alias-bg-base);flex-direction:column;flex:1;min-width:0;min-height:0;display:flex}.exFxyG_viewHeader{border-bottom:.5px solid var(--dsw-alias-border-l3);flex-direction:column;flex:none;padding:10px 20px 0;display:flex}.exFxyG_viewTitleRow{align-items:center;gap:8px;min-width:0;min-height:30px;display:flex}.exFxyG_viewSpacer{flex:1}.exFxyG_viewTabs{z-index:1;gap:36px;margin-top:10px;padding-left:8px;display:flex;position:relative}.exFxyG_viewTab{color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:0;padding:0 0 9px;font-size:13px;font-weight:500;line-height:16px;position:relative}.exFxyG_viewTab:after{content:\"\";background:0 0;border-radius:2px;height:2px;position:absolute;bottom:-1px;left:0;right:0}.exFxyG_viewTabActive{color:var(--dsw-alias-state-business-primary)}.exFxyG_viewTabActive:after{background:var(--dsw-alias-state-business-primary)}.exFxyG_viewTab:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.exFxyG_chromeCluster{flex:none;align-items:center;gap:8px;min-width:0;display:flex}.exFxyG_chromeChip{border:.5px solid var(--dsw-alias-border-l2);corner-shape:round;max-width:200px;min-height:24px;color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);text-overflow:ellipsis;white-space:nowrap;border-radius:999px;align-items:center;gap:4px;padding:0 8px;display:inline-flex;overflow:hidden}.exFxyG_ringRoot{flex:none;display:inline-flex;position:relative}.exFxyG_ringTrigger{corner-shape:round;cursor:pointer;background:0 0;border:0;border-radius:50%;place-items:center;width:20px;height:20px;padding:0;display:grid}.exFxyG_ringTrigger:hover{background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_ringTrigger:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.exFxyG_ringTrack{fill:none;stroke:var(--dsw-alias-border-l3);stroke-width:2px}.exFxyG_ringFill{fill:none;stroke:var(--dsw-alias-state-business-primary);stroke-width:2px;stroke-linecap:round}.exFxyG_ringPanel{z-index:9;--dsw-elevation-stroke-color:var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-overlay);box-shadow:var(--dsw-elevation-prominent);white-space:nowrap;border:0;border-radius:10px;flex-direction:column;gap:2px;padding:8px 10px;display:flex;position:absolute;top:26px;right:0}.exFxyG_ringHeadline{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12)}.exFxyG_ringFigures{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11)}.exFxyG_statusRow{width:100%;max-width:calc(min(920px,100%) + 32px);color:var(--dsw-alias-label-caption);font:var(--dsw-font-xxxs-11);font-variant-numeric:tabular-nums;flex-wrap:wrap;justify-content:center;gap:12px;padding:6px 0 0;display:flex}.exFxyG_ledger{background:var(--dsw-alias-bg-layer-1);flex:1;min-height:0;margin-right:2px;overflow-y:auto}.exFxyG_ledgerTable{border-spacing:0;table-layout:fixed;width:100%;color:var(--dsw-alias-label-primary);font:var(--dsw-font-xxs-12)}.exFxyG_ledgerTable th{z-index:3;box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-specific-sidebar-fill);height:30px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);text-align:left;text-overflow:ellipsis;white-space:nowrap;padding:0 8px;font-weight:500;position:sticky;top:0;overflow:hidden}.exFxyG_ledgerEventHead{text-align:right;width:122px;padding-right:4px}.exFxyG_ledgerTable td{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l1);text-overflow:ellipsis;white-space:nowrap;height:30px;padding:0 8px;overflow:hidden}.exFxyG_ledgerTable tbody tr:hover{background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_ledgerEventCell{text-align:right;padding-left:36px;padding-right:4px;position:relative;overflow:visible}.exFxyG_ledgerRail{z-index:4;background:var(--dsw-alias-border-l3);pointer-events:none;width:2px;position:absolute;top:-1px;bottom:-1px;left:0}.exFxyG_ledgerTable tbody tr[data-error=true] .exFxyG_ledgerRail{background:var(--dsw-alias-state-error-primary)}.exFxyG_ledgerTable tbody tr[data-turn-start=true] td:before{z-index:1;background:var(--dsw-alias-border-l1);content:\"\";pointer-events:none;height:2px;position:absolute;top:0;left:0;right:0;transform:translateY(-50%)}.exFxyG_ledgerTable tbody tr[data-turn-start=true]:first-child td:before{content:none}.exFxyG_ledgerTurnLabel{z-index:3;box-sizing:border-box;background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-tertiary);font:8px/10px var(--ds-font-family-code);font-variant-numeric:tabular-nums;white-space:nowrap;border-radius:0 0 2px;align-items:center;padding:1px 5px;display:inline-grid;position:absolute;top:0;left:0}.exFxyG_ledgerKindSlot{justify-content:flex-end;align-items:center;width:76px;display:inline-flex}.exFxyG_ledgerKind{box-sizing:border-box;letter-spacing:.035em;user-select:none;border:1px solid #0000;border-radius:4px;align-items:center;height:19px;padding:0 5px;font-size:10px;font-weight:650;line-height:16px;display:inline-flex}.exFxyG_kind_user{color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-state-business-tertiary)}.exFxyG_kind_assistant,.exFxyG_kind_think{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-2)}.exFxyG_kind_tool{color:var(--dsw-alias-state-warn-label);background:var(--dsw-alias-state-warn-tertiary)}.exFxyG_kind_error{color:var(--dsw-alias-state-error-primary);background:var(--dsw-alias-bg-layer-2)}.exFxyG_kind_system,.exFxyG_kind_policy,.exFxyG_kind_title,.exFxyG_kind_other,.exFxyG_kind_compaction{color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-bg-module-platform)}.exFxyG_kind_turn,.exFxyG_kind_step,.exFxyG_kind_context{color:var(--dsw-alias-label-tertiary);background:var(--dsw-alias-bg-layer-2)}.exFxyG_ledgerContentCell{padding-left:4px}.exFxyG_ledgerText{color:var(--dsw-alias-label-primary)}.exFxyG_ledgerMono{color:var(--dsw-alias-label-secondary);font-family:var(--ds-font-family-code);font-size:12px}.exFxyG_ledgerResult{grid-template-columns:clamp(180px,36cqw,480px) minmax(0,1fr);align-items:center;gap:8px;min-width:0;display:grid}.exFxyG_ledgerResult>*{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.exFxyG_ledgerErrorText{color:var(--dsw-alias-state-error-primary)}.exFxyG_ledgerArrow{color:var(--dsw-alias-label-caption);display:none}.exFxyG_ledgerDuration{color:var(--dsw-alias-label-caption);font:var(--dsw-font-xxxs-11);font-variant-numeric:tabular-nums;margin-left:8px}.exFxyG_viewTitle{min-width:0;font:var(--dsw-font-s-strong-14);text-overflow:ellipsis;white-space:nowrap;flex:0 auto;margin:0;overflow:hidden}.exFxyG_viewMachine{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);white-space:nowrap;flex:none}.exFxyG_viewScroll{flex:1;min-height:0;margin-right:2px;padding:16px 32px;overflow-y:auto}.exFxyG_viewColumn{flex-direction:column;width:100%;max-width:min(920px,100%);margin:0 auto;display:flex}.exFxyG_viewColumn>*+*{margin-top:16px}.exFxyG_userRow{flex-direction:column;align-items:flex-end;display:flex}.exFxyG_bubble{background:var(--dsw-specific-bubble);max-width:min(82%,640px);color:var(--dsw-alias-label-primary);font:var(--dsw-font-s-14);white-space:pre-wrap;word-break:break-word;border-radius:22px;padding:10px 16px}.exFxyG_assistantRow{flex-direction:column;gap:6px;min-width:0;display:flex}.exFxyG_reasoning{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);white-space:pre-wrap}.exFxyG_thinkRow{border-bottom:.5px solid var(--dsw-alias-border-l2)}.exFxyG_thinkTitle{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xs-13)}.exFxyG_toolName{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13);font-weight:400}.exFxyG_toolSep{background:var(--dsw-alias-label-caption);border-radius:1px;flex:none;width:2px;height:2px;margin:0 8px}.exFxyG_toolSummary{min-width:0;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);text-overflow:ellipsis;white-space:nowrap;flex:auto;overflow:hidden}.exFxyG_ioCard{border:.5px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-markdown-code-block);font:var(--dsw-font-markdown-code-block-small);border-radius:12px;flex-direction:column;margin:4px 0 4px 4px;display:flex}.exFxyG_ioSection{grid-template-columns:max-content 1fr;align-items:baseline;column-gap:14px;max-height:150px;padding:12px 16px;display:grid;overflow-y:auto}.exFxyG_ioLabel{color:var(--dsw-alias-label-caption);align-self:start;position:sticky;top:0}.exFxyG_ioDivider{background:var(--dsw-alias-border-l2);flex:none;height:.5px}.exFxyG_ioText{min-width:0;color:var(--dsw-alias-label-secondary);white-space:pre-wrap;word-break:break-word}.exFxyG_ioTextError{color:var(--dsw-alias-state-error-primary)}.exFxyG_composerRoot{flex-direction:column;flex:none;align-items:center;padding:0 16px 8px;display:flex}.exFxyG_composerCard{box-sizing:border-box;--dsw-elevation-stroke-color:var(--dsw-alias-border-l2);background:var(--dsw-specific-input-major);width:100%;max-width:calc(min(920px,100%) + 32px);box-shadow:var(--dsw-elevation-soft);font:var(--dsw-font-s-14);border:0;border-radius:22px;flex-direction:column;gap:12px;padding-top:8px;display:flex}.exFxyG_composerText{box-sizing:border-box;width:100%;min-height:44px;max-height:200px;color:var(--dsw-alias-label-primary);font:inherit;resize:none;background:0 0;border:0;margin:0;padding:8px 16px 0}.exFxyG_composerText::placeholder{color:var(--dsw-alias-placeholder)}.exFxyG_composerText:focus-visible{outline:none}.exFxyG_composerBar{align-items:center;gap:8px;padding:0 10px 10px 16px;display:flex}.exFxyG_composerTarget{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);flex:none}.exFxyG_composerDelivery{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11)}.exFxyG_composerOffline{color:var(--dsw-alias-state-warn-label);font:var(--dsw-font-xxxs-11)}.exFxyG_composerSpacer{flex:1}.exFxyG_sendButton{corner-shape:round;background:var(--dsw-alias-button-info-fill);color:#fff;cursor:pointer;width:34px;height:34px;transition:background-color var(--ds-transition-duration-fast) var(--ds-ease-in-out);border:0;border-radius:999px;flex:none;place-items:center;display:grid}.exFxyG_sendButton:hover:not(:disabled){background:var(--dsw-alias-button-info-hover)}.exFxyG_sendButton:disabled{opacity:.4;cursor:default}.exFxyG_sendButton:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.exFxyG_error{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12);margin-bottom:10px}.exFxyG_narrowOnly{display:none}@media (width<=719px){.exFxyG_listPane{border-right:0;width:100%}.exFxyG_panel[data-open=true] .exFxyG_listPane,.exFxyG_panel[data-open=false] .exFxyG_viewPane{display:none}.exFxyG_narrowOnly{display:inline-flex}}@media (prefers-reduced-motion:reduce){.exFxyG_treeRow,.exFxyG_treeSession,.exFxyG_treeChevron svg,.exFxyG_sendButton{transition:none}}";
 		const tagId = "dsh-session-sync/sync.module.css";
 		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagId) + "]") === null) {
 			const tag = document.createElement("style");
@@ -47,6 +47,8 @@ window.__ModuleLoader__.load({
 			"assistantRow": "exFxyG_assistantRow",
 			"bubble": "exFxyG_bubble",
 			"card": "exFxyG_card",
+			"chromeChip": "exFxyG_chromeChip",
+			"chromeCluster": "exFxyG_chromeCluster",
 			"composerBar": "exFxyG_composerBar",
 			"composerCard": "exFxyG_composerCard",
 			"composerDelivery": "exFxyG_composerDelivery",
@@ -78,8 +80,36 @@ window.__ModuleLoader__.load({
 			"ioSection": "exFxyG_ioSection",
 			"ioText": "exFxyG_ioText",
 			"ioTextError": "exFxyG_ioTextError",
+			"kind_assistant": "exFxyG_kind_assistant",
+			"kind_compaction": "exFxyG_kind_compaction",
+			"kind_context": "exFxyG_kind_context",
+			"kind_error": "exFxyG_kind_error",
+			"kind_other": "exFxyG_kind_other",
+			"kind_policy": "exFxyG_kind_policy",
+			"kind_step": "exFxyG_kind_step",
+			"kind_system": "exFxyG_kind_system",
+			"kind_think": "exFxyG_kind_think",
+			"kind_title": "exFxyG_kind_title",
+			"kind_tool": "exFxyG_kind_tool",
+			"kind_turn": "exFxyG_kind_turn",
+			"kind_user": "exFxyG_kind_user",
 			"label": "exFxyG_label",
 			"lede": "exFxyG_lede",
+			"ledger": "exFxyG_ledger",
+			"ledgerArrow": "exFxyG_ledgerArrow",
+			"ledgerContentCell": "exFxyG_ledgerContentCell",
+			"ledgerDuration": "exFxyG_ledgerDuration",
+			"ledgerErrorText": "exFxyG_ledgerErrorText",
+			"ledgerEventCell": "exFxyG_ledgerEventCell",
+			"ledgerEventHead": "exFxyG_ledgerEventHead",
+			"ledgerKind": "exFxyG_ledgerKind",
+			"ledgerKindSlot": "exFxyG_ledgerKindSlot",
+			"ledgerMono": "exFxyG_ledgerMono",
+			"ledgerRail": "exFxyG_ledgerRail",
+			"ledgerResult": "exFxyG_ledgerResult",
+			"ledgerTable": "exFxyG_ledgerTable",
+			"ledgerText": "exFxyG_ledgerText",
+			"ledgerTurnLabel": "exFxyG_ledgerTurnLabel",
 			"list": "exFxyG_list",
 			"listHead": "exFxyG_listHead",
 			"listPane": "exFxyG_listPane",
@@ -88,6 +118,13 @@ window.__ModuleLoader__.load({
 			"pair": "exFxyG_pair",
 			"panel": "exFxyG_panel",
 			"reasoning": "exFxyG_reasoning",
+			"ringFigures": "exFxyG_ringFigures",
+			"ringFill": "exFxyG_ringFill",
+			"ringHeadline": "exFxyG_ringHeadline",
+			"ringPanel": "exFxyG_ringPanel",
+			"ringRoot": "exFxyG_ringRoot",
+			"ringTrack": "exFxyG_ringTrack",
+			"ringTrigger": "exFxyG_ringTrigger",
 			"rowTime": "exFxyG_rowTime",
 			"rowTitle": "exFxyG_rowTitle",
 			"saved": "exFxyG_saved",
@@ -102,6 +139,7 @@ window.__ModuleLoader__.load({
 			"statusBad": "exFxyG_statusBad",
 			"statusGood": "exFxyG_statusGood",
 			"statusItem": "exFxyG_statusItem",
+			"statusRow": "exFxyG_statusRow",
 			"statusValue": "exFxyG_statusValue",
 			"thinkRow": "exFxyG_thinkRow",
 			"thinkTitle": "exFxyG_thinkTitle",
@@ -121,7 +159,12 @@ window.__ModuleLoader__.load({
 			"viewMachine": "exFxyG_viewMachine",
 			"viewPane": "exFxyG_viewPane",
 			"viewScroll": "exFxyG_viewScroll",
-			"viewTitle": "exFxyG_viewTitle"
+			"viewSpacer": "exFxyG_viewSpacer",
+			"viewTab": "exFxyG_viewTab",
+			"viewTabActive": "exFxyG_viewTabActive",
+			"viewTabs": "exFxyG_viewTabs",
+			"viewTitle": "exFxyG_viewTitle",
+			"viewTitleRow": "exFxyG_viewTitleRow"
 		};
 		//#endregion
 		//#region src/client/ConfigSection.tsx
@@ -499,6 +542,476 @@ window.__ModuleLoader__.load({
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconGlobeOutline14, { size: props.size });
 		}
 		//#endregion
+		//#region src/client/session-chrome.ts
+		/** Longest content excerpt kept for one cell. */
+		const EXCERPT_LIMIT = 400;
+		/** Longest subagent label kept. */
+		const LABEL_LIMIT = 60;
+		/** Event types the ledger does not show: bookkeeping the reader never asked for. */
+		const HIDDEN_EVENTS = new Set([
+			"session/end-seed",
+			"agent/inbox/spliced",
+			"session/title-llm-request"
+		]);
+		/**
+		* Read the Session's chrome from its mirrored log.
+		* @param events - the mirrored events in log order.
+		* @returns the chrome the console renders; every field is optional and absent
+		*   when the log does not say.
+		*/
+		function sessionChrome(events) {
+			let model;
+			let window;
+			let used;
+			const policy = {};
+			const usage = {
+				inputTokens: 0,
+				outputTokens: 0,
+				cacheReadTokens: 0,
+				reasoningTokens: 0
+			};
+			let turns = 0;
+			let steps = 0;
+			let firstTime;
+			let lastTime;
+			let title;
+			let stepMs = 0;
+			let openTurn = false;
+			const subagents = /* @__PURE__ */ new Map();
+			const stepStarts = /* @__PURE__ */ new Map();
+			for (const event of events) {
+				const data = asRecord$1(event.data);
+				if (firstTime === void 0) firstTime = event.time;
+				lastTime = event.time;
+				if (event.type === "request/header") {
+					const config = asRecord$1(asRecord$1(data?.["header"])?.["config"]);
+					const provider = text(config?.["provider"]);
+					const name = text(config?.["model"]);
+					if (provider !== void 0 && name !== void 0) model = {
+						provider,
+						model: name,
+						...text(config?.["reasoningEffort"]) === void 0 ? {} : { effort: text(config?.["reasoningEffort"]) },
+						...number(config?.["maxTokens"]) === void 0 ? {} : { maxTokens: number(config?.["maxTokens"]) }
+					};
+					continue;
+				}
+				if (event.type === "request/context") {
+					const reported = number(data?.["contextWindow"]);
+					if (reported !== void 0 && reported > 0) window = reported;
+					const provider = text(data?.["provider"]);
+					const name = text(data?.["model"]);
+					if (model === void 0 && provider !== void 0 && name !== void 0) model = {
+						provider,
+						model: name
+					};
+					continue;
+				}
+				if (event.type === "turn/start") {
+					const turn = number(data?.["turn"]);
+					if (turn !== void 0) turns = Math.max(turns, turn);
+					openTurn = true;
+					continue;
+				}
+				if (event.type === "turn/end") {
+					openTurn = false;
+					continue;
+				}
+				if (event.type === "step/start") {
+					steps += 1;
+					const turn = number(data?.["turn"]);
+					const step = number(data?.["step"]);
+					if (turn !== void 0 && step !== void 0) stepStarts.set(`${String(turn)}\u0000${String(step)}`, event.time);
+					continue;
+				}
+				if (event.type === "step/end") {
+					const turn = number(data?.["turn"]);
+					const step = number(data?.["step"]);
+					const started = turn === void 0 || step === void 0 ? void 0 : stepStarts.get(`${String(turn)}\u0000${String(step)}`);
+					if (started !== void 0) stepMs += Math.max(0, event.time - started);
+					continue;
+				}
+				if (event.type === "assistant/message") {
+					const reported = asRecord$1(data?.["usage"]);
+					usage.inputTokens += number(reported?.["inputTokens"]) ?? 0;
+					usage.outputTokens += number(reported?.["outputTokens"]) ?? 0;
+					usage.cacheReadTokens += number(reported?.["cacheReadTokens"]) ?? 0;
+					usage.reasoningTokens += number(reported?.["reasoningTokens"]) ?? 0;
+					const surface = number(reported?.["totalTokens"]) ?? (number(reported?.["inputTokens"]) ?? 0) + (number(reported?.["outputTokens"]) ?? 0);
+					if (surface > 0) used = surface;
+					continue;
+				}
+				if (event.type === "permission/preset") {
+					policy.preset = text(data?.["preset"]) ?? policy.preset;
+					continue;
+				}
+				if (event.type === "sandbox/mode") {
+					policy.sandbox = text(data?.["mode"]) ?? policy.sandbox;
+					continue;
+				}
+				if (event.type === "approval/policy") {
+					policy.approval = text(data?.["policy"]) ?? policy.approval;
+					continue;
+				}
+				if (event.type === "session/title") {
+					title = text(data?.["title"]) ?? title;
+					continue;
+				}
+				if (event.type === "tool/call") {
+					const callId = text(data?.["callId"]);
+					const name = text(data?.["name"]);
+					if (callId === void 0 || name === void 0) continue;
+					if (name !== "subagent" && name !== "subagent_fork") continue;
+					subagents.set(callId, {
+						callId,
+						label: delegationLabel(data?.["arguments"]) ?? name,
+						time: event.time,
+						done: false,
+						isError: false
+					});
+					continue;
+				}
+				if (event.type === "tool/result") {
+					const callId = text(asRecord$1(asRecord$1(data?.["message"])?.["source"])?.["callId"]);
+					const seen = callId === void 0 ? void 0 : subagents.get(callId);
+					if (seen === void 0) continue;
+					seen.done = true;
+					seen.isError = data?.["error"] !== void 0;
+				}
+			}
+			const inputTotal = usage.inputTokens + usage.cacheReadTokens;
+			const context = window === void 0 || used === void 0 ? void 0 : {
+				window,
+				used,
+				percent: Math.min(100, Math.round(used / window * 100))
+			};
+			const outputPerSecond = stepMs > 0 && usage.outputTokens > 0 ? Math.round(usage.outputTokens / (stepMs / 1e3)) : void 0;
+			return {
+				...model === void 0 ? {} : { model },
+				...context === void 0 ? {} : { context },
+				policy,
+				stats: {
+					turns,
+					steps,
+					usage,
+					...inputTotal > 0 ? { cacheHitPercent: Math.round(usage.cacheReadTokens / inputTotal * 1e3) / 10 } : {},
+					stepMs,
+					...outputPerSecond === void 0 ? {} : { outputPerSecond },
+					...firstTime === void 0 ? {} : { firstTime },
+					...lastTime === void 0 ? {} : { lastTime }
+				},
+				subagents: [...subagents.values()],
+				...title === void 0 ? {} : { title },
+				running: openTurn
+			};
+		}
+		/**
+		* Project the mirrored log onto the trajectory ledger's rows.
+		*
+		* One row per event, except that a tool result joins its call's row — the same
+		* pairing the transcript uses, because the ledger's content column draws the
+		* request and its result side by side.
+		* @param events - the mirrored events in log order.
+		* @param label - kind-tag text lookup, so the copy stays in the dictionaries.
+		* @returns the rows to render, oldest first.
+		*/
+		function trajectoryCells(events, label) {
+			const cells = [];
+			const calls = /* @__PURE__ */ new Map();
+			let openTurn;
+			let currentTurn;
+			let currentStep;
+			for (const event of events) {
+				if (HIDDEN_EVENTS.has(event.type)) continue;
+				const data = asRecord$1(event.data);
+				if (data === void 0) continue;
+				const key = String(event.seq);
+				if (event.type === "turn/start") {
+					currentTurn = number(data["turn"]) ?? currentTurn;
+					currentStep = void 0;
+				} else if (event.type === "step/start") currentStep = number(data["step"]) ?? currentStep;
+				const turn = number(data["turn"]) ?? currentTurn;
+				const step = number(data["step"]) ?? currentStep;
+				if (event.type === "turn/start") {
+					const cell = base(key, "turn", label, event, {
+						turn,
+						step,
+						mono: false
+					});
+					cell.title = turn === void 0 ? "" : `#${String(turn)}`;
+					cell.turnStart = true;
+					cells.push(cell);
+					openTurn = turn === void 0 ? void 0 : {
+						turn,
+						last: cell
+					};
+					continue;
+				}
+				if (event.type === "turn/end") {
+					const reason = text(asRecord$1(data["reason"])?.["kind"]);
+					const cell = base(key, "turn", label, event, {
+						turn,
+						step,
+						mono: false
+					});
+					cell.title = reason ?? "";
+					cell.turnEnd = true;
+					cells.push(cell);
+					openTurn = void 0;
+					continue;
+				}
+				if (event.type === "tool/call") {
+					const callId = text(data["callId"]) ?? "";
+					const name = text(data["name"]) ?? "tool";
+					const raw = text(data["arguments"]) ?? "";
+					const cell = base(key, "tool", label, event, {
+						turn,
+						step,
+						mono: true
+					});
+					cell.title = name;
+					cell.request = summarizeArguments(raw);
+					cell.isError = false;
+					cells.push(cell);
+					if (callId !== "") calls.set(callId, cell);
+					continue;
+				}
+				if (event.type === "tool/result") {
+					const callId = text(asRecord$1(asRecord$1(data["message"])?.["source"])?.["callId"]) ?? "";
+					const cell = calls.get(callId);
+					if (cell !== void 0) {
+						cell.result = resultExcerpt(data);
+						cell.isError = data["error"] !== void 0 || resultIsError(data);
+						cell.durationMs = Math.max(0, event.time - cell.time);
+						continue;
+					}
+					const orphan = base(key, "tool", label, event, {
+						turn,
+						step,
+						mono: true
+					});
+					orphan.title = "";
+					orphan.result = resultExcerpt(data);
+					orphan.isError = data["error"] !== void 0 || resultIsError(data);
+					cells.push(orphan);
+					continue;
+				}
+				const assistant = event.type === "assistant/message";
+				const kind = kindOf(event.type, data);
+				const message = asRecord$1(data["message"]);
+				const textBody = textOf$1(message?.["content"] ?? data["content"]);
+				const cell = base(key, kind, label, event, {
+					turn,
+					step,
+					mono: false
+				});
+				cell.title = excerpt(textBody);
+				if (assistant) {
+					const output = number(asRecord$1(data["usage"])?.["outputTokens"]);
+					if (output !== void 0 && output > 0) cell.tokens = output;
+					const reasoning = reasoningOf$1(message?.["content"]);
+					if (cell.title === "" && reasoning !== "") {
+						cell.title = excerpt(reasoning);
+						cell.kind = "think";
+						cell.label = label("think");
+					}
+				}
+				if (kind === "step") cell.title = stepText(data);
+				if (kind === "policy") cell.title = excerpt(policyText(event.type, data));
+				if (kind === "title" && event.type === "session/title") cell.title = excerpt(text(data["title"]) ?? "");
+				if (kind === "context") cell.title = event.type === "request/header" ? excerpt(requestHeaderText(data)) : excerpt(contextText(data));
+				if (kind === "other") cell.title = event.type;
+				cells.push(cell);
+				if (openTurn !== void 0) openTurn.last = cell;
+			}
+			return cells;
+		}
+		/**
+		* Which ledger kind one event type reads as.
+		*
+		* A type this projection does not know is `other` rather than dropped: the
+		* ledger exists to show what happened, and silently hiding an event a newer
+		* origin logged would be the one failure a reader cannot detect.
+		*/
+		function kindOf(type, data) {
+			switch (type) {
+				case "turn/start":
+				case "turn/end": return "turn";
+				case "step/start":
+				case "step/end": return "step";
+				case "assistant/message": return "assistant";
+				case "user/message": return asRecord$1(data["source"])?.["kind"] === "user" ? "user" : "system";
+				case "system/message": return "system";
+				case "request/header":
+				case "request/context": return "context";
+				case "session/title": return "title";
+				case "permission/preset":
+				case "sandbox/mode":
+				case "approval/policy": return "policy";
+				default:
+					if (type.startsWith("compaction/")) return "compaction";
+					if (type.includes("error")) return "error";
+					return "other";
+			}
+		}
+		/** Build one cell with the fields every row shares. */
+		function base(key, kind, label, event, extra) {
+			return {
+				key,
+				kind,
+				label: label(kind),
+				seq: event.seq,
+				time: event.time,
+				...extra.turn === void 0 ? {} : { turn: extra.turn },
+				...extra.step === void 0 ? {} : { step: extra.step },
+				title: "",
+				mono: extra.mono,
+				isError: false,
+				turnStart: false,
+				turnEnd: false
+			};
+		}
+		/** The request header's route and tool count, as one line. */
+		function requestHeaderText(data) {
+			const header = asRecord$1(data["header"]);
+			const config = asRecord$1(header?.["config"]);
+			const tools = Array.isArray(header?.["tools"]) ? header["tools"].length : void 0;
+			const parts = [];
+			const provider = text(config?.["provider"]);
+			const model = text(config?.["model"]);
+			if (provider !== void 0 && model !== void 0) parts.push(`${provider}/${model}`);
+			const effort = text(config?.["reasoningEffort"]);
+			if (effort !== void 0) parts.push(effort);
+			if (tools !== void 0) parts.push(`${String(tools)} tools`);
+			return parts.join(" · ");
+		}
+		/** One step boundary's turn/step pair. */
+		function stepText(data) {
+			const turn = number(data["turn"]);
+			const step = number(data["step"]);
+			if (turn === void 0 || step === void 0) return "";
+			return `#${String(turn)}/${String(step)}`;
+		}
+		/** The route a request context was assembled for, with its window. */
+		function contextText(data) {
+			const provider = text(data["provider"]);
+			const model = text(data["model"]);
+			const window = number(data["contextWindow"]);
+			const parts = [];
+			if (provider !== void 0 && model !== void 0) parts.push(`${provider}/${model}`);
+			if (window !== void 0) parts.push(`${String(Math.round(window / 1e3))}k window`);
+			return parts.join(" · ");
+		}
+		/** One policy event as a readable line. */
+		function policyText(type, data) {
+			const value = text(data["preset"]) ?? text(data["mode"]) ?? text(data["policy"]) ?? "";
+			return value === "" ? "" : `${type.split("/")[0] ?? ""}: ${value}`;
+		}
+		/** One-line gist of a tool call's raw arguments. */
+		function summarizeArguments(raw) {
+			if (raw === "") return "";
+			try {
+				const record = asRecord$1(JSON.parse(raw));
+				if (record !== void 0) {
+					for (const key of [
+						"command",
+						"cmd",
+						"file_path",
+						"path",
+						"pattern",
+						"query",
+						"description",
+						"prompt",
+						"url",
+						"text"
+					]) {
+						const value = record[key];
+						if (typeof value === "string" && value.trim() !== "") return excerpt(oneLine$2(value), 160);
+					}
+					const first = Object.values(record).find((value) => typeof value === "string" && value.trim() !== "");
+					if (typeof first === "string") return excerpt(oneLine$2(first), 160);
+					return excerpt(oneLine$2(raw), 160);
+				}
+			} catch {}
+			return excerpt(oneLine$2(raw), 160);
+		}
+		/** The label a subagent delegation carries in its arguments. */
+		function delegationLabel(raw) {
+			const args = typeof raw === "string" ? raw : "";
+			if (args === "") return void 0;
+			try {
+				const record = asRecord$1(JSON.parse(args));
+				const description = record === void 0 ? void 0 : text(record["description"]);
+				if (description !== void 0) return excerpt(oneLine$2(description), LABEL_LIMIT);
+				const prompt = record === void 0 ? void 0 : text(record["prompt"]);
+				if (prompt !== void 0) return excerpt(oneLine$2(prompt), LABEL_LIMIT);
+			} catch {
+				return;
+			}
+		}
+		/** Every visible result block's text, bounded. */
+		function resultExcerpt(data) {
+			const message = asRecord$1(data["message"]);
+			const blocks = Array.isArray(message?.["content"]) ? message["content"] : [];
+			const parts = [];
+			for (const block of blocks) {
+				const record = asRecord$1(block);
+				if (record === void 0) continue;
+				const text = textOf$1(Array.isArray(record["content"]) ? record["content"] : [record]);
+				if (text !== "") parts.push(text);
+			}
+			return excerpt(parts.join("\n"));
+		}
+		/** Whether a tool result reports failure on any block. */
+		function resultIsError(data) {
+			const message = asRecord$1(data["message"]);
+			return (Array.isArray(message?.["content"]) ? message["content"] : []).some((block) => asRecord$1(block)?.["isError"] === true);
+		}
+		/** Join the visible text blocks of one content array. */
+		function textOf$1(content) {
+			if (!Array.isArray(content)) return "";
+			const parts = [];
+			for (const block of content) {
+				const record = asRecord$1(block);
+				if (record === void 0) continue;
+				if (record["type"] === "text" && typeof record["text"] === "string") parts.push(record["text"]);
+			}
+			return parts.join("\n").trim();
+		}
+		/** Join the reasoning blocks of one content array. */
+		function reasoningOf$1(content) {
+			if (!Array.isArray(content)) return "";
+			const parts = [];
+			for (const block of content) {
+				const record = asRecord$1(block);
+				if (record === void 0) continue;
+				if (record["type"] === "reasoning" && typeof record["text"] === "string") parts.push(record["text"]);
+			}
+			return parts.join("\n").trim();
+		}
+		/** Narrow one unknown value to a plain record. */
+		function asRecord$1(value) {
+			if (typeof value !== "object" || value === null || Array.isArray(value)) return void 0;
+			return value;
+		}
+		/** One non-empty string, or undefined. */
+		function text(value) {
+			return typeof value === "string" && value.trim() !== "" ? value : void 0;
+		}
+		/** One finite number, or undefined. */
+		function number(value) {
+			return typeof value === "number" && Number.isFinite(value) ? value : void 0;
+		}
+		/** Collapse every run of whitespace so one value fits on one line. */
+		function oneLine$2(value) {
+			return value.replace(/\s+/g, " ").trim();
+		}
+		/** Bound one excerpt, marking that it was cut. */
+		function excerpt(value, limit = EXCERPT_LIMIT) {
+			const collapsed = value.trim();
+			if (collapsed.length <= limit) return collapsed;
+			return `${collapsed.slice(0, limit)}…`;
+		}
+		//#endregion
 		//#region src/client/transcript.ts
 		/** Longest argument gist shown on the collapsed row. */
 		const SUMMARY_LIMIT = 140;
@@ -649,12 +1162,12 @@ window.__ModuleLoader__.load({
 			if (record !== void 0) {
 				for (const key of SUMMARY_KEYS) {
 					const value = record[key];
-					if (typeof value === "string" && value.trim() !== "") return truncate(oneLine(value), SUMMARY_LIMIT);
+					if (typeof value === "string" && value.trim() !== "") return truncate(oneLine$1(value), SUMMARY_LIMIT);
 				}
-				for (const value of Object.values(record)) if (typeof value === "string" && value.trim() !== "") return truncate(oneLine(value), SUMMARY_LIMIT);
+				for (const value of Object.values(record)) if (typeof value === "string" && value.trim() !== "") return truncate(oneLine$1(value), SUMMARY_LIMIT);
 				return "";
 			}
-			return truncate(oneLine(raw), SUMMARY_LIMIT);
+			return truncate(oneLine$1(raw), SUMMARY_LIMIT);
 		}
 		/** Pretty-print an arguments string, falling back to it verbatim when unparsable. */
 		function formatArguments(raw) {
@@ -676,7 +1189,7 @@ window.__ModuleLoader__.load({
 			}
 		}
 		/** Collapse every run of whitespace so one value fits on one row. */
-		function oneLine(text) {
+		function oneLine$1(text) {
 			return text.replace(/\s+/g, " ").trim();
 		}
 		/** Join the visible text blocks of one content array. */
@@ -923,8 +1436,11 @@ window.__ModuleLoader__.load({
 			const { t, state, session } = props;
 			const [draft, setDraft] = react.useState("");
 			const [sending, setSending] = react.useState(false);
+			const [tab, setTab] = react.useState("chat");
 			const body = react.useRef(null);
 			const rows = react.useMemo(() => toRows(state.transcript?.events ?? []), [state.transcript]);
+			const chrome = react.useMemo(() => sessionChrome(state.transcript?.events ?? []), [state.transcript]);
+			const cells = react.useMemo(() => trajectoryCells(state.transcript?.events ?? [], kindLabel(t)), [state.transcript, t]);
 			const labels = react.useMemo(() => ({
 				code: {
 					copyLabel: t("copyCode"),
@@ -950,30 +1466,64 @@ window.__ModuleLoader__.load({
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [
 				/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("header", {
 					className: sync_module_css_default.viewHeader,
-					children: [
-						/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
-							variant: "ghost",
-							size: "sm",
-							className: sync_module_css_default.narrowOnly,
-							icon: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconChevronLeftOutline14, {}),
-							"aria-label": t("back"),
-							onClick: props.closeSession
-						}),
-						/* @__PURE__ */ (0, react_jsx_runtime.jsx)("h2", {
-							className: sync_module_css_default.viewTitle,
-							children: session.title
-						}),
-						/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-							className: sync_module_css_default.viewMachine,
-							children: props.machineName
-						}),
-						session.running && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.StateDot, { state: "ongoing" }), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-							className: sync_module_css_default.viewMachine,
-							children: t("sessionRunning")
-						})] })
-					]
+					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+						className: sync_module_css_default.viewTitleRow,
+						children: [
+							/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
+								variant: "ghost",
+								size: "sm",
+								className: sync_module_css_default.narrowOnly,
+								icon: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconChevronLeftOutline14, {}),
+								"aria-label": t("back"),
+								onClick: props.closeSession
+							}),
+							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("h2", {
+								className: sync_module_css_default.viewTitle,
+								children: session.title
+							}),
+							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+								className: sync_module_css_default.viewMachine,
+								children: props.machineName
+							}),
+							session.running && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.StateDot, { state: "ongoing" }), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+								className: sync_module_css_default.viewMachine,
+								children: t("sessionRunning")
+							})] }),
+							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { className: sync_module_css_default.viewSpacer }),
+							/* @__PURE__ */ (0, react_jsx_runtime.jsx)(ChromeChips, {
+								t,
+								chrome
+							})
+						]
+					}), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+						className: sync_module_css_default.viewTabs,
+						role: "tablist",
+						"aria-label": t("panelTitle"),
+						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
+							type: "button",
+							role: "tab",
+							"aria-selected": tab === "chat",
+							className: tab === "chat" ? `${sync_module_css_default.viewTab} ${sync_module_css_default.viewTabActive}` : sync_module_css_default.viewTab,
+							onClick: () => {
+								setTab("chat");
+							},
+							children: t("tabChat")
+						}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
+							type: "button",
+							role: "tab",
+							"aria-selected": tab === "trajectory",
+							className: tab === "trajectory" ? `${sync_module_css_default.viewTab} ${sync_module_css_default.viewTabActive}` : sync_module_css_default.viewTab,
+							onClick: () => {
+								setTab("trajectory");
+							},
+							children: t("tabTrajectory")
+						})]
+					})]
 				}),
-				/* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+				tab === "trajectory" ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)(Ledger, {
+					t,
+					cells
+				}) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
 					className: sync_module_css_default.viewScroll,
 					ref: body,
 					children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
@@ -997,9 +1547,9 @@ window.__ModuleLoader__.load({
 						}, row.key))]
 					})
 				}),
-				/* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+				/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 					className: sync_module_css_default.composerRoot,
-					children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("form", {
+					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("form", {
 						className: sync_module_css_default.composerCard,
 						onSubmit: (event) => {
 							event.preventDefault();
@@ -1048,9 +1598,238 @@ window.__ModuleLoader__.load({
 								})
 							]
 						})]
-					})
+					}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(StatusRow, {
+						t,
+						stats: chrome.stats
+					})]
 				})
 			] });
+		}
+		/**
+		* The header's right-hand cluster:上下文占用率 ring, and the model, preset and
+		* subagent facts the log reports.
+		*
+		* Every one of these is a **reading**, not a control: the mirror can see what
+		* the owning machine is doing and cannot change it. The shipped session header
+		* carries selectors in these seats; this console shows the same facts without
+		* pretending a click would do something.
+		*/
+		function ChromeChips({ t, chrome }) {
+			const { model, context, policy, subagents } = chrome;
+			const preset = policy.preset === void 0 ? void 0 : policy.preset === "danger-full-access" ? t("presetDangerFullAccess") : policy.preset;
+			const subagentLabel = subagents.length === 0 ? t("chromeSubagentsNone") : subagents.map((seen) => `${seen.label}${seen.isError ? " !" : ""}`).join("\n");
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
+				className: sync_module_css_default.chromeCluster,
+				children: [
+					model !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
+						label: `${t("chromeModel")}: ${model.provider}/${model.model}`,
+						side: "bottom",
+						delayMs: 200,
+						children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
+							className: sync_module_css_default.chromeChip,
+							children: [model.model, model.effort === void 0 ? "" : ` · ${model.effort}`]
+						})
+					}),
+					preset !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
+						label: `${t("chromePreset")}: ${preset}`,
+						side: "bottom",
+						delayMs: 200,
+						children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+							className: sync_module_css_default.chromeChip,
+							children: preset
+						})
+					}),
+					/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
+						label: subagentLabel,
+						side: "bottom",
+						delayMs: 200,
+						children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+							className: sync_module_css_default.chromeChip,
+							children: `${t("chromeSubagents")} ${String(subagents.length)}`
+						})
+					}),
+					context !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)(ContextRing, {
+						t,
+						context
+					})
+				]
+			});
+		}
+		/**
+		* The composer's context-occupancy ring (14px, 2px stroke) and the panel its
+		* click opens: the shipped meter's geometry, fed by the last request's own
+		* numbers instead of the projection.
+		*/
+		function ContextRing({ t, context }) {
+			const [open, setOpen] = react.useState(false);
+			const radius = 5.5;
+			const circumference = 2 * Math.PI * radius;
+			const reading = `${String(context.percent)}%`;
+			const label = `${t("chromeContextUsed")} ${reading}`;
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
+				className: sync_module_css_default.ringRoot,
+				children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
+					label,
+					side: "bottom",
+					delayMs: 200,
+					disabled: open,
+					children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
+						type: "button",
+						className: sync_module_css_default.ringTrigger,
+						"aria-label": label,
+						"aria-haspopup": "dialog",
+						"aria-expanded": open,
+						onClick: () => {
+							setOpen((current) => !current);
+						},
+						children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("svg", {
+							viewBox: "0 0 14 14",
+							width: "14",
+							height: "14",
+							"aria-hidden": "true",
+							children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("circle", {
+								className: sync_module_css_default.ringTrack,
+								cx: "7",
+								cy: "7",
+								r: radius
+							}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("circle", {
+								className: sync_module_css_default.ringFill,
+								cx: "7",
+								cy: "7",
+								r: radius,
+								strokeDasharray: `${String(circumference * context.percent / 100)} ${String(circumference)}`,
+								transform: "rotate(-90 7 7)"
+							})]
+						})
+					})
+				}), open && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
+					className: sync_module_css_default.ringPanel,
+					role: "dialog",
+					"aria-label": label,
+					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
+						className: sync_module_css_default.ringHeadline,
+						children: [
+							t("chromeContextUsed"),
+							" ",
+							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("b", { children: reading })
+						]
+					}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+						className: sync_module_css_default.ringFigures,
+						children: `~${compactTokens(context.used)} / ${compactTokens(context.window)}`
+					})]
+				})]
+			});
+		}
+		/** The status row under the composer card: turns, steps, throughput, cache. */
+		function StatusRow({ t, stats }) {
+			if (stats.turns === 0 && stats.steps === 0) return null;
+			const parts = [`${String(stats.turns)} ${t("statusTurns")}`, `${String(stats.steps)} ${t("statusSteps")}`];
+			if (stats.outputPerSecond !== void 0) parts.push(`${String(stats.outputPerSecond)} ${t("statusTokens")}/s`);
+			const total = stats.usage.inputTokens + stats.usage.cacheReadTokens + stats.usage.outputTokens;
+			const tail = [];
+			if (total > 0) tail.push(`${compactTokens(total)} ${t("statusTokens")}`);
+			if (stats.cacheHitPercent !== void 0) tail.push(`${t("statusCacheHit")} ${String(stats.cacheHitPercent)}%`);
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+				className: sync_module_css_default.statusRow,
+				children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { children: parts.join(" · ") }), tail.length > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { children: tail.join(" · ") })]
+			});
+		}
+		/**
+		* The trajectory ledger: one row per mirrored event, in the shipped table's
+		* shape — a 122px event column carrying the turn label and the kind tag, and a
+		* content column that draws a tool call's request beside its result.
+		*/
+		function Ledger({ t, cells }) {
+			if (cells.length === 0) return /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+				className: sync_module_css_default.empty,
+				children: t("ledgerEmpty")
+			});
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+				className: sync_module_css_default.ledger,
+				children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("table", {
+					className: sync_module_css_default.ledgerTable,
+					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("thead", { children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("tr", { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("th", {
+						className: sync_module_css_default.ledgerEventHead,
+						children: t("ledgerEvent")
+					}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("th", { children: t("ledgerContent") })] }) }), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("tbody", { children: cells.map((cell) => /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("tr", {
+						"data-kind": cell.kind,
+						"data-turn-start": cell.turnStart ? "true" : void 0,
+						"data-error": cell.isError ? "true" : void 0,
+						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("td", {
+							className: sync_module_css_default.ledgerEventCell,
+							children: [
+								/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+									className: sync_module_css_default.ledgerRail,
+									"aria-hidden": "true"
+								}),
+								cell.turnStart && cell.turn !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+									className: sync_module_css_default.ledgerTurnLabel,
+									children: `T${String(cell.turn)}`
+								}),
+								/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+									className: sync_module_css_default.ledgerKindSlot,
+									children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+										className: `${sync_module_css_default.ledgerKind} ${sync_module_css_default[`kind_${cell.kind}`] ?? ""}`,
+										children: cell.label
+									})
+								})
+							]
+						}), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("td", {
+							className: sync_module_css_default.ledgerContentCell,
+							children: [
+								cell.request === void 0 ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+									className: cell.mono ? sync_module_css_default.ledgerMono : sync_module_css_default.ledgerText,
+									children: cell.title
+								}) : /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
+									className: sync_module_css_default.ledgerResult,
+									children: [
+										/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
+											className: sync_module_css_default.ledgerMono,
+											children: [cell.title, cell.request === "" ? "" : ` ${cell.request}`]
+										}),
+										/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+											className: sync_module_css_default.ledgerArrow,
+											"aria-hidden": "true",
+											children: "→"
+										}),
+										/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+											className: cell.isError ? `${sync_module_css_default.ledgerMono} ${sync_module_css_default.ledgerErrorText}` : sync_module_css_default.ledgerMono,
+											children: cell.result === void 0 || cell.result === "" ? cell.durationMs === void 0 ? t("toolRunning") : t("toolNoOutput") : oneLine(cell.result)
+										})
+									]
+								}),
+								cell.durationMs !== void 0 && cell.durationMs > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+									className: sync_module_css_default.ledgerDuration,
+									children: `${String(cell.durationMs)} ms`
+								}),
+								cell.tokens !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+									className: sync_module_css_default.ledgerDuration,
+									children: `${String(cell.tokens)} tok`
+								})
+							]
+						})]
+					}, cell.key)) })]
+				})
+			});
+		}
+		/** One compact token count: K and M, one decimal below 100. */
+		function compactTokens(value) {
+			const scaled = (candidate) => candidate >= 100 ? String(Math.round(candidate)) : String(Math.round(candidate * 10) / 10);
+			if (value < 1e3) return String(value);
+			if (value < 1e6) return `${scaled(value / 1e3)}K`;
+			return `${scaled(value / 1e6)}M`;
+		}
+		/**
+		* The ledger's kind-tag text, from the dictionaries.
+		* @param t - the localized copy lookup.
+		* @returns a lookup from a projected kind to its tag.
+		*/
+		function kindLabel(t) {
+			return (kind) => t(`kind${kind.charAt(0).toUpperCase()}${kind.slice(1)}`);
+		}
+		/** Collapse whitespace so one excerpt fits a single ledger cell. */
+		function oneLine(value) {
+			return value.replace(/\s+/g, " ").trim();
 		}
 		/**
 		* What the talk column shows before something is open.
@@ -1660,6 +2439,36 @@ window.__ModuleLoader__.load({
 			noCwd: "未记录目录",
 			heroHeadline: "探索未至之境",
 			heroPreview: "预览版",
+			tabChat: "对话",
+			tabTrajectory: "轨迹",
+			ledgerEmpty: "这个会话在服务器侧还没有可显示的事件。",
+			ledgerEvent: "事件",
+			ledgerContent: "内容",
+			ledgerTurn: "轮次",
+			chromeContext: "上下文占用率",
+			chromeModel: "模型",
+			chromePreset: "预设",
+			chromeSubagents: "子代理",
+			chromeSubagentsNone: "没有子代理",
+			chromeContextUsed: "上下文已用",
+			presetDangerFullAccess: "完全权限",
+			statusTurns: "轮",
+			statusSteps: "步",
+			statusTokens: "tok",
+			statusCacheHit: "缓存命中",
+			kindTurn: "轮次",
+			kindStep: "步骤",
+			kindUser: "用户",
+			kindSystem: "系统",
+			kindAssistant: "助手",
+			kindThink: "思考",
+			kindTool: "工具",
+			kindPolicy: "策略",
+			kindTitle: "标题",
+			kindCompaction: "压缩",
+			kindContext: "上下文",
+			kindError: "错误",
+			kindOther: "其他",
 			back: "返回",
 			transcriptEmpty: "该会话在服务器侧还没有可显示的内容。",
 			transcriptLoading: "读取会话内容…",
@@ -1739,6 +2548,36 @@ window.__ModuleLoader__.load({
 			noCwd: "No directory recorded",
 			heroHeadline: "Into the Unknown",
 			heroPreview: "Preview",
+			tabChat: "Chat",
+			tabTrajectory: "Trajectory",
+			ledgerEmpty: "This Session has no events to show on the server yet.",
+			ledgerEvent: "Event",
+			ledgerContent: "Content",
+			ledgerTurn: "Turn",
+			chromeContext: "Context used",
+			chromeModel: "Model",
+			chromePreset: "Preset",
+			chromeSubagents: "Subagents",
+			chromeSubagentsNone: "No subagents",
+			chromeContextUsed: "Context used",
+			presetDangerFullAccess: "Full access",
+			statusTurns: "turns",
+			statusSteps: "steps",
+			statusTokens: "tok",
+			statusCacheHit: "cache hit",
+			kindTurn: "TURN",
+			kindStep: "STEP",
+			kindUser: "USER",
+			kindSystem: "SYSTEM",
+			kindAssistant: "ASSISTANT",
+			kindThink: "THINK",
+			kindTool: "TOOL",
+			kindPolicy: "POLICY",
+			kindTitle: "TITLE",
+			kindCompaction: "COMPACT",
+			kindContext: "CONTEXT",
+			kindError: "ERROR",
+			kindOther: "OTHER",
 			back: "Back",
 			transcriptEmpty: "This Session has nothing to show on the server yet.",
 			transcriptLoading: "Loading Session…",

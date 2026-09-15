@@ -24,6 +24,7 @@ import {
   Input,
   MarkdownText,
   StateDot,
+  Tooltip,
   IconChevronLeftOutline14,
   IconFolderClose16,
   IconFolderOpen16,
@@ -37,6 +38,15 @@ import {
 import type { MirroredMachine, MirroredSession } from '../shared/protocol.ts'
 import type { CommandDelivery, SyncClientSnapshot } from './api.ts'
 import type { SessionSyncKey } from './locales.ts'
+import {
+  sessionChrome,
+  trajectoryCells,
+  type SessionChrome,
+  type SessionContext,
+  type SessionStats,
+  type TrajectoryCell,
+  type TrajectoryKind,
+} from './session-chrome.ts'
 import { toRows, type ToolRow, type TranscriptRow } from './transcript.ts'
 import css from './sync.module.css'
 
@@ -273,10 +283,21 @@ function Conversation(props: {
   const { t, state, session } = props
   const [draft, setDraft] = React.useState('')
   const [sending, setSending] = React.useState(false)
+  const [tab, setTab] = React.useState<'chat' | 'trajectory'>('chat')
   const body = React.useRef<HTMLDivElement | null>(null)
   const rows = React.useMemo(
     () => toRows(state.transcript?.events ?? []),
     [state.transcript],
+  )
+  // The header's facts and the ledger's rows read the same mirrored events the
+  // transcript does; nothing extra crosses the wire for them.
+  const chrome = React.useMemo(
+    () => sessionChrome(state.transcript?.events ?? []),
+    [state.transcript],
+  )
+  const cells = React.useMemo(
+    () => trajectoryCells(state.transcript?.events ?? [], kindLabel(t)),
+    [state.transcript, t],
   )
   // MarkdownText caches a streaming render against the labels object's identity,
   // so a fresh object on every render would discard that cache each time.
@@ -310,35 +331,65 @@ function Conversation(props: {
   return (
     <>
       <header className={css.viewHeader}>
-        <Button
-          variant="ghost"
-          size="sm"
-          className={css.narrowOnly}
-          icon={<IconChevronLeftOutline14 />}
-          aria-label={t('back')}
-          onClick={props.closeSession}
-        />
-        <h2 className={css.viewTitle}>{session.title}</h2>
-        <span className={css.viewMachine}>{props.machineName}</span>
-        {session.running && (
-          <>
-            <StateDot state="ongoing" />
-            <span className={css.viewMachine}>{t('sessionRunning')}</span>
-          </>
-        )}
-      </header>
-      <div className={css.viewScroll} ref={body}>
-        <div className={css.viewColumn}>
-          {state.error !== undefined && <div className={css.error}>{state.error}</div>}
-          {state.transcript === undefined && !state.loadingTranscript
-            ? <p className={css.empty}>{t('transcriptGone')}</p>
-            : state.loadingTranscript
-              ? <p className={css.empty}>{t('transcriptLoading')}</p>
-              : rows.length === 0
-                ? <p className={css.empty}>{t('transcriptEmpty')}</p>
-                : rows.map(row => <TranscriptLine key={row.key} t={t} row={row} labels={labels} />)}
+        <div className={css.viewTitleRow}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={css.narrowOnly}
+            icon={<IconChevronLeftOutline14 />}
+            aria-label={t('back')}
+            onClick={props.closeSession}
+          />
+          <h2 className={css.viewTitle}>{session.title}</h2>
+          <span className={css.viewMachine}>{props.machineName}</span>
+          {session.running && (
+            <>
+              <StateDot state="ongoing" />
+              <span className={css.viewMachine}>{t('sessionRunning')}</span>
+            </>
+          )}
+          <span className={css.viewSpacer} />
+          <ChromeChips t={t} chrome={chrome} />
         </div>
-      </div>
+        {/* The two views the shipped header switches between (figma Tab_Group):
+            13/16 wt500, a 2px bar under the active one. */}
+        <div className={css.viewTabs} role="tablist" aria-label={t('panelTitle')}>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'chat'}
+            className={tab === 'chat' ? `${css.viewTab} ${css.viewTabActive}` : css.viewTab}
+            onClick={() => { setTab('chat') }}
+          >
+            {t('tabChat')}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'trajectory'}
+            className={tab === 'trajectory' ? `${css.viewTab} ${css.viewTabActive}` : css.viewTab}
+            onClick={() => { setTab('trajectory') }}
+          >
+            {t('tabTrajectory')}
+          </button>
+        </div>
+      </header>
+      {tab === 'trajectory'
+        ? <Ledger t={t} cells={cells} />
+        : (
+          <div className={css.viewScroll} ref={body}>
+            <div className={css.viewColumn}>
+              {state.error !== undefined && <div className={css.error}>{state.error}</div>}
+              {state.transcript === undefined && !state.loadingTranscript
+                ? <p className={css.empty}>{t('transcriptGone')}</p>
+                : state.loadingTranscript
+                  ? <p className={css.empty}>{t('transcriptLoading')}</p>
+                  : rows.length === 0
+                    ? <p className={css.empty}>{t('transcriptEmpty')}</p>
+                    : rows.map(row => <TranscriptLine key={row.key} t={t} row={row} labels={labels} />)}
+            </div>
+          </div>
+        )}
       <div className={css.composerRoot}>
         <form
           className={css.composerCard}
@@ -378,9 +429,223 @@ function Conversation(props: {
             </button>
           </div>
         </form>
+        <StatusRow t={t} stats={chrome.stats} />
       </div>
     </>
   )
+}
+
+/**
+ * The header's right-hand cluster:上下文占用率 ring, and the model, preset and
+ * subagent facts the log reports.
+ *
+ * Every one of these is a **reading**, not a control: the mirror can see what
+ * the owning machine is doing and cannot change it. The shipped session header
+ * carries selectors in these seats; this console shows the same facts without
+ * pretending a click would do something.
+ */
+function ChromeChips({ t, chrome }: {
+  t: (key: SessionSyncKey) => string
+  chrome: SessionChrome
+}): React.ReactElement {
+  const { model, context, policy, subagents } = chrome
+  const preset = policy.preset === undefined
+    ? undefined
+    : policy.preset === 'danger-full-access'
+      ? t('presetDangerFullAccess')
+      : policy.preset
+  const subagentLabel = subagents.length === 0
+    ? t('chromeSubagentsNone')
+    : subagents.map(seen => `${seen.label}${seen.isError ? ' !' : ''}`).join('\n')
+  return (
+    <span className={css.chromeCluster}>
+      {model !== undefined && (
+        <Tooltip label={`${t('chromeModel')}: ${model.provider}/${model.model}`} side="bottom" delayMs={200}>
+          <span className={css.chromeChip}>
+            {model.model}
+            {model.effort === undefined ? '' : ` · ${model.effort}`}
+          </span>
+        </Tooltip>
+      )}
+      {preset !== undefined && (
+        <Tooltip label={`${t('chromePreset')}: ${preset}`} side="bottom" delayMs={200}>
+          <span className={css.chromeChip}>{preset}</span>
+        </Tooltip>
+      )}
+      <Tooltip label={subagentLabel} side="bottom" delayMs={200}>
+        <span className={css.chromeChip}>
+          {`${t('chromeSubagents')} ${String(subagents.length)}`}
+        </span>
+      </Tooltip>
+      {context !== undefined && <ContextRing t={t} context={context} />}
+    </span>
+  )
+}
+
+/**
+ * The composer's context-occupancy ring (14px, 2px stroke) and the panel its
+ * click opens: the shipped meter's geometry, fed by the last request's own
+ * numbers instead of the projection.
+ */
+function ContextRing({ t, context }: {
+  t: (key: SessionSyncKey) => string
+  context: SessionContext
+}): React.ReactElement {
+  const [open, setOpen] = React.useState(false)
+  const radius = 5.5
+  const circumference = 2 * Math.PI * radius
+  const reading = `${String(context.percent)}%`
+  const label = `${t('chromeContextUsed')} ${reading}`
+  return (
+    <span className={css.ringRoot}>
+      <Tooltip label={label} side="bottom" delayMs={200} disabled={open}>
+        <button
+          type="button"
+          className={css.ringTrigger}
+          aria-label={label}
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          onClick={() => { setOpen(current => !current) }}
+        >
+          <svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true">
+            <circle className={css.ringTrack} cx="7" cy="7" r={radius} />
+            <circle
+              className={css.ringFill}
+              cx="7"
+              cy="7"
+              r={radius}
+              strokeDasharray={`${String(circumference * context.percent / 100)} ${String(circumference)}`}
+              transform="rotate(-90 7 7)"
+            />
+          </svg>
+        </button>
+      </Tooltip>
+      {open && (
+        <span className={css.ringPanel} role="dialog" aria-label={label}>
+          <span className={css.ringHeadline}>
+            {t('chromeContextUsed')}
+            {' '}
+            <b>{reading}</b>
+          </span>
+          <span className={css.ringFigures}>
+            {`~${compactTokens(context.used)} / ${compactTokens(context.window)}`}
+          </span>
+        </span>
+      )}
+    </span>
+  )
+}
+
+/** The status row under the composer card: turns, steps, throughput, cache. */
+function StatusRow({ t, stats }: {
+  t: (key: SessionSyncKey) => string
+  stats: SessionStats
+}): React.ReactElement | null {
+  if (stats.turns === 0 && stats.steps === 0) return null
+  const parts: string[] = [`${String(stats.turns)} ${t('statusTurns')}`, `${String(stats.steps)} ${t('statusSteps')}`]
+  if (stats.outputPerSecond !== undefined) parts.push(`${String(stats.outputPerSecond)} ${t('statusTokens')}/s`)
+  const total = stats.usage.inputTokens + stats.usage.cacheReadTokens + stats.usage.outputTokens
+  const tail: string[] = []
+  if (total > 0) tail.push(`${compactTokens(total)} ${t('statusTokens')}`)
+  if (stats.cacheHitPercent !== undefined) tail.push(`${t('statusCacheHit')} ${String(stats.cacheHitPercent)}%`)
+  return (
+    <div className={css.statusRow}>
+      <span>{parts.join(' · ')}</span>
+      {tail.length > 0 && <span>{tail.join(' · ')}</span>}
+    </div>
+  )
+}
+
+/**
+ * The trajectory ledger: one row per mirrored event, in the shipped table's
+ * shape — a 122px event column carrying the turn label and the kind tag, and a
+ * content column that draws a tool call's request beside its result.
+ */
+function Ledger({ t, cells }: {
+  t: (key: SessionSyncKey) => string
+  cells: readonly TrajectoryCell[]
+}): React.ReactElement {
+  if (cells.length === 0) return <p className={css.empty}>{t('ledgerEmpty')}</p>
+  return (
+    <div className={css.ledger}>
+      <table className={css.ledgerTable}>
+        <thead>
+          <tr>
+            <th className={css.ledgerEventHead}>{t('ledgerEvent')}</th>
+            <th>{t('ledgerContent')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {cells.map(cell => (
+            <tr
+              key={cell.key}
+              data-kind={cell.kind}
+              data-turn-start={cell.turnStart ? 'true' : undefined}
+              data-error={cell.isError ? 'true' : undefined}
+            >
+              <td className={css.ledgerEventCell}>
+                <span className={css.ledgerRail} aria-hidden="true" />
+                {cell.turnStart && cell.turn !== undefined && (
+                  <span className={css.ledgerTurnLabel}>{`T${String(cell.turn)}`}</span>
+                )}
+                <span className={css.ledgerKindSlot}>
+                  <span className={`${css.ledgerKind} ${css[`kind_${cell.kind}`] ?? ''}`}>{cell.label}</span>
+                </span>
+              </td>
+              <td className={css.ledgerContentCell}>
+                {cell.request === undefined
+                  ? (
+                    <span className={cell.mono ? css.ledgerMono : css.ledgerText}>{cell.title}</span>
+                  )
+                  : (
+                    <span className={css.ledgerResult}>
+                      <span className={css.ledgerMono}>
+                        {cell.title}
+                        {cell.request === '' ? '' : ` ${cell.request}`}
+                      </span>
+                      <span className={css.ledgerArrow} aria-hidden="true">→</span>
+                      <span className={cell.isError ? `${css.ledgerMono} ${css.ledgerErrorText}` : css.ledgerMono}>
+                        {cell.result === undefined || cell.result === ''
+                          ? (cell.durationMs === undefined ? t('toolRunning') : t('toolNoOutput'))
+                          : oneLine(cell.result)}
+                      </span>
+                    </span>
+                  )}
+                {cell.durationMs !== undefined && cell.durationMs > 0 && (
+                  <span className={css.ledgerDuration}>{`${String(cell.durationMs)} ms`}</span>
+                )}
+                {cell.tokens !== undefined && <span className={css.ledgerDuration}>{`${String(cell.tokens)} tok`}</span>}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+/** One compact token count: K and M, one decimal below 100. */
+function compactTokens(value: number): string {
+  const scaled = (candidate: number): string => candidate >= 100
+    ? String(Math.round(candidate))
+    : String(Math.round(candidate * 10) / 10)
+  if (value < 1_000) return String(value)
+  if (value < 1_000_000) return `${scaled(value / 1_000)}K`
+  return `${scaled(value / 1_000_000)}M`
+}
+
+/**
+ * The ledger's kind-tag text, from the dictionaries.
+ * @param t - the localized copy lookup.
+ * @returns a lookup from a projected kind to its tag.
+ */
+function kindLabel(t: (key: SessionSyncKey) => string): (kind: TrajectoryKind) => string {
+  return kind => t(`kind${kind.charAt(0).toUpperCase()}${kind.slice(1)}` as SessionSyncKey)
+}
+
+/** Collapse whitespace so one excerpt fits a single ledger cell. */
+function oneLine(value: string): string {
+  return value.replace(/\s+/g, ' ').trim()
 }
 
 /**

@@ -459,17 +459,416 @@
 }
 
 /*
- * 52px against the shipped 76px: that header holds a tab strip this pane has no
- * tabs for, and the rest of its rhythm (30px title row, l3 seam) is kept.
+ * The shipped header's own anatomy: a 30px title row above the tab strip, with
+ * the l3 seam under both (ui-conversation ConversationRoot.module.css).
  */
 .viewHeader {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  padding: 10px 20px 0;
+  border-bottom: 0.5px solid var(--dsw-alias-border-l3);
+}
+
+.viewTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 30px;
+}
+
+.viewSpacer {
+  flex: 1;
+}
+
+/* The shipped tab strip: 13/16 wt500, 36px apart, a 2px bar under the active
+   tab reaching 1px past the row to sit over the seam. */
+.viewTabs {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 36px;
+  margin-top: 10px;
+  padding-left: 8px;
+}
+
+.viewTab {
+  position: relative;
+  padding: 0 0 9px;
+  border: 0;
+  background: transparent;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.viewTab::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: transparent;
+}
+
+/* Selected is the business blue, not ink: brand-primary resolves to near-black
+   in the light theme, so the blue is the token that stays a highlight. */
+.viewTabActive {
+  color: var(--dsw-alias-state-business-primary);
+}
+
+.viewTabActive::after {
+  background: var(--dsw-alias-state-business-primary);
+}
+
+.viewTab:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--dsw-alias-state-business-primary);
+}
+
+/* ── console: the header's reading cluster ─────────────────────────────── */
+
+.chromeCluster {
   display: flex;
   align-items: center;
   gap: 8px;
   flex: none;
-  min-height: 52px;
-  padding: 0 20px;
-  border-bottom: 0.5px solid var(--dsw-alias-border-l3);
+  min-width: 0;
+}
+
+.chromeChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 200px;
+  min-height: 24px;
+  padding: 0 8px;
+  overflow: hidden;
+  border: 0.5px solid var(--dsw-alias-border-l2);
+  border-radius: 999px;
+  corner-shape: round;
+  color: var(--dsw-alias-label-secondary);
+  font: var(--dsw-font-xxxs-11);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Context-occupancy ring: 14px viewBox, 2px stroke — the shipped meter's own
+   figure (ContextMeter.tsx). */
+.ringRoot {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+
+.ringTrigger {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  corner-shape: round;
+  background: transparent;
+  cursor: pointer;
+}
+
+.ringTrigger:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.ringTrigger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--dsw-alias-state-business-primary);
+}
+
+.ringTrack {
+  fill: none;
+  stroke: var(--dsw-alias-border-l3);
+  stroke-width: 2;
+}
+
+.ringFill {
+  fill: none;
+  stroke: var(--dsw-alias-state-business-primary);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.ringPanel {
+  position: absolute;
+  z-index: 9;
+  top: 26px;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 0;
+  --dsw-elevation-stroke-color: var(--dsw-alias-border-l1);
+  border-radius: 10px;
+  background: var(--dsw-alias-bg-overlay);
+  box-shadow: var(--dsw-elevation-prominent);
+  white-space: nowrap;
+}
+
+.ringHeadline {
+  color: var(--dsw-alias-label-secondary);
+  font: var(--dsw-font-xxs-12);
+}
+
+.ringFigures {
+  color: var(--dsw-alias-label-tertiary);
+  font: var(--dsw-font-xxxs-11);
+}
+
+/* ── console: the composer's status row ────────────────────────────────── */
+
+.statusRow {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+  max-width: calc(min(920px, 100%) + 32px);
+  padding: 6px 0 0;
+  color: var(--dsw-alias-label-caption);
+  font: var(--dsw-font-xxxs-11);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── console: the trajectory ledger ───────────────────────────────────── */
+
+/*
+ * The shipped ledger's table: 30px rows, a 122px event column, a sticky 30px
+ * header on the sidebar fill, a 2px turn rail down the left edge, and a 2px
+ * rule where a turn begins (ui-trajectory TrajectoryTable.module.css).
+ */
+.ledger {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin-right: 2px;
+  background: var(--dsw-alias-bg-layer-1);
+}
+
+.ledgerTable {
+  width: 100%;
+  border-spacing: 0;
+  table-layout: fixed;
+  color: var(--dsw-alias-label-primary);
+  font: var(--dsw-font-xxs-12);
+}
+
+.ledgerTable th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  box-sizing: border-box;
+  height: 30px;
+  padding: 0 8px;
+  overflow: hidden;
+  border-bottom: 0.5px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-specific-sidebar-fill);
+  color: var(--dsw-alias-label-tertiary);
+  font: var(--dsw-font-xxs-12);
+  font-weight: 500;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ledgerEventHead {
+  width: 122px;
+  padding-right: 4px;
+  text-align: right;
+}
+
+.ledgerTable td {
+  box-sizing: border-box;
+  height: 30px;
+  padding: 0 8px;
+  overflow: hidden;
+  border-bottom: 0.5px solid var(--dsw-alias-border-l1);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ledgerTable tbody tr:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.ledgerEventCell {
+  position: relative;
+  overflow: visible;
+  padding-right: 4px;
+  padding-left: 36px;
+  text-align: right;
+}
+
+/* The turn rail: 2px at the table's left edge, spanning one turn's rows. */
+.ledgerRail {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  left: 0;
+  z-index: 4;
+  width: 2px;
+  background: var(--dsw-alias-border-l3);
+  pointer-events: none;
+}
+
+.ledgerTable tbody tr[data-error='true'] .ledgerRail {
+  background: var(--dsw-alias-state-error-primary);
+}
+
+/* Where a turn begins, a 2px rule across the row above it. */
+.ledgerTable tbody tr[data-turn-start='true'] td::before {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 2px;
+  background: var(--dsw-alias-border-l1);
+  content: '';
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.ledgerTable tbody tr[data-turn-start='true']:first-child td::before {
+  content: none;
+}
+
+.ledgerTurnLabel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  display: inline-grid;
+  align-items: center;
+  box-sizing: border-box;
+  padding: 1px 5px;
+  border-radius: 0 0 2px;
+  background: var(--dsw-alias-bg-module-platform);
+  color: var(--dsw-alias-label-tertiary);
+  font: 8px/10px var(--ds-font-family-code);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ledgerKindSlot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 76px;
+}
+
+.ledgerKind {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: 19px;
+  padding: 0 5px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-size: 10px;
+  line-height: 16px;
+  font-weight: 650;
+  letter-spacing: 0.035em;
+  user-select: none;
+}
+
+/* Kind tints by the shipped palette's roles: the human is the business blue,
+   tools are the warning amber, bookkeeping is the platform grey. */
+.kind_user {
+  color: var(--dsw-alias-state-business-primary);
+  background: var(--dsw-alias-state-business-tertiary);
+}
+
+.kind_assistant,
+.kind_think {
+  color: var(--dsw-alias-label-primary);
+  background: var(--dsw-alias-bg-layer-2);
+}
+
+.kind_tool {
+  color: var(--dsw-alias-state-warn-label);
+  background: var(--dsw-alias-state-warn-tertiary);
+}
+
+.kind_error {
+  color: var(--dsw-alias-state-error-primary);
+  background: var(--dsw-alias-bg-layer-2);
+}
+
+.kind_system,
+.kind_policy,
+.kind_title,
+.kind_other,
+.kind_compaction {
+  color: var(--dsw-alias-label-secondary);
+  background: var(--dsw-alias-bg-module-platform);
+}
+
+.kind_turn,
+.kind_step,
+.kind_context {
+  color: var(--dsw-alias-label-tertiary);
+  background: var(--dsw-alias-bg-layer-2);
+}
+
+.ledgerContentCell {
+  padding-left: 4px;
+}
+
+.ledgerText {
+  color: var(--dsw-alias-label-primary);
+}
+
+/* Tool rows read as code, the shipped ledger's own treatment. */
+.ledgerMono {
+  color: var(--dsw-alias-label-secondary);
+  font-family: var(--ds-font-family-code);
+  font-size: 12px;
+}
+
+/* Request beside result, at the shipped ledger's measured request width. */
+.ledgerResult {
+  display: grid;
+  grid-template-columns: clamp(180px, 36cqw, 480px) minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ledgerResult > * {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ledgerErrorText {
+  color: var(--dsw-alias-state-error-primary);
+}
+
+.ledgerArrow {
+  display: none;
+  color: var(--dsw-alias-label-caption);
+}
+
+.ledgerDuration {
+  margin-left: 8px;
+  color: var(--dsw-alias-label-caption);
+  font: var(--dsw-font-xxxs-11);
+  font-variant-numeric: tabular-nums;
 }
 
 .viewTitle {
