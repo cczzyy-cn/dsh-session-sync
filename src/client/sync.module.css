@@ -255,6 +255,21 @@
   margin-right: 2px;
 }
 
+/*
+ * One line of state the tree could not otherwise explain — a mirror that came
+ * back empty because the host restarted. It sits in the list's own flow, above
+ * the machines it is talking about, in the warning tint because it describes a
+ * gap the reader should expect to close on its own.
+ */
+.notice {
+  margin: 2px 2px 6px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--dsw-alias-state-warn-tertiary);
+  color: var(--dsw-alias-label-secondary);
+  font: var(--dsw-font-xxxs-11);
+}
+
 /* ── console: the machine → directory → Session tree ───────────────────── */
 
 /* Shared row chrome (ui-workspace Rows.module.css .projectRow/.sessionRow). */

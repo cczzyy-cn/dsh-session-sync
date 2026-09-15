@@ -70,6 +70,21 @@ export interface SyncClientSnapshot {
   loadingTranscript: boolean
   /** The last takeover prompt's progress, cleared when another Session is opened. */
   delivery?: CommandDelivery
+  /**
+   * Whether this page's stream to its own host is up.
+   *
+   * The page is served by that host, so a restart breaks the stream and nothing
+   * else in the panel can tell: every read it makes is answered by whatever is
+   * listening now, and a mirror that came back empty looks exactly like a mirror
+   * nobody has published to yet.
+   */
+  stream: 'connecting' | 'open'
+  /**
+   * True when a reopened stream found the mirror empty after it had held
+   * machines — what a server restart leaves behind, because the mirror is
+   * memory-only. Cleared as soon as a machine appears again.
+   */
+  mirrorReset: boolean
   /** Last failure text, cleared by the next successful action. */
   error?: string
 }
@@ -95,6 +110,10 @@ export class SyncClient {
   private started = false
   /** Status frames that arrived before this browser knew their command's id. */
   private readonly earlyCommands = new Map<string, CommandDelivery>()
+  /** Whether this page has ever held an open stream. */
+  private sawOpen = false
+  /** Whether this page has ever seen a machine in the mirror. */
+  private sawMachines = false
 
   constructor() {
     this.store = createSnapshotStore<SyncClientSnapshot>({
@@ -103,6 +122,8 @@ export class SyncClient {
       state: idleState(),
       sessions: [],
       loadingTranscript: false,
+      stream: 'connecting',
+      mirrorReset: false,
     })
   }
 
@@ -275,6 +296,21 @@ export class SyncClient {
   private openStream(): void {
     if (typeof EventSource === 'undefined') return
     const source = new EventSource(`${ROUTE_PREFIX}/events`)
+    source.onopen = () => {
+      const first = !this.sawOpen
+      this.sawOpen = true
+      const snapshot = this.store.getSnapshot()
+      // A stream that comes back after it was open before means the host went
+      // away: restarting it is the ordinary cause, and its mirror is memory-only,
+      // so an empty one now is a reset rather than a quiet fleet. Say so, and
+      // re-read everything instead of trusting what is still on screen.
+      const reset = !first && this.sawMachines && snapshot.state.machines.length === 0
+      this.update({ stream: 'open', ...(reset ? { mirrorReset: true } : {}) })
+      if (!first) void this.refresh()
+    }
+    source.onerror = () => {
+      this.update({ stream: 'connecting' })
+    }
     source.onmessage = (event: MessageEvent<string>) => {
       let frame: SyncStreamFrame
       try {
@@ -348,8 +384,22 @@ export class SyncClient {
     this.update({ error: frame.message })
   }
 
+  /**
+   * Publish one patch and keep the mirror-reset notice honest.
+   *
+   * The notice exists only for the window between a host restart and the first
+   * machine re-publishing (they do so within their reconcile tick), so it is
+   * retired the moment a machine is in the snapshot again — and the fact that
+   * this page once held machines is remembered, because that is what makes an
+   * empty mirror a reset instead of a quiet fleet.
+   */
   private update(patch: Partial<SyncClientSnapshot>): void {
-    this.store.set({ ...this.store.getSnapshot(), ...patch })
+    const next = { ...this.store.getSnapshot(), ...patch }
+    if (next.state.machines.length > 0) {
+      this.sawMachines = true
+      if (next.mirrorReset) next.mirrorReset = false
+    }
+    this.store.set(next)
   }
 }
 

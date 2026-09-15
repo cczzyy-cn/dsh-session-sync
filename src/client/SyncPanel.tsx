@@ -130,9 +130,19 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
             aria-label={t('searchSessions')}
             onChange={(event) => { setQuery(event.target.value) }}
           />
-          <span className={css.listStatus}>{roleLine(state, t)}</span>
+          <span className={css.listStatus}>
+            {state.stream === 'connecting'
+              ? `${roleLine(state, t)} · ${t('streamReconnecting')}`
+              : roleLine(state, t)}
+          </span>
         </div>
         <div className={css.list} role="tree">
+          {/* A host restart empties a memory-only mirror. Without this line the
+              list simply loses every machine, which reads as "nothing is
+              connected" rather than "the server was restarted". */}
+          {state.mirrorReset && (
+            <p className={css.notice} role="status">{t('mirrorResetNotice')}</p>
+          )}
           {!state.ready && <p className={css.empty}>{t('sessionsLoading')}</p>}
           {state.ready && state.state.role !== 'server' && (
             <p className={css.empty}>{t('panelEmptyClient')}</p>
@@ -150,6 +160,7 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
               <React.Fragment key={machineKey}>
                 <TreeRow
                   level={0}
+                  icon="machine"
                   open={machineOpen}
                   dim={!group.machine.online}
                   label={group.machine.machineName}
@@ -167,6 +178,7 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
                     <React.Fragment key={projectKey}>
                       <TreeRow
                         level={1}
+                        icon="project"
                         open={projectOpen}
                         label={projectLabel}
                         trailing={String(project.sessions.length)}
@@ -230,11 +242,17 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
 }
 
 /**
- * One foldable tree row: the machine and project levels, which differ only in
- * their depth and their trailing text.
+ * One foldable tree row: the machine and project levels, which differ in their
+ * depth, their leading glyph, and their trailing text.
+ *
+ * A machine wears the globe its sidebar panel row uses — the two are the same
+ * thing seen from two places — while a directory keeps the folder the workspace
+ * browser gives it. Both still swap to the expand arrow on hover, because that
+ * arrow is the only affordance saying the row folds.
  */
 function TreeRow(props: {
   level: 0 | 1
+  icon: 'machine' | 'project'
   open: boolean
   dim?: boolean
   label: string
@@ -251,10 +269,10 @@ function TreeRow(props: {
       className={props.dim === true ? `${css.treeRow} ${css.treeRowDim}` : css.treeRow}
       onClick={props.onToggle}
     >
-      {/* Folder at rest, expand arrow on hover: the workspace browser's own
-          lead-in (ui-workspace Rows.module.css). */}
       <span className={`${css.treeSlot} ${css.treeFolder}`}>
-        {props.open ? <IconFolderOpen16 /> : <IconFolderClose16 />}
+        {props.icon === 'machine'
+          ? <IconGlobeOutline14 size={16} />
+          : (props.open ? <IconFolderOpen16 /> : <IconFolderClose16 />)}
       </span>
       <span className={`${css.treeSlot} ${css.treeChevron}`}>
         <IconTriangleRightFill14 className={props.open ? css.arrowOpen : undefined} />
