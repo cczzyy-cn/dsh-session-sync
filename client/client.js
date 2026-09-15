@@ -32,7 +32,7 @@ window.__ModuleLoader__.load({
 		let react_jsx_runtime = require("react/jsx-runtime");
 		let _deepseek_ai_dsh_client_store = require("@deepseek-ai/dsh-client-store");
 		//#region \0dsh-css:C:\Users\14339\Desktop\git\AI\dsh-session-sync\src\client\sync.module.css.mjs
-		const css = ".exFxyG_section{flex-direction:column;gap:14px;padding:4px 0 8px;display:flex}.exFxyG_lede{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xs-13);margin:0}.exFxyG_group{flex-direction:column;gap:10px;display:flex}.exFxyG_groupTitle{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-strong-13);margin:0}.exFxyG_card{border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);border-radius:10px;flex-direction:column;gap:10px;padding:12px 14px;display:flex}.exFxyG_field{flex-direction:column;gap:4px;display:flex}.exFxyG_fieldRow{justify-content:space-between;align-items:center;gap:12px;display:flex}.exFxyG_fieldText{flex-direction:column;gap:2px;min-width:0;display:flex}.exFxyG_label{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13)}.exFxyG_hint{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12)}.exFxyG_pair{grid-template-columns:minmax(0,1fr) 120px;gap:10px;display:grid}.exFxyG_actions{align-items:center;gap:8px;display:flex}.exFxyG_saved{color:var(--dsw-alias-state-success-primary);font:var(--dsw-font-xxs-12)}.exFxyG_dirty{color:var(--dsw-alias-state-warn-primary);font:var(--dsw-font-xxs-12)}.exFxyG_failed{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12)}.exFxyG_sessionList{flex-direction:column;max-height:280px;display:flex;overflow-y:auto}.exFxyG_sessionRow{justify-content:space-between;align-items:center;gap:12px;min-height:40px;padding:5px 2px;display:flex}.exFxyG_sessionRow+.exFxyG_sessionRow{border-top:.5px solid var(--dsw-alias-border-l1)}.exFxyG_sessionText{flex-direction:column;gap:2px;min-width:0;display:flex}.exFxyG_sessionTitle{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.exFxyG_sessionMeta{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);align-items:center;gap:6px;display:flex}.exFxyG_empty{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);padding:12px 2px}.exFxyG_status{flex-wrap:wrap;gap:6px 18px;display:flex}.exFxyG_statusItem{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12);align-items:center;gap:6px;display:flex}.exFxyG_statusValue{color:var(--dsw-alias-label-primary)}.exFxyG_statusBad{color:var(--dsw-alias-state-error-primary)}.exFxyG_statusGood{color:var(--dsw-alias-state-success-primary)}.exFxyG_console{height:100%;min-height:0;color:var(--dsw-alias-label-primary);display:flex}.exFxyG_machinePane{border-right:.5px solid var(--dsw-alias-border-l1);flex-direction:column;flex:none;width:220px;min-height:0;display:flex}.exFxyG_sessionPane{border-right:.5px solid var(--dsw-alias-border-l1);flex-direction:column;flex:none;width:300px;min-height:0;display:flex}.exFxyG_detailPane{flex-direction:column;flex:1;min-width:0;min-height:0;display:flex}.exFxyG_paneHead{border-bottom:.5px solid var(--dsw-alias-border-l1);flex-direction:column;flex:none;gap:6px;padding:10px 10px 8px;display:flex}.exFxyG_paneRow{align-items:center;gap:4px;min-width:0;display:flex}.exFxyG_paneTitle{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-strong-12);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.exFxyG_statusLine{color:var(--dsw-alias-label-caption);font:var(--dsw-font-xxxs-11);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.exFxyG_paneBody{flex-direction:column;flex:1;gap:2px;min-height:0;padding:6px;display:flex;overflow-y:auto}.exFxyG_filters{gap:4px;display:flex}.exFxyG_machineRow{box-sizing:border-box;width:100%;color:inherit;text-align:left;cursor:pointer;transition:background var(--ds-transition-duration-fast) var(--ds-ease-in-out);background:0 0;border:0;border-radius:8px;align-items:center;gap:8px;padding:6px 8px;display:flex}.exFxyG_machineRow:hover{background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_machineRowActive,.exFxyG_machineRowActive:hover{background:var(--dsw-alias-interactive-bg-active)}.exFxyG_machineRow:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.exFxyG_machineRowText{flex-direction:column;flex:1;gap:1px;min-width:0;display:flex}.exFxyG_machineRowName{font:var(--dsw-font-xs-strong-13);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.exFxyG_machineRowMeta{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.exFxyG_groupLabel{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);text-overflow:ellipsis;white-space:nowrap;padding:8px 8px 2px;overflow:hidden}.exFxyG_listRow{box-sizing:border-box;width:100%;color:inherit;text-align:left;cursor:pointer;transition:background var(--ds-transition-duration-fast) var(--ds-ease-in-out);background:0 0;border:0;border-radius:8px;flex-direction:column;gap:1px;padding:6px 8px;display:flex}.exFxyG_listRow:hover{background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_listRow:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.exFxyG_listRowTop{align-items:center;gap:6px;min-width:0;display:flex}.exFxyG_listRowTitle{font:var(--dsw-font-xs-13);text-overflow:ellipsis;white-space:nowrap;flex:1;overflow:hidden}.exFxyG_listRowTime{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);flex:none}.exFxyG_listRowMeta{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.exFxyG_detailHeader{border-bottom:.5px solid var(--dsw-alias-border-l1);flex:none;align-items:center;gap:8px;min-height:48px;padding:0 14px;display:flex}.exFxyG_detailTitle{font:var(--dsw-font-s-strong-14);text-overflow:ellipsis;white-space:nowrap;flex:1;margin:0;overflow:hidden}.exFxyG_detailBody{flex:1;min-height:0;padding:12px 14px 16px;overflow-y:auto}.exFxyG_narrowOnly{display:none}@media (width<=959px){.exFxyG_console{flex-direction:column}.exFxyG_machinePane,.exFxyG_sessionPane{border-right:0;width:auto}.exFxyG_console[data-step=machines] .exFxyG_sessionPane,.exFxyG_console[data-step=machines] .exFxyG_detailPane,.exFxyG_console[data-step=sessions] .exFxyG_machinePane,.exFxyG_console[data-step=sessions] .exFxyG_detailPane,.exFxyG_console[data-step=detail] .exFxyG_machinePane,.exFxyG_console[data-step=detail] .exFxyG_sessionPane{display:none}.exFxyG_narrowOnly{display:inline-flex}}.exFxyG_turn{flex-direction:column;gap:4px;margin-bottom:14px;display:flex}.exFxyG_turnLabel{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-strong-12)}.exFxyG_turnUser .exFxyG_bubble{background:var(--dsw-alias-bg-layer-2)}.exFxyG_bubble{background:var(--dsw-alias-bg-layer-1);font:var(--dsw-font-s-14);overflow-wrap:anywhere;white-space:pre-wrap;border-radius:10px;padding:8px 10px}.exFxyG_reasoningRow,.exFxyG_toolRow{border-bottom:.5px solid var(--dsw-alias-border-l1)}.exFxyG_toolRow{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12)}.exFxyG_toolName{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xxs-12)}.exFxyG_toolDetail{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);flex:none}.exFxyG_toolError .exFxyG_toolDetail{color:var(--dsw-alias-state-error-primary)}.exFxyG_toolBody{flex-direction:column;gap:4px;padding:4px 0 10px;display:flex}.exFxyG_toolSection{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-strong-11)}.exFxyG_toolCode{background:var(--dsw-alias-markdown-code-block);color:var(--dsw-alias-label-primary);font:var(--dsw-font-xxxs-11);font-family:var(--ds-font-family-code);white-space:pre;border-radius:8px;margin:0;padding:8px 10px;overflow-x:auto}.exFxyG_reasoning{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);white-space:pre-wrap}.exFxyG_inputWrap{box-sizing:border-box;width:100%}.exFxyG_composer{border-top:.5px solid var(--dsw-alias-border-l1);align-items:flex-end;gap:8px;padding:10px 14px 14px;display:flex}.exFxyG_composerField{flex-direction:column;flex:1;gap:4px;min-width:0;display:flex}.exFxyG_composerMeta{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);flex-wrap:wrap;align-items:center;gap:8px;display:flex}.exFxyG_composerTarget{flex:none}.exFxyG_composerDelivery{color:var(--dsw-alias-label-secondary)}.exFxyG_composerOffline{color:var(--dsw-alias-state-warn-label)}.exFxyG_composerInput{box-sizing:border-box;border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);min-height:36px;max-height:160px;color:var(--dsw-alias-label-primary);font:var(--dsw-font-s-14);resize:none;border-radius:10px;flex:1;padding:8px 10px}.exFxyG_composerInput::placeholder{color:var(--dsw-alias-placeholder)}.exFxyG_composerInput:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.exFxyG_error{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12);margin-bottom:10px}.exFxyG_sectionRoot{min-height:0;max-height:min(45vh,320px);padding-right:var(--dsh-sidebar-inline-padding);flex-direction:column;flex:0 auto;display:flex;overflow:hidden}.exFxyG_wsRow{box-sizing:border-box;height:32px;color:var(--dsw-alias-label-primary);cursor:pointer;user-select:none;border-radius:8px;flex:none;align-items:center;gap:6px;padding:0 8px;display:flex}.exFxyG_wsRow:hover{background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_wsRow:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.exFxyG_wsSlot{width:16px;height:20px;color:var(--dsw-alias-label-tertiary);flex:none;justify-content:center;align-items:center;display:inline-flex}.exFxyG_wsArrowOpen{transform:rotate(90deg)}.exFxyG_wsRow .exFxyG_wsChevron{display:none}.exFxyG_wsRow:hover .exFxyG_wsChevron,.exFxyG_wsRow:focus-visible .exFxyG_wsChevron{display:inline-flex}.exFxyG_wsRow:hover .exFxyG_wsFolder,.exFxyG_wsRow:focus-visible .exFxyG_wsFolder{display:none}.exFxyG_wsText{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.exFxyG_wsTitle{min-width:0;font:var(--dsw-font-s-14);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.exFxyG_wsActions{opacity:0;transition:opacity var(--ds-transition-duration-fast) var(--ds-ease-in-out);flex:none;align-items:center;gap:2px;display:inline-flex}.exFxyG_wsRow:hover .exFxyG_wsActions,.exFxyG_wsRow:focus-within .exFxyG_wsActions{opacity:1}.exFxyG_wsIconButton{corner-shape:round;width:24px;height:24px;color:var(--dsw-alias-label-secondary);cursor:pointer;background:0 0;border:0;border-radius:50%;flex:none;justify-content:center;align-items:center;padding:0;display:inline-flex}.exFxyG_wsIconButton:hover{background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_wsIconButton:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.exFxyG_wsList{min-height:0;margin-right:calc(-1 * var(--dsh-sidebar-inline-padding));padding-bottom:6px;padding-right:var(--dsh-sidebar-inline-padding);flex-direction:column;flex:0 auto;display:flex;overflow-y:auto}.exFxyG_wsSummary{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);text-overflow:ellipsis;white-space:nowrap;padding:6px 8px 2px 30px;overflow:hidden}.exFxyG_wsMachine{align-items:center;gap:6px;min-width:0;padding:8px 8px 2px 24px;display:flex}.exFxyG_wsMachineName{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-strong-11);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.exFxyG_wsMore{box-sizing:border-box;width:100%;height:32px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);text-align:left;cursor:pointer;transition:background var(--ds-transition-duration-fast) var(--ds-ease-in-out);background:0 0;border:0;border-radius:8px;flex:none;padding:0 8px 0 24px;display:block}.exFxyG_wsMore:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary)}.exFxyG_wsMore:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.exFxyG_wsSession{box-sizing:border-box;height:32px;color:var(--dsw-alias-label-primary);text-align:left;cursor:pointer;background:0 0;border:0;border-radius:8px;flex:none;align-items:center;gap:0;padding:0 8px 0 24px;display:flex}.exFxyG_wsSession:hover{background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_wsSession:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.exFxyG_wsSessionTitle{min-width:0;font:var(--dsw-font-s-14);text-overflow:ellipsis;white-space:nowrap;flex:1;margin:0 6px 0 4px;overflow:hidden}.exFxyG_wsSessionTime{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);flex:none}.exFxyG_sectionEmpty{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);margin:0;padding:2px 8px 8px 24px}@media (prefers-reduced-motion:reduce){.exFxyG_listRow,.exFxyG_machineRow,.exFxyG_wsMore,.exFxyG_wsActions,.exFxyG_wsArrowOpen{transition:none}}";
+		const css = ".exFxyG_section{flex-direction:column;gap:14px;padding:4px 0 8px;display:flex}.exFxyG_lede{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xs-13);margin:0}.exFxyG_group{flex-direction:column;gap:10px;display:flex}.exFxyG_groupTitle{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-strong-13);margin:0}.exFxyG_card{border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);border-radius:10px;flex-direction:column;gap:10px;padding:12px 14px;display:flex}.exFxyG_field{flex-direction:column;gap:4px;display:flex}.exFxyG_fieldRow{justify-content:space-between;align-items:center;gap:12px;display:flex}.exFxyG_fieldText{flex-direction:column;gap:2px;min-width:0;display:flex}.exFxyG_label{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13)}.exFxyG_hint{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12)}.exFxyG_pair{grid-template-columns:minmax(0,1fr) 120px;gap:10px;display:grid}.exFxyG_actions{align-items:center;gap:8px;display:flex}.exFxyG_saved{color:var(--dsw-alias-state-success-primary);font:var(--dsw-font-xxs-12)}.exFxyG_dirty{color:var(--dsw-alias-state-warn-primary);font:var(--dsw-font-xxs-12)}.exFxyG_failed{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12)}.exFxyG_sessionList{flex-direction:column;max-height:280px;display:flex;overflow-y:auto}.exFxyG_sessionRow{justify-content:space-between;align-items:center;gap:12px;min-height:40px;padding:5px 2px;display:flex}.exFxyG_sessionRow+.exFxyG_sessionRow{border-top:.5px solid var(--dsw-alias-border-l1)}.exFxyG_sessionText{flex-direction:column;gap:2px;min-width:0;display:flex}.exFxyG_sessionTitle{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.exFxyG_sessionMeta{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);align-items:center;gap:6px;display:flex}.exFxyG_empty{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);padding:12px 2px}.exFxyG_status{flex-wrap:wrap;gap:6px 18px;display:flex}.exFxyG_statusItem{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12);align-items:center;gap:6px;display:flex}.exFxyG_statusValue{color:var(--dsw-alias-label-primary)}.exFxyG_statusBad{color:var(--dsw-alias-state-error-primary)}.exFxyG_statusGood{color:var(--dsw-alias-state-success-primary)}.exFxyG_panel{height:100%;min-height:0;color:var(--dsw-alias-label-primary);display:flex}.exFxyG_listPane{background:var(--dsw-specific-sidebar-fill);border-right:.5px solid var(--dsw-alias-border-l3);flex-direction:column;flex:none;width:280px;min-height:0;display:flex}.exFxyG_listHead{flex-direction:column;flex:none;gap:6px;padding:10px 10px 8px;display:flex}.exFxyG_listStatus{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.exFxyG_list{flex-direction:column;flex:1;min-height:0;margin-right:2px;padding:0 6px 8px;display:flex;overflow-y:auto}.exFxyG_treeRow,.exFxyG_treeSession{box-sizing:border-box;width:100%;color:var(--dsw-alias-label-primary);text-align:left;cursor:pointer;user-select:none;transition:background var(--ds-transition-duration-fast) var(--ds-ease-in-out);background:0 0;border:0;border-radius:8px;align-items:center;gap:6px;padding:0 8px;display:flex}.exFxyG_treeRow{height:34px}.exFxyG_treeSession{gap:0;height:32px}.exFxyG_treeRow:hover,.exFxyG_treeSession:hover,.exFxyG_treeSessionSelected{background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_treeRow:focus-visible,.exFxyG_treeSession:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.exFxyG_panel [data-level=\"1\"]{padding-left:24px}.exFxyG_panel [data-level=\"2\"]{padding-left:40px}.exFxyG_treeSlot{width:16px;height:20px;color:var(--dsw-alias-label-tertiary);flex:none;justify-content:center;align-items:center;display:inline-flex}.exFxyG_treeChevron{color:var(--dsw-alias-label-caption);display:none}.exFxyG_treeRow:hover .exFxyG_treeFolder,.exFxyG_treeRow:focus-visible .exFxyG_treeFolder{display:none}.exFxyG_treeRow:hover .exFxyG_treeChevron,.exFxyG_treeRow:focus-visible .exFxyG_treeChevron{display:inline-flex}.exFxyG_arrowOpen{transform:rotate(90deg)}.exFxyG_treeChevron svg{transition:transform .15s var(--ds-ease-in-out)}.exFxyG_rowTitle{min-width:0;font:var(--dsw-font-s-14);text-overflow:ellipsis;white-space:nowrap;flex:1;overflow:hidden}.exFxyG_treeSession .exFxyG_rowTitle{margin:0 6px 0 4px}.exFxyG_rowTime{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);flex:none}.exFxyG_treeRowDim .exFxyG_rowTitle,.exFxyG_treeRowDim .exFxyG_rowTime{color:var(--dsw-alias-label-secondary)}.exFxyG_viewPane{background:var(--dsw-alias-bg-base);flex-direction:column;flex:1;min-width:0;min-height:0;display:flex}.exFxyG_viewHeader{border-bottom:.5px solid var(--dsw-alias-border-l3);flex:none;align-items:center;gap:8px;min-height:52px;padding:0 20px;display:flex}.exFxyG_viewTitle{min-width:0;font:var(--dsw-font-s-strong-14);text-overflow:ellipsis;white-space:nowrap;flex:0 auto;margin:0;overflow:hidden}.exFxyG_viewMachine{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);white-space:nowrap;flex:none}.exFxyG_viewScroll{flex:1;min-height:0;margin-right:2px;padding:16px 32px;overflow-y:auto}.exFxyG_viewColumn{flex-direction:column;width:100%;max-width:min(920px,100%);margin:0 auto;display:flex}.exFxyG_viewColumn>*+*{margin-top:16px}.exFxyG_userRow{flex-direction:column;align-items:flex-end;display:flex}.exFxyG_bubble{background:var(--dsw-specific-bubble);max-width:min(82%,640px);color:var(--dsw-alias-label-primary);font:var(--dsw-font-s-14);white-space:pre-wrap;word-break:break-word;border-radius:22px;padding:10px 16px}.exFxyG_assistantRow{flex-direction:column;gap:6px;min-width:0;display:flex}.exFxyG_reasoning{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);white-space:pre-wrap}.exFxyG_thinkRow{border-bottom:.5px solid var(--dsw-alias-border-l2)}.exFxyG_thinkTitle{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xs-13)}.exFxyG_toolName{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13);font-weight:400}.exFxyG_toolSep{background:var(--dsw-alias-label-caption);border-radius:1px;flex:none;width:2px;height:2px;margin:0 8px}.exFxyG_toolSummary{min-width:0;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);text-overflow:ellipsis;white-space:nowrap;flex:auto;overflow:hidden}.exFxyG_ioCard{border:.5px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-markdown-code-block);font:var(--dsw-font-markdown-code-block-small);border-radius:12px;flex-direction:column;margin:4px 0 4px 4px;display:flex}.exFxyG_ioSection{grid-template-columns:max-content 1fr;align-items:baseline;column-gap:14px;max-height:150px;padding:12px 16px;display:grid;overflow-y:auto}.exFxyG_ioLabel{color:var(--dsw-alias-label-caption);align-self:start;position:sticky;top:0}.exFxyG_ioDivider{background:var(--dsw-alias-border-l2);flex:none;height:.5px}.exFxyG_ioText{min-width:0;color:var(--dsw-alias-label-secondary);white-space:pre-wrap;word-break:break-word}.exFxyG_ioTextError{color:var(--dsw-alias-state-error-primary)}.exFxyG_composerRoot{flex-direction:column;flex:none;align-items:center;padding:0 16px 8px;display:flex}.exFxyG_composerCard{box-sizing:border-box;--dsw-elevation-stroke-color:var(--dsw-alias-border-l2);background:var(--dsw-specific-input-major);width:100%;max-width:calc(min(920px,100%) + 32px);box-shadow:var(--dsw-elevation-soft);font:var(--dsw-font-s-14);border:0;border-radius:22px;flex-direction:column;gap:12px;padding-top:8px;display:flex}.exFxyG_composerText{box-sizing:border-box;width:100%;min-height:44px;max-height:200px;color:var(--dsw-alias-label-primary);font:inherit;resize:none;background:0 0;border:0;margin:0;padding:8px 16px 0}.exFxyG_composerText::placeholder{color:var(--dsw-alias-placeholder)}.exFxyG_composerText:focus-visible{outline:none}.exFxyG_composerBar{align-items:center;gap:8px;padding:0 10px 10px 16px;display:flex}.exFxyG_composerTarget{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);flex:none}.exFxyG_composerDelivery{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11)}.exFxyG_composerOffline{color:var(--dsw-alias-state-warn-label);font:var(--dsw-font-xxxs-11)}.exFxyG_composerSpacer{flex:1}.exFxyG_sendButton{corner-shape:round;background:var(--dsw-alias-button-info-fill);color:#fff;cursor:pointer;width:34px;height:34px;transition:background-color var(--ds-transition-duration-fast) var(--ds-ease-in-out);border:0;border-radius:999px;flex:none;place-items:center;display:grid}.exFxyG_sendButton:hover:not(:disabled){background:var(--dsw-alias-button-info-hover)}.exFxyG_sendButton:disabled{opacity:.4;cursor:default}.exFxyG_sendButton:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.exFxyG_error{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12);margin-bottom:10px}.exFxyG_narrowOnly{display:none}@media (width<=719px){.exFxyG_listPane{border-right:0;width:100%}.exFxyG_panel[data-open=true] .exFxyG_listPane,.exFxyG_panel[data-open=false] .exFxyG_viewPane{display:none}.exFxyG_narrowOnly{display:inline-flex}}@media (prefers-reduced-motion:reduce){.exFxyG_treeRow,.exFxyG_treeSession,.exFxyG_treeChevron svg,.exFxyG_sendButton{transition:none}}";
 		const tagId = "dsh-session-sync/sync.module.css";
 		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagId) + "]") === null) {
 			const tag = document.createElement("style");
@@ -43,20 +43,18 @@ window.__ModuleLoader__.load({
 		}
 		var sync_module_css_default = {
 			"actions": "exFxyG_actions",
+			"arrowOpen": "exFxyG_arrowOpen",
+			"assistantRow": "exFxyG_assistantRow",
 			"bubble": "exFxyG_bubble",
 			"card": "exFxyG_card",
-			"composer": "exFxyG_composer",
+			"composerBar": "exFxyG_composerBar",
+			"composerCard": "exFxyG_composerCard",
 			"composerDelivery": "exFxyG_composerDelivery",
-			"composerField": "exFxyG_composerField",
-			"composerInput": "exFxyG_composerInput",
-			"composerMeta": "exFxyG_composerMeta",
 			"composerOffline": "exFxyG_composerOffline",
+			"composerRoot": "exFxyG_composerRoot",
+			"composerSpacer": "exFxyG_composerSpacer",
 			"composerTarget": "exFxyG_composerTarget",
-			"console": "exFxyG_console",
-			"detailBody": "exFxyG_detailBody",
-			"detailHeader": "exFxyG_detailHeader",
-			"detailPane": "exFxyG_detailPane",
-			"detailTitle": "exFxyG_detailTitle",
+			"composerText": "exFxyG_composerText",
 			"dirty": "exFxyG_dirty",
 			"empty": "exFxyG_empty",
 			"error": "exFxyG_error",
@@ -64,40 +62,32 @@ window.__ModuleLoader__.load({
 			"field": "exFxyG_field",
 			"fieldRow": "exFxyG_fieldRow",
 			"fieldText": "exFxyG_fieldText",
-			"filters": "exFxyG_filters",
 			"group": "exFxyG_group",
-			"groupLabel": "exFxyG_groupLabel",
 			"groupTitle": "exFxyG_groupTitle",
 			"hint": "exFxyG_hint",
-			"inputWrap": "exFxyG_inputWrap",
+			"ioCard": "exFxyG_ioCard",
+			"ioDivider": "exFxyG_ioDivider",
+			"ioLabel": "exFxyG_ioLabel",
+			"ioSection": "exFxyG_ioSection",
+			"ioText": "exFxyG_ioText",
+			"ioTextError": "exFxyG_ioTextError",
 			"label": "exFxyG_label",
 			"lede": "exFxyG_lede",
-			"listRow": "exFxyG_listRow",
-			"listRowMeta": "exFxyG_listRowMeta",
-			"listRowTime": "exFxyG_listRowTime",
-			"listRowTitle": "exFxyG_listRowTitle",
-			"listRowTop": "exFxyG_listRowTop",
-			"machinePane": "exFxyG_machinePane",
-			"machineRow": "exFxyG_machineRow",
-			"machineRowActive": "exFxyG_machineRowActive",
-			"machineRowMeta": "exFxyG_machineRowMeta",
-			"machineRowName": "exFxyG_machineRowName",
-			"machineRowText": "exFxyG_machineRowText",
+			"list": "exFxyG_list",
+			"listHead": "exFxyG_listHead",
+			"listPane": "exFxyG_listPane",
+			"listStatus": "exFxyG_listStatus",
 			"narrowOnly": "exFxyG_narrowOnly",
 			"pair": "exFxyG_pair",
-			"paneBody": "exFxyG_paneBody",
-			"paneHead": "exFxyG_paneHead",
-			"paneRow": "exFxyG_paneRow",
-			"paneTitle": "exFxyG_paneTitle",
+			"panel": "exFxyG_panel",
 			"reasoning": "exFxyG_reasoning",
-			"reasoningRow": "exFxyG_reasoningRow",
+			"rowTime": "exFxyG_rowTime",
+			"rowTitle": "exFxyG_rowTitle",
 			"saved": "exFxyG_saved",
 			"section": "exFxyG_section",
-			"sectionEmpty": "exFxyG_sectionEmpty",
-			"sectionRoot": "exFxyG_sectionRoot",
+			"sendButton": "exFxyG_sendButton",
 			"sessionList": "exFxyG_sessionList",
 			"sessionMeta": "exFxyG_sessionMeta",
-			"sessionPane": "exFxyG_sessionPane",
 			"sessionRow": "exFxyG_sessionRow",
 			"sessionText": "exFxyG_sessionText",
 			"sessionTitle": "exFxyG_sessionTitle",
@@ -105,35 +95,26 @@ window.__ModuleLoader__.load({
 			"statusBad": "exFxyG_statusBad",
 			"statusGood": "exFxyG_statusGood",
 			"statusItem": "exFxyG_statusItem",
-			"statusLine": "exFxyG_statusLine",
 			"statusValue": "exFxyG_statusValue",
-			"toolBody": "exFxyG_toolBody",
-			"toolCode": "exFxyG_toolCode",
-			"toolDetail": "exFxyG_toolDetail",
-			"toolError": "exFxyG_toolError",
+			"thinkRow": "exFxyG_thinkRow",
+			"thinkTitle": "exFxyG_thinkTitle",
 			"toolName": "exFxyG_toolName",
-			"toolRow": "exFxyG_toolRow",
-			"toolSection": "exFxyG_toolSection",
-			"turn": "exFxyG_turn",
-			"turnLabel": "exFxyG_turnLabel",
-			"turnUser": "exFxyG_turnUser",
-			"wsActions": "exFxyG_wsActions",
-			"wsArrowOpen": "exFxyG_wsArrowOpen",
-			"wsChevron": "exFxyG_wsChevron",
-			"wsFolder": "exFxyG_wsFolder",
-			"wsIconButton": "exFxyG_wsIconButton",
-			"wsList": "exFxyG_wsList",
-			"wsMachine": "exFxyG_wsMachine",
-			"wsMachineName": "exFxyG_wsMachineName",
-			"wsMore": "exFxyG_wsMore",
-			"wsRow": "exFxyG_wsRow",
-			"wsSession": "exFxyG_wsSession",
-			"wsSessionTime": "exFxyG_wsSessionTime",
-			"wsSessionTitle": "exFxyG_wsSessionTitle",
-			"wsSlot": "exFxyG_wsSlot",
-			"wsSummary": "exFxyG_wsSummary",
-			"wsText": "exFxyG_wsText",
-			"wsTitle": "exFxyG_wsTitle"
+			"toolSep": "exFxyG_toolSep",
+			"toolSummary": "exFxyG_toolSummary",
+			"treeChevron": "exFxyG_treeChevron",
+			"treeFolder": "exFxyG_treeFolder",
+			"treeRow": "exFxyG_treeRow",
+			"treeRowDim": "exFxyG_treeRowDim",
+			"treeSession": "exFxyG_treeSession",
+			"treeSessionSelected": "exFxyG_treeSessionSelected",
+			"treeSlot": "exFxyG_treeSlot",
+			"userRow": "exFxyG_userRow",
+			"viewColumn": "exFxyG_viewColumn",
+			"viewHeader": "exFxyG_viewHeader",
+			"viewMachine": "exFxyG_viewMachine",
+			"viewPane": "exFxyG_viewPane",
+			"viewScroll": "exFxyG_viewScroll",
+			"viewTitle": "exFxyG_viewTitle"
 		};
 		//#endregion
 		//#region src/client/ConfigSection.tsx
@@ -728,16 +709,20 @@ window.__ModuleLoader__.load({
 		/**
 		* The centre panel: the server's console over every machine that publishes here.
 		*
-		* Three panes, because the job has three steps: pick a machine, pick one of its
-		* Sessions, then read it and take it over. On a wide column all three are
-		* visible at once, so the list never has to be re-navigated to see what a
-		* Session is doing; below 960px the same DOM becomes a drill-down, and the two
-		* back buttons that only exist in that mode are hidden by CSS rather than by a
-		* measured width.
+		* Two panes and a three-level tree. The list groups by machine, then by the
+		* directory a Session runs in, then lists the Sessions themselves 鈥?the shape
+		* the sidebar's workspace browser uses, so a remote Session reads the way a
+		* local one does. The talk column beside it is the conversation the DSH client
+		* already shows, wearing that UI's own clothes: a centered content column, a
+		* right-aligned user bubble, markdown answers, folded tool rows, and an elevated
+		* composer card with a circular send button.
+		*
+		* There is no machine pane: the machine is the tree's first level, so picking one
+		* is the same act as opening the list.
 		*
 		* Registered into the `main` slot under the same key as this plugin's sidebar
-		* row, so the frame's panel selector and the sidebar entry resolve to the same
-		* place without either knowing about the other.
+		* panel row, so the frame's panel selector and the sidebar entry resolve to the
+		* same place without either knowing about the other.
 		*/
 		/**
 		* Render the sync panel.
@@ -747,193 +732,178 @@ window.__ModuleLoader__.load({
 		function SyncPanel(props) {
 			const state = props.useSync((snapshot) => snapshot);
 			const { t } = props;
-			const [selected, setSelected] = react.useState(void 0);
 			const [query, setQuery] = react.useState("");
-			const [runningOnly, setRunningOnly] = react.useState(false);
+			const [collapsed, setCollapsed] = react.useState({});
 			const machines = state.state.machines;
 			const open = state.open;
-			const openMachine = open?.machineName;
-			react.useEffect(() => {
-				if (openMachine !== void 0) setSelected(openMachine);
-			}, [openMachine]);
-			const active = selected ?? openMachine ?? machines[0]?.machineName;
-			const machine = machines.find((candidate) => candidate.machineName === active);
-			const sessions = react.useMemo(() => filterSessions(machine, query, runningOnly), [
-				machine,
-				query,
-				runningOnly
-			]);
-			const groups = react.useMemo(() => groupByCwd(sessions), [sessions]);
-			const step = open !== void 0 ? "detail" : selected !== void 0 ? "sessions" : "machines";
-			const session = (open === void 0 ? void 0 : machine?.sessions.find((candidate) => candidate.sessionId === open.sessionId) ?? machines.find((candidate) => candidate.machineName === open.machineName)?.sessions.find((candidate) => candidate.sessionId === open.sessionId)) ?? (open === void 0 ? void 0 : {
+			const groups = react.useMemo(() => buildTree(machines, query), [machines, query]);
+			const searching = query.trim() !== "";
+			const isOpen = (key) => searching ? true : collapsed[key] !== true;
+			const toggle = (key) => {
+				setCollapsed((current) => ({
+					...current,
+					[key]: current[key] !== true
+				}));
+			};
+			const session = (open === void 0 ? void 0 : machines.find((candidate) => candidate.machineName === open.machineName)?.sessions.find((candidate) => candidate.sessionId === open.sessionId)) ?? (open === void 0 ? void 0 : {
 				sessionId: open.sessionId,
 				title: open.sessionId,
 				updatedAt: Date.now(),
 				running: false,
 				eventCount: 0
 			});
+			const online = open === void 0 ? false : machines.find((candidate) => candidate.machineName === open.machineName)?.online ?? false;
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-				className: sync_module_css_default.console,
-				"data-step": step,
-				children: [
-					/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("aside", {
-						className: sync_module_css_default.machinePane,
-						"aria-label": t("machinesTitle"),
-						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-							className: sync_module_css_default.paneHead,
-							children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-								className: sync_module_css_default.paneTitle,
-								children: t("machinesTitle")
-							}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-								className: sync_module_css_default.statusLine,
-								children: roleLine(state, t)
-							})]
-						}), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-							className: sync_module_css_default.paneBody,
-							children: [
-								!state.ready && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
-									className: sync_module_css_default.empty,
-									children: t("sessionsLoading")
-								}),
-								state.ready && state.state.role !== "server" && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
-									className: sync_module_css_default.empty,
-									children: t("panelEmptyClient")
-								}),
-								state.ready && state.state.role === "server" && machines.length === 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
-									className: sync_module_css_default.empty,
-									children: t("panelEmptyServer")
-								}),
-								machines.map((candidate) => /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("button", {
-									type: "button",
-									className: candidate.machineName === active ? `${sync_module_css_default.machineRow} ${sync_module_css_default.machineRowActive}` : sync_module_css_default.machineRow,
-									"aria-current": candidate.machineName === active ? "true" : void 0,
-									onClick: () => {
-										setSelected(candidate.machineName);
-									},
-									children: [
-										/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.StateDot, { state: candidate.online ? "done" : "idle" }),
-										/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
-											className: sync_module_css_default.machineRowText,
-											children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-												className: sync_module_css_default.machineRowName,
-												children: candidate.machineName
-											}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-												className: sync_module_css_default.machineRowMeta,
-												children: machineMeta(candidate, t)
-											})]
-										}),
-										/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Tag, {
-											tone: "quiet",
-											children: String(candidate.sessions.length)
-										})
-									]
-								}, candidate.machineName))
-							]
+				className: sync_module_css_default.panel,
+				"data-open": open === void 0 ? "false" : "true",
+				children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("aside", {
+					className: sync_module_css_default.listPane,
+					"aria-label": t("sessionsTitle"),
+					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+						className: sync_module_css_default.listHead,
+						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Input, {
+							icon: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconSearchOutline16, {}),
+							className: sync_module_css_default.inputWrap,
+							value: query,
+							placeholder: t("searchSessions"),
+							"aria-label": t("searchSessions"),
+							onChange: (event) => {
+								setQuery(event.target.value);
+							}
+						}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+							className: sync_module_css_default.listStatus,
+							children: roleLine(state, t)
 						})]
-					}),
-					/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("section", {
-						className: sync_module_css_default.sessionPane,
-						"aria-label": t("sessionsTitle"),
-						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-							className: sync_module_css_default.paneHead,
-							children: [
-								/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
-									className: sync_module_css_default.paneRow,
-									children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
-										variant: "ghost",
-										size: "sm",
-										className: sync_module_css_default.narrowOnly,
-										icon: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconChevronLeftOutline14, {}),
-										"aria-label": t("back"),
-										onClick: () => {
-											setSelected(void 0);
+					}), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+						className: sync_module_css_default.list,
+						role: "tree",
+						children: [
+							!state.ready && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+								className: sync_module_css_default.empty,
+								children: t("sessionsLoading")
+							}),
+							state.ready && state.state.role !== "server" && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+								className: sync_module_css_default.empty,
+								children: t("panelEmptyClient")
+							}),
+							state.ready && state.state.role === "server" && machines.length === 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+								className: sync_module_css_default.empty,
+								children: t("panelEmptyServer")
+							}),
+							state.ready && machines.length > 0 && groups.length === 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+								className: sync_module_css_default.empty,
+								children: t("searchEmpty")
+							}),
+							groups.map((group) => {
+								const machineKey = group.machine.machineName;
+								const machineOpen = isOpen(machineKey);
+								return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react.Fragment, { children: [
+									/* @__PURE__ */ (0, react_jsx_runtime.jsx)(TreeRow, {
+										level: 0,
+										open: machineOpen,
+										dim: !group.machine.online,
+										label: group.machine.machineName,
+										trailing: machineTrailing(group.machine, t),
+										onToggle: () => {
+											toggle(machineKey);
 										}
-									}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-										className: sync_module_css_default.paneTitle,
-										children: machine?.machineName ?? t("sessionsTitle")
-									})]
-								}),
-								/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Input, {
-									icon: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconSearchOutline16, {}),
-									className: sync_module_css_default.inputWrap,
-									value: query,
-									placeholder: t("searchSessions"),
-									"aria-label": t("searchSessions"),
-									onChange: (event) => {
-										setQuery(event.target.value);
-									}
-								}),
-								/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
-									className: sync_module_css_default.filters,
-									children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Pill, {
-										active: !runningOnly,
-										onClick: () => {
-											setRunningOnly(false);
-										},
-										children: t("filterAll")
-									}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Pill, {
-										active: runningOnly,
-										onClick: () => {
-											setRunningOnly(true);
-										},
-										children: t("filterRunning")
-									})]
-								})
-							]
-						}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
-							className: sync_module_css_default.paneBody,
-							children: machine === void 0 ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
-								className: sync_module_css_default.empty,
-								children: t("selectMachine")
-							}) : sessions.length === 0 ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
-								className: sync_module_css_default.empty,
-								children: query.trim() === "" && !runningOnly ? t("machineNoSessions") : t("searchEmpty")
-							}) : groups.map((group) => /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react.Fragment, { children: [groups.length > 1 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
-								className: sync_module_css_default.groupLabel,
-								title: group.cwd,
-								children: group.cwd === "" ? t("noCwd") : group.cwd
-							}), group.sessions.map((session) => /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("button", {
-								type: "button",
-								className: sync_module_css_default.listRow,
-								"aria-label": `${t("openSession")}: ${session.title}`,
-								onClick: () => {
-									props.openSession(machine.machineName, session.sessionId);
-								},
-								children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
-									className: sync_module_css_default.listRowTop,
-									children: [
-										session.running && /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.StateDot, { state: "ongoing" }),
-										/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-											className: sync_module_css_default.listRowTitle,
-											children: session.title
-										}),
-										/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-											className: sync_module_css_default.listRowTime,
-											children: session.running ? t("sessionRunning") : timeLabel$1(session.updatedAt, t)
-										})
-									]
-								}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-									className: sync_module_css_default.listRowMeta,
-									children: sessionMeta(session, t)
-								})]
-							}, session.sessionId))] }, group.cwd === "" ? "·" : group.cwd))
-						})]
+									}),
+									machineOpen && group.machine.sessions.length === 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+										className: sync_module_css_default.empty,
+										children: t("machineNoSessions")
+									}),
+									machineOpen && group.projects.map((project) => {
+										const projectKey = `${machineKey}\u0000${project.cwd}`;
+										const projectOpen = isOpen(projectKey);
+										const projectLabel = project.cwd === "" ? t("noCwd") : project.cwd;
+										return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react.Fragment, { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(TreeRow, {
+											level: 1,
+											open: projectOpen,
+											label: projectLabel,
+											trailing: String(project.sessions.length),
+											onToggle: () => {
+												toggle(projectKey);
+											}
+										}), projectOpen && project.sessions.map((candidate) => {
+											const selected = open?.sessionId === candidate.sessionId;
+											return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("button", {
+												type: "button",
+												role: "treeitem",
+												"aria-selected": selected,
+												"data-level": 2,
+												className: selected ? `${sync_module_css_default.treeSession} ${sync_module_css_default.treeSessionSelected}` : sync_module_css_default.treeSession,
+												"aria-label": `${t("openSession")}: ${candidate.title}`,
+												onClick: () => {
+													props.openSession(group.machine.machineName, candidate.sessionId);
+												},
+												children: [
+													/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+														className: sync_module_css_default.treeSlot,
+														children: candidate.running && /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.StateDot, { state: "ongoing" })
+													}),
+													/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+														className: sync_module_css_default.rowTitle,
+														children: candidate.title
+													}),
+													/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+														className: sync_module_css_default.rowTime,
+														children: candidate.running ? t("sessionRunning") : timeLabel(candidate.updatedAt, t)
+													})
+												]
+											}, candidate.sessionId);
+										})] }, projectKey);
+									})
+								] }, machineKey);
+							})
+						]
+					})]
+				}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("section", {
+					className: sync_module_css_default.viewPane,
+					"aria-label": t("panelTitle"),
+					children: open === void 0 || session === void 0 ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+						className: sync_module_css_default.empty,
+						children: t("selectSession")
+					}) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)(Conversation, {
+						t,
+						state,
+						session,
+						machineName: open.machineName,
+						online,
+						closeSession: props.closeSession,
+						sendPrompt: props.sendPrompt
+					})
+				})]
+			});
+		}
+		/**
+		* One foldable tree row: the machine and project levels, which differ only in
+		* their depth and their trailing text.
+		*/
+		function TreeRow(props) {
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("button", {
+				type: "button",
+				role: "treeitem",
+				"aria-expanded": props.open,
+				"aria-label": props.label,
+				"data-level": props.level,
+				className: props.dim === true ? `${sync_module_css_default.treeRow} ${sync_module_css_default.treeRowDim}` : sync_module_css_default.treeRow,
+				onClick: props.onToggle,
+				children: [
+					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+						className: `${sync_module_css_default.treeSlot} ${sync_module_css_default.treeFolder}`,
+						children: props.open ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconFolderOpen16, {}) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconFolderClose16, {})
 					}),
-					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("section", {
-						className: sync_module_css_default.detailPane,
-						"aria-label": t("panelTitle"),
-						children: open === void 0 || session === void 0 ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
-							className: sync_module_css_default.empty,
-							children: t("selectSession")
-						}) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)(Conversation, {
-							t,
-							state,
-							session,
-							machineName: open.machineName,
-							online: machines.find((candidate) => candidate.machineName === open.machineName)?.online ?? false,
-							closeSession: props.closeSession,
-							sendPrompt: props.sendPrompt
-						})
+					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+						className: `${sync_module_css_default.treeSlot} ${sync_module_css_default.treeChevron}`,
+						children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconTriangleRightFill14, { className: props.open ? sync_module_css_default.arrowOpen : void 0 })
+					}),
+					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+						className: sync_module_css_default.rowTitle,
+						children: props.label
+					}),
+					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+						className: sync_module_css_default.rowTime,
+						children: props.trailing
 					})
 				]
 			});
@@ -951,7 +921,7 @@ window.__ModuleLoader__.load({
 			const [sending, setSending] = react.useState(false);
 			const body = react.useRef(null);
 			const rows = react.useMemo(() => toRows(state.transcript?.events ?? []), [state.transcript]);
-			const markdownLabels = react.useMemo(() => ({
+			const labels = react.useMemo(() => ({
 				code: {
 					copyLabel: t("copyCode"),
 					copiedLabel: t("copiedCode")
@@ -974,8 +944,8 @@ window.__ModuleLoader__.load({
 			};
 			const delivery = state.delivery;
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [
-				/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-					className: sync_module_css_default.detailHeader,
+				/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("header", {
+					className: sync_module_css_default.viewHeader,
 					children: [
 						/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
 							variant: "ghost",
@@ -986,50 +956,53 @@ window.__ModuleLoader__.load({
 							onClick: props.closeSession
 						}),
 						/* @__PURE__ */ (0, react_jsx_runtime.jsx)("h2", {
-							className: sync_module_css_default.detailTitle,
+							className: sync_module_css_default.viewTitle,
 							children: session.title
 						}),
-						/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Tag, {
-							tone: "neutral",
+						/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+							className: sync_module_css_default.viewMachine,
 							children: props.machineName
 						}),
 						session.running && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.StateDot, { state: "ongoing" }), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-							className: sync_module_css_default.machineMeta,
+							className: sync_module_css_default.viewMachine,
 							children: t("sessionRunning")
 						})] })
 					]
 				}),
-				/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-					className: sync_module_css_default.detailBody,
+				/* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+					className: sync_module_css_default.viewScroll,
 					ref: body,
-					children: [state.error !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
-						className: sync_module_css_default.error,
-						children: state.error
-					}), state.transcript === void 0 && !state.loadingTranscript ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
-						className: sync_module_css_default.empty,
-						children: t("transcriptGone")
-					}) : state.loadingTranscript ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
-						className: sync_module_css_default.empty,
-						children: t("transcriptLoading")
-					}) : rows.length === 0 ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
-						className: sync_module_css_default.empty,
-						children: t("transcriptEmpty")
-					}) : rows.map((row) => /* @__PURE__ */ (0, react_jsx_runtime.jsx)(Row, {
-						t,
-						row,
-						labels: markdownLabels
-					}, row.key))]
+					children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+						className: sync_module_css_default.viewColumn,
+						children: [state.error !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+							className: sync_module_css_default.error,
+							children: state.error
+						}), state.transcript === void 0 && !state.loadingTranscript ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+							className: sync_module_css_default.empty,
+							children: t("transcriptGone")
+						}) : state.loadingTranscript ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+							className: sync_module_css_default.empty,
+							children: t("transcriptLoading")
+						}) : rows.length === 0 ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+							className: sync_module_css_default.empty,
+							children: t("transcriptEmpty")
+						}) : rows.map((row) => /* @__PURE__ */ (0, react_jsx_runtime.jsx)(TranscriptLine, {
+							t,
+							row,
+							labels
+						}, row.key))]
+					})
 				}),
-				/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("form", {
-					className: sync_module_css_default.composer,
-					onSubmit: (event) => {
-						event.preventDefault();
-						send();
-					},
-					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-						className: sync_module_css_default.composerField,
+				/* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+					className: sync_module_css_default.composerRoot,
+					children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("form", {
+						className: sync_module_css_default.composerCard,
+						onSubmit: (event) => {
+							event.preventDefault();
+							send();
+						},
 						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("textarea", {
-							className: sync_module_css_default.composerInput,
+							className: sync_module_css_default.composerText,
 							value: draft,
 							rows: 2,
 							placeholder: t("composerPlaceholder"),
@@ -1043,7 +1016,7 @@ window.__ModuleLoader__.load({
 								send();
 							}
 						}), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-							className: sync_module_css_default.composerMeta,
+							className: sync_module_css_default.composerBar,
 							children: [
 								/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
 									className: sync_module_css_default.composerTarget,
@@ -1060,49 +1033,41 @@ window.__ModuleLoader__.load({
 								!props.online && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 									className: sync_module_css_default.composerOffline,
 									children: t("offlineQueueHint")
+								}),
+								/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { className: sync_module_css_default.composerSpacer }),
+								/* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
+									type: "submit",
+									className: sync_module_css_default.sendButton,
+									disabled: sending || draft.trim() === "",
+									"aria-label": sending ? t("sending") : t("send"),
+									children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconRightUpOutline16, {})
 								})
 							]
 						})]
-					}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
-						variant: "primary",
-						size: "sm",
-						type: "submit",
-						disabled: sending || draft.trim() === "",
-						children: sending ? t("sending") : t("send")
-					})]
+					})
 				})
 			] });
 		}
-		/** One transcript row. */
-		function Row({ t, row, labels }) {
-			if (row.kind === "user") return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-				className: `${sync_module_css_default.turn} ${sync_module_css_default.turnUser}`,
-				children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-					className: sync_module_css_default.turnLabel,
-					children: t("you")
-				}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+		/** One transcript row, in the shapes the DSH conversation uses. */
+		function TranscriptLine({ t, row, labels }) {
+			if (row.kind === "user") return /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+				className: sync_module_css_default.userRow,
+				children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
 					className: sync_module_css_default.bubble,
 					children: row.text
-				})]
+				})
 			});
 			if (row.kind === "assistant") return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-				className: sync_module_css_default.turn,
-				children: [
-					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-						className: sync_module_css_default.turnLabel,
-						children: t("assistant")
-					}),
-					row.reasoning !== "" && /* @__PURE__ */ (0, react_jsx_runtime.jsx)(ReasoningRow, {
-						t,
-						reasoning: row.reasoning
-					}),
-					row.text !== "" && /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.MarkdownText, {
-						text: row.text,
-						labels
-					})
-				]
+				className: sync_module_css_default.assistantRow,
+				children: [row.reasoning !== "" && /* @__PURE__ */ (0, react_jsx_runtime.jsx)(ReasoningRow, {
+					t,
+					reasoning: row.reasoning
+				}), row.text !== "" && /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.MarkdownText, {
+					text: row.text,
+					labels
+				})]
 			});
-			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(ToolRowRow, {
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(ToolCallRow, {
 				t,
 				row
 			});
@@ -1119,75 +1084,73 @@ window.__ModuleLoader__.load({
 				onToggle: () => {
 					setOpen((current) => !current);
 				},
-				className: sync_module_css_default.reasoningRow,
-				titleClassName: sync_module_css_default.turnLabel,
+				className: sync_module_css_default.thinkRow,
+				titleClassName: sync_module_css_default.thinkTitle,
 				children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
 					className: sync_module_css_default.reasoning,
 					children: reasoning
 				})
 			});
 		}
-		/** One tool call and its result, folded into a single row. */
-		function ToolRowRow({ t, row }) {
+		/** One tool call and its result, folded into a single row with an IN/OUT card. */
+		function ToolCallRow({ t, row }) {
 			const [open, setOpen] = react.useState(false);
 			const label = row.name === "" ? t("toolResult") : row.name;
-			const status = row.pending ? t("sessionRunning") : row.isError ? t("deliveryFailed") : timeLabel$1(row.time, t);
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.DisclosureRow, {
 				icon: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.StateDot, { state: row.pending ? "ongoing" : row.isError ? "error" : "done" }),
-				title: row.summary === "" ? label : `${label} · ${row.summary}`,
+				title: label,
 				open,
 				expandable: true,
 				expandOnRowClick: true,
 				onToggle: () => {
 					setOpen((current) => !current);
 				},
-				className: row.isError ? `${sync_module_css_default.toolRow} ${sync_module_css_default.toolError}` : sync_module_css_default.toolRow,
+				className: sync_module_css_default.toolRow,
 				titleClassName: sync_module_css_default.toolName,
-				collapsedContent: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-					className: sync_module_css_default.toolDetail,
-					children: status
-				}),
+				collapsedContent: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { className: sync_module_css_default.toolSep }), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+					className: sync_module_css_default.toolSummary,
+					children: row.summary !== "" ? row.summary : timeLabel(row.time, t)
+				})] }),
 				children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-					className: sync_module_css_default.toolBody,
-					children: [
-						row.argumentsText !== "" && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-							className: sync_module_css_default.toolSection,
+					className: sync_module_css_default.ioCard,
+					children: [row.argumentsText !== "" && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+						className: sync_module_css_default.ioSection,
+						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+							className: sync_module_css_default.ioLabel,
 							children: t("toolArguments")
-						}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("pre", {
-							className: sync_module_css_default.toolCode,
+						}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+							className: sync_module_css_default.ioText,
 							children: row.argumentsText
-						})] }),
-						/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-							className: sync_module_css_default.toolSection,
+						})]
+					}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", { className: sync_module_css_default.ioDivider })] }), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+						className: sync_module_css_default.ioSection,
+						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+							className: sync_module_css_default.ioLabel,
 							children: t("toolResult")
-						}),
-						row.resultText === "" ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
-							className: sync_module_css_default.reasoning,
+						}), row.resultText === "" ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+							className: sync_module_css_default.ioText,
 							children: row.pending ? t("toolRunning") : t("toolNoOutput")
-						}) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)("pre", {
-							className: sync_module_css_default.toolCode,
+						}) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+							className: row.isError ? `${sync_module_css_default.ioText} ${sync_module_css_default.ioTextError}` : sync_module_css_default.ioText,
 							children: row.resultText
-						})
-					]
+						})]
+					})]
 				})
 			});
 		}
-		/** The role and link line above the machine list. */
+		/** The role and link line under the list's search box. */
 		function roleLine(state, t) {
 			const role = state.state.role === "server" ? t("roleServer") : t("roleClient");
-			if (state.state.role === "server") return `${role} · ${state.state.listening ? t("statusListening") : t("statusNotListening")}`;
-			if (state.state.serverUrl.trim() === "") return `${role} · ${t("statusNotConfigured")}`;
-			return `${role} · ${state.state.linked ? t("statusLinked") : t("statusUnlinked")}`;
+			if (state.state.role === "server") return `${role} 路 ${state.state.listening ? t("statusListening") : t("statusNotListening")}`;
+			if (state.state.serverUrl.trim() === "") return `${role} 路 ${t("statusNotConfigured")}`;
+			return `${role} 路 ${state.state.linked ? t("statusLinked") : t("statusUnlinked")}`;
 		}
-		/** One machine's activity line. */
-		function machineMeta(machine, t) {
-			const online = machine.online ? t("machineOnline") : t("machineOffline");
-			if (machine.online) return online;
-			return `${online} · ${t("lastSeen")} ${timeLabel$1(machine.lastSeen, t)}`;
-		}
-		/** One Session's second line inside the middle pane. */
-		function sessionMeta(session, t) {
-			return `${session.cwd ?? session.sessionId} · ${String(session.eventCount)} ${t("eventsCount")}`;
+		/** What a machine row says on its trailing cell. */
+		function machineTrailing(machine, t) {
+			if (!machine.online) return `${t("machineOffline")} 路 ${timeLabel(machine.lastSeen, t)}`;
+			const running = machine.sessions.filter((session) => session.running).length;
+			if (running > 0) return `${String(running)} ${t("sessionsRunning")}`;
+			return `${String(machine.sessions.length)} ${t("machineSessions")}`;
 		}
 		/** The delivery state of the last prompt, as the composer renders it. */
 		function deliveryLine(delivery, t) {
@@ -1198,233 +1161,41 @@ window.__ModuleLoader__.load({
 			return delivery.error === void 0 ? t("deliveryFailed") : `${t("deliveryFailed")}: ${delivery.error}`;
 		}
 		/**
-		* The machine's Sessions, filtered and running-first.
-		* @param machine - the selected machine, when one is.
+		* Group the mirror into machines, their directories, and their Sessions.
+		* @param machines - every machine the server mirrors, newest activity first.
 		* @param query - the current search text.
-		* @param runningOnly - whether the running filter is on.
-		* @returns the Sessions to list, in render order.
+		* @returns the tree to render; machines and directories with no match are gone.
 		*/
-		function filterSessions(machine, query, runningOnly) {
+		function buildTree(machines, query) {
 			const needle = query.trim().toLowerCase();
-			return (machine?.sessions ?? []).filter((session) => {
-				if (runningOnly && !session.running) return false;
-				if (needle === "") return true;
-				return session.title.toLowerCase().includes(needle) || (session.cwd ?? "").toLowerCase().includes(needle) || session.sessionId.toLowerCase().includes(needle);
-			}).sort((left, right) => Number(right.running) - Number(left.running) || right.updatedAt - left.updatedAt);
-		}
-		/**
-		* Group Sessions by the directory they run in, preserving the incoming order.
-		* @param sessions - already-filtered Sessions.
-		* @returns one group per directory, in first-appearance order.
-		*/
-		function groupByCwd(sessions) {
-			const groups = /* @__PURE__ */ new Map();
-			for (const session of sessions) {
-				const key = session.cwd ?? "";
-				const existing = groups.get(key);
-				if (existing === void 0) groups.set(key, [session]);
-				else existing.push(session);
+			const groups = [];
+			for (const machine of machines) {
+				const sessions = machine.sessions.filter((session) => needle === "" || matches(session, needle)).sort((left, right) => Number(right.running) - Number(left.running) || right.updatedAt - left.updatedAt);
+				if (needle !== "" && sessions.length === 0) continue;
+				const directories = /* @__PURE__ */ new Map();
+				for (const session of sessions) {
+					const key = session.cwd ?? "";
+					const bucket = directories.get(key);
+					if (bucket === void 0) directories.set(key, [session]);
+					else bucket.push(session);
+				}
+				groups.push({
+					machine,
+					projects: [...directories].map(([cwd, members]) => ({
+						cwd,
+						sessions: members
+					}))
+				});
 			}
-			return [...groups].map(([cwd, members]) => ({
-				cwd,
-				sessions: members
-			}));
+			return groups;
+		}
+		/** Whether one Session matches the search text. */
+		function matches(session, needle) {
+			return session.title.toLowerCase().includes(needle) || (session.cwd ?? "").toLowerCase().includes(needle) || session.sessionId.toLowerCase().includes(needle);
 		}
 		/**
 		* One relative-time label, from the shared bucketing and this plugin's words.
 		* @param at - epoch ms of the moment being described.
-		* @param t - the localized copy lookup.
-		* @returns the trailing label for one row.
-		*/
-		function timeLabel$1(at, t) {
-			const { unit, n } = (0, _deepseek_ai_dsh_client_ui_primitives.relativeTime)(at, Date.now());
-			if (unit === "now") return t("timeNow");
-			if (unit === "minutes") return `${String(n)} ${t("timeMinutes")}`;
-			if (unit === "hours") return `${String(n)} ${t("timeHours")}`;
-			if (unit === "days") return `${String(n)} ${t("timeDays")}`;
-			if (unit === "months") return `${String(n)} ${t("timeMonths")}`;
-			return `${String(n)} ${t("timeYears")}`;
-		}
-		//#endregion
-		//#region src/client/SyncSection.tsx
-		/**
-		* The sidebar's own sync section, wearing the workspace browser's clothes.
-		*
-		* It is a section of the browsing region rather than a global panel row, and it
-		* is rendered to look like one more workspace directory: the same
-		* folder-plus-chevron lead-in, the same 32px row with a hover fill, and the
-		* same indented Session rows carrying a trailing time.
-		*
-		* What it holds is a **glance**, not the console. The column's lower half cannot
-		* show every Session of every machine without taking that height from the
-		* workspace browser above it, so this lists what a reader needs to decide
-		* whether to go look — the machines that are here, what is running, and the few
-		* most recent Sessions — and hands everything else to the centre panel. The
-		* header row is the way in, in both directions.
-		*
-		* Clicking the row folds it, as a workspace row does; the hover action opens
-		* this plugin's centre panel, which carries the full three-pane console.
-		*/
-		/** How many Session rows the glance shows before deferring to the panel. */
-		const GLANCE_LIMIT = 3;
-		/**
-		* Render the sidebar sync section.
-		* @param props - copy, the column state, the snapshot hook, and the actions.
-		* @returns the section, or null in the collapsed rail where a grouped list has
-		*   no room — the rail reaches the panel through its own panel row instead.
-		*/
-		function SyncSection(props) {
-			const state = props.useSync((snapshot) => snapshot);
-			const { t, wide } = props;
-			const [open, setOpen] = react.useState(true);
-			if (!wide) return null;
-			const { role, machines } = state.state;
-			const glance = react.useMemo(() => pickGlance(machines), [machines]);
-			const toggle = () => {
-				setOpen((current) => !current);
-			};
-			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("section", {
-				className: sync_module_css_default.sectionRoot,
-				"aria-label": t("panelTitle"),
-				children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-					className: sync_module_css_default.wsRow,
-					role: "button",
-					tabIndex: 0,
-					"aria-expanded": open,
-					onClick: toggle,
-					onKeyDown: (event) => {
-						if (event.key !== "Enter" && event.key !== " ") return;
-						event.preventDefault();
-						toggle();
-					},
-					children: [
-						/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-							className: `${sync_module_css_default.wsSlot} ${sync_module_css_default.wsFolder}`,
-							children: open ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconFolderOpen16, {}) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconFolderClose16, {})
-						}),
-						/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-							className: `${sync_module_css_default.wsSlot} ${sync_module_css_default.wsChevron}`,
-							children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconTriangleRightFill14, { className: open ? sync_module_css_default.wsArrowOpen : void 0 })
-						}),
-						/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-							className: sync_module_css_default.wsText,
-							children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-								className: sync_module_css_default.wsTitle,
-								children: t("panelTitle")
-							})
-						}),
-						/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-							className: sync_module_css_default.wsActions,
-							children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
-								type: "button",
-								className: sync_module_css_default.wsIconButton,
-								"aria-label": t("openOverview"),
-								onClick: (event) => {
-									event.stopPropagation();
-									props.openOverview();
-								},
-								children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconShareOutline16, { size: 16 })
-							})
-						})
-					]
-				}), !open ? null : role !== "server" ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
-					className: sync_module_css_default.sectionEmpty,
-					children: t("sectionClientHint")
-				}) : machines.length === 0 ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
-					className: sync_module_css_default.sectionEmpty,
-					children: t("sectionEmptyServer")
-				}) : /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-					className: sync_module_css_default.wsList,
-					children: [
-						/* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
-							className: sync_module_css_default.wsSummary,
-							children: summaryLine(machines, t)
-						}),
-						glance.groups.map((group) => /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react.Fragment, { children: [machines.length > 1 && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-							className: sync_module_css_default.wsMachine,
-							children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.StateDot, { state: group.online ? "done" : "idle" }), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-								className: sync_module_css_default.wsMachineName,
-								children: group.machineName
-							})]
-						}), group.sessions.map((session) => /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("button", {
-							type: "button",
-							className: sync_module_css_default.wsSession,
-							"aria-label": `${t("openSession")}: ${session.title}`,
-							onClick: () => {
-								props.openSession(group.machineName, session.sessionId);
-							},
-							children: [
-								/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-									className: sync_module_css_default.wsSlot,
-									children: session.running && /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.StateDot, { state: "ongoing" })
-								}),
-								/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-									className: sync_module_css_default.wsSessionTitle,
-									children: session.title
-								}),
-								/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-									className: sync_module_css_default.wsSessionTime,
-									children: session.running ? t("sessionRunning") : timeLabel(session.updatedAt, t)
-								})
-							]
-						}, session.sessionId))] }, group.machineName)),
-						glance.groups.length === 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
-							className: sync_module_css_default.sectionEmpty,
-							children: t("machineNoSessions")
-						}),
-						glance.remainder > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
-							type: "button",
-							className: sync_module_css_default.wsMore,
-							onClick: props.openOverview,
-							children: `${t("viewAll")} (${String(glance.remainder)})`
-						})
-					]
-				})]
-			});
-		}
-		/**
-		* Choose what the glance shows: running Sessions first, then the most recent.
-		*
-		* Machines keep their own groups rather than being flattened into one list —
-		* the row does not carry the machine name, so a flat list across machines would
-		* be exactly the ambiguity this section exists to avoid. A machine whose slice
-		* is empty still counts toward the remainder, so "view all" never understates
-		* what the panel holds.
-		* @param machines - every machine the server mirrors, newest activity first.
-		* @returns the groups to render and how many Sessions were left for the panel.
-		*/
-		function pickGlance(machines) {
-			const groups = [];
-			let shown = 0;
-			let total = 0;
-			for (const machine of machines) {
-				const ordered = [...machine.sessions].sort((left, right) => Number(right.running) - Number(left.running) || right.updatedAt - left.updatedAt);
-				total += ordered.length;
-				if (shown >= GLANCE_LIMIT) continue;
-				const slice = ordered.slice(0, GLANCE_LIMIT - shown);
-				shown += slice.length;
-				if (slice.length > 0) groups.push({
-					machineName: machine.machineName,
-					online: machine.online,
-					sessions: slice
-				});
-			}
-			return {
-				groups,
-				remainder: Math.max(0, total - shown)
-			};
-		}
-		/** The one-line state of the fleet: how many machines and how many running. */
-		function summaryLine(machines, t) {
-			const online = machines.filter((machine) => machine.online).length;
-			const running = machines.reduce((total, machine) => total + machine.sessions.filter((session) => session.running).length, 0);
-			const fleet = `${String(online)}/${String(machines.length)} ${t("machinesOnline")}`;
-			if (running === 0) return fleet;
-			return `${fleet} · ${String(running)} ${t("sessionsRunning")}`;
-		}
-		/**
-		* One relative-time label, from the shared bucketing and this plugin's words.
-		* @param at - epoch ms of the Session's last activity.
 		* @param t - the localized copy lookup.
 		* @returns the trailing label for one row.
 		*/
@@ -1451,16 +1222,6 @@ window.__ModuleLoader__.load({
 		const ROUTE_PREFIX = "/dsh-session-sync";
 		/** Default listen port of the sync server. */
 		const DEFAULT_LISTEN_PORT = 8791;
-		/**
-		* How long a takeover command stays deliverable after the server accepted it.
-		*
-		* A prompt is a human act addressed at a Session that may have moved on: a
-		* command that sat in a queue while the owning machine was asleep must not be
-		* admitted hours later as if it had just been typed. Both ends enforce this —
-		* the server retires it and says so, and the origin refuses it even if the
-		* server's sweep has not run yet.
-		*/
-		const COMMAND_TTL_MS = 12e4;
 		/** Build the config a fresh install starts from. */
 		function defaultConfig(machineName) {
 			return {
@@ -1486,6 +1247,17 @@ window.__ModuleLoader__.load({
 		*/
 		/** How often the local Session list is re-read while the panel is mounted. */
 		const SESSION_POLL_MS = 15e3;
+		/**
+		* How many command states to remember for a command this browser has not been
+		* told about yet.
+		*
+		* A status frame and the POST response that mints the command's id travel by
+		* different roads, and the frame routinely wins: the server hands the command to
+		* the owning machine and narrates that immediately, while the response still has
+		* to come back. Dropping those frames left the composer on "submitted" for a
+		* command the machine had already accepted.
+		*/
+		const EARLY_COMMAND_LIMIT = 16;
 		/** The neutral state rendered before the Host has answered. */
 		function idleState() {
 			return {
@@ -1504,6 +1276,8 @@ window.__ModuleLoader__.load({
 			source;
 			poll;
 			started = false;
+			/** Status frames that arrived before this browser knew their command's id. */
+			earlyCommands = /* @__PURE__ */ new Map();
 			constructor() {
 				this.store = (0, _deepseek_ai_dsh_client_store.createSnapshotStore)({
 					ready: false,
@@ -1652,12 +1426,14 @@ window.__ModuleLoader__.load({
 						sessionId: open.sessionId,
 						text
 					});
+					const known = this.earlyCommands.get(result.commandId);
+					this.earlyCommands.delete(result.commandId);
 					this.update({
 						error: void 0,
-						delivery: {
+						delivery: known ?? {
 							commandId: result.commandId,
 							state: "queued",
-							expiresAt: Date.now() + COMMAND_TTL_MS
+							expiresAt: Date.now() + 12e4
 						}
 					});
 					return true;
@@ -1708,14 +1484,24 @@ window.__ModuleLoader__.load({
 					return;
 				}
 				if (frame.type === "command") {
-					const delivery = this.store.getSnapshot().delivery;
-					if (delivery === void 0 || delivery.commandId !== frame.command.commandId) return;
-					this.update({ delivery: {
-						commandId: delivery.commandId,
+					const delivery = {
+						commandId: frame.command.commandId,
 						state: frame.command.state,
 						expiresAt: frame.command.expiresAt,
 						...frame.command.error === void 0 ? {} : { error: frame.command.error }
-					} });
+					};
+					const current = this.store.getSnapshot().delivery;
+					if (current !== void 0 && current.commandId === frame.command.commandId) {
+						this.update({ delivery });
+						return;
+					}
+					this.earlyCommands.delete(frame.command.commandId);
+					this.earlyCommands.set(frame.command.commandId, delivery);
+					while (this.earlyCommands.size > EARLY_COMMAND_LIMIT) {
+						const oldest = this.earlyCommands.keys().next();
+						if (oldest.done === true) break;
+						this.earlyCommands.delete(oldest.value);
+					}
 					return;
 				}
 				this.update({ error: frame.message });
@@ -1800,7 +1586,6 @@ window.__ModuleLoader__.load({
 			sessionsEmpty: "本机还没有会话。",
 			sessionsLoading: "读取中…",
 			sessionRunning: "进行中",
-			sessionSynced: "已同步",
 			sessionSyncLabel: "同步该会话",
 			statusTitle: "状态",
 			roleServer: "服务器",
@@ -1812,9 +1597,6 @@ window.__ModuleLoader__.load({
 			statusUnlinked: "未连接",
 			publishedCount: "已同步会话数",
 			panelTitle: "服务器同步工作区",
-			sectionClientHint: "本机不是同步服务器。",
-			sectionEmptyServer: "还没有机器连接。",
-			openOverview: "打开同步面板",
 			timeNow: "刚刚",
 			timeMinutes: "分钟前",
 			timeHours: "小时前",
@@ -1823,32 +1605,20 @@ window.__ModuleLoader__.load({
 			timeYears: "年前",
 			panelEmptyServer: "还没有机器连接。请在另一台机器的「会话同步」设置里填入本机地址，并用相同的密码。",
 			panelEmptyClient: "本机不是同步服务器。在设置中开启「作为服务器」，或把本机会话同步到已配置的服务器。",
-			machineOnline: "在线",
 			machineOffline: "离线",
 			machineSessions: "个会话",
-			lastSeen: "最后活动",
 			openSession: "打开",
-			machinesTitle: "机器",
 			sessionsTitle: "会话",
-			machinesOnline: "台在线",
 			sessionsRunning: "个会话进行中",
-			viewAll: "查看全部",
 			searchSessions: "搜索会话",
-			filterAll: "全部",
-			filterRunning: "运行中",
 			searchEmpty: "没有匹配的会话。",
 			machineNoSessions: "这台机器还没有发布会话。",
-			selectMachine: "在左侧选择一台机器。",
-			selectSession: "从中间的列表打开一个会话，即可阅读并接管。",
+			selectSession: "从列表打开一个会话，即可阅读并接管。",
 			noCwd: "未记录目录",
-			eventsCount: "条事件",
 			back: "返回",
 			transcriptEmpty: "该会话在服务器侧还没有可显示的内容。",
 			transcriptLoading: "读取会话内容…",
 			transcriptGone: "该会话已停止同步，内容已从服务器移除。",
-			you: "用户",
-			assistant: "助手",
-			tool: "工具",
 			toolResult: "工具结果",
 			reasoning: "思考",
 			toolArguments: "参数",
@@ -1858,7 +1628,6 @@ window.__ModuleLoader__.load({
 			composerTarget: "发送到",
 			send: "发送",
 			sending: "发送中",
-			readOnly: "只读",
 			deliveryQueued: "已提交，等待投递",
 			deliveryDelivered: "已投递，等待对方确认",
 			deliveryAccepted: "对方已接收",
@@ -1894,7 +1663,6 @@ window.__ModuleLoader__.load({
 			sessionsEmpty: "This machine has no Sessions yet.",
 			sessionsLoading: "Loading…",
 			sessionRunning: "Running",
-			sessionSynced: "Published",
 			sessionSyncLabel: "Sync this Session",
 			statusTitle: "Status",
 			roleServer: "Server",
@@ -1906,9 +1674,6 @@ window.__ModuleLoader__.load({
 			statusUnlinked: "Not connected",
 			publishedCount: "Published Sessions",
 			panelTitle: "Server sync workspace",
-			sectionClientHint: "This machine is not the sync server.",
-			sectionEmptyServer: "No machine has connected yet.",
-			openOverview: "Open the sync panel",
 			timeNow: "now",
 			timeMinutes: "min ago",
 			timeHours: "h ago",
@@ -1917,32 +1682,20 @@ window.__ModuleLoader__.load({
 			timeYears: "y ago",
 			panelEmptyServer: "No machine has connected yet. On another machine open Session sync settings, enter this machine's address, and use the same password.",
 			panelEmptyClient: "This machine is not the sync server. Turn on \"Act as the server\" in settings, or point Session sync at a configured server.",
-			machineOnline: "Online",
 			machineOffline: "Offline",
 			machineSessions: "Sessions",
-			lastSeen: "Last seen",
 			openSession: "Open",
-			machinesTitle: "Machines",
 			sessionsTitle: "Sessions",
-			machinesOnline: "online",
 			sessionsRunning: "running",
-			viewAll: "View all",
 			searchSessions: "Search Sessions",
-			filterAll: "All",
-			filterRunning: "Running",
 			searchEmpty: "No Session matches.",
 			machineNoSessions: "This machine has published no Sessions.",
-			selectMachine: "Choose a machine on the left.",
 			selectSession: "Open a Session from the list to read it and take it over.",
 			noCwd: "No directory recorded",
-			eventsCount: "events",
 			back: "Back",
 			transcriptEmpty: "This Session has nothing to show on the server yet.",
 			transcriptLoading: "Loading Session…",
 			transcriptGone: "This Session stopped syncing and was removed from the server.",
-			you: "User",
-			assistant: "Assistant",
-			tool: "Tool",
 			toolResult: "Tool result",
 			reasoning: "Reasoning",
 			toolArguments: "Arguments",
@@ -1952,7 +1705,6 @@ window.__ModuleLoader__.load({
 			composerTarget: "Send to",
 			send: "Send",
 			sending: "Sending",
-			readOnly: "Read only",
 			deliveryQueued: "Submitted, waiting to be delivered",
 			deliveryDelivered: "Delivered, waiting for the machine",
 			deliveryAccepted: "Accepted by the machine",
@@ -1966,22 +1718,17 @@ window.__ModuleLoader__.load({
 		//#endregion
 		//#region src/client/index.ts
 		const name = "dsh-session-sync";
-		/** Services this half requires: slots, dictionaries, and panel selection. */
-		const inject = [
-			"slots",
-			"locale",
-			"layout"
-		];
+		/** Services this half requires: slot registration and dictionaries. */
+		const inject = ["slots", "locale"];
 		/**
-		* One id for this plugin's centre panel and for the section's overview
-		* gesture.
+		* One id for this plugin's centre panel and for its sidebar panel row.
 		*
 		* `ctx.layout.selectPanel(id)` validates the id against the registered `main`
 		* keys, so the panel key and this constant are one contract.
 		*/
 		const PANEL_ID = "session-sync";
 		/**
-		* Mount the settings page, the sidebar section, and the centre panel.
+		* Mount the settings page, the sidebar panel row, and the console.
 		* @param ctx - the browser plugin context.
 		*/
 		function apply(ctx) {
@@ -2015,20 +1762,6 @@ window.__ModuleLoader__.load({
 				order: 40,
 				label: () => t("panelTitle")
 			}, PanelIcon));
-			ctx.slots.inject("sidebar.region.section", () => ctx.slots.register({
-				name: "sidebar.region.section",
-				locale: NS,
-				inject: () => ({
-					hooks: { sync: client.snapshot },
-					openSession: (machineName, sessionId) => {
-						ctx.layout.selectPanel(PANEL_ID);
-						return client.openSession(machineName, sessionId);
-					},
-					openOverview: () => {
-						ctx.layout.selectPanel(PANEL_ID);
-					}
-				})
-			}, SyncSection));
 			ctx.slots.inject("main", () => ctx.slots.register({
 				name: "main",
 				key: PANEL_ID,

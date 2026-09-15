@@ -2,10 +2,8 @@
 # clone on any platform matches what was committed.
 * text=auto eol=lf
 
-# Committed build output and the extension patch must stay byte-identical to
-# what the build and `git diff` produced: the patch has to apply with
-# `git apply`, and the bundles are the artifacts the client module registry
-# serves. CRLF conversion would break both.
+# Committed build output must stay byte-identical to what the build produced:
+# the bundles are the artifacts the client module registry serves, and CRLF
+# conversion would break them.
 lib/** -text
 client/** -text
-patches/** -text

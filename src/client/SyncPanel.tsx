@@ -1,16 +1,20 @@
 /**
  * The centre panel: the server's console over every machine that publishes here.
  *
- * Three panes, because the job has three steps: pick a machine, pick one of its
- * Sessions, then read it and take it over. On a wide column all three are
- * visible at once, so the list never has to be re-navigated to see what a
- * Session is doing; below 960px the same DOM becomes a drill-down, and the two
- * back buttons that only exist in that mode are hidden by CSS rather than by a
- * measured width.
+ * Two panes and a three-level tree. The list groups by machine, then by the
+ * directory a Session runs in, then lists the Sessions themselves 鈥?the shape
+ * the sidebar's workspace browser uses, so a remote Session reads the way a
+ * local one does. The talk column beside it is the conversation the DSH client
+ * already shows, wearing that UI's own clothes: a centered content column, a
+ * right-aligned user bubble, markdown answers, folded tool rows, and an elevated
+ * composer card with a circular send button.
+ *
+ * There is no machine pane: the machine is the tree's first level, so picking one
+ * is the same act as opening the list.
  *
  * Registered into the `main` slot under the same key as this plugin's sidebar
- * row, so the frame's panel selector and the sidebar entry resolve to the same
- * place without either knowing about the other.
+ * panel row, so the frame's panel selector and the sidebar entry resolve to the
+ * same place without either knowing about the other.
  */
 import * as React from 'react'
 import {
@@ -18,12 +22,14 @@ import {
   DisclosureRow,
   Input,
   MarkdownText,
-  Pill,
   StateDot,
-  Tag,
   IconChevronLeftOutline14,
+  IconFolderClose16,
+  IconFolderOpen16,
+  IconRightUpOutline16,
   IconSearchOutline16,
   IconThinkOutline14,
+  IconTriangleRightFill14,
   relativeTime,
   type MarkdownLabels,
 } from '@deepseek-ai/dsh-client-ui-primitives'
@@ -47,10 +53,16 @@ export interface SyncPanelProps {
   sendPrompt: (text: string) => Promise<boolean>
 }
 
-/** One machine's Sessions, grouped by the directory they run in. */
-interface SessionGroup {
+/** One directory's Sessions, inside one machine. */
+interface ProjectGroup {
   cwd: string
   sessions: MirroredSession[]
+}
+
+/** One machine and its directories. */
+interface MachineGroup {
+  machine: MirroredMachine
+  projects: ProjectGroup[]
 }
 
 /**
@@ -61,36 +73,28 @@ interface SessionGroup {
 export function SyncPanel(props: SyncPanelProps): React.ReactElement {
   const state = props.useSync(snapshot => snapshot)
   const { t } = props
-  const [selected, setSelected] = React.useState<string | undefined>(undefined)
   const [query, setQuery] = React.useState('')
-  const [runningOnly, setRunningOnly] = React.useState(false)
+  const [collapsed, setCollapsed] = React.useState<Record<string, boolean>>({})
 
   const machines = state.state.machines
   const open = state.open
-  // Opening a Session from the sidebar arrives with no machine selection, so the
-  // panes follow the Session rather than showing an unrelated machine's list.
-  const openMachine = open?.machineName
-  React.useEffect(() => {
-    if (openMachine !== undefined) setSelected(openMachine)
-  }, [openMachine])
-  const active = selected ?? openMachine ?? machines[0]?.machineName
-  const machine = machines.find(candidate => candidate.machineName === active)
-  const sessions = React.useMemo(
-    () => filterSessions(machine, query, runningOnly),
-    [machine, query, runningOnly],
-  )
-  const groups = React.useMemo(() => groupByCwd(sessions), [sessions])
-  const step = open !== undefined ? 'detail' : selected !== undefined ? 'sessions' : 'machines'
+  const groups = React.useMemo(() => buildTree(machines, query), [machines, query])
+  const searching = query.trim() !== ''
+  // A search is a question about the whole tree, so nothing stays folded while
+  // one is being asked: a match inside a collapsed machine would look like no
+  // match at all.
+  const isOpen = (key: string): boolean => (searching ? true : collapsed[key] !== true)
+  const toggle = (key: string): void => {
+    setCollapsed(current => ({ ...current, [key]: current[key] !== true }))
+  }
+
   const mirrored = open === undefined
     ? undefined
-    : (machine?.sessions.find(candidate => candidate.sessionId === open.sessionId)
-      ?? machines
-        .find(candidate => candidate.machineName === open.machineName)
-        ?.sessions.find(candidate => candidate.sessionId === open.sessionId))
+    : machines
+      .find(candidate => candidate.machineName === open.machineName)
+      ?.sessions.find(candidate => candidate.sessionId === open.sessionId)
   // A Session that was un-published while it was open has no mirror row left,
-  // but the panel is still showing it: the placeholder keeps the detail pane —
-  // and therefore its back button — reachable instead of stranding a narrow
-  // reader in a pane with no way out.
+  // but the panel is still showing it: the placeholder keeps the talk column 鈥?  // and therefore its back button on a narrow window 鈥?reachable.
   const session: MirroredSession | undefined = mirrored ?? (open === undefined ? undefined : {
     sessionId: open.sessionId,
     title: open.sessionId,
@@ -98,54 +102,14 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
     running: false,
     eventCount: 0,
   })
+  const online = open === undefined
+    ? false
+    : machines.find(candidate => candidate.machineName === open.machineName)?.online ?? false
 
   return (
-    <div className={css.console} data-step={step}>
-      <aside className={css.machinePane} aria-label={t('machinesTitle')}>
-        <div className={css.paneHead}>
-          <span className={css.paneTitle}>{t('machinesTitle')}</span>
-          <span className={css.statusLine}>{roleLine(state, t)}</span>
-        </div>
-        <div className={css.paneBody}>
-          {!state.ready && <p className={css.empty}>{t('sessionsLoading')}</p>}
-          {state.ready && state.state.role !== 'server' && (
-            <p className={css.empty}>{t('panelEmptyClient')}</p>
-          )}
-          {state.ready && state.state.role === 'server' && machines.length === 0 && (
-            <p className={css.empty}>{t('panelEmptyServer')}</p>
-          )}
-          {machines.map(candidate => (
-            <button
-              key={candidate.machineName}
-              type="button"
-              className={candidate.machineName === active ? `${css.machineRow} ${css.machineRowActive}` : css.machineRow}
-              aria-current={candidate.machineName === active ? 'true' : undefined}
-              onClick={() => { setSelected(candidate.machineName) }}
-            >
-              <StateDot state={candidate.online ? 'done' : 'idle'} />
-              <span className={css.machineRowText}>
-                <span className={css.machineRowName}>{candidate.machineName}</span>
-                <span className={css.machineRowMeta}>{machineMeta(candidate, t)}</span>
-              </span>
-              <Tag tone="quiet">{String(candidate.sessions.length)}</Tag>
-            </button>
-          ))}
-        </div>
-      </aside>
-
-      <section className={css.sessionPane} aria-label={t('sessionsTitle')}>
-        <div className={css.paneHead}>
-          <span className={css.paneRow}>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={css.narrowOnly}
-              icon={<IconChevronLeftOutline14 />}
-              aria-label={t('back')}
-              onClick={() => { setSelected(undefined) }}
-            />
-            <span className={css.paneTitle}>{machine?.machineName ?? t('sessionsTitle')}</span>
-          </span>
+    <div className={css.panel} data-open={open === undefined ? 'false' : 'true'}>
+      <aside className={css.listPane} aria-label={t('sessionsTitle')}>
+        <div className={css.listHead}>
           <Input
             icon={<IconSearchOutline16 />}
             className={css.inputWrap}
@@ -154,45 +118,87 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
             aria-label={t('searchSessions')}
             onChange={(event) => { setQuery(event.target.value) }}
           />
-          <span className={css.filters}>
-            <Pill active={!runningOnly} onClick={() => { setRunningOnly(false) }}>{t('filterAll')}</Pill>
-            <Pill active={runningOnly} onClick={() => { setRunningOnly(true) }}>{t('filterRunning')}</Pill>
-          </span>
+          <span className={css.listStatus}>{roleLine(state, t)}</span>
         </div>
-        <div className={css.paneBody}>
-          {machine === undefined
-            ? <p className={css.empty}>{t('selectMachine')}</p>
-            : sessions.length === 0
-              ? <p className={css.empty}>{query.trim() === '' && !runningOnly ? t('machineNoSessions') : t('searchEmpty')}</p>
-              : groups.map(group => (
-                <React.Fragment key={group.cwd === '' ? '·' : group.cwd}>
-                  {groups.length > 1 && (
-                    <div className={css.groupLabel} title={group.cwd}>{group.cwd === '' ? t('noCwd') : group.cwd}</div>
-                  )}
-                  {group.sessions.map(session => (
-                    <button
-                      key={session.sessionId}
-                      type="button"
-                      className={css.listRow}
-                      aria-label={`${t('openSession')}: ${session.title}`}
-                      onClick={() => { void props.openSession(machine.machineName, session.sessionId) }}
-                    >
-                      <span className={css.listRowTop}>
-                        {session.running && <StateDot state="ongoing" />}
-                        <span className={css.listRowTitle}>{session.title}</span>
-                        <span className={css.listRowTime}>
-                          {session.running ? t('sessionRunning') : timeLabel(session.updatedAt, t)}
-                        </span>
-                      </span>
-                      <span className={css.listRowMeta}>{sessionMeta(session, t)}</span>
-                    </button>
-                  ))}
-                </React.Fragment>
-              ))}
+        <div className={css.list} role="tree">
+          {!state.ready && <p className={css.empty}>{t('sessionsLoading')}</p>}
+          {state.ready && state.state.role !== 'server' && (
+            <p className={css.empty}>{t('panelEmptyClient')}</p>
+          )}
+          {state.ready && state.state.role === 'server' && machines.length === 0 && (
+            <p className={css.empty}>{t('panelEmptyServer')}</p>
+          )}
+          {state.ready && machines.length > 0 && groups.length === 0 && (
+            <p className={css.empty}>{t('searchEmpty')}</p>
+          )}
+          {groups.map(group => {
+            const machineKey = group.machine.machineName
+            const machineOpen = isOpen(machineKey)
+            return (
+              <React.Fragment key={machineKey}>
+                <TreeRow
+                  level={0}
+                  open={machineOpen}
+                  dim={!group.machine.online}
+                  label={group.machine.machineName}
+                  trailing={machineTrailing(group.machine, t)}
+                  onToggle={() => { toggle(machineKey) }}
+                />
+                {machineOpen && group.machine.sessions.length === 0 && (
+                  <p className={css.empty}>{t('machineNoSessions')}</p>
+                )}
+                {machineOpen && group.projects.map(project => {
+                  const projectKey = `${machineKey}\u0000${project.cwd}`
+                  const projectOpen = isOpen(projectKey)
+                  const projectLabel = project.cwd === '' ? t('noCwd') : project.cwd
+                  return (
+                    <React.Fragment key={projectKey}>
+                      <TreeRow
+                        level={1}
+                        open={projectOpen}
+                        label={projectLabel}
+                        trailing={String(project.sessions.length)}
+                        onToggle={() => { toggle(projectKey) }}
+                      />
+                      {projectOpen && project.sessions.map(candidate => {
+                        const selected = open?.sessionId === candidate.sessionId
+                        return (
+                          <button
+                            key={candidate.sessionId}
+                            type="button"
+                            role="treeitem"
+                            aria-selected={selected}
+                            data-level={2}
+                            className={selected
+                              ? `${css.treeSession} ${css.treeSessionSelected}`
+                              : css.treeSession}
+                            aria-label={`${t('openSession')}: ${candidate.title}`}
+                            onClick={() => {
+                              void props.openSession(group.machine.machineName, candidate.sessionId)
+                            }}
+                          >
+                            <span className={css.treeSlot}>
+                              {candidate.running && <StateDot state="ongoing" />}
+                            </span>
+                            <span className={css.rowTitle}>{candidate.title}</span>
+                            <span className={css.rowTime}>
+                              {candidate.running
+                                ? t('sessionRunning')
+                                : timeLabel(candidate.updatedAt, t)}
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </React.Fragment>
+                  )
+                })}
+              </React.Fragment>
+            )
+          })}
         </div>
-      </section>
+      </aside>
 
-      <section className={css.detailPane} aria-label={t('panelTitle')}>
+      <section className={css.viewPane} aria-label={t('panelTitle')}>
         {open === undefined || session === undefined
           ? <p className={css.empty}>{t('selectSession')}</p>
           : (
@@ -201,13 +207,49 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
               state={state}
               session={session}
               machineName={open.machineName}
-              online={machines.find(candidate => candidate.machineName === open.machineName)?.online ?? false}
+              online={online}
               closeSession={props.closeSession}
               sendPrompt={props.sendPrompt}
             />
           )}
       </section>
     </div>
+  )
+}
+
+/**
+ * One foldable tree row: the machine and project levels, which differ only in
+ * their depth and their trailing text.
+ */
+function TreeRow(props: {
+  level: 0 | 1
+  open: boolean
+  dim?: boolean
+  label: string
+  trailing: string
+  onToggle: () => void
+}): React.ReactElement {
+  return (
+    <button
+      type="button"
+      role="treeitem"
+      aria-expanded={props.open}
+      aria-label={props.label}
+      data-level={props.level}
+      className={props.dim === true ? `${css.treeRow} ${css.treeRowDim}` : css.treeRow}
+      onClick={props.onToggle}
+    >
+      {/* Folder at rest, expand arrow on hover: the workspace browser's own
+          lead-in (ui-workspace Rows.module.css). */}
+      <span className={`${css.treeSlot} ${css.treeFolder}`}>
+        {props.open ? <IconFolderOpen16 /> : <IconFolderClose16 />}
+      </span>
+      <span className={`${css.treeSlot} ${css.treeChevron}`}>
+        <IconTriangleRightFill14 className={props.open ? css.arrowOpen : undefined} />
+      </span>
+      <span className={css.rowTitle}>{props.label}</span>
+      <span className={css.rowTime}>{props.trailing}</span>
+    </button>
   )
 }
 
@@ -237,7 +279,7 @@ function Conversation(props: {
   )
   // MarkdownText caches a streaming render against the labels object's identity,
   // so a fresh object on every render would discard that cache each time.
-  const markdownLabels = React.useMemo(
+  const labels = React.useMemo(
     () => ({
       code: { copyLabel: t('copyCode'), copiedLabel: t('copiedCode') },
       footnotes: t('footnotes'),
@@ -266,7 +308,7 @@ function Conversation(props: {
   const delivery = state.delivery
   return (
     <>
-      <div className={css.detailHeader}>
+      <header className={css.viewHeader}>
         <Button
           variant="ghost"
           size="sm"
@@ -275,32 +317,34 @@ function Conversation(props: {
           aria-label={t('back')}
           onClick={props.closeSession}
         />
-        <h2 className={css.detailTitle}>{session.title}</h2>
-        <Tag tone="neutral">{props.machineName}</Tag>
+        <h2 className={css.viewTitle}>{session.title}</h2>
+        <span className={css.viewMachine}>{props.machineName}</span>
         {session.running && (
           <>
             <StateDot state="ongoing" />
-            <span className={css.machineMeta}>{t('sessionRunning')}</span>
+            <span className={css.viewMachine}>{t('sessionRunning')}</span>
           </>
         )}
+      </header>
+      <div className={css.viewScroll} ref={body}>
+        <div className={css.viewColumn}>
+          {state.error !== undefined && <div className={css.error}>{state.error}</div>}
+          {state.transcript === undefined && !state.loadingTranscript
+            ? <p className={css.empty}>{t('transcriptGone')}</p>
+            : state.loadingTranscript
+              ? <p className={css.empty}>{t('transcriptLoading')}</p>
+              : rows.length === 0
+                ? <p className={css.empty}>{t('transcriptEmpty')}</p>
+                : rows.map(row => <TranscriptLine key={row.key} t={t} row={row} labels={labels} />)}
+        </div>
       </div>
-      <div className={css.detailBody} ref={body}>
-        {state.error !== undefined && <div className={css.error}>{state.error}</div>}
-        {state.transcript === undefined && !state.loadingTranscript
-          ? <p className={css.empty}>{t('transcriptGone')}</p>
-          : state.loadingTranscript
-            ? <p className={css.empty}>{t('transcriptLoading')}</p>
-            : rows.length === 0
-              ? <p className={css.empty}>{t('transcriptEmpty')}</p>
-              : rows.map(row => <Row key={row.key} t={t} row={row} labels={markdownLabels} />)}
-      </div>
-      <form
-        className={css.composer}
-        onSubmit={(event) => { event.preventDefault(); send() }}
-      >
-        <div className={css.composerField}>
+      <div className={css.composerRoot}>
+        <form
+          className={css.composerCard}
+          onSubmit={(event) => { event.preventDefault(); send() }}
+        >
           <textarea
-            className={css.composerInput}
+            className={css.composerText}
             value={draft}
             rows={2}
             placeholder={t('composerPlaceholder')}
@@ -312,7 +356,7 @@ function Conversation(props: {
               send()
             }}
           />
-          <div className={css.composerMeta}>
+          <div className={css.composerBar}>
             <span className={css.composerTarget}>
               {t('composerTarget')}
               {' '}
@@ -322,45 +366,44 @@ function Conversation(props: {
               <span className={css.composerDelivery}>{deliveryLine(delivery, t)}</span>
             )}
             {!props.online && <span className={css.composerOffline}>{t('offlineQueueHint')}</span>}
+            <span className={css.composerSpacer} />
+            <button
+              type="submit"
+              className={css.sendButton}
+              disabled={sending || draft.trim() === ''}
+              aria-label={sending ? t('sending') : t('send')}
+            >
+              <IconRightUpOutline16 />
+            </button>
           </div>
-        </div>
-        <Button
-          variant="primary"
-          size="sm"
-          type="submit"
-          disabled={sending || draft.trim() === ''}
-        >
-          {sending ? t('sending') : t('send')}
-        </Button>
-      </form>
+        </form>
+      </div>
     </>
   )
 }
 
-/** One transcript row. */
-function Row({ t, row, labels }: {
+/** One transcript row, in the shapes the DSH conversation uses. */
+function TranscriptLine({ t, row, labels }: {
   t: (key: SessionSyncKey) => string
   row: TranscriptRow
   labels: MarkdownLabels
 }): React.ReactElement {
   if (row.kind === 'user') {
     return (
-      <div className={`${css.turn} ${css.turnUser}`}>
-        <span className={css.turnLabel}>{t('you')}</span>
+      <div className={css.userRow}>
         <div className={css.bubble}>{row.text}</div>
       </div>
     )
   }
   if (row.kind === 'assistant') {
     return (
-      <div className={css.turn}>
-        <span className={css.turnLabel}>{t('assistant')}</span>
+      <div className={css.assistantRow}>
         {row.reasoning !== '' && <ReasoningRow t={t} reasoning={row.reasoning} />}
         {row.text !== '' && <MarkdownText text={row.text} labels={labels} />}
       </div>
     )
   }
-  return <ToolRowRow t={t} row={row} />
+  return <ToolCallRow t={t} row={row} />
 }
 
 /** One assistant reasoning block, folded away by default. */
@@ -377,71 +420,81 @@ function ReasoningRow({ t, reasoning }: {
       expandable
       expandOnRowClick
       onToggle={() => { setOpen(current => !current) }}
-      className={css.reasoningRow}
-      titleClassName={css.turnLabel}
+      className={css.thinkRow}
+      titleClassName={css.thinkTitle}
     >
       <div className={css.reasoning}>{reasoning}</div>
     </DisclosureRow>
   )
 }
 
-/** One tool call and its result, folded into a single row. */
-function ToolRowRow({ t, row }: {
+/** One tool call and its result, folded into a single row with an IN/OUT card. */
+function ToolCallRow({ t, row }: {
   t: (key: SessionSyncKey) => string
   row: ToolRow
 }): React.ReactElement {
   const [open, setOpen] = React.useState(false)
   const label = row.name === '' ? t('toolResult') : row.name
-  const status = row.pending ? t('sessionRunning') : row.isError ? t('deliveryFailed') : timeLabel(row.time, t)
   return (
     <DisclosureRow
       icon={<StateDot state={row.pending ? 'ongoing' : row.isError ? 'error' : 'done'} />}
-      title={row.summary === '' ? label : `${label} · ${row.summary}`}
+      title={label}
       open={open}
       expandable
       expandOnRowClick
       onToggle={() => { setOpen(current => !current) }}
-      className={row.isError ? `${css.toolRow} ${css.toolError}` : css.toolRow}
+      className={css.toolRow}
       titleClassName={css.toolName}
-      collapsedContent={<span className={css.toolDetail}>{status}</span>}
+      collapsedContent={(
+        <>
+          <span className={css.toolSep} />
+          <span className={css.toolSummary}>
+            {row.summary !== '' ? row.summary : timeLabel(row.time, t)}
+          </span>
+        </>
+      )}
     >
-      <div className={css.toolBody}>
+      <div className={css.ioCard}>
         {row.argumentsText !== '' && (
           <>
-            <span className={css.toolSection}>{t('toolArguments')}</span>
-            <pre className={css.toolCode}>{row.argumentsText}</pre>
+            <div className={css.ioSection}>
+              <span className={css.ioLabel}>{t('toolArguments')}</span>
+              <span className={css.ioText}>{row.argumentsText}</span>
+            </div>
+            <div className={css.ioDivider} />
           </>
         )}
-        <span className={css.toolSection}>{t('toolResult')}</span>
-        {row.resultText === ''
-          ? <div className={css.reasoning}>{row.pending ? t('toolRunning') : t('toolNoOutput')}</div>
-          : <pre className={css.toolCode}>{row.resultText}</pre>}
+        <div className={css.ioSection}>
+          <span className={css.ioLabel}>{t('toolResult')}</span>
+          {row.resultText === ''
+            ? <span className={css.ioText}>{row.pending ? t('toolRunning') : t('toolNoOutput')}</span>
+            : (
+              <span className={row.isError ? `${css.ioText} ${css.ioTextError}` : css.ioText}>
+                {row.resultText}
+              </span>
+            )}
+        </div>
       </div>
     </DisclosureRow>
   )
 }
 
-/** The role and link line above the machine list. */
+/** The role and link line under the list's search box. */
 function roleLine(state: SyncClientSnapshot, t: (key: SessionSyncKey) => string): string {
   const role = state.state.role === 'server' ? t('roleServer') : t('roleClient')
   if (state.state.role === 'server') {
-    return `${role} · ${state.state.listening ? t('statusListening') : t('statusNotListening')}`
+    return `${role} 路 ${state.state.listening ? t('statusListening') : t('statusNotListening')}`
   }
-  if (state.state.serverUrl.trim() === '') return `${role} · ${t('statusNotConfigured')}`
-  return `${role} · ${state.state.linked ? t('statusLinked') : t('statusUnlinked')}`
+  if (state.state.serverUrl.trim() === '') return `${role} 路 ${t('statusNotConfigured')}`
+  return `${role} 路 ${state.state.linked ? t('statusLinked') : t('statusUnlinked')}`
 }
 
-/** One machine's activity line. */
-function machineMeta(machine: MirroredMachine, t: (key: SessionSyncKey) => string): string {
-  const online = machine.online ? t('machineOnline') : t('machineOffline')
-  if (machine.online) return online
-  return `${online} · ${t('lastSeen')} ${timeLabel(machine.lastSeen, t)}`
-}
-
-/** One Session's second line inside the middle pane. */
-function sessionMeta(session: MirroredSession, t: (key: SessionSyncKey) => string): string {
-  const place = session.cwd ?? session.sessionId
-  return `${place} · ${String(session.eventCount)} ${t('eventsCount')}`
+/** What a machine row says on its trailing cell. */
+function machineTrailing(machine: MirroredMachine, t: (key: SessionSyncKey) => string): string {
+  if (!machine.online) return `${t('machineOffline')} 路 ${timeLabel(machine.lastSeen, t)}`
+  const running = machine.sessions.filter(session => session.running).length
+  if (running > 0) return `${String(running)} ${t('sessionsRunning')}`
+  return `${String(machine.sessions.length)} ${t('machineSessions')}`
 }
 
 /** The delivery state of the last prompt, as the composer renders it. */
@@ -456,43 +509,40 @@ function deliveryLine(delivery: CommandDelivery, t: (key: SessionSyncKey) => str
 }
 
 /**
- * The machine's Sessions, filtered and running-first.
- * @param machine - the selected machine, when one is.
+ * Group the mirror into machines, their directories, and their Sessions.
+ * @param machines - every machine the server mirrors, newest activity first.
  * @param query - the current search text.
- * @param runningOnly - whether the running filter is on.
- * @returns the Sessions to list, in render order.
+ * @returns the tree to render; machines and directories with no match are gone.
  */
-function filterSessions(
-  machine: MirroredMachine | undefined,
-  query: string,
-  runningOnly: boolean,
-): MirroredSession[] {
+function buildTree(machines: readonly MirroredMachine[], query: string): MachineGroup[] {
   const needle = query.trim().toLowerCase()
-  return (machine?.sessions ?? [])
-    .filter(session => {
-      if (runningOnly && !session.running) return false
-      if (needle === '') return true
-      return session.title.toLowerCase().includes(needle)
-        || (session.cwd ?? '').toLowerCase().includes(needle)
-        || session.sessionId.toLowerCase().includes(needle)
+  const groups: MachineGroup[] = []
+  for (const machine of machines) {
+    const sessions = machine.sessions
+      .filter(session => needle === '' || matches(session, needle))
+      .sort((left, right) =>
+        Number(right.running) - Number(left.running) || right.updatedAt - left.updatedAt)
+    if (needle !== '' && sessions.length === 0) continue
+    const directories = new Map<string, MirroredSession[]>()
+    for (const session of sessions) {
+      const key = session.cwd ?? ''
+      const bucket = directories.get(key)
+      if (bucket === undefined) directories.set(key, [session])
+      else bucket.push(session)
+    }
+    groups.push({
+      machine,
+      projects: [...directories].map(([cwd, members]) => ({ cwd, sessions: members })),
     })
-    .sort((left, right) => Number(right.running) - Number(left.running) || right.updatedAt - left.updatedAt)
+  }
+  return groups
 }
 
-/**
- * Group Sessions by the directory they run in, preserving the incoming order.
- * @param sessions - already-filtered Sessions.
- * @returns one group per directory, in first-appearance order.
- */
-function groupByCwd(sessions: readonly MirroredSession[]): SessionGroup[] {
-  const groups = new Map<string, MirroredSession[]>()
-  for (const session of sessions) {
-    const key = session.cwd ?? ''
-    const existing = groups.get(key)
-    if (existing === undefined) groups.set(key, [session])
-    else existing.push(session)
-  }
-  return [...groups].map(([cwd, members]) => ({ cwd, sessions: members }))
+/** Whether one Session matches the search text. */
+function matches(session: MirroredSession, needle: string): boolean {
+  return session.title.toLowerCase().includes(needle)
+    || (session.cwd ?? '').toLowerCase().includes(needle)
+    || session.sessionId.toLowerCase().includes(needle)
 }
 
 /**

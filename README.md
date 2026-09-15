@@ -3,10 +3,10 @@
 Multi-machine Session sync for DeepSeek Harness.
 
 Publish selected Sessions from this machine to a sync server, and — on the
-server — watch every connected machine's Sessions arrive in real time from a
-group in the left sidebar. A Session opened on the server can be taken over:
-prompts typed there are forwarded to the machine that owns the Session, which
-admits them into its own agent loop, and the results stream back.
+server — browse every connected machine's Sessions in the console, grouped by
+machine and by the directory they run in. A Session opened there can be taken
+over: prompts typed in the console are forwarded to the machine that owns the
+Session, which admits them into its own agent loop, and the results stream back.
 
 ## Install
 
@@ -22,61 +22,47 @@ it — `vision` and `dshmarket` are installed from git on that same basis. Sourc
 changes therefore need `scripts/build-and-install.ps1` to run before they are
 committed.
 
-### Host extension this needs
+### No host extension is needed
 
-Everything else the plugin contributes is additive through shipped slots, but
-one seat does not exist upstream: the sidebar browsing region renders exactly
-one child (`sidebar.workspaces`, a `single` cell holding the whole session
-browser), so a second grouped list has nowhere to attach. This repository
-carries the 28-line, purely additive change to `ui-sidebar` that declares
-`sidebar.region.section`:
-
-```sh
-git -C <your-dsh-checkout> apply patches/ui-sidebar-region-section.patch
-pnpm --filter @deepseek-ai/dsh-client-ui-sidebar bundle
-```
-
-Without it the section silently never appears — `ctx.slots.inject` waits for a
-declaration that never comes and contributes nothing. The patch therefore costs
-you the *glance*, not the feature: the settings page, the sidebar panel row, the
-console, and the sync engine all work without it.
+Every contribution goes through a shipped slot. An earlier revision also drew a
+glance into the sidebar's browsing region and carried a 28-line patch that
+declared `sidebar.region.section` for it; the console's panel row needs no such
+seat, so that section, the patch, and the checkout modification it asked for are
+all gone. If your DSH checkout still carries the applied patch, it is now inert
+and may be reverted with `git -C <checkout> checkout -- packages/client/ui-sidebar`.
 
 ## What it adds
 
 | Surface | Slot | What it is |
 | --- | --- | --- |
 | Settings page | `settings.section` (id `session-sync`) | Machine name, server domain/IP, the server switch, the connection password, the listen address/port, and the per-Session publish list |
-| Sidebar panel row | `sidebar.panellist` (id `session-sync`) | The entry that opens the console, and the only one that survives the collapsed rail |
-| Left sidebar section | `sidebar.region.section` (see above) | **服务器同步工作区** — a glance beside the workspace browser: the fleet line, then each machine's running and most recent Sessions, then 查看全部 into the console |
-| Centre panel | `main` (key `session-sync`) | The console: machines, the selected machine's Sessions searched and grouped by directory, and one opened Session with its transcript and the takeover composer |
+| Sidebar panel row | `sidebar.panellist` (id `session-sync`) | The entry that opens the console, and the one that survives the collapsed rail |
+| Centre panel | `main` (key `session-sync`) | The console: a **machine → directory → Session** tree beside the opened Session's conversation and the takeover composer |
 
-All four are additive: no shipped cell is replaced, and the sidebar row, the
-section and the centre panel share one id because the frame validates a selected
-panel against the registered `main` keys.
+All three are additive: no shipped cell is replaced, and the sidebar row and the
+console share one id because the frame validates a selected panel against the
+registered `main` keys.
 
-### Three ways in, and why they are three
+### The console wears the DSH UI it stands beside
 
-- **`sidebar.panellist` needs no host patch** and renders in both column widths,
-  so it is the console's real entry point. Without it the panel would be
-  reachable only from the browsing region, which is a wide-column surface:
-  collapsing the sidebar would hide the panel with no way back.
-- **`sidebar.region.section` is the glance.** There is no additive slot for a
-  group *inside* the sidebar's session-browsing region — `sidebar.workspaces` is
-  a `single` cell occupied by `ui-workspace`, and shadowing it would delete the
-  whole session browser with it. This section therefore sits beneath that browser
-  and wears its clothes: the same folder-plus-chevron lead-in, the same 32px
-  rows, the same indented Session rows with a trailing time.
-- A glance is all it holds, on purpose. The column's lower half cannot show every
-  Session of every machine without taking that height from the browser above it,
-  so it lists what a reader needs in order to decide whether to go look. Its rows
-  carry no machine name, so Sessions are grouped per machine there rather than
-  flattened into one list — a flat list would make another machine's Session read
-  as one of your own.
-- **The console is `main`.** Machines, Sessions, and the opened Session are three
-  panes of one panel, because that is what the job is: pick a machine, pick a
-  Session, read it or take it over. On a wide column all three are visible at
-  once; below 960px the same DOM becomes a drill-down with back buttons that only
-  exist in that mode.
+- **The list is the workspace browser.** Machines are the tree's first level,
+  their `cwd` values the second, and the Sessions the third — the same 34px
+  project row, the same 32px session row, the same folder glyph that becomes an
+  expand arrow on hover, the same trailing relative time. A remote Session should
+  scan exactly like a local one, because telling them apart is a detail of where
+  the row lives, not of what the row is.
+- **The talk column is the conversation.** A centered reading column capped at
+  920px, user prompts as right-aligned bubbles, assistant answers as Markdown,
+  thinking folded behind one row, each tool call one 24px summary line with its
+  arguments and result in an IN/OUT card, and an elevated 22px-radius composer
+  card with a circular send button.
+- **There is no machine pane.** The machine is a level of the tree, so choosing
+  one and opening a Session are the same gesture; a separate column would only
+  restate what the row already says.
+- **Nothing user-visible is invented.** Both panes reuse `ui-primitives`
+  (`DisclosureRow`, `MarkdownText`, `Input`, `StateDot`, `Button`) and the shipped
+  tokens, so the console follows a theme change, a font-size preference, and a
+  hairline change with the rest of the product.
 
 ## Configuration
 
@@ -193,9 +179,14 @@ became of that command down the browser's own event stream:
   one machine at a time. Both limits are deliberate; a queued prompt that
   outlives them is reported as `expired` rather than delivered late.
 - **Assistant text is rendered as Markdown and each tool call is one folded row**
-  with its arguments and result, but tool-specific cards (diff, terminal, read)
-  are not implemented: the mirrored event carries no trusted presentation
-  payload, so every result renders as text.
+  with its arguments and result in an IN/OUT card, but tool-specific cards (diff,
+  terminal, read) are not implemented: the mirrored event carries no trusted
+  presentation payload, so every result renders as text.
+- **The console copies the shipped UI; it does not import it.** A browser plugin
+  cannot import another plugin's components, so the tree and the conversation are
+  this package's own markup wearing `ui-primitives` and the shipped tokens. They
+  follow the visual system, not every future change to `ui-workspace` or
+  `ui-chat`.
 - The mirror is lost on server restart; origins re-publish on their next
   reconcile tick (within 10 s) plus their follow snapshots.
 
@@ -213,8 +204,7 @@ src/client/api.ts        transport plus the one snapshot every surface reads
 src/client/transcript.ts mirrored events projected onto readable rows
 src/client/ConfigSection.tsx  the settings page
 src/client/PanelIcon.tsx      the sidebar panel row's glyph
-src/client/SyncPanel.tsx      the console: machines, Sessions, takeover
-src/client/SyncSection.tsx    the sidebar glance
+src/client/SyncPanel.tsx      the console: the tree, the conversation, takeover
 ```
 
 `src/host/dsh.ts` declares the consumed Host services structurally rather than

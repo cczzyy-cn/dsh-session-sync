@@ -25,6 +25,18 @@ import {
 /** How often the local Session list is re-read while the panel is mounted. */
 const SESSION_POLL_MS = 15_000
 
+/**
+ * How many command states to remember for a command this browser has not been
+ * told about yet.
+ *
+ * A status frame and the POST response that mints the command's id travel by
+ * different roads, and the frame routinely wins: the server hands the command to
+ * the owning machine and narrates that immediately, while the response still has
+ * to come back. Dropping those frames left the composer on "submitted" for a
+ * command the machine had already accepted.
+ */
+const EARLY_COMMAND_LIMIT = 16
+
 /** One remote Session the user has open. */
 export interface OpenSession {
   machineName: string
@@ -81,6 +93,8 @@ export class SyncClient {
   private source: EventSource | undefined
   private poll: ReturnType<typeof setInterval> | undefined
   private started = false
+  /** Status frames that arrived before this browser knew their command's id. */
+  private readonly earlyCommands = new Map<string, CommandDelivery>()
 
   constructor() {
     this.store = createSnapshotStore<SyncClientSnapshot>({
@@ -239,11 +253,13 @@ export class SyncClient {
         sessionId: open.sessionId,
         text,
       })
+      // The machine may have answered before this response landed; adopt what it
+      // said rather than restarting the story at "queued".
+      const known = this.earlyCommands.get(result.commandId)
+      this.earlyCommands.delete(result.commandId)
       this.update({
         error: undefined,
-        // Optimistic only in its timestamp: the state is the server's own word
-        // for a command it has accepted but not yet handed over.
-        delivery: {
+        delivery: known ?? {
           commandId: result.commandId,
           state: 'queued',
           expiresAt: Date.now() + COMMAND_TTL_MS,
@@ -304,19 +320,29 @@ export class SyncClient {
       return
     }
     if (frame.type === 'command') {
-      const delivery = this.store.getSnapshot().delivery
-      // Only the prompt this browser sent is narrated here. A command another
-      // browser issued is that browser's business, and a frame that arrives
-      // after this one was already superseded must not resurrect it.
-      if (delivery === undefined || delivery.commandId !== frame.command.commandId) return
-      this.update({
-        delivery: {
-          commandId: delivery.commandId,
-          state: frame.command.state,
-          expiresAt: frame.command.expiresAt,
-          ...(frame.command.error === undefined ? {} : { error: frame.command.error }),
-        },
-      })
+      const delivery: CommandDelivery = {
+        commandId: frame.command.commandId,
+        state: frame.command.state,
+        expiresAt: frame.command.expiresAt,
+        ...(frame.command.error === undefined ? {} : { error: frame.command.error }),
+      }
+      const current = this.store.getSnapshot().delivery
+      // Only the prompt this browser sent is narrated in the composer. A command
+      // another browser issued is that browser's business, and a frame that
+      // arrives after this one was already superseded must not resurrect it.
+      if (current !== undefined && current.commandId === frame.command.commandId) {
+        this.update({ delivery })
+        return
+      }
+      // Unknown id: the frame outran the response that mints it. Keep the newest
+      // state per command so the composer can pick the story up where it is.
+      this.earlyCommands.delete(frame.command.commandId)
+      this.earlyCommands.set(frame.command.commandId, delivery)
+      while (this.earlyCommands.size > EARLY_COMMAND_LIMIT) {
+        const oldest = this.earlyCommands.keys().next()
+        if (oldest.done === true) break
+        this.earlyCommands.delete(oldest.value)
+      }
       return
     }
     this.update({ error: frame.message })

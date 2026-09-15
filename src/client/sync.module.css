@@ -1,13 +1,22 @@
 /*
- * Both sync surfaces: the settings page and the centre panel.
+ * Both sync surfaces: the settings page and the console.
  *
- * Shared sheet rather than one per component because the two render the same
- * vocabulary (machine group, session row, status line) and a second copy of a
- * row would be the thing that drifts.
+ * Shared sheet rather than one per component because both render the same
+ * vocabulary (machine, session row, status line) and a second copy of a row
+ * would be the thing that drifts.
+ *
+ * The console's two panes copy the shipped UI they stand beside: the tree
+ * follows ui-workspace's browser rows (34px project row, 32px session row,
+ * folder that becomes a chevron on hover), and the talk column follows
+ * ui-conversation's skeleton (a centered content column, a right-aligned user
+ * bubble, folded tool rows, and an elevated composer card capped at the content
+ * width plus 32px).
  *
  * Every value is a semantic alias: no palette literal, no theme branch, no
  * second global theme. Neutral hairlines draw at 0.5px; nothing here pairs a
- * neutral border with an elevation.
+ * neutral border with an elevation. The one literal is the composer's arrow,
+ * which stays white on the blue fill in both themes — the same exception the
+ * shipped InputBar documents.
  */
 
 /* ── settings page ─────────────────────────────────────────────────────── */
@@ -192,225 +201,199 @@
   color: var(--dsw-alias-state-success-primary);
 }
 
-/* ── centre panel: the server console ──────────────────────────────────── */
+/* ── console: the two panes ────────────────────────────────────────────── */
 
-/*
- * Three panes in a row on a wide column, and the same DOM as a one-pane
- * drill-down below 960px. `data-step` is what the narrow rules select on, so no
- * component has to measure the window; above the breakpoint it is ignored and
- * all three panes are visible at once.
- */
-.console {
+.panel {
   display: flex;
   height: 100%;
   min-height: 0;
   color: var(--dsw-alias-label-primary);
 }
 
-.machinePane {
+/*
+ * The tree sits on the sidebar's own fill, because that is the surface the list
+ * it copies lives on: a reader who knows the workspace browser should recognize
+ * this column immediately.
+ */
+.listPane {
   display: flex;
   flex-direction: column;
   flex: none;
-  width: 220px;
+  width: 280px;
   min-height: 0;
-  border-right: 0.5px solid var(--dsw-alias-border-l1);
+  background: var(--dsw-specific-sidebar-fill);
+  border-right: 0.5px solid var(--dsw-alias-border-l3);
 }
 
-.sessionPane {
-  display: flex;
-  flex-direction: column;
-  flex: none;
-  width: 300px;
-  min-height: 0;
-  border-right: 0.5px solid var(--dsw-alias-border-l1);
-}
-
-.detailPane {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-width: 0;
-  min-height: 0;
-}
-
-.paneHead {
+.listHead {
   display: flex;
   flex-direction: column;
   gap: 6px;
   flex: none;
   padding: 10px 10px 8px;
-  border-bottom: 0.5px solid var(--dsw-alias-border-l1);
 }
 
-.paneRow {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  min-width: 0;
-}
-
-.paneTitle {
+.listStatus {
   overflow: hidden;
   color: var(--dsw-alias-label-tertiary);
-  font: var(--dsw-font-xxs-strong-12);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.statusLine {
-  overflow: hidden;
-  color: var(--dsw-alias-label-caption);
   font: var(--dsw-font-xxxs-11);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.paneBody {
+/*
+ * The scroller spans the pane and the 2px offset matches the workspace
+ * browser's list, so both scrollbars land in the same place.
+ */
+.list {
   display: flex;
   flex-direction: column;
-  gap: 2px;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 6px;
+  padding: 0 6px 8px;
+  margin-right: 2px;
 }
 
-.filters {
-  display: flex;
-  gap: 4px;
-}
+/* ── console: the machine → directory → Session tree ───────────────────── */
 
-/* One machine row: online dot, name over its last-seen line, session count. */
-.machineRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 6px 8px;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: background var(--ds-transition-duration-fast) var(--ds-ease-in-out);
-}
-
-.machineRow:hover {
-  background: var(--dsw-alias-interactive-bg-hover);
-}
-
-.machineRowActive,
-.machineRowActive:hover {
-  background: var(--dsw-alias-interactive-bg-active);
-}
-
-.machineRow:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--dsw-alias-state-business-primary);
-}
-
-.machineRowText {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  flex: 1;
-  min-width: 0;
-}
-
-.machineRowName {
-  overflow: hidden;
-  font: var(--dsw-font-xs-strong-13);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.machineRowMeta {
-  overflow: hidden;
-  color: var(--dsw-alias-label-tertiary);
-  font: var(--dsw-font-xxxs-11);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* The directory a group of Sessions runs in. */
-.groupLabel {
-  overflow: hidden;
-  padding: 8px 8px 2px;
-  color: var(--dsw-alias-label-tertiary);
-  font: var(--dsw-font-xxxs-11);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* One Session row in the middle pane: title and time, then its facts. */
-.listRow {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 6px 8px;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: background var(--ds-transition-duration-fast) var(--ds-ease-in-out);
-}
-
-.listRow:hover {
-  background: var(--dsw-alias-interactive-bg-hover);
-}
-
-.listRow:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--dsw-alias-state-business-primary);
-}
-
-.listRowTop {
+/* Shared row chrome (ui-workspace Rows.module.css .projectRow/.sessionRow). */
+.treeRow,
+.treeSession {
   display: flex;
   align-items: center;
   gap: 6px;
-  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dsw-alias-label-primary);
+  text-align: left;
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--ds-transition-duration-fast) var(--ds-ease-in-out);
 }
 
-.listRowTitle {
+.treeRow {
+  height: 34px;
+}
+
+.treeSession {
+  height: 32px;
+  gap: 0;
+}
+
+.treeRow:hover,
+.treeSession:hover,
+.treeSessionSelected {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.treeRow:focus-visible,
+.treeSession:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--dsw-alias-state-business-primary);
+}
+
+/* One indent step per level, past the lead-in the level above owns. */
+.panel [data-level='1'] {
+  padding-left: 24px;
+}
+
+.panel [data-level='2'] {
+  padding-left: 40px;
+}
+
+/* The 16px leading slot the workspace rows reserve for a glyph or a dot. */
+.treeSlot {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 20px;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+/* Folder at rest, expand arrow on hover — the browser's own lead-in swap. */
+.treeChevron {
+  display: none;
+  color: var(--dsw-alias-label-caption);
+}
+
+.treeRow:hover .treeFolder,
+.treeRow:focus-visible .treeFolder {
+  display: none;
+}
+
+.treeRow:hover .treeChevron,
+.treeRow:focus-visible .treeChevron {
+  display: inline-flex;
+}
+
+.arrowOpen {
+  transform: rotate(90deg);
+}
+
+.treeChevron svg {
+  transition: transform 150ms var(--ds-ease-in-out);
+}
+
+.rowTitle {
   flex: 1;
+  min-width: 0;
   overflow: hidden;
-  font: var(--dsw-font-xs-13);
+  font: var(--dsw-font-s-14);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.listRowTime {
+.treeSession .rowTitle {
+  margin: 0 6px 0 4px;
+}
+
+.rowTime {
   flex: none;
   color: var(--dsw-alias-label-tertiary);
-  font: var(--dsw-font-xxxs-11);
+  font: var(--dsw-font-xxs-12);
 }
 
-.listRowMeta {
-  overflow: hidden;
-  color: var(--dsw-alias-label-tertiary);
-  font: var(--dsw-font-xxxs-11);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+/* An offline machine stays listed and stays readable, one step quieter. */
+.treeRowDim .rowTitle,
+.treeRowDim .rowTime {
+  color: var(--dsw-alias-label-secondary);
 }
 
-.detailHeader {
+/* ── console: the conversation ─────────────────────────────────────────── */
+
+.viewPane {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  background: var(--dsw-alias-bg-base);
+}
+
+/*
+ * 52px against the shipped 76px: that header holds a tab strip this pane has no
+ * tabs for, and the rest of its rhythm (30px title row, l3 seam) is kept.
+ */
+.viewHeader {
   display: flex;
   align-items: center;
   gap: 8px;
   flex: none;
-  min-height: 48px;
-  padding: 0 14px;
-  border-bottom: 0.5px solid var(--dsw-alias-border-l1);
+  min-height: 52px;
+  padding: 0 20px;
+  border-bottom: 0.5px solid var(--dsw-alias-border-l3);
 }
 
-.detailTitle {
-  flex: 1;
+.viewTitle {
+  flex: 0 1 auto;
+  min-width: 0;
   margin: 0;
   overflow: hidden;
   font: var(--dsw-font-s-strong-14);
@@ -418,213 +401,263 @@
   white-space: nowrap;
 }
 
-.detailBody {
+.viewMachine {
+  flex: none;
+  color: var(--dsw-alias-label-tertiary);
+  font: var(--dsw-font-xxs-12);
+  white-space: nowrap;
+}
+
+/* 16px vertical, 32px horizontal: the composer's 16px clearance plus its 16px
+   inset, so the transcript stays exactly 32px narrower than the input card. */
+.viewScroll {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 12px 14px 16px;
+  padding: 16px 32px;
+  margin-right: 2px;
 }
 
-/*
- * The two back buttons exist for the narrow drill-down only. They are always
- * rendered and hidden here rather than by a measured width, so the pane rules
- * above stay the single place that knows about the breakpoint.
- */
-.narrowOnly {
-  display: none;
-}
-
-@media (max-width: 959px) {
-  .console {
-    flex-direction: column;
-  }
-
-  .machinePane,
-  .sessionPane {
-    width: auto;
-    border-right: 0;
-  }
-
-  .console[data-step='machines'] .sessionPane,
-  .console[data-step='machines'] .detailPane,
-  .console[data-step='sessions'] .machinePane,
-  .console[data-step='sessions'] .detailPane,
-  .console[data-step='detail'] .machinePane,
-  .console[data-step='detail'] .sessionPane {
-    display: none;
-  }
-
-  .narrowOnly {
-    display: inline-flex;
-  }
-}
-
-/* ── transcript ────────────────────────────────────────────────────────── */
-
-.turn {
+/* The reading column, capped for line length and centered on the same axis as
+   the composer card. */
+.viewColumn {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-bottom: 14px;
+  width: 100%;
+  max-width: min(920px, 100%);
+  margin: 0 auto;
 }
 
-.turnLabel {
-  color: var(--dsw-alias-label-tertiary);
-  font: var(--dsw-font-xxs-strong-12);
+.viewColumn > * + * {
+  margin-top: 16px;
 }
 
-.turnUser .bubble {
-  background: var(--dsw-alias-bg-layer-2);
+/* User turn: right-aligned bubble (ui-chat MessageItem.module.css). */
+.userRow {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 }
 
 .bubble {
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: var(--dsw-alias-bg-layer-1);
-  font: var(--dsw-font-s-14);
-  overflow-wrap: anywhere;
-  white-space: pre-wrap;
-}
-
-/*
- * A folded reasoning or tool row. The disclosure primitive owns the 24px row
- * and the chevron; these rules only give it the panel's own spacing and the
- * hairline that separates the folded summary from the body it opens.
- */
-.reasoningRow,
-.toolRow {
-  border-bottom: 0.5px solid var(--dsw-alias-border-l1);
-}
-
-.toolRow {
-  color: var(--dsw-alias-label-secondary);
-  font: var(--dsw-font-xxs-12);
-}
-
-.toolName {
+  max-width: min(82%, 640px);
+  padding: 10px 16px;
+  border-radius: 22px;
+  background: var(--dsw-specific-bubble);
   color: var(--dsw-alias-label-primary);
-  font: var(--dsw-font-xxs-12);
+  font: var(--dsw-font-s-14);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
-.toolDetail {
-  flex: none;
-  color: var(--dsw-alias-label-tertiary);
-  font: var(--dsw-font-xxxs-11);
-}
-
-.toolError .toolDetail {
-  color: var(--dsw-alias-state-error-primary);
-}
-
-.toolBody {
+/* Assistant turn: folded thinking (when any) above the markdown answer. */
+.assistantRow {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 4px 0 10px;
-}
-
-.toolSection {
-  color: var(--dsw-alias-label-tertiary);
-  font: var(--dsw-font-xxxs-strong-11);
-}
-
-/*
- * Argument and result bodies keep their own newlines and do not wrap: both are
- * column-bearing text (JSON, command output), where a wrapped line reads as
- * continuation of the line above it.
- */
-.toolCode {
-  margin: 0;
-  padding: 8px 10px;
-  border-radius: 8px;
-  background: var(--dsw-alias-markdown-code-block);
-  color: var(--dsw-alias-label-primary);
-  font: var(--dsw-font-xxxs-11);
-  font-family: var(--ds-font-family-code);
-  overflow-x: auto;
-  white-space: pre;
+  gap: 6px;
+  min-width: 0;
 }
 
 .reasoning {
   color: var(--dsw-alias-label-tertiary);
-  font: var(--dsw-font-xxs-12);
+  font: var(--dsw-font-xs-13);
   white-space: pre-wrap;
 }
 
+.thinkRow {
+  border-bottom: 0.5px solid var(--dsw-alias-border-l2);
+}
+
+.thinkTitle {
+  color: var(--dsw-alias-label-secondary);
+  font: var(--dsw-font-xs-13);
+}
+
 /*
- * The `Input` primitive owns its own chrome; this only makes it fill the column.
- *
- * `box-sizing` is load-bearing, not boilerplate: this repository sets no global
- * `border-box`, and the primitive's wrapper carries its own padding and border.
- * With the default `content-box`, `width: 100%` means 100% PLUS that padding and
- * border — about 17px past the right edge of whatever this sits in. Every rule
- * below that gives an element an explicit width or flex share while also
- * padding it horizontally carries the same declaration for the same reason.
+ * Tool call: one 24px summary line — leading state dot, tool name, a 2px
+ * separator, then the argument gist filling the rest of the row (ui-tool
+ * ToolRow.module.css). No rule between rows: the expanded card is the
+ * separation.
  */
-.inputWrap {
-  width: 100%;
-  box-sizing: border-box;
+.toolName {
+  color: var(--dsw-alias-label-primary);
+  font: var(--dsw-font-xs-13);
+  font-weight: 400;
 }
 
-/* ── composer ──────────────────────────────────────────────────────────── */
-
-.composer {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-  padding: 10px 14px 14px;
-  border-top: 0.5px solid var(--dsw-alias-border-l1);
+.toolSep {
+  flex: none;
+  width: 2px;
+  height: 2px;
+  margin: 0 8px;
+  border-radius: 1px;
+  background: var(--dsw-alias-label-caption);
 }
 
-.composerField {
+.toolSummary {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--dsw-alias-label-tertiary);
+  font: var(--dsw-font-xs-13);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Expanded IN/OUT card: the code-block surface with a sticky gutter label per
+   section, each section scrolling alone. */
+.ioCard {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  flex: 1;
-  min-width: 0;
+  margin: 4px 0 4px 4px;
+  border: 0.5px solid var(--dsw-alias-border-l1);
+  border-radius: 12px;
+  background: var(--dsw-alias-markdown-code-block);
+  font: var(--dsw-font-markdown-code-block-small);
 }
 
-/* Who the prompt is addressed to, and what became of the last one. */
-.composerMeta {
+.ioSection {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  column-gap: 14px;
+  align-items: baseline;
+  padding: 12px 16px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.ioLabel {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  color: var(--dsw-alias-label-caption);
+}
+
+.ioDivider {
+  flex: none;
+  height: 0.5px;
+  background: var(--dsw-alias-border-l2);
+}
+
+.ioText {
+  min-width: 0;
+  color: var(--dsw-alias-label-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ioTextError {
+  color: var(--dsw-alias-state-error-primary);
+}
+
+/* ── console: the composer ─────────────────────────────────────────────── */
+
+.composerRoot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: none;
+  padding: 0 16px 8px;
+}
+
+/*
+ * The input card: 22px radius on the input surface, its stroke drawn as the
+ * elevation hairline (l2) so it costs no layout, capped at the content column
+ * plus 32px (ui-conversation InputBar.module.css).
+ */
+.composerCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: calc(min(920px, 100%) + 32px);
+  box-sizing: border-box;
+  padding-top: 8px;
+  border: 0;
+  --dsw-elevation-stroke-color: var(--dsw-alias-border-l2);
+  border-radius: 22px;
+  background: var(--dsw-specific-input-major);
+  box-shadow: var(--dsw-elevation-soft);
+  font: var(--dsw-font-s-14);
+}
+
+.composerText {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  max-height: 200px;
+  margin: 0;
+  padding: 8px 16px 0;
+  border: 0;
+  background: transparent;
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  resize: none;
+}
+
+.composerText::placeholder {
+  color: var(--dsw-alias-placeholder);
+}
+
+.composerText:focus-visible {
+  outline: none;
+}
+
+.composerBar {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
-  color: var(--dsw-alias-label-tertiary);
-  font: var(--dsw-font-xxxs-11);
+  padding: 0 10px 10px 16px;
 }
 
 .composerTarget {
   flex: none;
+  color: var(--dsw-alias-label-tertiary);
+  font: var(--dsw-font-xxxs-11);
 }
 
 .composerDelivery {
   color: var(--dsw-alias-label-secondary);
+  font: var(--dsw-font-xxxs-11);
 }
 
 .composerOffline {
   color: var(--dsw-alias-state-warn-label);
+  font: var(--dsw-font-xxxs-11);
 }
 
-.composerInput {
+.composerSpacer {
   flex: 1;
-  box-sizing: border-box;
-  min-height: 36px;
-  max-height: 160px;
-  padding: 8px 10px;
-  border: 0.5px solid var(--dsw-alias-border-l2);
-  border-radius: 10px;
-  background: var(--dsw-alias-bg-layer-1);
-  color: var(--dsw-alias-label-primary);
-  font: var(--dsw-font-s-14);
-  resize: none;
 }
 
-.composerInput::placeholder {
-  color: var(--dsw-alias-placeholder);
+/* The 34px circular send button. The arrow is a literal white on purpose: the
+   shipped InputBar does the same, because the fill is the blue in both themes
+   and neither label-inverted token stays white in the dark one. */
+.sendButton {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 999px;
+  corner-shape: round;
+  background: var(--dsw-alias-button-info-fill);
+  color: #fff;
+  cursor: pointer;
+  transition: background-color var(--ds-transition-duration-fast) var(--ds-ease-in-out);
 }
 
-.composerInput:focus-visible {
+.sendButton:hover:not(:disabled) {
+  background: var(--dsw-alias-button-info-hover);
+}
+
+.sendButton:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.sendButton:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px var(--dsw-alias-state-business-primary);
 }
@@ -637,310 +670,39 @@
   font: var(--dsw-font-xxs-12);
 }
 
-/* ── sidebar section (browsing region) ─────────────────────────────────── */
-
 /*
- * Lives in `sidebar.region.section`, beneath the workspace browser. The
- * browser above is `flex: 1`, so this takes its own bounded height and scrolls
- * internally rather than pushing the sidebar's foot around.
+ * The two panes cannot both be usable in a phone-width column, so one of them
+ * owns the width: the list while nothing is open, the conversation once
+ * something is. The back button exists only in that mode.
  */
-.sectionRoot {
-  /*
-   * Bounded three ways, because this is the lower half of a two-child column
-   * whose upper child is the whole workspace browser:
-   *  - `flex: 0 1 auto` lets it give height back when the column is short,
-   *    instead of taking the browser's space at the browser's expense;
-   *  - `max-height` is expressed in viewport units and pixels only, so it
-   *    resolves even if the parent's height is ever indefinite — a percentage
-   *    would silently become `none` and let this grow without limit;
-   *  - `overflow: hidden` means a failed cap clips this section rather than
-   *    spilling over the workspace list above it.
-   */
-  flex: 0 1 auto;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  max-height: min(45vh, 320px);
-  overflow: hidden;
-  /*
-   * The browsing region cancels the sidebar's right padding with a negative
-   * margin so its scroller can reach the column edge, and every occupant has to
-   * put the inline inset back on its own content. The workspace browser does it
-   * with `--dsh-session-list-edge-inset`; this does it with the sidebar's own
-   * variable, which is where that one gets its value. Without it a row's hover
-   * fill runs flush to the window edge while the workspace rows above stop at
-   * the padding — which is exactly how the row first looked.
-   */
-  padding-right: var(--dsh-sidebar-inline-padding);
-}
-
-/*
- * The row deliberately wears the workspace browser's own clothes — same
- * folder-plus-chevron lead-in, same 32px row, same hover fill, same indented
- * session rows with a trailing time — so the section reads as one more
- * workspace in the column rather than as a plugin widget bolted beneath it.
- * The classes are prefixed `ws` and kept separate from the settings page's row
- * classes: the two surfaces look alike on purpose but must be free to change
- * independently, and a shared class would couple them by accident.
- */
-.wsRow {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex: none;
-  height: 32px;
-  box-sizing: border-box;
-  padding: 0 8px;
-  border-radius: 8px;
-  color: var(--dsw-alias-label-primary);
-  cursor: pointer;
-  user-select: none;
-}
-
-.wsRow:hover {
-  background: var(--dsw-alias-interactive-bg-hover);
-}
-
-.wsRow:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--dsw-alias-state-business-primary);
-}
-
-.wsSlot {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 20px;
-  color: var(--dsw-alias-label-tertiary);
-}
-
-.wsArrowOpen {
-  transform: rotate(90deg);
-}
-
-/*
- * The shipped workspace rows show the folder at rest and swap it for the
- * disclosure triangle on hover, which keeps the title aligned with every other
- * workspace name instead of paying 16px for a permanent chevron. Matching that
- * is the whole point of this section, so the swap is reproduced — extended to
- * `:focus-visible` so the fold stays reachable from the keyboard.
- */
-.wsRow .wsChevron {
+.narrowOnly {
   display: none;
 }
 
-.wsRow:hover .wsChevron,
-.wsRow:focus-visible .wsChevron {
-  display: inline-flex;
-}
+@media (max-width: 719px) {
+  .listPane {
+    width: 100%;
+    border-right: 0;
+  }
 
-.wsRow:hover .wsFolder,
-.wsRow:focus-visible .wsFolder {
-  display: none;
-}
+  .panel[data-open='true'] .listPane {
+    display: none;
+  }
 
-.wsText {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
+  .panel[data-open='false'] .viewPane {
+    display: none;
+  }
 
-.wsTitle {
-  min-width: 0;
-  overflow: hidden;
-  font: var(--dsw-font-s-14);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/*
- * Hover-revealed, as the workspace rows are — but kept reachable from the
- * keyboard through `:focus-within`, and only faded rather than unmounted so the
- * control never changes the row's metrics under the pointer.
- */
-.wsActions {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  opacity: 0;
-  transition: opacity var(--ds-transition-duration-fast) var(--ds-ease-in-out);
-}
-
-.wsRow:hover .wsActions,
-.wsRow:focus-within .wsActions {
-  opacity: 1;
-}
-
-.wsIconButton {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  corner-shape: round;
-  background: transparent;
-  color: var(--dsw-alias-label-secondary);
-  cursor: pointer;
-}
-
-.wsIconButton:hover {
-  background: var(--dsw-alias-interactive-bg-hover);
-}
-
-.wsIconButton:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--dsw-alias-state-business-primary);
-}
-
-.wsList {
-  display: flex;
-  flex-direction: column;
-  flex: 0 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  padding-bottom: 6px;
-  /*
-   * Same cancellation the region itself uses: the scroller spans the full
-   * column so its scrollbar lands where the workspace browser's does, and the
-   * inset is applied to its content instead of to the scroll container.
-   */
-  margin-right: calc(-1 * var(--dsh-sidebar-inline-padding));
-  padding-right: var(--dsh-sidebar-inline-padding);
-}
-
-/*
- * The fleet's one-line state, indented like the session titles below it so the
- * section reads as a group rather than a header plus a list.
- */
-.wsSummary {
-  padding: 6px 8px 2px 30px;
-  overflow: hidden;
-  color: var(--dsw-alias-label-tertiary);
-  font: var(--dsw-font-xxxs-11);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/*
- * One machine's slice of the glance. Shown only when more than one machine
- * publishes: with a single origin the machine line would say nothing, and the
- * Session rows below it already read as one workspace.
- */
-.wsMachine {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 8px 2px 24px;
-  min-width: 0;
-}
-
-.wsMachineName {
-  overflow: hidden;
-  color: var(--dsw-alias-label-tertiary);
-  font: var(--dsw-font-xxxs-strong-11);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* The row that hands the rest of the list to the centre panel. */
-.wsMore {
-  display: block;
-  width: 100%;
-  box-sizing: border-box;
-  flex: none;
-  height: 32px;
-  padding: 0 8px 0 24px;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--dsw-alias-label-tertiary);
-  font: var(--dsw-font-xxs-12);
-  text-align: left;
-  cursor: pointer;
-  transition: background var(--ds-transition-duration-fast) var(--ds-ease-in-out);
-}
-
-.wsMore:hover {
-  background: var(--dsw-alias-interactive-bg-hover);
-  color: var(--dsw-alias-label-secondary);
-}
-
-.wsMore:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--dsw-alias-state-business-primary);
-}
-
-.wsSession {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  flex: none;
-  height: 32px;
-  box-sizing: border-box;
-  /* Indented past the workspace lead-in so titles line up with their group. */
-  padding: 0 8px 0 24px;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--dsw-alias-label-primary);
-  text-align: left;
-  cursor: pointer;
-}
-
-.wsSession:hover {
-  background: var(--dsw-alias-interactive-bg-hover);
-}
-
-.wsSession:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--dsw-alias-state-business-primary);
-}
-
-.wsSessionTitle {
-  flex: 1;
-  min-width: 0;
-  margin: 0 6px 0 4px;
-  overflow: hidden;
-  font: var(--dsw-font-s-14);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.wsSessionTime {
-  flex: none;
-  color: var(--dsw-alias-label-tertiary);
-  font: var(--dsw-font-xxs-12);
-}
-
-/* Indented like a session title, so the two empty states sit in the list. */
-.sectionEmpty {
-  margin: 0;
-  padding: 2px 8px 8px 24px;
-  color: var(--dsw-alias-label-tertiary);
-  font: var(--dsw-font-xxs-12);
+  .narrowOnly {
+    display: inline-flex;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .listRow,
-  .machineRow,
-  .wsMore {
-    transition: none;
-  }
-
-  .wsActions {
-    transition: none;
-  }
-
-  .wsArrowOpen {
+  .treeRow,
+  .treeSession,
+  .treeChevron svg,
+  .sendButton {
     transition: none;
   }
 }
