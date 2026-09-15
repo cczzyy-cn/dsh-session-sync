@@ -80,11 +80,16 @@ export interface SyncClientSnapshot {
    */
   stream: 'connecting' | 'open'
   /**
-   * True when a reopened stream found the mirror empty after it had held
-   * machines — what a server restart leaves behind, because the mirror is
-   * memory-only. Cleared as soon as a machine appears again.
+   * How many times a reopened stream has found the mirror empty after it had
+   * held machines — what a server restart leaves behind, because the mirror is
+   * memory-only.
+   *
+   * A count rather than a flag: the notice is the reader's to dismiss, and a
+   * later restart has to raise it again. Measured on the real host, the empty
+   * window lasts only about two to four seconds before the machines re-publish,
+   * which is far too short to notice on its own.
    */
-  mirrorReset: boolean
+  mirrorResets: number
   /** Last failure text, cleared by the next successful action. */
   error?: string
 }
@@ -123,7 +128,7 @@ export class SyncClient {
       sessions: [],
       loadingTranscript: false,
       stream: 'connecting',
-      mirrorReset: false,
+      mirrorResets: 0,
     })
   }
 
@@ -305,7 +310,10 @@ export class SyncClient {
       // so an empty one now is a reset rather than a quiet fleet. Say so, and
       // re-read everything instead of trusting what is still on screen.
       const reset = !first && this.sawMachines && snapshot.state.machines.length === 0
-      this.update({ stream: 'open', ...(reset ? { mirrorReset: true } : {}) })
+      this.update({
+        stream: 'open',
+        ...(reset ? { mirrorResets: snapshot.mirrorResets + 1 } : {}),
+      })
       if (!first) void this.refresh()
     }
     source.onerror = () => {
@@ -385,20 +393,16 @@ export class SyncClient {
   }
 
   /**
-   * Publish one patch and keep the mirror-reset notice honest.
+   * Publish one patch, remembering that this page once held machines.
    *
-   * The notice exists only for the window between a host restart and the first
-   * machine re-publishing (they do so within their reconcile tick), so it is
-   * retired the moment a machine is in the snapshot again — and the fact that
-   * this page once held machines is remembered, because that is what makes an
-   * empty mirror a reset instead of a quiet fleet.
+   * That memory is what makes an empty mirror a reset rather than a fleet that
+   * never connected: the empty window itself is only a couple of seconds wide,
+   * so the notice has to be raised by the reconnect rather than by what the
+   * next read happens to find.
    */
   private update(patch: Partial<SyncClientSnapshot>): void {
     const next = { ...this.store.getSnapshot(), ...patch }
-    if (next.state.machines.length > 0) {
-      this.sawMachines = true
-      if (next.mirrorReset) next.mirrorReset = false
-    }
+    if (next.state.machines.length > 0) this.sawMachines = true
     this.store.set(next)
   }
 }

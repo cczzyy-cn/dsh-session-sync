@@ -87,6 +87,8 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
   const { t } = props
   const [query, setQuery] = React.useState('')
   const [collapsed, setCollapsed] = React.useState<Record<string, boolean>>({})
+  /** The reset count the reader has already acknowledged. */
+  const [dismissedResets, setDismissedResets] = React.useState(0)
 
   const machines = state.state.machines
   const open = state.open
@@ -137,11 +139,21 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
           </span>
         </div>
         <div className={css.list} role="tree">
-          {/* A host restart empties a memory-only mirror. Without this line the
-              list simply loses every machine, which reads as "nothing is
-              connected" rather than "the server was restarted". */}
-          {state.mirrorReset && (
-            <p className={css.notice} role="status">{t('mirrorResetNotice')}</p>
+          {/* A host restart empties a memory-only mirror for a couple of
+              seconds, which is far too short to notice. The count is raised by
+              the reconnect itself and stays up until the reader closes it. */}
+          {state.mirrorResets > dismissedResets && (
+            <p className={css.notice} role="status">
+              <span className={css.noticeText}>{t('mirrorResetNotice')}</span>
+              <button
+                type="button"
+                className={css.noticeClose}
+                aria-label={t('tjClose')}
+                onClick={() => { setDismissedResets(state.mirrorResets) }}
+              >
+                ×
+              </button>
+            </p>
           )}
           {!state.ready && <p className={css.empty}>{t('sessionsLoading')}</p>}
           {state.ready && state.state.role !== 'server' && (

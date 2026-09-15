@@ -262,12 +262,42 @@
  * gap the reader should expect to close on its own.
  */
 .notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
   margin: 2px 2px 6px;
   padding: 6px 8px;
   border-radius: 8px;
   background: var(--dsw-alias-state-warn-tertiary);
   color: var(--dsw-alias-label-secondary);
   font: var(--dsw-font-xxxs-11);
+}
+
+.noticeText {
+  flex: 1;
+  min-width: 0;
+}
+
+.noticeClose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 13px;
+  line-height: 13px;
+  cursor: pointer;
+}
+
+.noticeClose:hover {
+  color: var(--dsw-alias-label-primary);
+  background: var(--dsw-alias-interactive-bg-hover);
 }
 
 /* ── console: the machine → directory → Session tree ───────────────────── */
