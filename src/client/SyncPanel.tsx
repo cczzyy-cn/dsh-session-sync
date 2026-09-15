@@ -28,6 +28,7 @@ import {
   IconChevronLeftOutline14,
   IconFolderClose16,
   IconFolderOpen16,
+  IconGlobeOutline14,
   IconRightUpOutline16,
   IconSearchOutline16,
   IconThinkOutline14,
