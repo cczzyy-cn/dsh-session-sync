@@ -1921,7 +1921,11 @@ window.__ModuleLoader__.load({
 					...wantsPath && request !== void 0 && request !== "" ? { path: request } : {}
 				};
 			}
-			return { glyph: "generic" };
+			return wire === "" ? { glyph: "generic" } : {
+				glyph: "generic",
+				labelKey: "toolLabelGeneric",
+				wire: name
+			};
 		}
 		//#endregion
 		//#region src/client/SyncPanel.tsx
@@ -2556,6 +2560,7 @@ window.__ModuleLoader__.load({
 			const [open, setOpen] = react.useState(false);
 			const presentation = toolPresentation(row.name, row.request);
 			const label = presentation.labelKey === void 0 ? row.name === "" ? t("toolResult") : row.name : t(presentation.labelKey);
+			const summary = presentation.wire === void 0 ? row.summary : [presentation.wire, row.summary].filter((part) => part !== "").join(" · ");
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.DisclosureRow, {
 				icon: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 					className: row.isError ? `${sync_module_css_default.toolGlyph} ${sync_module_css_default.toolGlyphError}` : sync_module_css_default.toolGlyph,
@@ -2578,7 +2583,7 @@ window.__ModuleLoader__.load({
 					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { className: sync_module_css_default.toolSep }),
 					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 						className: sync_module_css_default.toolSummary,
-						children: row.summary !== "" ? row.summary : timeLabel(row.time, t)
+						children: summary !== "" ? summary : timeLabel(row.time, t)
 					})
 				] }),
 				children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
@@ -2628,7 +2633,7 @@ window.__ModuleLoader__.load({
 				case "subagent": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconShareOutline16, { size: 14 });
 				case "plan": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconChecklistOutline14, { size: 14 });
 				case "ask": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconListPenOutline16, { size: 14 });
-				default: return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.StateDot, { state: "idle" });
+				default: return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconSparkle16, { size: 14 });
 			}
 		}
 		/** The role and link line under the list's search box. */
@@ -3214,6 +3219,7 @@ window.__ModuleLoader__.load({
 			toolLabelAsk: "提问",
 			toolLabelTerminal: "终端",
 			toolLabelCode: "代码",
+			toolLabelGeneric: "工具调用",
 			reasoning: "思考",
 			toolArguments: "参数",
 			toolRunning: "执行中…",
@@ -3362,6 +3368,7 @@ window.__ModuleLoader__.load({
 			toolLabelAsk: "Question",
 			toolLabelTerminal: "Terminal",
 			toolLabelCode: "Code",
+			toolLabelGeneric: "Tool call",
 			reasoning: "Reasoning",
 			toolArguments: "Arguments",
 			toolRunning: "Running…",

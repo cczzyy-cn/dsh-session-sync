@@ -38,6 +38,7 @@ import {
   IconRightUpOutline16,
   IconSearchOutline16,
   IconShareOutline16,
+  IconSparkle16,
   IconThinkOutline14,
   IconTriangleRightFill14,
   relativeTime,
@@ -691,11 +692,15 @@ function ToolCallRow({ t, row }: {
 }): React.ReactElement {
   const [open, setOpen] = React.useState(false)
   const presentation = toolPresentation(row.name, row.request)
-  // An unrecognised tool keeps its wire name; a known family gets the same word
-  // the shipped client uses for it.
+  // A family row is titled with the family's word and its own gist below; a
+  // generic row is titled 工具调用 and carries the wire name in that gist, which
+  // is how the shipped client falls back for a tool it has no view for.
   const label = presentation.labelKey === undefined
     ? (row.name === '' ? t('toolResult') : row.name)
     : t(presentation.labelKey)
+  const summary = presentation.wire === undefined
+    ? row.summary
+    : [presentation.wire, row.summary].filter(part => part !== '').join(' · ')
   return (
     <DisclosureRow
       icon={(
@@ -716,7 +721,7 @@ function ToolCallRow({ t, row }: {
           {row.pending && <StateDot state="ongoing" />}
           <span className={css.toolSep} />
           <span className={css.toolSummary}>
-            {row.summary !== '' ? row.summary : timeLabel(row.time, t)}
+            {summary !== '' ? summary : timeLabel(row.time, t)}
           </span>
         </>
       )}
@@ -777,9 +782,9 @@ function ToolGlyphIcon({ glyph, path }: {
     case 'ask':
       return <IconListPenOutline16 size={14} />
     default:
-      // Unknown tool: the status dot the console has always used, which claims
-      // nothing about what the tool does.
-      return <StateDot state="idle" />
+      // No family claims it: the shipped client's generic card leads with its
+      // own neutral mark, so this uses the same one instead of the status dot.
+      return <IconSparkle16 size={14} />
   }
 }
 

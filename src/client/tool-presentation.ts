@@ -22,6 +22,8 @@ export interface ToolPresentation {
   labelKey?: SessionSyncKey
   /** The path a file-family glyph should be classified from, when there is one. */
   path?: string
+  /** The wire name, for a generic row that shows it in its summary instead. */
+  wire?: string
 }
 
 /** Wire names whose row reads as one family, checked in order. */
@@ -55,5 +57,11 @@ export function toolPresentation(name: string, request: string | undefined): Too
       ...(wantsPath && request !== undefined && request !== '' ? { path: request } : {}),
     }
   }
-  return { glyph: 'generic' }
+  // No family claims it: the shipped client's own fallback is a generic card —
+  // one neutral glyph, the word 工具调用, and the wire name moved into the
+  // summary line. Matching that keeps one track of rows reading the same way
+  // instead of a mix of titled and bare rows.
+  return wire === ''
+    ? { glyph: 'generic' }
+    : { glyph: 'generic', labelKey: 'toolLabelGeneric', wire: name }
 }
