@@ -145,11 +145,36 @@ became of that command down the browser's own event stream:
   bearer token. It is deliberately *not* a route on the GUI's web server, so
   exposing sync never exposes the session GUI.
 - **The browser surface** is registered on `ctx.webServer` under
-  `/dsh-session-sync`, so the panel is same-origin with the GUI and inherits
-  whatever authentication the composition already applies.
+  `/dsh-session-sync`, same-origin with the GUI, and it **adopts the GUI's own
+  gate**: every request goes through `ctx.connection.requestRejection`, which is
+  the shipped seam for putting the composition's browser session and Host/Origin
+  fence in front of another route. Same cookie, same launch token, same fence —
+  no second secret.
+
+  This is not automatic, which is worth stating plainly: a prefix route is
+  matched *before* the fallback that enforces the frontend's gate, so an
+  unguarded plugin route is reachable by anyone who can reach the port. An
+  earlier revision of this plugin was exactly that, and answered
+  `/dsh-session-sync/config` — sync password included — with 200 and no token.
+
+  Behind a reverse proxy the deployment must name its authority, or the fence
+  rejects it with 403 (the GUI's own `/api` included):
+
+  ```sh
+  dsh --profile web --port 3080 --trusted-host dsh.example.com
+  ```
 
 ## Security
 
+- The plugin's browser routes require the same browser session as the GUI
+  (`ctx.connection.requestRejection`), so they are no easier to reach than the
+  GUI itself. A composition that mounts no browser frontend has no
+  `ctx.connection` to inherit, and the routes are then only as protected as that
+  composition's own web surface.
+- The **sync transport** (`<listenPort>`) is a separate listener with its own
+  password handshake. It is not covered by the browser session, so an exposed
+  deployment should firewall that port and use a long password: the browser gate
+  says nothing about who may publish or take over Sessions.
 - The password is compared with `timingSafeEqual`; a token is minted per
   machine and bound to the machine name it was issued for, so a client cannot
   publish under another machine's identity.

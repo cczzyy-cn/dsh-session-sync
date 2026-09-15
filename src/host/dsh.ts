@@ -11,6 +11,8 @@
  *  - `SessionControllerLike` — `packages/api/session-controller/src/index.ts`
  *    (`ctx.sessionController`, the service behind `ctx.remote.session`).
  *  - `WebServerLike`      — `packages/host/webserver/src/index.ts` (`ctx.webServer`).
+ *  - `ConnectionLike`     — `packages/client/connection/src/rpc.ts`
+ *    (`ctx.connection`, the browser-session and Host/Origin fence).
  *
  * `import type` from those packages would be erased before bundling and is
  * therefore safe; a value import would not be, and there are none.
@@ -129,6 +131,22 @@ export interface WebServerLike {
     path: string
     handler: (request: NodeRequestLike, response: NodeResponseLike) => void | Promise<void>
   }): () => void
+}
+
+/**
+ * The browser-session and Host/Origin fence — `HostConnectionHandle` in
+ * `packages/client/connection/src/rpc.ts`, mounted as `ctx.connection`.
+ *
+ * `requestRejection` is the shipped seam for putting the composition's own
+ * browser authentication in front of another web route: 403 when the request
+ * authority is not trusted, 401 when the browser session is missing, and
+ * `undefined` when the route may accept the request. It is optional: a
+ * composition with no browser frontend mounts no such service.
+ */
+export interface ConnectionLike {
+  requestRejection(
+    request: { readonly headers: Record<string, string | string[] | undefined> },
+  ): number | undefined
 }
 
 /** The slice of `node:http` `IncomingMessage` the route handlers read. */

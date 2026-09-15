@@ -18,7 +18,13 @@ import {
   type SyncStreamFrame,
 } from './shared/protocol.ts'
 import { configPath, resolveHome } from './host/config.ts'
-import type { HostContext, NodeRequestLike, NodeResponseLike, WebServerLike } from './host/dsh.ts'
+import type {
+  ConnectionLike,
+  HostContext,
+  NodeRequestLike,
+  NodeResponseLike,
+  WebServerLike,
+} from './host/dsh.ts'
 import { SessionSyncService } from './host/service.ts'
 
 export const name = 'dsh-session-sync'
@@ -73,6 +79,16 @@ async function dispatch(
   request: NodeRequestLike,
   response: NodeResponseLike,
 ): Promise<void> {
+  const rejection = rejectionOf(ctx, request)
+  if (rejection !== undefined) {
+    sendJson(response, rejection, {
+      error: rejection === 403
+        ? 'forbidden: this authority is not trusted by the browser-trust fence'
+        : 'authentication required; reopen the URL printed by dsh web',
+    })
+    return
+  }
+
   const url = new URL(request.url ?? '/', 'http://gui.invalid')
   const route = url.pathname.slice(ROUTE_PREFIX.length)
   const method = request.method ?? 'GET'
@@ -141,6 +157,36 @@ async function dispatch(
   }
 
   sendJson(response, 404, { error: 'unknown route' })
+}
+
+/**
+ * Apply the composition's own browser authentication to one request.
+ *
+ * The GUI's token gate covers only the routes the frontend itself serves: a
+ * prefix route registered here is matched before the fallback that enforces it,
+ * which is how `/dsh-session-sync/config` came to answer 200 without a token and
+ * hand out the sync password. `ctx.connection.requestRejection` is the shipped
+ * seam for adopting that same Host/Origin fence and browser session on another
+ * route, so this surface ends up exactly as protected as the GUI it lives in —
+ * with no second secret for anyone to manage.
+ *
+ * A composition without `ctx.connection` (no browser frontend at all) has no
+ * gate to inherit, and these routes are then as open as that composition's own
+ * web surface. A fence that throws is answered 401: an authorization check that
+ * fails open is worse than one that fails closed.
+ * @param ctx - the scoped Host context carrying the routes.
+ * @param request - the request being dispatched.
+ * @returns the rejection status, or undefined when the route may serve it.
+ */
+function rejectionOf(ctx: HostContext, request: NodeRequestLike): number | undefined {
+  const connection = ctx.get('connection') as ConnectionLike | undefined
+  if (connection === undefined || connection === null) return undefined
+  try {
+    return connection.requestRejection({ headers: request.headers })
+  } catch (error: unknown) {
+    ctx.logger.warn(`dsh-session-sync: browser-trust check failed: ${describe(error)}`)
+    return 401
+  }
 }
 
 /** Hold one SSE response open and pump every frame into it. */
