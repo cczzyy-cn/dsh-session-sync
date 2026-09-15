@@ -62,6 +62,8 @@ export class SessionSyncService {
   private linkError: string | undefined
   private reconcileTimer: ReturnType<typeof setInterval> | undefined
   private flushTimer: ReturnType<typeof setInterval> | undefined
+  /** The last publish attempt, as the settings page reports it. */
+  private lastPublish: { at: number; ok: boolean; error?: string } | undefined
   private disposed = false
 
   private constructor(
@@ -134,6 +136,7 @@ export class SessionSyncService {
       ...(this.linkError === undefined ? {} : { linkError: this.linkError }),
       machines: this.config.isServer ? this.hub.machines() : [],
       published: Object.values(this.config.syncSessions).filter(Boolean).length,
+      ...(this.lastPublish === undefined ? {} : { publish: this.lastPublish }),
     }
   }
 
@@ -262,6 +265,7 @@ export class SessionSyncService {
           logger: this.ctx.logger,
           onCommand: (command) => { void this.runCommand(command) },
           onStatus: (status) => { this.onLinkStatus(status) },
+          onPost: (path, ok, error) => { this.notePublish(path, ok, error) },
         })
         this.link.start()
       }
@@ -332,8 +336,27 @@ export class SessionSyncService {
     } satisfies PublishIndexPayload)
   }
 
-  /** Open one `follow` stream and absorb its frames into the pending buffer. */
-  private startFollow(sessionId: string): void {
+  /**
+   * Record what became of one publish attempt.
+   *
+   * The settings page used to call "marked in the config" published, which is
+   * how a client that stopped publishing entirely could still read 已同步会话数 3
+   * while the server held none. Only `/publish` and `/frames` are watched: an
+   * ack or a status read saying nothing about the mirror is not a publish.
+   * @param path - the route the link called.
+   * @param ok - whether the server accepted it.
+   * @param error - why not, when it did not.
+   */
+  private notePublish(path: string, ok: boolean, error?: string): void {
+    if (path !== '/publish' && path !== '/frames') return
+    this.lastPublish = {
+      at: Date.now(),
+      ok,
+      ...(error === undefined ? {} : { error }),
+    }
+  }
+
+  /** Open one `follow` stream and absorb its frames into the pending buffer. */  private startFollow(sessionId: string): void {
     const controller = this.controller()
     if (controller === undefined) return
     const handle: FollowHandle = { abort: new AbortController(), pending: [] }

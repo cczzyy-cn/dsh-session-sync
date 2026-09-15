@@ -103,6 +103,16 @@ export interface SyncState {
   machines: MirroredMachine[]
   /** Client role: the Sessions this machine is publishing. */
   published: number
+  /**
+   * The last publish the server accepted, or the last one it refused.
+   *
+   * `linked` says the downstream stream is up; this says whether anything is
+   * actually reaching the mirror. Without it, a link that stopped publishing
+   * looked exactly like a healthy one — and the mark count above read as
+   * success, which is how a client could show 已同步会话数 3 while the server
+   * held nothing at all.
+   */
+  publish?: { at: number; ok: boolean; error?: string }
 }
 
 /** One mirrored Session event, carried verbatim from the origin's log. */

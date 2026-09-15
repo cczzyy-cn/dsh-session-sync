@@ -865,15 +865,25 @@ function ToolGlyphIcon({ glyph, path }: {
 function roleLine(state: SyncClientSnapshot, t: (key: SessionSyncKey) => string): string {
   const role = state.state.role === 'server' ? t('roleServer') : t('roleClient')
   if (state.state.role === 'server') {
-    return `${role} 路 ${state.state.listening ? t('statusListening') : t('statusNotListening')}`
+    return `${role} · ${state.state.listening ? t('statusListening') : t('statusNotListening')}`
   }
-  if (state.state.serverUrl.trim() === '') return `${role} 路 ${t('statusNotConfigured')}`
-  return `${role} 路 ${state.state.linked ? t('statusLinked') : t('statusUnlinked')}`
+  if (state.state.serverUrl.trim() === '') return `${role} · ${t('statusNotConfigured')}`
+  if (!state.state.linked) return `${role} · ${t('statusUnlinked')}`
+  // Connected and publishing are two different claims, and the gap between them
+  // was invisible: a live stream with nothing going down it read as healthy.
+  const publish = state.state.publish
+  if (publish === undefined) return `${role} · ${t('statusLinked')} · ${t('statusNeverPublished')}`
+  if (!publish.ok) {
+    return `${role} · ${t('statusLinked')} · ${t('statusPublishFailed')}${publish.error === undefined ? '' : `: ${publish.error}`}`
+  }
+  return Date.now() - publish.at > 30_000
+    ? `${role} · ${t('statusLinked')} · ${t('statusPublishStalled')}`
+    : `${role} · ${t('statusLinked')} · ${t('statusPublishOk')}`
 }
 
 /** What a machine row says on its trailing cell. */
 function machineTrailing(machine: MirroredMachine, t: (key: SessionSyncKey) => string): string {
-  if (!machine.online) return `${t('machineOffline')} 路 ${timeLabel(machine.lastSeen, t)}`
+  if (!machine.online) return `${t('machineOffline')} · ${timeLabel(machine.lastSeen, t)}`
   const running = machine.sessions.filter(session => session.running).length
   if (running > 0) return `${String(running)} ${t('sessionsRunning')}`
   return `${String(machine.sessions.length)} ${t('machineSessions')}`

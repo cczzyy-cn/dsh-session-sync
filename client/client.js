@@ -2714,13 +2714,17 @@ window.__ModuleLoader__.load({
 		/** The role and link line under the list's search box. */
 		function roleLine(state, t) {
 			const role = state.state.role === "server" ? t("roleServer") : t("roleClient");
-			if (state.state.role === "server") return `${role} 路 ${state.state.listening ? t("statusListening") : t("statusNotListening")}`;
-			if (state.state.serverUrl.trim() === "") return `${role} 路 ${t("statusNotConfigured")}`;
-			return `${role} 路 ${state.state.linked ? t("statusLinked") : t("statusUnlinked")}`;
+			if (state.state.role === "server") return `${role} · ${state.state.listening ? t("statusListening") : t("statusNotListening")}`;
+			if (state.state.serverUrl.trim() === "") return `${role} · ${t("statusNotConfigured")}`;
+			if (!state.state.linked) return `${role} · ${t("statusUnlinked")}`;
+			const publish = state.state.publish;
+			if (publish === void 0) return `${role} · ${t("statusLinked")} · ${t("statusNeverPublished")}`;
+			if (!publish.ok) return `${role} · ${t("statusLinked")} · ${t("statusPublishFailed")}${publish.error === void 0 ? "" : `: ${publish.error}`}`;
+			return Date.now() - publish.at > 3e4 ? `${role} · ${t("statusLinked")} · ${t("statusPublishStalled")}` : `${role} · ${t("statusLinked")} · ${t("statusPublishOk")}`;
 		}
 		/** What a machine row says on its trailing cell. */
 		function machineTrailing(machine, t) {
-			if (!machine.online) return `${t("machineOffline")} 路 ${timeLabel(machine.lastSeen, t)}`;
+			if (!machine.online) return `${t("machineOffline")} · ${timeLabel(machine.lastSeen, t)}`;
 			const running = machine.sessions.filter((session) => session.running).length;
 			if (running > 0) return `${String(running)} ${t("sessionsRunning")}`;
 			return `${String(machine.sessions.length)} ${t("machineSessions")}`;
@@ -3196,6 +3200,10 @@ window.__ModuleLoader__.load({
 			statusListening: "正在监听",
 			statusNotListening: "未监听",
 			statusLinked: "已连接到服务器",
+			statusNeverPublished: "尚未成功发布",
+			statusPublishOk: "正在发布",
+			statusPublishStalled: "发布停滞（30 秒内无成功发布）",
+			statusPublishFailed: "发布失败",
 			statusNotConfigured: "未填写服务器地址",
 			statusUnlinked: "未连接",
 			publishedCount: "已同步会话数",
@@ -3345,6 +3353,10 @@ window.__ModuleLoader__.load({
 			statusListening: "Listening",
 			statusNotListening: "Not listening",
 			statusLinked: "Connected to server",
+			statusNeverPublished: "nothing published yet",
+			statusPublishOk: "publishing",
+			statusPublishStalled: "publishing stalled (nothing accepted for 30s)",
+			statusPublishFailed: "publish failed",
 			statusNotConfigured: "No server address set",
 			statusUnlinked: "Not connected",
 			publishedCount: "Published Sessions",

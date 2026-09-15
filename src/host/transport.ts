@@ -37,6 +37,12 @@ export interface SyncServerOptions {
   serverName: () => string
   hub: SyncHub
   logger: HostLogger
+  /**
+   * Observer for every publish attempt: the service turns it into the status
+   * the settings page shows, so "connected" and "actually publishing" stop
+   * being the same claim.
+   */
+  onPost?: (path: string, ok: boolean, error?: string) => void
 }
 
 /** A running server-role listener. */
@@ -323,7 +329,15 @@ export class OriginLink {
 
   private async post(path: string, body: unknown): Promise<void> {
     const token = this.token
-    if (token === undefined) return
+    if (token === undefined) {
+      // Silently dropping this was invisible: a link that still looked
+      // connected could stop publishing entirely and say nothing. A skipped
+      // publish is a warning, not a no-op.
+      const reason = 'no session token (the downstream stream is not established)'
+      this.options.logger.warn(`dsh-session-sync: dropped ${path}: ${reason}`)
+      this.options.onPost?.(path, false, reason)
+      return
+    }
     try {
       const response = await fetch(`${this.options.serverUrl}${path}`, {
         method: 'POST',
@@ -334,11 +348,17 @@ export class OriginLink {
         body: JSON.stringify(body),
       })
       if (!response.ok) {
+        const reason = `server answered ${String(response.status)}`
         this.options.logger.warn(`dsh-session-sync: ${path} answered ${String(response.status)}`)
-        this.setLinked(false, `server answered ${String(response.status)}`)
+        this.options.onPost?.(path, false, reason)
+        this.setLinked(false, reason)
+        return
       }
+      this.options.onPost?.(path, true)
     } catch (error: unknown) {
-      this.setLinked(false, describe(error))
+      const reason = describe(error)
+      this.options.onPost?.(path, false, reason)
+      this.setLinked(false, reason)
     }
   }
 
