@@ -416,6 +416,16 @@ export class SessionSyncService {
   private absorbStream(frame: unknown): void {
     const seen = new Set<unknown>()
     const visit = (value: unknown): void => {
+      // A chunk may arrive as serialised JSON (the contract types it JsonValue),
+      // in which case the object this reader needs is one parse away. Bounded to
+      // one level: a string that is not JSON is simply not a chunk.
+      if (typeof value === 'string') {
+        const trimmed = value.trim()
+        if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+          try { visit(JSON.parse(trimmed) as unknown) } catch { /* not JSON: not a chunk */ }
+        }
+        return
+      }
       if (typeof value !== 'object' || value === null || seen.has(value)) return
       seen.add(value)
       const record = value as Record<string, unknown>
