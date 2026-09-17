@@ -152,7 +152,7 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
           />
           <span className={css.listStatus}>
             {state.stream === 'connecting'
-              ? `${roleLine(state, t)} 路 ${t('streamReconnecting')}`
+              ? `${roleLine(state, t)} · ${t('streamReconnecting')}`
               : roleLine(state, t)}
           </span>
         </div>
@@ -532,7 +532,7 @@ function ChromeChips({ t, chrome }: {
         <Tooltip label={`${t('chromeModel')}: ${model.provider}/${model.model}`} side="bottom" delayMs={200}>
           <span className={css.chromeChip}>
             {model.model}
-            {model.effort === undefined ? '' : ` 路 ${model.effort}`}
+            {model.effort === undefined ? '' : ` · ${model.effort}`}
           </span>
         </Tooltip>
       )}
@@ -619,8 +619,8 @@ function StatusRow({ t, stats }: {
   if (stats.cacheHitPercent !== undefined) tail.push(`${t('statusCacheHit')} ${String(stats.cacheHitPercent)}%`)
   return (
     <div className={css.statusRow}>
-      <span>{parts.join(' 路 ')}</span>
-      {tail.length > 0 && <span>{tail.join(' 路 ')}</span>}
+      <span>{parts.join(' · ')}</span>
+      {tail.length > 0 && <span>{tail.join(' · ')}</span>}
     </div>
   )
 }
@@ -732,7 +732,7 @@ function ToolCallRow({ t, row }: {
     : t(presentation.labelKey)
   const summary = presentation.wire === undefined
     ? row.summary
-    : [presentation.wire, row.summary].filter(part => part !== '').join(' 路 ')
+    : [presentation.wire, row.summary].filter(part => part !== '').join(' · ')
 
   const glyph = (): React.ReactElement => (
     <span className={row.isError ? `${css.toolGlyph} ${css.toolGlyphError}` : css.toolGlyph}>
@@ -885,25 +885,25 @@ function ToolGlyphIcon({ glyph }: { glyph: ToolGlyph }): React.ReactElement {
 function roleLine(state: SyncClientSnapshot, t: (key: SessionSyncKey) => string): string {
   const role = state.state.role === 'server' ? t('roleServer') : t('roleClient')
   if (state.state.role === 'server') {
-    return `${role} 路 ${state.state.listening ? t('statusListening') : t('statusNotListening')}`
+    return `${role} · ${state.state.listening ? t('statusListening') : t('statusNotListening')}`
   }
-  if (state.state.serverUrl.trim() === '') return `${role} 路 ${t('statusNotConfigured')}`
-  if (!state.state.linked) return `${role} 路 ${t('statusUnlinked')}`
+  if (state.state.serverUrl.trim() === '') return `${role} · ${t('statusNotConfigured')}`
+  if (!state.state.linked) return `${role} · ${t('statusUnlinked')}`
   // Connected and publishing are two different claims, and the gap between them
   // was invisible: a live stream with nothing going down it read as healthy.
   const publish = state.state.publish
-  if (publish === undefined) return `${role} 路 ${t('statusLinked')} 路 ${t('statusNeverPublished')}`
+  if (publish === undefined) return `${role} · ${t('statusLinked')} · ${t('statusNeverPublished')}`
   if (!publish.ok) {
-    return `${role} 路 ${t('statusLinked')} 路 ${t('statusPublishFailed')}${publish.error === undefined ? '' : `: ${publish.error}`}`
+    return `${role} · ${t('statusLinked')} · ${t('statusPublishFailed')}${publish.error === undefined ? '' : `: ${publish.error}`}`
   }
   return Date.now() - publish.at > 30_000
-    ? `${role} 路 ${t('statusLinked')} 路 ${t('statusPublishStalled')}`
-    : `${role} 路 ${t('statusLinked')} 路 ${t('statusPublishOk')}`
+    ? `${role} · ${t('statusLinked')} · ${t('statusPublishStalled')}`
+    : `${role} · ${t('statusLinked')} · ${t('statusPublishOk')}`
 }
 
 /** What a machine row says on its trailing cell. */
 function machineTrailing(machine: MirroredMachine, t: (key: SessionSyncKey) => string): string {
-  if (!machine.online) return `${t('machineOffline')} 路 ${timeLabel(machine.lastSeen, t)}`
+  if (!machine.online) return `${t('machineOffline')} · ${timeLabel(machine.lastSeen, t)}`
   const running = machine.sessions.filter(session => session.running).length
   if (running > 0) return `${String(running)} ${t('sessionsRunning')}`
   return `${String(machine.sessions.length)} ${t('machineSessions')}`

@@ -2012,7 +2012,7 @@ window.__ModuleLoader__.load({
 							}
 						}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 							className: sync_module_css_default.listStatus,
-							children: state.stream === "connecting" ? `${roleLine(state, t)} 路 ${t("streamReconnecting")}` : roleLine(state, t)
+							children: state.stream === "connecting" ? `${roleLine(state, t)} · ${t("streamReconnecting")}` : roleLine(state, t)
 						})]
 					}), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 						className: sync_module_css_default.list,
@@ -2387,7 +2387,7 @@ window.__ModuleLoader__.load({
 						delayMs: 200,
 						children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
 							className: sync_module_css_default.chromeChip,
-							children: [model.model, model.effort === void 0 ? "" : ` 路 ${model.effort}`]
+							children: [model.model, model.effort === void 0 ? "" : ` · ${model.effort}`]
 						})
 					}),
 					preset !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
@@ -2491,7 +2491,7 @@ window.__ModuleLoader__.load({
 			if (stats.cacheHitPercent !== void 0) tail.push(`${t("statusCacheHit")} ${String(stats.cacheHitPercent)}%`);
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 				className: sync_module_css_default.statusRow,
-				children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { children: parts.join(" 路 ") }), tail.length > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { children: tail.join(" 路 ") })]
+				children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { children: parts.join(" · ") }), tail.length > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { children: tail.join(" · ") })]
 			});
 		}
 		/**
@@ -2592,7 +2592,7 @@ window.__ModuleLoader__.load({
 			const presentation = toolPresentation(row.name);
 			const generic = presentation.glyph === "generic" && presentation.wire !== void 0;
 			const label = presentation.labelKey === void 0 ? row.name === "" ? t("toolResult") : row.name : t(presentation.labelKey);
-			const summary = presentation.wire === void 0 ? row.summary : [presentation.wire, row.summary].filter((part) => part !== "").join(" 路 ");
+			const summary = presentation.wire === void 0 ? row.summary : [presentation.wire, row.summary].filter((part) => part !== "").join(" · ");
 			const glyph = () => /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 				className: row.isError ? `${sync_module_css_default.toolGlyph} ${sync_module_css_default.toolGlyphError}` : sync_module_css_default.toolGlyph,
 				children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(ToolGlyphIcon, { glyph: presentation.glyph })
@@ -2732,17 +2732,17 @@ window.__ModuleLoader__.load({
 		/** The role and link line under the list's search box. */
 		function roleLine(state, t) {
 			const role = state.state.role === "server" ? t("roleServer") : t("roleClient");
-			if (state.state.role === "server") return `${role} 路 ${state.state.listening ? t("statusListening") : t("statusNotListening")}`;
-			if (state.state.serverUrl.trim() === "") return `${role} 路 ${t("statusNotConfigured")}`;
-			if (!state.state.linked) return `${role} 路 ${t("statusUnlinked")}`;
+			if (state.state.role === "server") return `${role} · ${state.state.listening ? t("statusListening") : t("statusNotListening")}`;
+			if (state.state.serverUrl.trim() === "") return `${role} · ${t("statusNotConfigured")}`;
+			if (!state.state.linked) return `${role} · ${t("statusUnlinked")}`;
 			const publish = state.state.publish;
-			if (publish === void 0) return `${role} 路 ${t("statusLinked")} 路 ${t("statusNeverPublished")}`;
-			if (!publish.ok) return `${role} 路 ${t("statusLinked")} 路 ${t("statusPublishFailed")}${publish.error === void 0 ? "" : `: ${publish.error}`}`;
-			return Date.now() - publish.at > 3e4 ? `${role} 路 ${t("statusLinked")} 路 ${t("statusPublishStalled")}` : `${role} 路 ${t("statusLinked")} 路 ${t("statusPublishOk")}`;
+			if (publish === void 0) return `${role} · ${t("statusLinked")} · ${t("statusNeverPublished")}`;
+			if (!publish.ok) return `${role} · ${t("statusLinked")} · ${t("statusPublishFailed")}${publish.error === void 0 ? "" : `: ${publish.error}`}`;
+			return Date.now() - publish.at > 3e4 ? `${role} · ${t("statusLinked")} · ${t("statusPublishStalled")}` : `${role} · ${t("statusLinked")} · ${t("statusPublishOk")}`;
 		}
 		/** What a machine row says on its trailing cell. */
 		function machineTrailing(machine, t) {
-			if (!machine.online) return `${t("machineOffline")} 路 ${timeLabel(machine.lastSeen, t)}`;
+			if (!machine.online) return `${t("machineOffline")} · ${timeLabel(machine.lastSeen, t)}`;
 			const running = machine.sessions.filter((session) => session.running).length;
 			if (running > 0) return `${String(running)} ${t("sessionsRunning")}`;
 			return `${String(machine.sessions.length)} ${t("machineSessions")}`;
