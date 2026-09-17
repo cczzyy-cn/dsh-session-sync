@@ -2137,8 +2137,8 @@ window.__ModuleLoader__.load({
 		* One foldable tree row: the machine and project levels, which differ in their
 		* depth, their leading glyph, and their trailing text.
 		*
-		* A machine wears the globe its sidebar panel row uses 鈥?the two are the same
-		* thing seen from two places 鈥?while a directory keeps the folder the workspace
+		* A machine wears the globe its sidebar panel row uses —the two are the same
+		* thing seen from two places —while a directory keeps the folder the workspace
 		* browser gives it. Both still swap to the expand arrow on hover, because that
 		* arrow is the only affordance saying the row folds.
 		*/
@@ -2505,8 +2505,8 @@ window.__ModuleLoader__.load({
 		/**
 		* What the talk column shows before something is open.
 		*
-		* It is the client's own new-session hero 鈥?the fish, the headline, the preview
-		* badge 鈥?copied to the figure (ui-conversation HeroShell), because an empty
+		* It is the client's own new-session hero —the fish, the headline, the preview
+		* badge —copied to the figure (ui-conversation HeroShell), because an empty
 		* column in this product already has a face and inventing a second one would
 		* make the console look like a different application. The one addition is the
 		* hint line: unlike a new session, this column is not waiting for a draft, it is
@@ -2713,7 +2713,7 @@ window.__ModuleLoader__.load({
 			return running ? `${sync_module_css_default.toolRow} ${sync_module_css_default.toolRowRunning}` : sync_module_css_default.toolRow;
 		}
 		/**
-		* The glyph a tool family leads with 鈥?the same mark the shipped toolview for
+		* The glyph a tool family leads with —the same mark the shipped toolview for
 		* that family registers, at 14 inside the row's 16px leading box.
 		*/
 		function ToolGlyphIcon({ glyph }) {

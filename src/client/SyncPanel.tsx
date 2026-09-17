@@ -280,8 +280,8 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
  * One foldable tree row: the machine and project levels, which differ in their
  * depth, their leading glyph, and their trailing text.
  *
- * A machine wears the globe its sidebar panel row uses 鈥?the two are the same
- * thing seen from two places 鈥?while a directory keeps the folder the workspace
+ * A machine wears the globe its sidebar panel row uses —the two are the same
+ * thing seen from two places —while a directory keeps the folder the workspace
  * browser gives it. Both still swap to the expand arrow on hover, because that
  * arrow is the only affordance saying the row folds.
  */
@@ -637,8 +637,8 @@ function kindLabel(t: (key: SessionSyncKey) => string): (kind: TrajectoryKind) =
 /**
  * What the talk column shows before something is open.
  *
- * It is the client's own new-session hero 鈥?the fish, the headline, the preview
- * badge 鈥?copied to the figure (ui-conversation HeroShell), because an empty
+ * It is the client's own new-session hero —the fish, the headline, the preview
+ * badge —copied to the figure (ui-conversation HeroShell), because an empty
  * column in this product already has a face and inventing a second one would
  * make the console look like a different application. The one addition is the
  * hint line: unlike a new session, this column is not waiting for a draft, it is
@@ -725,7 +725,7 @@ function ToolCallRow({ t, row }: {
 
   // A family row is titled with the family's word and its own gist below, and
   // keeps the request and the result in one card. The shipped client's generic
-  // card instead spends two rows 鈥?the call, then its result 鈥?so this does the
+  // card instead spends two rows —the call, then its result —so this does the
   // same for a tool no family claims, and only then.
   const label = presentation.labelKey === undefined
     ? (row.name === '' ? t('toolResult') : row.name)
@@ -853,7 +853,7 @@ function toolRowClass(running: boolean): string {
 }
 
 /**
- * The glyph a tool family leads with 鈥?the same mark the shipped toolview for
+ * The glyph a tool family leads with —the same mark the shipped toolview for
  * that family registers, at 14 inside the row's 16px leading box.
  */
 function ToolGlyphIcon({ glyph }: { glyph: ToolGlyph }): React.ReactElement {
