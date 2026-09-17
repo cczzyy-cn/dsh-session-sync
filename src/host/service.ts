@@ -502,6 +502,16 @@ export class SessionSyncService {
     const frameType = typeof (frame as { type?: unknown }).type === 'string' ? (frame as { type: string }).type : 'unknown'
     if (this.followFrameTypes.size < 12) this.followFrameTypes.add(frameType)
     this.followEvents += 1
+    // The streaming frame's field names, recorded once. The durable side needed
+    // no such reading; the stream has now cost three attempts, so it stops being
+    // guessed at.
+    if (frameType === 'assistant-stream' && this.followShapes.length < 8) {
+      const keysOf = (value: unknown): string => value !== null && typeof value === 'object' ? Object.keys(value as Record<string, unknown>).slice(0, 10).join(',') : typeof value
+      const outer = frame as unknown as Record<string, unknown>
+      const inner = outer['frame'] ?? outer['assistantStream'] ?? outer
+      const chunk = inner !== null && typeof inner === 'object' ? (inner as Record<string, unknown>)['chunk'] : undefined
+      this.followShapes.push('assistant-stream{' + keysOf(outer) + '} inner{' + keysOf(inner) + '} chunk{' + keysOf(chunk) + '}')
+    }
     this.absorbStream(frame)
     // The opening frame carries the Session's history. The transport writes it as
     // { type: 'opened', cursor, page }, while this half's own contract says
