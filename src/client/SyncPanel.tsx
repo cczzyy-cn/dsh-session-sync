@@ -452,6 +452,17 @@ function Conversation(props: {
     () => trajectoryCells(state.transcript?.events ?? [], kindLabel(t)),
     [state.transcript, t],
   )
+  // The shipped chat reveals a turn's actions by recency: the newest turn keeps
+  // its row, an older one reveals it on hover. The live step counts as a turn of
+  // its own, so the moment a new one starts the previous turn's row retires to
+  // hover — which is what a reader sees in the conversation beside this panel.
+  const latestTurn = React.useMemo(
+    () => rows.reduce(
+      (newest, row) => (row.kind === 'assistant' && row.turn > newest ? row.turn : newest),
+      state.live.turn,
+    ),
+    [rows, state.live.turn],
+  )
   // MarkdownText caches a streaming render against the labels object's identity,
   // so a fresh object on every render would discard that cache each time.
   const labels = React.useMemo(
@@ -542,7 +553,9 @@ function Conversation(props: {
                   ? <p className={css.empty}>{t('transcriptLoading')}</p>
                   : rows.length === 0
                     ? <p className={css.empty}>{t('transcriptEmpty')}</p>
-                    : rows.map(row => <TranscriptLine key={row.key} t={t} row={row} labels={labels} />)}
+                    : rows.map(row => (
+                      <TranscriptLine key={row.key} t={t} row={row} labels={labels} latestTurn={latestTurn} />
+                    ))}
               {/* Streaming text arrives between durable settlements: reasoning
                   first, then the answer, each replacing itself as it grows. The
                   settlement that ends the step retires both. */}
@@ -779,14 +792,19 @@ function HeroPlaceholder({ t }: { t: (key: SessionSyncKey) => string }): React.R
 }
 
 /** One transcript row, in the shapes the DSH conversation uses. */
-function TranscriptLine({ t, row, labels }: {
+function TranscriptLine({ t, row, labels, latestTurn }: {
   t: SessionSyncTranslate
   row: TranscriptRow
   labels: MarkdownLabels
+  /** The newest turn in the flow, which is the one whose actions stay visible. */
+  latestTurn: number
 }): React.ReactElement {
   if (row.kind === 'user') {
     return (
-      <div className={css.userRow}>
+      // The shipped flow marks each item's kind and lets the actions sheet hide
+      // an earlier prompt's row until hover; the copied rule keys on exactly
+      // this attribute, so the console inherits that behaviour.
+      <div className={css.userRow} data-chat-flow-kind="user">
         <div className={css.bubble}>{row.text}</div>
         <MessageActions t={t} text={row.text} place="user" time={row.time} />
       </div>
@@ -794,7 +812,16 @@ function TranscriptLine({ t, row, labels }: {
   }
   if (row.kind === 'assistant') {
     return (
-      <div className={css.assistantRow}>
+      <div
+        className={css.assistantRow}
+        data-chat-flow-kind="assistant"
+        data-chat-turn={row.turn}
+        // Shipped semantics (ui-chat TurnTailNodeView): the newest turn's
+        // actions are always there, an older turn's appear on hover or focus.
+        {...row.tail
+          ? { 'data-actions-reveal': row.turn >= latestTurn ? 'always' : 'hover' }
+          : {}}
+      >
         {/* Blocks stay in authored order: the model interleaves reasoning and
             prose, and hoisting every reasoning block to the top would rewrite
             what it actually said. */}

@@ -63,9 +63,11 @@ registered `main` keys.
   shipped `details` row with its countdown, a turn that failed or hit the output
   cap shows the shipped notice, and a turn's closing answer carries the copy,
   usage and run-time actions — one row of them per turn, plus one per user
-  prompt. Assistant blocks keep the order the model wrote them in: reasoning and
-  prose interleave, and hoisting every reasoning block to the top rewrites what
-  it actually said.
+  prompt, revealed by the shipped recency rule: the newest turn's row stays,
+  an older turn's appears on hover or keyboard focus, and an earlier prompt's
+  clock-and-copy row does the same once a later prompt exists. Assistant blocks
+  keep the order the model wrote them in: reasoning and prose interleave, and
+  hoisting every reasoning block to the top rewrites what it actually said.
 - **There is no machine pane.** The machine is a level of the tree, so choosing
   one and opening a Session are the same gesture; a separate column would only
   restate what the row already says.

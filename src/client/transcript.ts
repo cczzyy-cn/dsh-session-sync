@@ -27,7 +27,7 @@ export type AssistantBlock =
 /** One renderable transcript row. */
 export type TranscriptRow =
   | { kind: 'user'; key: string; time: number; text: string }
-  | { kind: 'assistant'; key: string; time: number; blocks: AssistantBlock[]; interrupted: boolean; facts?: TurnFacts; tail: boolean }
+  | { kind: 'assistant'; key: string; time: number; blocks: AssistantBlock[]; interrupted: boolean; facts?: TurnFacts; turn: number; tail: boolean }
   | NoticeRow
   | RetryRow
   | ToolRow

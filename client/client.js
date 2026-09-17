@@ -3523,6 +3523,7 @@ window.__ModuleLoader__.load({
 			const rows = react.useMemo(() => toRows(state.transcript?.events ?? []), [state.transcript]);
 			const chrome = react.useMemo(() => sessionChrome(state.transcript?.events ?? []), [state.transcript]);
 			const cells = react.useMemo(() => trajectoryCells(state.transcript?.events ?? [], kindLabel(t)), [state.transcript, t]);
+			const latestTurn = react.useMemo(() => rows.reduce((newest, row) => row.kind === "assistant" && row.turn > newest ? row.turn : newest, state.live.turn), [rows, state.live.turn]);
 			const labels = react.useMemo(() => ({
 				code: {
 					copyLabel: t("copyCode"),
@@ -3634,7 +3635,8 @@ window.__ModuleLoader__.load({
 							}) : rows.map((row) => /* @__PURE__ */ (0, react_jsx_runtime.jsx)(TranscriptLine, {
 								t,
 								row,
-								labels
+								labels,
+								latestTurn
 							}, row.key)),
 							(state.live.reasoning !== "" || state.live.text !== "") && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 								className: sync_module_css_default.assistantRow,
@@ -3896,9 +3898,10 @@ window.__ModuleLoader__.load({
 			});
 		}
 		/** One transcript row, in the shapes the DSH conversation uses. */
-		function TranscriptLine({ t, row, labels }) {
+		function TranscriptLine({ t, row, labels, latestTurn }) {
 			if (row.kind === "user") return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 				className: sync_module_css_default.userRow,
+				"data-chat-flow-kind": "user",
 				children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
 					className: sync_module_css_default.bubble,
 					children: row.text
@@ -3911,6 +3914,9 @@ window.__ModuleLoader__.load({
 			});
 			if (row.kind === "assistant") return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 				className: sync_module_css_default.assistantRow,
+				"data-chat-flow-kind": "assistant",
+				"data-chat-turn": row.turn,
+				...row.tail ? { "data-actions-reveal": row.turn >= latestTurn ? "always" : "hover" } : {},
 				children: [
 					row.blocks.map((block, index) => /* @__PURE__ */ (0, react_jsx_runtime.jsx)(AssistantBlockView, {
 						t,
