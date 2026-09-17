@@ -2764,7 +2764,8 @@ window.__ModuleLoader__.load({
 		function buildTree(machines, query) {
 			const needle = query.trim().toLowerCase();
 			const groups = [];
-			for (const machine of machines) {
+			const ordered = [...machines].sort((left, right) => left.machineName.localeCompare(right.machineName));
+			for (const machine of ordered) {
 				const sessions = machine.sessions.filter((session) => needle === "" || matches(session, needle)).sort((left, right) => Number(right.running) - Number(left.running) || right.updatedAt - left.updatedAt);
 				if (needle !== "" && sessions.length === 0) continue;
 				const directories = /* @__PURE__ */ new Map();
@@ -2776,7 +2777,7 @@ window.__ModuleLoader__.load({
 				}
 				groups.push({
 					machine,
-					projects: [...directories].map(([cwd, members]) => ({
+					projects: [...directories].sort(([left], [right]) => left.localeCompare(right)).map(([cwd, members]) => ({
 						cwd,
 						sessions: members
 					}))

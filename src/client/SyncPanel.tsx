@@ -929,7 +929,12 @@ function deliveryLine(delivery: CommandDelivery, t: (key: SessionSyncKey) => str
 function buildTree(machines: readonly MirroredMachine[], query: string): MachineGroup[] {
   const needle = query.trim().toLowerCase()
   const groups: MachineGroup[] = []
-  for (const machine of machines) {
+  // Ordered by name, not by arrival: the mirror lists machines in whatever order
+  // they last published, so two machines publishing in turn would swap rows and
+  // the list would appear to jump. A name order changes only when membership does.
+  const ordered = [...machines]
+    .sort((left, right) => left.machineName.localeCompare(right.machineName))
+  for (const machine of ordered) {
     const sessions = machine.sessions
       .filter(session => needle === '' || matches(session, needle))
       .sort((left, right) =>
@@ -944,7 +949,10 @@ function buildTree(machines: readonly MirroredMachine[], query: string): Machine
     }
     groups.push({
       machine,
-      projects: [...directories].map(([cwd, members]) => ({ cwd, sessions: members })),
+      // Directories are ordered by path for the same reason.
+      projects: [...directories]
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([cwd, members]) => ({ cwd, sessions: members })),
     })
   }
   return groups
