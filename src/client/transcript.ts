@@ -76,10 +76,19 @@ export interface ToolRow {
   name: string
   /** One-line gist of the arguments, for the collapsed row. */
   summary: string
+  /**
+   * The call's own `description` argument, which the shipped terminal row shows
+   * instead of the command it runs.
+   */
+  description: string
+  /** One-line failure text, which replaces the summary on a failed call. */
+  errorSummary: string
   /** Formatted arguments, for the expanded body. */
   argumentsText: string
   /** Every visible result block joined, for the expanded body. */
   resultText: string
+  /** The result's structured presentation metadata, verbatim. */
+  meta: unknown
   isError: boolean
   /** True while the call has no matching result in the mirrored window. */
   pending: boolean
@@ -135,6 +144,8 @@ export function toRows(events: readonly MirrorEvent[]): TranscriptRow[] {
       }
       row.resultText = resultTextOf(data)
       row.isError = isErrorOf(data)
+      row.errorSummary = row.isError ? firstLineOfText(row.resultText) : ''
+      row.meta = data['meta']
       row.pending = false
       continue
     }
@@ -313,8 +324,11 @@ function toolCallRow(event: MirrorEvent, data: Record<string, unknown>): ToolRow
     callId: typeof data['callId'] === 'string' ? data['callId'] : '',
     name: typeof data['name'] === 'string' ? data['name'] : '',
     summary: summarize(raw),
+    description: descriptionOf(raw),
+    errorSummary: '',
     argumentsText: formatArguments(raw),
     resultText: '',
+    meta: undefined,
     isError: false,
     pending: true,
   }
@@ -326,6 +340,8 @@ function toolResultOnlyRow(
   callId: string,
   data: Record<string, unknown>,
 ): ToolRow {
+  const resultText = resultTextOf(data)
+  const isError = isErrorOf(data)
   return {
     kind: 'tool',
     key: String(event.seq),
@@ -333,9 +349,12 @@ function toolResultOnlyRow(
     callId,
     name: '',
     summary: '',
+    description: '',
+    errorSummary: isError ? firstLineOfText(resultText) : '',
     argumentsText: '',
-    resultText: resultTextOf(data),
-    isError: isErrorOf(data),
+    resultText,
+    meta: data['meta'],
+    isError,
     pending: false,
   }
 }
@@ -372,6 +391,31 @@ function isErrorOf(data: Record<string, unknown>): boolean {
 function failureText(value: unknown): string {
   const record = asRecord(value)
   return text(record?.['message'])
+}
+
+/**
+ * The call's own one-line description.
+ *
+ * The shipped terminal row shows this instead of the command it runs, which is
+ * the difference between a row that says what the call is for and one that
+ * repeats a shell line.
+ * @param raw - the call's raw arguments string.
+ * @returns the description, or an empty string when the tool was given none.
+ */
+function descriptionOf(raw: string): string {
+  if (raw === '') return ''
+  const record = asRecord(parseJson(raw))
+  const description = record?.['description']
+  return typeof description === 'string' ? oneLine(description) : ''
+}
+
+/** The first non-empty line, which is what a failure summary shows. */
+function firstLineOfText(text: string): string {
+  for (const line of text.split('\n')) {
+    const trimmed = line.trim()
+    if (trimmed !== '') return trimmed
+  }
+  return ''
 }
 
 /** One-line gist of a raw arguments string. */

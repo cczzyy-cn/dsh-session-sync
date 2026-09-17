@@ -994,6 +994,13 @@ function ToolCallRow({ t, row }: {
   const summary = presentation.wire === undefined
     ? row.summary
     : [presentation.wire, row.summary].filter(part => part !== '').join(' · ')
+  // The shipped row replaces the summary on failure, and lets a terminal card's
+  // own description stand in for the command it runs.
+  const summaryText = row.errorSummary !== ''
+    ? row.errorSummary
+    : presentation.glyph === 'terminal' && row.description !== ''
+      ? row.description
+      : summary
 
   const glyph = (): React.ReactElement => (
     <span className={row.isError ? `${css.toolGlyph} ${css.toolGlyphError}` : css.toolGlyph}>
@@ -1021,7 +1028,7 @@ function ToolCallRow({ t, row }: {
           onToggle={() => { setOpen(current => !current) }}
           className={toolRowClass(row.pending)}
           titleClassName={css.toolName}
-          collapsedContent={<span className={css.toolSummary}>{summary}</span>}
+          collapsedContent={<span className={css.toolSummary}>{summaryText}</span>}
         >
           {argumentsCard}
         </DisclosureRow>
@@ -1073,7 +1080,7 @@ function ToolCallRow({ t, row }: {
         <>
           <span className={css.toolSep} />
           <span className={css.toolSummary}>
-            {summary !== '' ? summary : timeLabel(row.time, t)}
+            {summaryText !== '' ? summaryText : timeLabel(row.time, t)}
           </span>
         </>
       )}

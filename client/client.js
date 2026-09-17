@@ -1724,6 +1724,8 @@ window.__ModuleLoader__.load({
 					}
 					row.resultText = resultTextOf(data);
 					row.isError = isErrorOf(data);
+					row.errorSummary = row.isError ? firstLineOfText(row.resultText) : "";
+					row.meta = data["meta"];
 					row.pending = false;
 					continue;
 				}
@@ -1903,14 +1905,19 @@ window.__ModuleLoader__.load({
 				callId: typeof data["callId"] === "string" ? data["callId"] : "",
 				name: typeof data["name"] === "string" ? data["name"] : "",
 				summary: summarize(raw),
+				description: descriptionOf(raw),
+				errorSummary: "",
 				argumentsText: formatArguments(raw),
 				resultText: "",
+				meta: void 0,
 				isError: false,
 				pending: true
 			};
 		}
 		/** Build the row for a `tool/result` whose call is not in the window. */
 		function toolResultOnlyRow(event, callId, data) {
+			const resultText = resultTextOf(data);
+			const isError = isErrorOf(data);
 			return {
 				kind: "tool",
 				key: String(event.seq),
@@ -1918,9 +1925,12 @@ window.__ModuleLoader__.load({
 				callId,
 				name: "",
 				summary: "",
+				description: "",
+				errorSummary: isError ? firstLineOfText(resultText) : "",
 				argumentsText: "",
-				resultText: resultTextOf(data),
-				isError: isErrorOf(data),
+				resultText,
+				meta: data["meta"],
+				isError,
 				pending: false
 			};
 		}
@@ -1951,6 +1961,28 @@ window.__ModuleLoader__.load({
 		/** One-line failure text out of an `LlmFailure`-shaped record. */
 		function failureText(value) {
 			return text(asRecord(value)?.["message"]);
+		}
+		/**
+		* The call's own one-line description.
+		*
+		* The shipped terminal row shows this instead of the command it runs, which is
+		* the difference between a row that says what the call is for and one that
+		* repeats a shell line.
+		* @param raw - the call's raw arguments string.
+		* @returns the description, or an empty string when the tool was given none.
+		*/
+		function descriptionOf(raw) {
+			if (raw === "") return "";
+			const description = asRecord(parseJson(raw))?.["description"];
+			return typeof description === "string" ? oneLine(description) : "";
+		}
+		/** The first non-empty line, which is what a failure summary shows. */
+		function firstLineOfText(text) {
+			for (const line of text.split("\n")) {
+				const trimmed = line.trim();
+				if (trimmed !== "") return trimmed;
+			}
+			return "";
 		}
 		/** One-line gist of a raw arguments string. */
 		function summarize(raw) {
@@ -3022,6 +3054,7 @@ window.__ModuleLoader__.load({
 			const generic = presentation.glyph === "generic" && presentation.wire !== void 0;
 			const label = presentation.labelKey === void 0 ? row.name === "" ? t("toolResult") : row.name : t(presentation.labelKey);
 			const summary = presentation.wire === void 0 ? row.summary : [presentation.wire, row.summary].filter((part) => part !== "").join(" · ");
+			const summaryText = row.errorSummary !== "" ? row.errorSummary : presentation.glyph === "terminal" && row.description !== "" ? row.description : summary;
 			const glyph = () => /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 				className: row.isError ? `${sync_module_css_default.toolGlyph} ${sync_module_css_default.toolGlyphError}` : sync_module_css_default.toolGlyph,
 				children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(ToolGlyphIcon, { glyph: presentation.glyph })
@@ -3052,7 +3085,7 @@ window.__ModuleLoader__.load({
 				titleClassName: sync_module_css_default.toolName,
 				collapsedContent: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 					className: sync_module_css_default.toolSummary,
-					children: summary
+					children: summaryText
 				}),
 				children: argumentsCard
 			}), row.pending ? null : /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.DisclosureRow, {
@@ -3103,7 +3136,7 @@ window.__ModuleLoader__.load({
 				titleClassName: sync_module_css_default.toolName,
 				collapsedContent: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { className: sync_module_css_default.toolSep }), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 					className: sync_module_css_default.toolSummary,
-					children: summary !== "" ? summary : timeLabel(row.time, t)
+					children: summaryText !== "" ? summaryText : timeLabel(row.time, t)
 				})] }),
 				children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 					className: sync_module_css_default.ioCard,
