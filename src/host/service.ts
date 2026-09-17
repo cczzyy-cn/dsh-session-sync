@@ -30,6 +30,7 @@ import type {
   HostContext,
   SessionControllerLike,
   SessionSummaryRow,
+  WireEvent,
 } from './dsh.ts'
 import { SyncHub, type BrowserSink } from './hub.ts'
 import { OriginLink, startSyncServer, type SyncServerHandle } from './transport.ts'
@@ -43,11 +44,54 @@ const FLUSH_MS = 400
 /** Bound on events buffered per Session while the link is down. */
 const BUFFER_LIMIT = 4_000
 
+/** Bound on steps whose streamed text is still tracked, per kind. */
+const LIVE_LIMIT = 64
+
+/** The two kinds of text one step streams. */
+const STREAM_KINDS = ['reasoning', 'text'] as const
+
+/** One kind of streamed text. */
+type StreamKind = typeof STREAM_KINDS[number]
+
 /** One tracked `follow` stream. */
 interface FollowHandle {
   readonly abort: AbortController
   /** Durable events observed since the last successful flush. */
   readonly pending: MirrorEvent[]
+  /**
+   * The Session this follow belongs to.
+   *
+   * A follow is already addressed to one Session and its frames carry no
+   * Session id of their own, so this is where that identity is kept. It used to
+   * live on the service, which meant that with more than one published Session
+   * every stream was attributed to whichever follow happened to start last.
+   */
+  readonly sessionId: string
+  /** The open attempt's identity, from its `start` frame or the opening baseline. */
+  attemptId: string
+  /** The open attempt's turn and step, which its `chunk` frames do not repeat. */
+  turn: number
+  step: number
+}
+
+/** The accumulator key of one step's text. */
+function sessionLiveKey(sessionId: string, turn: number, step: number, kind: StreamKind): string {
+  return `${sessionId}|${String(turn)}|${String(step)}|${kind}`
+}
+
+/** The settlement key of one step: what says that step is over. */
+function sessionStepKey(sessionId: string, turn: number, step: number): string {
+  return `${sessionId}|${String(turn)}|${String(step)}`
+}
+
+/** The accumulator key of the step one follow has open. */
+function liveKey(handle: FollowHandle, kind: StreamKind): string {
+  return sessionLiveKey(handle.sessionId, handle.turn, handle.step, kind)
+}
+
+/** The settlement key of the step one follow has open. */
+function stepKey(handle: FollowHandle): string {
+  return sessionStepKey(handle.sessionId, handle.turn, handle.step)
 }
 
 /** The engine. */
@@ -77,15 +121,12 @@ export class SessionSyncService {
   private readonly postCounts = new Map<string, { count: number; at: number; ok: boolean }>()
   private followError: string | undefined
   private followErrorSession: string | undefined
-  /** The Session whose frames are being absorbed right now. */
-  private streamSessionId = ''
-  /** The running attempt's turn and step, taken from its start frame. */
-  private streamTurn = 0
-  private streamStep = 0
 
   /** Streaming text per step, keyed session|turn|step|kind; relayed, never mirrored. */
   private readonly liveText = new Map<string, StreamDeltaPayload>()
   private readonly liveDirty = new Set<string>()
+  /** Steps whose settlement already arrived, so a late delta cannot revive them. */
+  private readonly settled = new Set<string>()
 
   /** The last publish attempt, as the settings page reports it. */
   private lastPublish: { at: number; ok: boolean; error?: string } | undefined
@@ -404,11 +445,18 @@ export class SessionSyncService {
     }
   }
 
-  /** Open one `follow` stream and absorb its frames into the pending buffer. */  private startFollow(sessionId: string): void {
+  /** Open one `follow` stream and absorb its frames into the pending buffer. */
+  private startFollow(sessionId: string): void {
     const controller = this.controller()
     if (controller === undefined) return
-    this.streamSessionId = sessionId
-    const handle: FollowHandle = { abort: new AbortController(), pending: [] }
+    const handle: FollowHandle = {
+      abort: new AbortController(),
+      pending: [],
+      sessionId,
+      attemptId: '',
+      turn: 0,
+      step: 0,
+    }
     this.follows.set(sessionId, handle)
     void (async () => {
       try {
@@ -429,112 +477,225 @@ export class SessionSyncService {
     })()
   }
 
-  /** Record one follow frame's durable events. */
   /**
-   * Take whatever streaming text a follow frame carries.
+   * Take the streaming text out of one follow frame.
    *
-   * The frame family is not ours to define: the contract is structural and the
-   * stream rides it as a variant we cannot name from here, so this reads the
-   * shapes defensively -- an opening baseline, a stream frame, or a bare chunk
-   * -- and accumulates the text each one carries. Anything it does not
-   * recognise is left alone, so the durable path is never at risk.
-   * @param frame - one frame from the follow stream.
+   * With `assistantStream: true` a follow yields
+   * `{ type: 'assistant-stream', frame }`, where the frame is a `start` (the
+   * attempt's identity, turn, and step), a dense `chunk` carrying one
+   * `text-delta` or `reasoning-delta`, or an `end` whose outcome says whether
+   * the attempt was committed or abandoned.
+   *
+   * The wire sends deltas; everything this plugin relays is the whole text so
+   * far, so they are accumulated here per Session, step, and kind, and a lost
+   * frame heals on the next one. The durable path is not touched: a chunk this
+   * reader does not recognise is simply ignored.
+   * @param handle - the follow the frame arrived on, which owns the identity
+   *   every field below is keyed by: several follows are open at once, and a
+   *   service-wide "current Session" attributed one Session's stream to another.
+   * @param frame - one frame from that follow stream.
    */
-  private absorbStream(frame: unknown): void {
-    const seen = new Set<unknown>()
-    const visit = (value: unknown): void => {
-      // A chunk may arrive as serialised JSON (the contract types it JsonValue),
-      // in which case the object this reader needs is one parse away. Bounded to
-      // one level: a string that is not JSON is simply not a chunk.
-      if (typeof value === 'string') {
-        const trimmed = value.trim()
-        if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
-          try { visit(JSON.parse(trimmed) as unknown) } catch { /* not JSON: not a chunk */ }
-        }
-        return
-      }
-      if (typeof value !== 'object' || value === null || seen.has(value)) return
-      seen.add(value)
-      const record = value as Record<string, unknown>
-      // A chunk frame carries no turn/step of its own: the attempt's start frame
-      // does, so it is remembered here and used for whatever follows.
-      if (record['type'] === 'start') {
-        if (typeof record['turn'] === 'number') this.streamTurn = record['turn']
-        if (typeof record['step'] === 'number') this.streamStep = record['step']
-      }
-      if (Array.isArray(record['stream'])) { for (const item of record['stream']) visit(item) }
-      visit(record['chunk'])
-      visit(record['frame'])
-      visit(record['assistantStream'])
-      if (Array.isArray(record['chunks'])) { for (const item of record['chunks']) visit(item) }
-      // The compact record families the Session stream carries: each is one run
-      // of deltas for a kind, in `texts`. This is the shape an assistant-stream
-      // frame actually holds (see @deepseek-ai/dsh-llm's AssistantStreamRecord),
-      // and it is why reading only a { type: 'text', text } chunk found nothing.
-      const recordType = record['type']
-      const texts = record['texts']
-      if (Array.isArray(texts) && (recordType === 'text-chunks' || recordType === 'reasoning-chunks')) {
-        const kind = recordType === 'reasoning-chunks' ? 'reasoning' : 'text'
-        const text = texts.filter(part => typeof part === 'string').join('')
-        if (text !== '') {
-          const sessionId = this.streamSessionId
-          if (sessionId !== '') {
-            const turn = typeof record['turn'] === 'number' ? record['turn'] : 0
-            const step = typeof record['step'] === 'number' ? record['step'] : 0
-            const key = sessionId + '|' + String(turn) + '|' + String(step) + '|' + kind
-            const previous = this.liveText.get(key)
-            this.liveText.set(key, { sessionId, turn, step, kind, text: (previous?.text ?? '') + text })
-            this.liveDirty.add(key)
-          }
-        }
-        return
-      }
-      const inner = record['chunk'] as Record<string, unknown> | undefined
-      const source = inner !== undefined && typeof inner === 'object' ? inner : record
-      // The model's own chunk types: text-delta and reasoning-delta carry `text`.
-      // Matching the bare words 'text'/'reasoning' is what kept this reader from
-      // ever taking a delta, so both spellings are accepted.
-      const sourceType = source['type']
-      const kind = sourceType === 'reasoning-delta' || sourceType === 'reasoning'
-        ? 'reasoning'
-        : sourceType === 'text-delta' || sourceType === 'text' ? 'text' : undefined
-      if (kind === undefined) return
-      const text = typeof source['text'] === 'string' ? source['text'] : typeof source['delta'] === 'string' ? source['delta'] : undefined
-      if (text === undefined || text === '') return
-      const turn = typeof record['turn'] === 'number' ? record['turn'] : this.streamTurn
-      const step = typeof record['step'] === 'number' ? record['step'] : this.streamStep
-      const sessionId = this.streamSessionId
-      if (sessionId === '') return
-      const key = `${sessionId}|${String(turn)}|${String(step)}|${kind}`
+  private absorbStream(handle: FollowHandle, frame: unknown): void {
+    const envelope = jsonObject(frame)
+    if (envelope === undefined || envelope['type'] !== 'assistant-stream') return
+    const record = jsonObject(envelope['frame'])
+    if (record === undefined) return
+    const type = record['type']
+    if (type === 'start') {
+      this.openAttempt(handle, record)
+      return
+    }
+    if (type === 'chunk') {
+      this.takeChunk(handle, record)
+      return
+    }
+    if (type === 'end') {
+      const outcome = record['outcome'] as Record<string, unknown> | undefined
+      // An abandoned attempt has no durable settlement to replace its row, so
+      // the reader is told the text is gone. A committed one is replaced by its
+      // own `assistant/message`, which is the durable path's business.
+      if (outcome !== undefined && outcome['kind'] === 'abandoned') this.dropStep(handle)
+    }
+  }
+
+  /**
+   * Adopt one attempt's identity and forget whatever step it replaces.
+   *
+   * A retried step re-opens the same turn and step, so without this the second
+   * attempt's deltas would be appended to the first attempt's text.
+   * @param handle - the follow the start frame arrived on.
+   * @param record - one `start` frame.
+   */
+  private openAttempt(handle: FollowHandle, record: Record<string, unknown>): void {
+    const previousTurn = handle.turn
+    const previousStep = handle.step
+    if (typeof record['attemptId'] === 'string') handle.attemptId = record['attemptId']
+    if (typeof record['turn'] === 'number') handle.turn = record['turn']
+    if (typeof record['step'] === 'number') handle.step = record['step']
+    this.forgetStep(handle.sessionId, previousTurn, previousStep)
+  }
+
+  /**
+   * Accumulate one streamed chunk of the open attempt.
+   * @param handle - the follow the chunk arrived on.
+   * @param record - one `chunk` frame.
+   */
+  private takeChunk(handle: FollowHandle, record: Record<string, unknown>): void {
+    // A controller mounted after this attempt started has no `start` frame to
+    // reset on; the first chunk of another attempt is that reset.
+    if (typeof record['attemptId'] === 'string' && record['attemptId'] !== handle.attemptId) {
+      handle.attemptId = record['attemptId']
+      this.forgetStep(handle.sessionId, handle.turn, handle.step)
+    }
+    const chunk = jsonObject(record['chunk'])
+    if (chunk === undefined) return
+    const kind = chunk['type'] === 'reasoning-delta' ? 'reasoning' : chunk['type'] === 'text-delta' ? 'text' : undefined
+    if (kind === undefined) return
+    this.appendStream(handle, kind, typeof chunk['text'] === 'string' ? chunk['text'] : '')
+  }
+
+  /**
+   * Append one delta to its step's text and mark that step for relay.
+   * @param handle - the follow the delta belongs to.
+   * @param kind - which of the step's two texts it is.
+   * @param text - the delta itself.
+   */
+  private appendStream(handle: FollowHandle, kind: StreamKind, text: string): void {
+    if (text === '' || this.settled.has(stepKey(handle))) return
+    const key = liveKey(handle, kind)
+    const base = this.liveText.get(key)?.text ?? ''
+    this.liveText.set(key, {
+      sessionId: handle.sessionId,
+      turn: handle.turn,
+      step: handle.step,
+      kind,
+      text: base + text,
+    })
+    this.liveDirty.add(key)
+    while (this.liveText.size > LIVE_LIMIT) {
+      const oldest = this.liveText.keys().next()
+      if (oldest.done === true || oldest.value === key) break
+      this.liveText.delete(oldest.value)
+      this.liveDirty.delete(oldest.value)
+    }
+  }
+
+  /**
+   * Forget one step entirely: its text, its pending relay, and any settlement
+   * mark it carried.
+   * @param sessionId - the Session that owns the step.
+   * @param turn - the step's turn.
+   * @param step - the step number.
+   */
+  private forgetStep(sessionId: string, turn: number, step: number): void {
+    for (const kind of STREAM_KINDS) {
+      const key = sessionLiveKey(sessionId, turn, step, kind)
+      this.liveText.delete(key)
+      this.liveDirty.delete(key)
+    }
+    this.settled.delete(sessionStepKey(sessionId, turn, step))
+  }
+
+  /**
+   * Tell the reader the open step's text is gone, and refuse any late delta for
+   * it. Only an abandoned attempt needs the frame: nothing follows it, so
+   * nothing else would replace the row.
+   * @param handle - the follow whose attempt was abandoned.
+   */
+  private dropStep(handle: FollowHandle): void {
+    for (const kind of STREAM_KINDS) {
+      const key = liveKey(handle, kind)
       const previous = this.liveText.get(key)
-      const base = previous?.text ?? ''
-      if (text !== '' && base.endsWith(text)) { this.liveDirty.add(key); return }
-      this.liveText.set(key, { sessionId, turn, step, kind, text: base + text })
+      if (previous === undefined) continue
+      this.liveText.set(key, { ...previous, text: '' })
       this.liveDirty.add(key)
     }
-    visit(frame)
+    this.settled.add(stepKey(handle))
+    this.pruneSettled()
+  }
+
+  /**
+   * Stop relaying one settled step, and drop what it accumulated.
+   *
+   * A delta and its settlement travel as two separate posts, so without this a
+   * delta that lost the race would put the live row back after the durable
+   * message that replaced it.
+   * @param handle - the follow the event arrived on.
+   * @param event - one durable mirrored event.
+   */
+  private retireStream(handle: FollowHandle, event: WireEvent): void {
+    if (event.type !== 'assistant/message' && event.type !== 'assistant/attempt') return
+    const data = event.data as Record<string, unknown> | undefined
+    const turn = typeof data?.['turn'] === 'number' ? data['turn'] : handle.turn
+    const step = typeof data?.['step'] === 'number' ? data['step'] : handle.step
+    this.forgetStep(handle.sessionId, turn, step)
+    this.settled.add(sessionStepKey(handle.sessionId, turn, step))
+    this.pruneSettled()
+  }
+
+  /** Bound the settlement marks, newest kept. */
+  private pruneSettled(): void {
+    while (this.settled.size > LIVE_LIMIT) {
+      const oldest = this.settled.values().next()
+      if (oldest.done === true) break
+      this.settled.delete(oldest.value)
+    }
+  }
+
+  /**
+   * Adopt the opening frame's live attempt, so a follow that opens in the
+   * middle of a step still shows the text that was streamed before it.
+   *
+   * The baseline nests its compact runs under `activeAttempt`, and `nextIndex`
+   * says how many deltas they represent: DSH's own Web client expands them and
+   * stops there, and so does this.
+   * @param handle - the follow that just opened.
+   * @param frame - its opening frame.
+   */
+  private seedStream(handle: FollowHandle, frame: Record<string, unknown>): void {
+    const baseline = frame['assistantStream'] as Record<string, unknown> | undefined
+    const attempt = baseline?.['activeAttempt'] as Record<string, unknown> | undefined
+    if (attempt === undefined) return
+    if (typeof attempt['attemptId'] === 'string') handle.attemptId = attempt['attemptId']
+    if (typeof attempt['turn'] === 'number') handle.turn = attempt['turn']
+    if (typeof attempt['step'] === 'number') handle.step = attempt['step']
+    const runs = Array.isArray(attempt['stream']) ? attempt['stream'] as readonly Record<string, unknown>[] : []
+    const limit = typeof attempt['nextIndex'] === 'number' ? attempt['nextIndex'] : Number.MAX_SAFE_INTEGER
+    let members = 0
+    for (const run of runs) {
+      const kind = run['type'] === 'reasoning-chunks' ? 'reasoning' : run['type'] === 'text-chunks' ? 'text' : undefined
+      if (kind === undefined) continue
+      const texts = Array.isArray(run['texts']) ? run['texts'] : []
+      for (const part of texts) {
+        if (typeof part !== 'string' || part === '') continue
+        if (members >= limit) return
+        members += 1
+        this.appendStream(handle, kind, part)
+      }
+    }
   }
 
   private absorb(handle: FollowHandle, frame: FollowFrame): void {
     const frameType = typeof (frame as { type?: unknown }).type === 'string' ? (frame as { type: string }).type : 'unknown'
     if (this.followFrameTypes.size < 12) this.followFrameTypes.add(frameType)
     this.followEvents += 1
+    const carrier = frame as unknown as Record<string, unknown>
     // The streaming frame's field names, recorded once. The durable side needed
     // no such reading; the stream has now cost three attempts, so it stops being
     // guessed at.
     if (frameType === 'assistant-stream' && this.followShapes.length < 8) {
       const keysOf = (value: unknown): string => value !== null && typeof value === 'object' ? Object.keys(value as Record<string, unknown>).slice(0, 10).join(',') : typeof value
-      const outer = frame as unknown as Record<string, unknown>
-      const inner = outer['frame'] ?? outer['assistantStream'] ?? outer
+      const inner = carrier['frame'] ?? carrier['assistantStream'] ?? carrier
       const chunk = inner !== null && typeof inner === 'object' ? (inner as Record<string, unknown>)['chunk'] : undefined
-      this.followShapes.push('assistant-stream{' + keysOf(outer) + '} inner{' + keysOf(inner) + '} chunk{' + keysOf(chunk) + '}')
+      this.followShapes.push('assistant-stream{' + keysOf(carrier) + '} inner{' + keysOf(inner) + '} chunk{' + keysOf(chunk) + '}')
     }
-    this.absorbStream(frame)
-    // The opening frame carries the Session's history. The transport writes it as
+    this.absorbStream(handle, frame)
+    // The opening frame carries the Session's history and, when one is open, the
+    // attempt that is still streaming. The transport writes it as
     // { type: 'opened', cursor, page }, while this half's own contract says
     // { type: 'snapshot', records }, so both are read: whichever arrives is not
     // ours to choose, and a history nobody reads is a Session that looks empty.
-    const carrier = frame as unknown as Record<string, unknown>
+    if (frameType === 'snapshot' || frameType === 'opened') this.seedStream(handle, carrier)
     const page = carrier['page'] as Record<string, unknown> | undefined
     const records = Array.isArray(carrier['records'])
       ? carrier['records'] as readonly { event?: unknown }[]
@@ -549,16 +710,20 @@ export class SessionSyncService {
       }
       for (const record of records) {
         if (record !== null && typeof record === 'object' && record.event !== undefined) {
-          buffer(handle, record.event as MirrorEvent)
+          const event = record.event as WireEvent
+          buffer(handle, event)
+          this.retireStream(handle, event)
         }
       }
       return
     }
     if (frameType === 'snapshot' || frameType === 'opened') this.historyMisses += 1
-    if (frame.type === 'event') buffer(handle, frame.event)
+    if (carrier['type'] === 'event' && 'event' in frame) {
+      buffer(handle, frame.event)
+      this.retireStream(handle, frame.event)
+    }
   }
 
-  /** Hand every buffered batch to the link, when there is a link to hand it to. */
   /** Relay the streaming text accumulated since the last tick. */
   private flushStream(): void {
     if (this.liveDirty.size === 0) return
@@ -651,6 +816,26 @@ function buffer(handle: FollowHandle, event: MirrorEvent): void {
   if (handle.pending.length > BUFFER_LIMIT) {
     handle.pending.splice(0, handle.pending.length - BUFFER_LIMIT)
   }
+}
+
+/**
+ * Read one JSON object out of a wire value.
+ *
+ * The frames this reader walks are typed as JSON, and a carrier that serialises
+ * one leaves it as a string; a value that is neither is simply not the object
+ * being looked for.
+ * @param value - a frame, a frame field, or anything else.
+ * @returns the object, or undefined when the value is not one.
+ */
+function jsonObject(value: unknown): Record<string, unknown> | undefined {
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (!trimmed.startsWith('{') || !trimmed.endsWith('}')) return undefined
+    try { return jsonObject(JSON.parse(trimmed) as unknown) } catch { return undefined }
+  }
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : undefined
 }
 
 /** One optional non-empty string. */

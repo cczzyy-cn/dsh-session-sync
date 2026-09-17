@@ -65,6 +65,33 @@ export interface WireRecord {
   readonly event: WireEvent
 }
 
+/** One packed delta run of a live attempt — `AssistantStreamRecord` minus raw chunks. */
+export interface WireStreamRun {
+  readonly type: 'text-chunks' | 'reasoning-chunks'
+  readonly time0: number
+  readonly index: number
+  readonly dt: readonly number[]
+  readonly texts: readonly string[]
+}
+
+/** An Assistant attempt still live at the follow opening — `SessionAssistantStreamAttempt`. */
+export interface WireStreamAttempt {
+  readonly attemptId: string
+  readonly startedAfterSeq: number
+  readonly turn: number
+  readonly step: number
+  /** Dense position expected for the next live chunk frame. */
+  readonly nextIndex: number
+  /** The deltas already streamed when this opening was taken. */
+  readonly stream: readonly WireStreamRun[]
+}
+
+/** The process-local Assistant state an opening carries — `SessionAssistantStreamBaseline`. */
+export interface WireStreamBaseline {
+  readonly revision: number
+  readonly activeAttempt?: WireStreamAttempt
+}
+
 /** The opening window of a `follow` stream — `SessionFollowFrame` `snapshot`. */
 export interface FollowSnapshotFrame {
   readonly type: 'snapshot'
@@ -73,12 +100,57 @@ export interface FollowSnapshotFrame {
   readonly records: readonly WireRecord[]
   readonly hasMore: boolean
   readonly projections: { readonly values: Readonly<Record<string, unknown>> }
+  /** Present only when the follow asked for assistant frames and one is open. */
+  readonly assistantStream?: WireStreamBaseline
 }
 
-/** One durable event frame. Process-local assistant frames are not consumed here. */
+/** One durable event frame — `SessionEventEntry`. */
 export interface FollowEventFrame {
   readonly type: 'event'
   readonly event: WireEvent
+}
+
+/** The attempt's identity, the first frame of one live attempt. */
+export interface FollowStreamStartFrame {
+  readonly type: 'start'
+  readonly attemptId: string
+  readonly revision: number
+  readonly turn: number
+  readonly step: number
+}
+
+/** One streamed model chunk; only the two delta kinds carry readable text. */
+export interface FollowStreamChunk {
+  readonly type: string
+  readonly text?: string
+}
+
+/** One streamed model chunk frame. */
+export interface FollowStreamChunkFrame {
+  readonly type: 'chunk'
+  readonly attemptId: string
+  readonly revision: number
+  readonly index: number
+  readonly time: number
+  readonly chunk: FollowStreamChunk
+}
+
+/** The attempt's terminal marker. */
+export interface FollowStreamEndFrame {
+  readonly type: 'end'
+  readonly attemptId: string
+  readonly revision: number
+  readonly index: number
+  readonly outcome: { readonly kind: string }
+}
+
+/** One process-local Assistant frame — `SessionAssistantStreamFrame`. */
+export type FollowStreamFrame = FollowStreamStartFrame | FollowStreamChunkFrame | FollowStreamEndFrame
+
+/** One opted-in process-local Assistant frame — `SessionFollowFrame` `assistant-stream`. */
+export interface FollowAssistantStreamFrame {
+  readonly type: 'assistant-stream'
+  readonly frame: FollowStreamFrame
 }
 
 /** Any other frame kind this plugin ignores. */
@@ -87,7 +159,11 @@ export interface FollowIgnoredFrame {
 }
 
 /** The frames a `follow` iteration yields. */
-export type FollowFrame = FollowSnapshotFrame | FollowEventFrame | FollowIgnoredFrame
+export type FollowFrame =
+  | FollowSnapshotFrame
+  | FollowEventFrame
+  | FollowAssistantStreamFrame
+  | FollowIgnoredFrame
 
 /** One prompt admission request — `SessionPromptRequest`. */
 export interface PromptRequest {

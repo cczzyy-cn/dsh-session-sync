@@ -20,6 +20,8 @@ import {
   type MirroredSession,
   type PublishFramesPayload,
   type PublishIndexPayload,
+  type StreamDeltaPayload,
+  type SyncState,
   type SyncStreamFrame,
 } from '../shared/protocol.ts'
 

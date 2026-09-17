@@ -20,6 +20,7 @@ import {
   type HandshakeResponse,
   type MirrorEvent,
   type PublishIndexPayload,
+  type StreamDeltaPayload,
 } from '../shared/protocol.ts'
 import type { SyncHub } from './hub.ts'
 import type { HostLogger } from './dsh.ts'
@@ -273,6 +274,14 @@ export interface OriginLinkOptions extends OriginLinkHandlers {
   password: () => string
   machineName: () => string
   logger: HostLogger
+  /**
+   * Observer for every post the link makes, accepted or dropped.
+   *
+   * `linked` says the downstream stream is up; this says whether anything is
+   * actually reaching the server, which is the difference a publisher that went
+   * quiet without disconnecting used to hide.
+   */
+  onPost?: (path: string, ok: boolean, error?: string) => void
 }
 
 /** The origin-role link to one sync server. */
