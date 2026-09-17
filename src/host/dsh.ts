@@ -57,6 +57,8 @@ export interface WireEvent {
   readonly seq: number
   readonly time: number
   readonly data: unknown
+  /** Surface placement, read so a replacement window survives the mirror. */
+  readonly surfaceOp?: unknown
 }
 
 /** One history record — `SessionEventEntry`. */

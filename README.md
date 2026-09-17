@@ -56,7 +56,13 @@ registered `main` keys.
   thinking folded behind one row, each tool call one 24px summary line with its
   arguments and result in an IN/OUT card, and an elevated 22px-radius composer
   card with a circular send button. A step that is still running shows its
-  thinking and its answer under that row as they arrive.
+  thinking and its answer under that row as they arrive, the folded thinking row
+  sweeps while it streams and follows its newest line, an interrupted answer
+  carries the shipped `已停止` chip, a model retry shows the shipped `details`
+  row with its countdown, a turn that failed or hit the output cap shows the
+  shipped notice, and each message carries a copy action. Assistant blocks keep
+  the order the model wrote them in: reasoning and prose interleave, and hoisting
+  every reasoning block to the top rewrites what it actually said.
 - **There is no machine pane.** The machine is a level of the tree, so choosing
   one and opening a Session are the same gesture; a separate column would only
   restate what the row already says.
@@ -107,7 +113,8 @@ normal way to edit it.
 ```
 
 - The origin keeps one `ctx.sessionController.follow` stream open per published
-  Session and forwards its durable events, plus the streamed step text its
+  Session and forwards its durable events — each with the surface placement that
+  says whether it appends or replaces — plus the streamed step text its
   assistant frames carry while a step is still running.
 - The server keeps an in-memory mirror. Sequence numbers make a replayed window
   idempotent, so a reconnect re-opens every follow and re-sends its opening
@@ -219,6 +226,19 @@ became of that command down the browser's own event stream:
   with its arguments and result in an IN/OUT card, but tool-specific cards (diff,
   terminal, read) are not implemented: the mirrored event carries no trusted
   presentation payload, so every result renders as text.
+- **An image block shows its facts, never the picture.** The mirror carries the
+  content block — media type and size — but not the attachment bytes, so the
+  console says an image was there instead of drawing it.
+- **The turn-level folds are not copied.** The shipped chat folds a turn's whole
+  process under one summary, offers a turn navigator rail, and prints per-turn
+  token pills with a usage dialog; the console lists each step's rows instead and
+  keeps its usage in the header. Command, approval, and compaction cards, and the
+  full composer (attachments, slash commands, model selection), are likewise not
+  copied.
+- **A surface replacement is honored.** The origin forwards each event's
+  `surfaceOp`, so a durable event that replaces a range of earlier ones — a
+  compaction, a replay after a fork — supersedes those rows in the console
+  instead of appearing beside them.
 - **The console copies the shipped UI; it does not import it.** A browser plugin
   cannot import another plugin's components, so the tree and the conversation are
   this package's own markup wearing `ui-primitives` and the shipped tokens. They

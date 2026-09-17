@@ -821,7 +821,15 @@ export class SessionSyncService {
 
 /** Append one durable event to the buffer, bounded so memory cannot run away. */
 function buffer(handle: FollowHandle, event: MirrorEvent): void {
-  handle.pending.push({ type: event.type, seq: event.seq, time: event.time, data: event.data })
+  handle.pending.push({
+    type: event.type,
+    seq: event.seq,
+    time: event.time,
+    data: event.data,
+    // Surface placement travels with the event: without it a replacement window
+    // reads as an append, and the console shows the history it superseded.
+    ...(event.surfaceOp === undefined ? {} : { surfaceOp: event.surfaceOp }),
+  })
   if (handle.pending.length > BUFFER_LIMIT) {
     handle.pending.splice(0, handle.pending.length - BUFFER_LIMIT)
   }

@@ -22,14 +22,17 @@ import {
   DisclosureRow,
   FishLogo,
   Input,
+  JsonBlock,
   MarkdownText,
   StateDot,
   Tooltip,
   IconApiOutline14,
   IconBrowseOutline16,
+  IconCheckOutline16,
   IconChecklistOutline14,
   IconChevronDownOutline14,
   IconChevronLeftOutline14,
+  IconCopyOutline16,
   IconEditOutline16,
   IconFolderClose16,
   IconFolderOpen16,
@@ -43,6 +46,7 @@ import {
   IconThinkOutline14,
   IconTriangleRightFill14,
   relativeTime,
+  writeClipboard,
   type MarkdownLabels,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { MirroredMachine, MirroredSession } from '../shared/protocol.ts'
@@ -58,7 +62,7 @@ import {
   type TrajectoryKind,
 } from './session-chrome.ts'
 import { TrajectoryView } from './TrajectoryView.tsx'
-import { toRows, type ToolRow, type TranscriptRow } from './transcript.ts'
+import { toRows, type AssistantBlock, type NoticeRow, type RetryRow, type ToolRow, type TranscriptRow } from './transcript.ts'
 import { toolPresentation, type ToolGlyph } from './tool-presentation.ts'
 import css from './sync.module.css'
 
@@ -743,18 +747,164 @@ function TranscriptLine({ t, row, labels }: {
     return (
       <div className={css.userRow}>
         <div className={css.bubble}>{row.text}</div>
+        <MessageActions t={t} text={row.text} place="user" />
       </div>
     )
   }
   if (row.kind === 'assistant') {
     return (
       <div className={css.assistantRow}>
-        {row.reasoning !== '' && <ReasoningRow t={t} reasoning={row.reasoning} />}
-        {row.text !== '' && <MarkdownText text={row.text} labels={labels} />}
+        {/* Blocks stay in authored order: the model interleaves reasoning and
+            prose, and hoisting every reasoning block to the top would rewrite
+            what it actually said. */}
+        {row.blocks.map((block, index) => (
+          <AssistantBlockView key={index} t={t} block={block} labels={labels} />
+        ))}
+        {row.interrupted && <span className={css.stopped}>{t('stopped')}</span>}
+        <MessageActions t={t} text={assistantTextOf(row.blocks)} place="assistant" />
       </div>
     )
   }
+  if (row.kind === 'notice') return <NoticeLine t={t} row={row} />
+  if (row.kind === 'retry') return <RetryLine t={t} row={row} />
   return <ToolCallRow t={t} row={row} />
+}
+
+/** One block of an assistant message. */
+function AssistantBlockView({ t, block, labels }: {
+  t: (key: SessionSyncKey) => string
+  block: AssistantBlock
+  labels: MarkdownLabels
+}): React.ReactElement {
+  if (block.kind === 'reasoning') return <ReasoningRow t={t} reasoning={block.text} />
+  if (block.kind === 'text') return <MarkdownText text={block.text} labels={labels} />
+  if (block.kind === 'image') {
+    // The mirror carries an image block's facts but never its bytes: the
+    // shipped chat renders the picture, this can only say one was there.
+    return (
+      <span className={css.mediaChip}>
+        {t('imageBlock')}
+        {block.detail === '' ? '' : ` · ${block.detail}`}
+      </span>
+    )
+  }
+  return (
+    <JsonBlock
+      label={t('unknownBlock')}
+      payload={block.payload}
+      truncatedLabel={total => `${t('jsonTruncated')} ${String(total)}`}
+    />
+  )
+}
+
+/** The plain text the copy action writes for one assistant message. */
+function assistantTextOf(blocks: readonly AssistantBlock[]): string {
+  return blocks
+    .filter((block): block is Extract<AssistantBlock, { kind: 'text' }> => block.kind === 'text')
+    .map(block => block.text)
+    .join('\n\n')
+}
+
+/**
+ * Copy chrome shared by user and assistant rows — the shipped `IconActions`.
+ *
+ * The copy feedback is local because the primitive that owns it
+ * (`useCopyFeedback`) is not part of the published surface; the behaviour is the
+ * shipped one: a one-second check swap, and no second write while it shows.
+ */
+function MessageActions({ t, text, place }: {
+  t: (key: SessionSyncKey) => string
+  text: string
+  place: 'user' | 'assistant'
+}): React.ReactElement | null {
+  const [copied, setCopied] = React.useState(false)
+  const timer = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  React.useEffect(() => () => { if (timer.current !== null) clearTimeout(timer.current) }, [])
+  const onCopy = (): void => {
+    if (copied) return
+    void writeClipboard(text).then((ok) => {
+      if (!ok) return
+      setCopied(true)
+      timer.current = setTimeout(() => { timer.current = null; setCopied(false) }, 1_000)
+    })
+  }
+  if (text === '') return null
+  const label = copied ? t('copiedCode') : t('messageCopy')
+  return (
+    <div className={place === 'user' ? css.userActions : css.messageActions}>
+      <Tooltip label={label} side="bottom">
+        <button type="button" className={css.action} aria-label={label} onClick={onCopy}>
+          {copied ? <IconCheckOutline16 /> : <IconCopyOutline16 />}
+        </button>
+      </Tooltip>
+    </div>
+  )
+}
+
+/** One turn-end notice: why a turn stopped producing. */
+function NoticeLine({ t, row }: {
+  t: (key: SessionSyncKey) => string
+  row: NoticeRow
+}): React.ReactElement {
+  return (
+    <div className={css.noticeRow} role="status">
+      <StateDot state={row.tone === 'error' ? 'error' : 'warning'} className={css.noticeDot} />
+      <div className={css.noticeCopy}>
+        <span className={row.tone === 'error' ? css.noticeTitleError : css.noticeTitleWarn}>
+          {row.tone === 'error' ? t('turnFailed') : t('turnMaxTokens')}
+        </span>
+        <span className={css.noticeMessage}>
+          {row.message !== '' ? row.message : t('turnMaxTokensHint')}
+        </span>
+      </div>
+      {row.code !== undefined && <code className={css.noticeCode}>{row.code}</code>}
+    </div>
+  )
+}
+
+/** One model-retry chain, as the shipped chat renders it. */
+function RetryLine({ t, row }: {
+  t: (key: SessionSyncKey) => string
+  row: RetryRow
+}): React.ReactElement {
+  // The delay is counted from this row's first render, not from the event time:
+  // the origin's clock and this browser's are not the same clock.
+  const deadline = React.useMemo(() => Date.now() + row.delayMs, [row.delayMs, row.key])
+  const [seconds, setSeconds] = React.useState(() => countdownSeconds(deadline))
+  const active = row.state === 'scheduled'
+  React.useEffect(() => {
+    if (!active) return
+    const timer = window.setInterval(() => { setSeconds(countdownSeconds(deadline)) }, 500)
+    return () => { window.clearInterval(timer) }
+  }, [active, deadline])
+  const status = row.state === 'scheduled'
+    ? t('retryActive')
+    : row.state === 'started' ? t('retryStarted') : t('retryCancelled')
+  const attempt = `${t('retryAttempt')} ${String(row.retry)}${row.maximum === undefined ? '' : ` ${t('retryOf')} ${String(row.maximum)}`} ${t('retryAttempts')}`.trim()
+  return (
+    <details className={css.retryRow} data-active={active || undefined}>
+      <summary className={css.retrySummary}>
+        <span className={css.retryText} role="status">
+          {`${t('retryTitle')} · ${status} · ${attempt}${active ? ` · ${String(seconds)} ${t('retrySeconds')}` : ''}`}
+        </span>
+      </summary>
+      <div className={css.retryDetails}>
+        <div>
+          <span className={css.retryDetailLabel}>{t('retryDelay')}</span>
+          {`${String(Math.round(row.delayMs))} ms`}
+        </div>
+        <div>
+          <span className={css.retryDetailLabel}>{t('retryFailure')}</span>
+          {row.failure}
+        </div>
+      </div>
+    </details>
+  )
+}
+
+/** Whole seconds left before a scheduled attempt runs, never below one. */
+function countdownSeconds(deadline: number): number {
+  return Math.max(1, Math.ceil((deadline - Date.now()) / 1_000))
 }
 
 /**
@@ -774,23 +924,32 @@ function ReasoningRow({ t, reasoning, streaming }: {
   // Its `**` markers are dropped so the gist reads as prose.
   const summary = (streaming === true ? lastLineOf(reasoning) : firstLineOf(reasoning)).replaceAll('**', '')
   return (
-    <DisclosureRow
-      icon={<IconThinkOutline14 size={14} />}
-      title={t('reasoning')}
-      open={open}
-      expandable
-      expandOnRowClick
-      onToggle={() => { setOpen(current => !current) }}
-      titleClassName={css.thinkTitle}
-      collapsedContent={(
-        <>
-          <span className={css.toolSep} />
-          <span className={css.thinkSummary}>{summary}</span>
-        </>
-      )}
+    <div
+      className={css.thinkRoot}
+      data-state={streaming === true ? 'running' : 'ok'}
+      data-expanded={open || undefined}
     >
-      <div className={css.reasoning}>{reasoning}</div>
-    </DisclosureRow>
+      <DisclosureRow
+        rowClassName={css.thinkLine}
+        icon={<IconThinkOutline14 size={14} />}
+        title={t('reasoning')}
+        open={open}
+        expandable
+        expandOnRowClick
+        onToggle={() => { setOpen(current => !current) }}
+        titleClassName={css.thinkTitle}
+        collapsedContent={(
+          <>
+            <span className={css.toolSep} />
+            <span className={css.thinkSummary} data-follow-end={streaming === true || undefined}>
+              <span className={css.thinkSummaryText}>{summary}</span>
+            </span>
+          </>
+        )}
+      >
+        <div className={css.reasoning}>{reasoning}</div>
+      </DisclosureRow>
+    </div>
   )
 }
 

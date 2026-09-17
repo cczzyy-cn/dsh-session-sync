@@ -122,12 +122,25 @@ export interface SyncState {
   follow?: { error?: string; sessionId?: string; frames: string[]; events: number; historyMisses?: number; localItems?: number; localRows?: number; shapes?: string[]; posts?: string[] }
 }
 
+/** Where one event sits on the Session surface — `SessionWireSurfaceOp`. */
+export type MirrorSurfaceOp =
+  | 'append'
+  | { op: 'replace'; startSeq: number; endSeq: number }
+
 /** One mirrored Session event, carried verbatim from the origin's log. */
 export interface MirrorEvent {
   type: string
   seq: number
   time: number
   data: unknown
+  /**
+   * The event's surface placement.
+   *
+   * Carried because a durable event can *replace* a range of earlier ones — a
+   * compaction, or a replay after a fork — and a reader that ignores that shows
+   * the replaced history beside the window that superseded it.
+   */
+  surfaceOp?: MirrorSurfaceOp
 }
 
 /** The opening window plus everything appended so far, for one mirrored Session. */
