@@ -33,6 +33,7 @@ import {
   IconFolderClose16,
   IconFolderOpen16,
   IconGlobeOutline14,
+  IconPanelLeftOutline16,
   IconQuestionOutline14,
   IconRightUpOutline16,
   IconSearchOutline16,
@@ -98,6 +99,14 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
   const [collapsed, setCollapsed] = React.useState<Record<string, boolean>>({})
   /** The reset count the reader has already acknowledged. */
   const [dismissedResets, setDismissedResets] = React.useState(0)
+  /**
+   * Whether the list column is put away.
+   *
+   * The list is the console's own column inside the centre surface, so hiding it
+   * is a view state of this component, not of the Host sidebar: the transcript
+   * then gets the whole width, which is what reading a mirrored Session wants.
+   */
+  const [listHidden, setListHidden] = React.useState(false)
 
   const machines = state.state.machines
   const open = state.open
@@ -130,8 +139,8 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
     : machines.find(candidate => candidate.machineName === open.machineName)?.online ?? false
 
   return (
-    <div className={css.panel} data-open={open === undefined ? 'false' : 'true'}>
-      <aside className={css.listPane} aria-label={t('sessionsTitle')}>
+    <div className={css.panel} data-open={open === undefined ? 'false' : 'true'} data-list={listHidden ? 'hidden' : 'shown'}>
+      <aside className={css.listPane} aria-label={t('sessionsTitle')} aria-hidden={listHidden}>
         <div className={css.listHead}>
           <Input
             icon={<IconSearchOutline16 />}
@@ -218,6 +227,7 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
                               ? `${css.treeSession} ${css.treeSessionSelected}`
                               : css.treeSession}
                             aria-label={`${t('openSession')}: ${candidate.title}`}
+                            title={candidate.title}
                             onClick={() => {
                               void props.openSession(group.machine.machineName, candidate.sessionId)
                             }}
@@ -255,6 +265,8 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
               online={online}
               closeSession={props.closeSession}
               sendPrompt={props.sendPrompt}
+              listHidden={listHidden}
+              toggleList={() => { setListHidden(current => !current) }}
             />
           )}
       </section>
@@ -286,6 +298,7 @@ function TreeRow(props: {
       role="treeitem"
       aria-expanded={props.open}
       aria-label={props.label}
+      title={props.label}
       data-level={props.level}
       className={props.dim === true ? `${css.treeRow} ${css.treeRowDim}` : css.treeRow}
       onClick={props.onToggle}
@@ -319,6 +332,8 @@ function Conversation(props: {
   online: boolean
   closeSession: () => void
   sendPrompt: (text: string) => Promise<boolean>
+  listHidden: boolean
+  toggleList: () => void
 }): React.ReactElement {
   const { t, state, session } = props
   const [draft, setDraft] = React.useState('')
@@ -389,6 +404,16 @@ function Conversation(props: {
             </>
           )}
           <span className={css.viewSpacer} />
+          {/* The list is this console's own column, so putting it away is a
+              control here rather than in the Host sidebar — and it lives in the
+              view header so it is reachable while the list is hidden. */}
+          <Button
+            variant="ghost"
+            size="sm"
+            icon={<IconPanelLeftOutline16 />}
+            aria-label={props.listHidden ? t('listShow') : t('listHide')}
+            onClick={props.toggleList}
+          />
           <ChromeChips t={t} chrome={chrome} />
         </div>
         {/* The two views the shipped header switches between (figma Tab_Group):

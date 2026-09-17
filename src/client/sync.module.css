@@ -233,6 +233,19 @@
   padding: 10px 10px 8px;
 }
 
+/* Placeholder text is a hint, not content: it wears the caption label the
+   shipped inputs use, rather than the browser's default of the value colour. */
+.panel ::placeholder {
+  color: var(--dsw-alias-label-caption);
+  opacity: 1;
+}
+
+/* The list column is this console's own, so putting it away gives the
+   transcript the whole width without touching the Host's sidebar. */
+.panel[data-list='hidden'] .listPane {
+  display: none;
+}
+
 .listStatus {
   overflow: hidden;
   color: var(--dsw-alias-label-tertiary);
@@ -248,6 +261,7 @@
 .list {
   display: flex;
   flex-direction: column;
+  gap: 3px;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
