@@ -73,6 +73,8 @@ export class SessionSyncService {
   private localRows = 0
   /** Field names seen in the opening frames, recorded once. */
   private readonly followShapes: string[] = []
+  /** Posts per route: the split between the origin and the server. */
+  private readonly postCounts = new Map<string, { count: number; at: number; ok: boolean }>()
   private followError: string | undefined
   private followErrorSession: string | undefined
   /** The Session whose frames are being absorbed right now. */
@@ -164,6 +166,7 @@ export class SessionSyncService {
           historyMisses: this.historyMisses,
           localItems: this.localItems,
           localRows: this.localRows,
+          posts: [...this.postCounts].map(([route, entry]) => route + ':' + String(entry.count) + (entry.ok ? '' : '!')),
           shapes: this.followShapes,
           ...(this.followError === undefined ? {} : { error: this.followError }),
           ...(this.followErrorSession === undefined ? {} : { sessionId: this.followErrorSession }),
@@ -385,6 +388,11 @@ export class SessionSyncService {
    * @param error - why not, when it did not.
    */
   private notePublish(path: string, ok: boolean, error?: string): void {
+    // Count every route the link posts to. Which of them moves is the difference
+    // between "the origin never sent it" and "the server did not take it", and
+    // that difference has been guessed at twice in this feature already.
+    const previous = this.postCounts.get(path)
+    this.postCounts.set(path, { count: (previous?.count ?? 0) + 1, at: Date.now(), ok })
     if (path !== '/publish' && path !== '/frames') return
     this.lastPublish = {
       at: Date.now(),
