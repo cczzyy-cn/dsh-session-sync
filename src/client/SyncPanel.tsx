@@ -2,7 +2,7 @@
  * The centre panel: the server's console over every machine that publishes here.
  *
  * Two panes and a three-level tree. The list groups by machine, then by the
- * directory a Session runs in, then lists the Sessions themselves 鈥?the shape
+ * directory a Session runs in, then lists the Sessions themselves 閳?the shape
  * the sidebar's workspace browser uses, so a remote Session reads the way a
  * local one does. The talk column beside it is the conversation the DSH client
  * already shows, wearing that UI's own clothes: a centered content column, a
@@ -116,9 +116,9 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
   // one is being asked: a match inside a collapsed machine would look like no
   // match at all.
   const isOpen = (key: string): boolean => (searching ? true : collapsed[key] !== true)
-  const toggle = (key: string): void => {
+  const toggle = React.useCallback((key: string): void => {
     setCollapsed(current => ({ ...current, [key]: current[key] !== true }))
-  }
+  }, [])
 
   const mirrored = open === undefined
     ? undefined
@@ -126,7 +126,7 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
       .find(candidate => candidate.machineName === open.machineName)
       ?.sessions.find(candidate => candidate.sessionId === open.sessionId)
   // A Session that was un-published while it was open has no mirror row left,
-  // but the panel is still showing it: the placeholder keeps the talk column 鈥?  // and therefore its back button on a narrow window 鈥?reachable.
+  // but the panel is still showing it: the placeholder keeps the talk column 閳?  // and therefore its back button on a narrow window 閳?reachable.
   const session: MirroredSession | undefined = mirrored ?? (open === undefined ? undefined : {
     sessionId: open.sessionId,
     title: open.sessionId,
@@ -152,7 +152,7 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
           />
           <span className={css.listStatus}>
             {state.stream === 'connecting'
-              ? `${roleLine(state, t)} · ${t('streamReconnecting')}`
+              ? `${roleLine(state, t)} 路 ${t('streamReconnecting')}`
               : roleLine(state, t)}
           </span>
         </div>
@@ -169,7 +169,7 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
                 aria-label={t('tjClose')}
                 onClick={() => { setDismissedResets(state.mirrorResets) }}
               >
-                ×
+                脳
               </button>
             </p>
           )}
@@ -195,7 +195,8 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
                   dim={!group.machine.online}
                   label={group.machine.machineName}
                   trailing={machineTrailing(group.machine, t)}
-                  onToggle={() => { toggle(machineKey) }}
+                  rowKey={machineKey}
+                  onToggleKey={toggle}
                 />
                 {machineOpen && group.machine.sessions.length === 0 && (
                   <p className={css.empty}>{t('machineNoSessions')}</p>
@@ -212,7 +213,8 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
                         open={projectOpen}
                         label={projectLabel}
                         trailing={String(project.sessions.length)}
-                        onToggle={() => { toggle(projectKey) }}
+                        rowKey={projectKey}
+                        onToggleKey={toggle}
                       />
                       {projectOpen && project.sessions.map(candidate => {
                         const selected = open?.sessionId === candidate.sessionId
@@ -278,19 +280,20 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
  * One foldable tree row: the machine and project levels, which differ in their
  * depth, their leading glyph, and their trailing text.
  *
- * A machine wears the globe its sidebar panel row uses — the two are the same
- * thing seen from two places — while a directory keeps the folder the workspace
+ * A machine wears the globe its sidebar panel row uses 鈥?the two are the same
+ * thing seen from two places 鈥?while a directory keeps the folder the workspace
  * browser gives it. Both still swap to the expand arrow on hover, because that
  * arrow is the only affordance saying the row folds.
  */
-function TreeRow(props: {
+const TreeRow = React.memo(function TreeRow(props: {
   level: 0 | 1
   icon: 'machine' | 'project'
   open: boolean
   dim?: boolean
   label: string
   trailing: string
-  onToggle: () => void
+  rowKey: string
+  onToggleKey: (key: string) => void
 }): React.ReactElement {
   return (
     <button
@@ -301,7 +304,7 @@ function TreeRow(props: {
       title={props.label}
       data-level={props.level}
       className={props.dim === true ? `${css.treeRow} ${css.treeRowDim}` : css.treeRow}
-      onClick={props.onToggle}
+      onClick={() => { props.onToggleKey(props.rowKey) }}
     >
       <span className={`${css.treeSlot} ${css.treeFolder}`}>
         {props.icon === 'machine'
@@ -315,7 +318,7 @@ function TreeRow(props: {
       <span className={css.rowTime}>{props.trailing}</span>
     </button>
   )
-}
+})
 
 /**
  * One mirrored Session opened for reading and takeover.
@@ -502,7 +505,7 @@ function Conversation(props: {
 }
 
 /**
- * The header's right-hand cluster:上下文占用率 ring, and the model, preset and
+ * The header's right-hand cluster:涓婁笅鏂囧崰鐢ㄧ巼 ring, and the model, preset and
  * subagent facts the log reports.
  *
  * Every one of these is a **reading**, not a control: the mirror can see what
@@ -529,7 +532,7 @@ function ChromeChips({ t, chrome }: {
         <Tooltip label={`${t('chromeModel')}: ${model.provider}/${model.model}`} side="bottom" delayMs={200}>
           <span className={css.chromeChip}>
             {model.model}
-            {model.effort === undefined ? '' : ` · ${model.effort}`}
+            {model.effort === undefined ? '' : ` 路 ${model.effort}`}
           </span>
         </Tooltip>
       )}
@@ -616,8 +619,8 @@ function StatusRow({ t, stats }: {
   if (stats.cacheHitPercent !== undefined) tail.push(`${t('statusCacheHit')} ${String(stats.cacheHitPercent)}%`)
   return (
     <div className={css.statusRow}>
-      <span>{parts.join(' · ')}</span>
-      {tail.length > 0 && <span>{tail.join(' · ')}</span>}
+      <span>{parts.join(' 路 ')}</span>
+      {tail.length > 0 && <span>{tail.join(' 路 ')}</span>}
     </div>
   )
 }
@@ -634,8 +637,8 @@ function kindLabel(t: (key: SessionSyncKey) => string): (kind: TrajectoryKind) =
 /**
  * What the talk column shows before something is open.
  *
- * It is the client's own new-session hero — the fish, the headline, the preview
- * badge — copied to the figure (ui-conversation HeroShell), because an empty
+ * It is the client's own new-session hero 鈥?the fish, the headline, the preview
+ * badge 鈥?copied to the figure (ui-conversation HeroShell), because an empty
  * column in this product already has a face and inventing a second one would
  * make the console look like a different application. The one addition is the
  * hint line: unlike a new session, this column is not waiting for a draft, it is
@@ -722,14 +725,14 @@ function ToolCallRow({ t, row }: {
 
   // A family row is titled with the family's word and its own gist below, and
   // keeps the request and the result in one card. The shipped client's generic
-  // card instead spends two rows — the call, then its result — so this does the
+  // card instead spends two rows 鈥?the call, then its result 鈥?so this does the
   // same for a tool no family claims, and only then.
   const label = presentation.labelKey === undefined
     ? (row.name === '' ? t('toolResult') : row.name)
     : t(presentation.labelKey)
   const summary = presentation.wire === undefined
     ? row.summary
-    : [presentation.wire, row.summary].filter(part => part !== '').join(' · ')
+    : [presentation.wire, row.summary].filter(part => part !== '').join(' 路 ')
 
   const glyph = (): React.ReactElement => (
     <span className={row.isError ? `${css.toolGlyph} ${css.toolGlyphError}` : css.toolGlyph}>
@@ -850,7 +853,7 @@ function toolRowClass(running: boolean): string {
 }
 
 /**
- * The glyph a tool family leads with — the same mark the shipped toolview for
+ * The glyph a tool family leads with 鈥?the same mark the shipped toolview for
  * that family registers, at 14 inside the row's 16px leading box.
  */
 function ToolGlyphIcon({ glyph }: { glyph: ToolGlyph }): React.ReactElement {
@@ -882,25 +885,25 @@ function ToolGlyphIcon({ glyph }: { glyph: ToolGlyph }): React.ReactElement {
 function roleLine(state: SyncClientSnapshot, t: (key: SessionSyncKey) => string): string {
   const role = state.state.role === 'server' ? t('roleServer') : t('roleClient')
   if (state.state.role === 'server') {
-    return `${role} · ${state.state.listening ? t('statusListening') : t('statusNotListening')}`
+    return `${role} 路 ${state.state.listening ? t('statusListening') : t('statusNotListening')}`
   }
-  if (state.state.serverUrl.trim() === '') return `${role} · ${t('statusNotConfigured')}`
-  if (!state.state.linked) return `${role} · ${t('statusUnlinked')}`
+  if (state.state.serverUrl.trim() === '') return `${role} 路 ${t('statusNotConfigured')}`
+  if (!state.state.linked) return `${role} 路 ${t('statusUnlinked')}`
   // Connected and publishing are two different claims, and the gap between them
   // was invisible: a live stream with nothing going down it read as healthy.
   const publish = state.state.publish
-  if (publish === undefined) return `${role} · ${t('statusLinked')} · ${t('statusNeverPublished')}`
+  if (publish === undefined) return `${role} 路 ${t('statusLinked')} 路 ${t('statusNeverPublished')}`
   if (!publish.ok) {
-    return `${role} · ${t('statusLinked')} · ${t('statusPublishFailed')}${publish.error === undefined ? '' : `: ${publish.error}`}`
+    return `${role} 路 ${t('statusLinked')} 路 ${t('statusPublishFailed')}${publish.error === undefined ? '' : `: ${publish.error}`}`
   }
   return Date.now() - publish.at > 30_000
-    ? `${role} · ${t('statusLinked')} · ${t('statusPublishStalled')}`
-    : `${role} · ${t('statusLinked')} · ${t('statusPublishOk')}`
+    ? `${role} 路 ${t('statusLinked')} 路 ${t('statusPublishStalled')}`
+    : `${role} 路 ${t('statusLinked')} 路 ${t('statusPublishOk')}`
 }
 
 /** What a machine row says on its trailing cell. */
 function machineTrailing(machine: MirroredMachine, t: (key: SessionSyncKey) => string): string {
-  if (!machine.online) return `${t('machineOffline')} · ${timeLabel(machine.lastSeen, t)}`
+  if (!machine.online) return `${t('machineOffline')} 路 ${timeLabel(machine.lastSeen, t)}`
   const running = machine.sessions.filter(session => session.running).length
   if (running > 0) return `${String(running)} ${t('sessionsRunning')}`
   return `${String(machine.sessions.length)} ${t('machineSessions')}`

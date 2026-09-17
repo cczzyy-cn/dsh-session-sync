@@ -1938,7 +1938,7 @@ window.__ModuleLoader__.load({
 		* The centre panel: the server's console over every machine that publishes here.
 		*
 		* Two panes and a three-level tree. The list groups by machine, then by the
-		* directory a Session runs in, then lists the Sessions themselves 鈥?the shape
+		* directory a Session runs in, then lists the Sessions themselves 閳?the shape
 		* the sidebar's workspace browser uses, so a remote Session reads the way a
 		* local one does. The talk column beside it is the conversation the DSH client
 		* already shows, wearing that UI's own clothes: a centered content column, a
@@ -1977,12 +1977,12 @@ window.__ModuleLoader__.load({
 			const groups = react.useMemo(() => buildTree(machines, query), [machines, query]);
 			const searching = query.trim() !== "";
 			const isOpen = (key) => searching ? true : collapsed[key] !== true;
-			const toggle = (key) => {
+			const toggle = react.useCallback((key) => {
 				setCollapsed((current) => ({
 					...current,
 					[key]: current[key] !== true
 				}));
-			};
+			}, []);
 			const session = (open === void 0 ? void 0 : machines.find((candidate) => candidate.machineName === open.machineName)?.sessions.find((candidate) => candidate.sessionId === open.sessionId)) ?? (open === void 0 ? void 0 : {
 				sessionId: open.sessionId,
 				title: open.sessionId,
@@ -2012,7 +2012,7 @@ window.__ModuleLoader__.load({
 							}
 						}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 							className: sync_module_css_default.listStatus,
-							children: state.stream === "connecting" ? `${roleLine(state, t)} · ${t("streamReconnecting")}` : roleLine(state, t)
+							children: state.stream === "connecting" ? `${roleLine(state, t)} 路 ${t("streamReconnecting")}` : roleLine(state, t)
 						})]
 					}), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 						className: sync_module_css_default.list,
@@ -2031,7 +2031,7 @@ window.__ModuleLoader__.load({
 									onClick: () => {
 										setDismissedResets(state.mirrorResets);
 									},
-									children: "×"
+									children: "脳"
 								})]
 							}),
 							!state.ready && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
@@ -2061,9 +2061,8 @@ window.__ModuleLoader__.load({
 										dim: !group.machine.online,
 										label: group.machine.machineName,
 										trailing: machineTrailing(group.machine, t),
-										onToggle: () => {
-											toggle(machineKey);
-										}
+										rowKey: machineKey,
+										onToggleKey: toggle
 									}),
 									machineOpen && group.machine.sessions.length === 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
 										className: sync_module_css_default.empty,
@@ -2079,9 +2078,8 @@ window.__ModuleLoader__.load({
 											open: projectOpen,
 											label: projectLabel,
 											trailing: String(project.sessions.length),
-											onToggle: () => {
-												toggle(projectKey);
-											}
+											rowKey: projectKey,
+											onToggleKey: toggle
 										}), projectOpen && project.sessions.map((candidate) => {
 											const selected = open?.sessionId === candidate.sessionId;
 											return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("button", {
@@ -2139,12 +2137,12 @@ window.__ModuleLoader__.load({
 		* One foldable tree row: the machine and project levels, which differ in their
 		* depth, their leading glyph, and their trailing text.
 		*
-		* A machine wears the globe its sidebar panel row uses — the two are the same
-		* thing seen from two places — while a directory keeps the folder the workspace
+		* A machine wears the globe its sidebar panel row uses 鈥?the two are the same
+		* thing seen from two places 鈥?while a directory keeps the folder the workspace
 		* browser gives it. Both still swap to the expand arrow on hover, because that
 		* arrow is the only affordance saying the row folds.
 		*/
-		function TreeRow(props) {
+		const TreeRow = react.memo(function TreeRow(props) {
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("button", {
 				type: "button",
 				role: "treeitem",
@@ -2153,7 +2151,9 @@ window.__ModuleLoader__.load({
 				title: props.label,
 				"data-level": props.level,
 				className: props.dim === true ? `${sync_module_css_default.treeRow} ${sync_module_css_default.treeRowDim}` : sync_module_css_default.treeRow,
-				onClick: props.onToggle,
+				onClick: () => {
+					props.onToggleKey(props.rowKey);
+				},
 				children: [
 					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 						className: `${sync_module_css_default.treeSlot} ${sync_module_css_default.treeFolder}`,
@@ -2173,7 +2173,7 @@ window.__ModuleLoader__.load({
 					})
 				]
 			});
-		}
+		});
 		/**
 		* One mirrored Session opened for reading and takeover.
 		*
@@ -2366,7 +2366,7 @@ window.__ModuleLoader__.load({
 			] });
 		}
 		/**
-		* The header's right-hand cluster:上下文占用率 ring, and the model, preset and
+		* The header's right-hand cluster:涓婁笅鏂囧崰鐢ㄧ巼 ring, and the model, preset and
 		* subagent facts the log reports.
 		*
 		* Every one of these is a **reading**, not a control: the mirror can see what
@@ -2387,7 +2387,7 @@ window.__ModuleLoader__.load({
 						delayMs: 200,
 						children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
 							className: sync_module_css_default.chromeChip,
-							children: [model.model, model.effort === void 0 ? "" : ` · ${model.effort}`]
+							children: [model.model, model.effort === void 0 ? "" : ` 路 ${model.effort}`]
 						})
 					}),
 					preset !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
@@ -2491,7 +2491,7 @@ window.__ModuleLoader__.load({
 			if (stats.cacheHitPercent !== void 0) tail.push(`${t("statusCacheHit")} ${String(stats.cacheHitPercent)}%`);
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 				className: sync_module_css_default.statusRow,
-				children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { children: parts.join(" · ") }), tail.length > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { children: tail.join(" · ") })]
+				children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { children: parts.join(" 路 ") }), tail.length > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { children: tail.join(" 路 ") })]
 			});
 		}
 		/**
@@ -2505,8 +2505,8 @@ window.__ModuleLoader__.load({
 		/**
 		* What the talk column shows before something is open.
 		*
-		* It is the client's own new-session hero — the fish, the headline, the preview
-		* badge — copied to the figure (ui-conversation HeroShell), because an empty
+		* It is the client's own new-session hero 鈥?the fish, the headline, the preview
+		* badge 鈥?copied to the figure (ui-conversation HeroShell), because an empty
 		* column in this product already has a face and inventing a second one would
 		* make the console look like a different application. The one addition is the
 		* hint line: unlike a new session, this column is not waiting for a draft, it is
@@ -2592,7 +2592,7 @@ window.__ModuleLoader__.load({
 			const presentation = toolPresentation(row.name);
 			const generic = presentation.glyph === "generic" && presentation.wire !== void 0;
 			const label = presentation.labelKey === void 0 ? row.name === "" ? t("toolResult") : row.name : t(presentation.labelKey);
-			const summary = presentation.wire === void 0 ? row.summary : [presentation.wire, row.summary].filter((part) => part !== "").join(" · ");
+			const summary = presentation.wire === void 0 ? row.summary : [presentation.wire, row.summary].filter((part) => part !== "").join(" 路 ");
 			const glyph = () => /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 				className: row.isError ? `${sync_module_css_default.toolGlyph} ${sync_module_css_default.toolGlyphError}` : sync_module_css_default.toolGlyph,
 				children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(ToolGlyphIcon, { glyph: presentation.glyph })
@@ -2713,7 +2713,7 @@ window.__ModuleLoader__.load({
 			return running ? `${sync_module_css_default.toolRow} ${sync_module_css_default.toolRowRunning}` : sync_module_css_default.toolRow;
 		}
 		/**
-		* The glyph a tool family leads with — the same mark the shipped toolview for
+		* The glyph a tool family leads with 鈥?the same mark the shipped toolview for
 		* that family registers, at 14 inside the row's 16px leading box.
 		*/
 		function ToolGlyphIcon({ glyph }) {
@@ -2732,17 +2732,17 @@ window.__ModuleLoader__.load({
 		/** The role and link line under the list's search box. */
 		function roleLine(state, t) {
 			const role = state.state.role === "server" ? t("roleServer") : t("roleClient");
-			if (state.state.role === "server") return `${role} · ${state.state.listening ? t("statusListening") : t("statusNotListening")}`;
-			if (state.state.serverUrl.trim() === "") return `${role} · ${t("statusNotConfigured")}`;
-			if (!state.state.linked) return `${role} · ${t("statusUnlinked")}`;
+			if (state.state.role === "server") return `${role} 路 ${state.state.listening ? t("statusListening") : t("statusNotListening")}`;
+			if (state.state.serverUrl.trim() === "") return `${role} 路 ${t("statusNotConfigured")}`;
+			if (!state.state.linked) return `${role} 路 ${t("statusUnlinked")}`;
 			const publish = state.state.publish;
-			if (publish === void 0) return `${role} · ${t("statusLinked")} · ${t("statusNeverPublished")}`;
-			if (!publish.ok) return `${role} · ${t("statusLinked")} · ${t("statusPublishFailed")}${publish.error === void 0 ? "" : `: ${publish.error}`}`;
-			return Date.now() - publish.at > 3e4 ? `${role} · ${t("statusLinked")} · ${t("statusPublishStalled")}` : `${role} · ${t("statusLinked")} · ${t("statusPublishOk")}`;
+			if (publish === void 0) return `${role} 路 ${t("statusLinked")} 路 ${t("statusNeverPublished")}`;
+			if (!publish.ok) return `${role} 路 ${t("statusLinked")} 路 ${t("statusPublishFailed")}${publish.error === void 0 ? "" : `: ${publish.error}`}`;
+			return Date.now() - publish.at > 3e4 ? `${role} 路 ${t("statusLinked")} 路 ${t("statusPublishStalled")}` : `${role} 路 ${t("statusLinked")} 路 ${t("statusPublishOk")}`;
 		}
 		/** What a machine row says on its trailing cell. */
 		function machineTrailing(machine, t) {
-			if (!machine.online) return `${t("machineOffline")} · ${timeLabel(machine.lastSeen, t)}`;
+			if (!machine.online) return `${t("machineOffline")} 路 ${timeLabel(machine.lastSeen, t)}`;
 			const running = machine.sessions.filter((session) => session.running).length;
 			if (running > 0) return `${String(running)} ${t("sessionsRunning")}`;
 			return `${String(machine.sessions.length)} ${t("machineSessions")}`;
