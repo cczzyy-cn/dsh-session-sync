@@ -79,6 +79,9 @@ export class SessionSyncService {
   private followErrorSession: string | undefined
   /** The Session whose frames are being absorbed right now. */
   private streamSessionId = ''
+  /** The running attempt's turn and step, taken from its start frame. */
+  private streamTurn = 0
+  private streamStep = 0
 
   /** Streaming text per step, keyed session|turn|step|kind; relayed, never mirrored. */
   private readonly liveText = new Map<string, StreamDeltaPayload>()
@@ -453,6 +456,12 @@ export class SessionSyncService {
       if (typeof value !== 'object' || value === null || seen.has(value)) return
       seen.add(value)
       const record = value as Record<string, unknown>
+      // A chunk frame carries no turn/step of its own: the attempt's start frame
+      // does, so it is remembered here and used for whatever follows.
+      if (record['type'] === 'start') {
+        if (typeof record['turn'] === 'number') this.streamTurn = record['turn']
+        if (typeof record['step'] === 'number') this.streamStep = record['step']
+      }
       if (Array.isArray(record['stream'])) { for (const item of record['stream']) visit(item) }
       visit(record['chunk'])
       visit(record['frame'])
@@ -482,12 +491,18 @@ export class SessionSyncService {
       }
       const inner = record['chunk'] as Record<string, unknown> | undefined
       const source = inner !== undefined && typeof inner === 'object' ? inner : record
-      const kind = source['type'] === 'reasoning' ? 'reasoning' : source['type'] === 'text' ? 'text' : undefined
+      // The model's own chunk types: text-delta and reasoning-delta carry `text`.
+      // Matching the bare words 'text'/'reasoning' is what kept this reader from
+      // ever taking a delta, so both spellings are accepted.
+      const sourceType = source['type']
+      const kind = sourceType === 'reasoning-delta' || sourceType === 'reasoning'
+        ? 'reasoning'
+        : sourceType === 'text-delta' || sourceType === 'text' ? 'text' : undefined
       if (kind === undefined) return
       const text = typeof source['text'] === 'string' ? source['text'] : typeof source['delta'] === 'string' ? source['delta'] : undefined
       if (text === undefined || text === '') return
-      const turn = typeof record['turn'] === 'number' ? record['turn'] : 0
-      const step = typeof record['step'] === 'number' ? record['step'] : 0
+      const turn = typeof record['turn'] === 'number' ? record['turn'] : this.streamTurn
+      const step = typeof record['step'] === 'number' ? record['step'] : this.streamStep
       const sessionId = this.streamSessionId
       if (sessionId === '') return
       const key = `${sessionId}|${String(turn)}|${String(step)}|${kind}`
