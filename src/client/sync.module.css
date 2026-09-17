@@ -1558,8 +1558,9 @@
 }
 
 .thinkTitle {
-  color: var(--dsw-alias-label-secondary);
+  /* Likewise the reasoning row: the shipped `.title` sets weight only. */
   font: var(--dsw-font-xs-13);
+  font-weight: 400;
 }
 
 /* Interrupted-turn marker (shipped AssistantMarkdown `.stopped`). */
@@ -1772,7 +1773,9 @@
  * separation.
  */
 .toolName {
-  color: var(--dsw-alias-label-primary);
+  /* No colour: the shipped row styles its title with weight alone and lets the
+     row's own text colour through, which is what keeps every row title on the
+     same tier. */
   font-size: 13px;
   line-height: 24px;
   font-weight: 400;
@@ -1830,7 +1833,7 @@
 .diffStat {
   flex: none;
   margin-left: 6px;
-  color: var(--dsw-alias-label-tertiary);
+  color: var(--dsw-alias-label-caption);
   font-size: var(--dsh-content-font-size-secondary, 13px);
   font-variant-numeric: tabular-nums;
 }
@@ -1860,11 +1863,8 @@
   justify-content: center;
   width: 16px;
   height: 16px;
-  color: var(--dsw-alias-label-secondary);
-}
-
-.toolGlyphError {
-  color: var(--dsw-alias-state-error-primary);
+  /* The shipped leading mark carries no colour either: it reads on the title's
+     own tier, and a failure swaps it for the shipped StateDot instead. */
 }
 
 .toolSep {
