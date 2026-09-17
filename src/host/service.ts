@@ -66,6 +66,8 @@ export class SessionSyncService {
   /** Distinct follow frame types seen, bounded; the contract made visible. */
   private readonly followFrameTypes = new Set<string>()
   private followEvents = 0
+  /** Opening frames that carried no readable history. */
+  private historyMisses = 0
   private followError: string | undefined
   private followErrorSession: string | undefined
   /** The Session whose frames are being absorbed right now. */
@@ -154,6 +156,7 @@ export class SessionSyncService {
         follow: {
           frames: [...this.followFrameTypes],
           events: this.followEvents,
+          historyMisses: this.historyMisses,
           ...(this.followError === undefined ? {} : { error: this.followError }),
           ...(this.followErrorSession === undefined ? {} : { sessionId: this.followErrorSession }),
         },
@@ -479,10 +482,24 @@ export class SessionSyncService {
     if (this.followFrameTypes.size < 12) this.followFrameTypes.add(frameType)
     this.followEvents += 1
     this.absorbStream(frame)
-    if (frame.type === 'snapshot') {
-      for (const record of frame.records) buffer(handle, record.event)
+    // The opening frame carries the Session's history. The transport writes it as
+    // { type: 'opened', cursor, page }, while this half's own contract says
+    // { type: 'snapshot', records }, so both are read: whichever arrives is not
+    // ours to choose, and a history nobody reads is a Session that looks empty.
+    const carrier = frame as unknown as Record<string, unknown>
+    const page = carrier['page'] as Record<string, unknown> | undefined
+    const records = Array.isArray(carrier['records'])
+      ? carrier['records'] as readonly { event?: unknown }[]
+      : Array.isArray(page?.['records']) ? page['records'] as readonly { event?: unknown }[] : undefined
+    if (records !== undefined) {
+      for (const record of records) {
+        if (record !== null && typeof record === 'object' && record.event !== undefined) {
+          buffer(handle, record.event as MirrorEvent)
+        }
+      }
       return
     }
+    if (frameType === 'snapshot' || frameType === 'opened') this.historyMisses += 1
     if (frame.type === 'event') buffer(handle, frame.event)
   }
 
