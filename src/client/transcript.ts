@@ -15,6 +15,7 @@
  * without guessing at ordering.
  */
 import type { MirrorEvent } from '../shared/protocol.ts'
+import { turnMetricsOf, type TurnMetrics } from './turn-metrics.ts'
 
 /** One assistant content block, in the order the model wrote it. */
 export type AssistantBlock =
@@ -50,9 +51,20 @@ export interface TurnUsage {
  */
 export interface TurnFacts {
   usage: TurnUsage
-  /** Turn wall time: `turn/start` to `turn/end`, or to the newest event while it runs. */
-  runMs: number
+  /**
+   * Turn wall time: `turn/start` to `turn/end`, or to the newest event while it
+   * runs. Absent when the turn's start is outside the mirror's window — the
+   * shipped footer shows no time reading for such a turn rather than a false
+   * zero, and so does this one.
+   */
+  runMs?: number
   running: boolean
+  /**
+   * First-step TTFT, decode throughput, and route, folded by `turn-metrics.ts`
+   * out of the same events. The shipped footer shows them when they are known
+   * and omits them otherwise, which is what the dialog does here too.
+   */
+  metrics?: TurnMetrics
 }
 
 /**
@@ -271,17 +283,18 @@ function turnFactsOf(events: readonly MirrorEvent[]): Map<number, TurnFacts> {
       continue
     }
     if (event.type === 'turn/end') {
-      const started = starts.get(turn) ?? event.time
+      const started = starts.get(turn)
       const existing = facts.get(turn)
       facts.set(turn, {
         usage: existing?.usage ?? emptyUsage(),
-        runMs: Math.max(0, event.time - started),
+        ...(started === undefined ? {} : { runMs: Math.max(0, event.time - started) }),
         running: false,
+        ...(existing?.metrics === undefined ? {} : { metrics: existing.metrics }),
       })
       continue
     }
     if (event.type !== 'assistant/message') continue
-    const current = facts.get(turn) ?? { usage: emptyUsage(), runMs: 0, running: true }
+    const current = facts.get(turn) ?? { usage: emptyUsage(), running: true }
     const reported = asRecord(data?.['usage'])
     current.usage.input += number(reported?.['inputTokens']) ?? 0
     current.usage.output += number(reported?.['outputTokens']) ?? 0
@@ -294,8 +307,15 @@ function turnFactsOf(events: readonly MirrorEvent[]): Map<number, TurnFacts> {
   const newest = events.reduce((latest, event) => Math.max(latest, event.time), 0)
   for (const [turn, entry] of facts) {
     if (!entry.running) continue
-    const started = starts.get(turn) ?? newest
-    entry.runMs = Math.max(0, newest - started)
+    const started = starts.get(turn)
+    if (started !== undefined) entry.runMs = Math.max(0, newest - started)
+  }
+  // The footer's latency and throughput ride the same events; a turn whose steps
+  // recorded none keeps no metrics, exactly as the shipped footer does.
+  for (const [turn, metrics] of turnMetricsOf(events)) {
+    const entry = facts.get(turn)
+    if (entry === undefined) continue
+    entry.metrics = metrics
   }
   return facts
 }

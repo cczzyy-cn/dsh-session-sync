@@ -228,18 +228,19 @@ became of that command down the browser's own event stream:
   one machine at a time. Both limits are deliberate; a queued prompt that
   outlives them is reported as `expired` rather than delivered late.
 - **Assistant text is rendered as Markdown and each tool call is one folded row**
-  with its arguments and result in an IN/OUT card, but tool-specific cards (diff,
-  terminal, read) are not implemented: the mirrored event carries no trusted
-  presentation payload, so every result renders as text.
+  that opens into the card its tool calls for — terminal transcript, diff with its
+  totals, line-capped read, search hits, fetched page — with the generic IN/OUT
+  card for anything else.
 - **An image block shows its facts, never the picture.** The mirror carries the
   content block — media type and size — but not the attachment bytes, so the
   console says an image was there instead of drawing it.
 - **The turn-level folds are not copied.** The shipped chat folds a turn's whole
-  process under one summary, offers a turn navigator rail, and prints per-turn
-  token pills with a usage dialog; the console lists each step's rows instead and
-  keeps its usage in the header. Command, approval, and compaction cards, and the
-  full composer (attachments, slash commands, model selection), are likewise not
-  copied.
+  process under one summary and offers a turn navigator rail; the console lists
+  each step's rows instead. The per-turn usage and time readings are copied,
+  though — pills that open the shipped detail dialogs (see below) — and the
+  session totals sit in the header. Command, approval, and compaction cards, and
+  the full composer (attachments, slash commands, model selection), are likewise
+  not copied.
 - **A surface replacement is honored.** The origin forwards each event's
   `surfaceOp`, so a durable event that replaces a range of earlier ones — a
   compaction, a replay after a fork — supersedes those rows in the console
@@ -247,14 +248,24 @@ became of that command down the browser's own event stream:
 - **The console copies the shipped UI; it does not import it.** A browser plugin
   cannot import another plugin's components, so the tree and the conversation are
   this package's own markup. The chat rows go further than wearing the tokens:
-  `ToolRow`, `ReasoningRow`, `MessageIconActions`, `TurnUsagePanel` and the
-  accessibility helpers are the shipped `ui-chat` stylesheets copied verbatim,
-  and `SyncPanel` uses their class vocabulary and data attributes, so a row's
-  metrics are the product's own. Only the two parent offsets `ui-chat` keeps out
-  of those shared sheets stay here — the user row's 6px action gap
-  (`MessageItem.module.css`) and the tail's 4px/-6px IconActions offset
-  (`TurnTailNodeView.module.css`). Anything `ui-chat` does beyond that — a
+  `ToolRow`, `ReasoningRow`, `MessageIconActions`, `TurnUsagePanel`,
+  `stat-dialog` and the accessibility helpers are the shipped `ui-chat`
+  stylesheets copied verbatim, and `SyncPanel` uses their class vocabulary and
+  data attributes, so a row's metrics are the product's own. Only the two parent
+  offsets `ui-chat` keeps out of those shared sheets stay here — the user row's
+  6px action gap (`MessageItem.module.css`) and the tail's 4px/-6px IconActions
+  offset (`TurnTailNodeView.module.css`). Anything `ui-chat` does beyond that — a
   refactor of the row markup itself — still needs a re-copy, not a re-derivation.
+- **The two turn-stat pills are the shipped ones, dialogs included.** `用量` opens
+  the turn-usage dialog and `用时` the turn-time dialog: the shipped seat (open
+  state, `useAnchoredPosition` clamp above the trigger, outside-pointer and
+  Escape close) with the panel portaled to the body, and the shipped rows —
+  provider/model, cache hit, the four token buckets, inline reasoning; total run
+  time, decode throughput, and first-token latency. Throughput and TTFT are folded
+  from the mirrored stream records by the same arithmetic the host uses
+  (`turn-metrics.ts`), so they appear when a step recorded them and the row is
+  omitted when it did not. The copy action's tooltip is the shipped `复制` /
+  `复制成功` pair.
 - The mirror is lost on server restart; origins re-publish on their next
   reconcile tick (within 10 s) plus their follow snapshots.
 
@@ -272,7 +283,9 @@ src/client/api.ts        transport plus the one snapshot every surface reads
 src/client/transcript.ts mirrored events projected onto readable rows
 src/client/tool-cards.ts  tool-row models: card choice, labels, caps
 src/client/message-stats.ts  clock, run time and token figures for a row
-src/client/*.module.css   the shipped chat stylesheets, copied verbatim
+src/client/turn-metrics.ts   per-turn TTFT, throughput and route, folded
+src/client/stat-panels.tsx   the turn-usage and turn-time pills and dialogs
+src/client/*.module.css      the shipped chat stylesheets, copied verbatim
 src/client/ConfigSection.tsx  the settings page
 src/client/PanelIcon.tsx      the sidebar panel row's glyph
 src/client/SyncPanel.tsx      the console: the tree, the conversation, takeover

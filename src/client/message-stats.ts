@@ -52,6 +52,27 @@ export function formatRunDuration(ms: number, t: SessionSyncTranslate): string {
 }
 
 /**
+ * Sub-turn latency figure: one decimal under ten seconds, whole seconds beyond.
+ * Unit-less, so the locale template owns the second suffix.
+ * @param ms - latency in milliseconds; negatives clamp to zero.
+ * @returns the display number in seconds, without unit.
+ */
+export function formatLatencySeconds(ms: number): string {
+  const seconds = Math.max(0, ms) / 1_000
+  return seconds < 10 ? String(Math.round(seconds * 10) / 10) : String(Math.round(seconds))
+}
+
+/**
+ * Decode-throughput figure: whole tokens from ten up, one decimal below.
+ * @param tps - tokens per second.
+ * @returns the display number, without unit.
+ */
+export function formatTokensPerSecond(tps: number): string {
+  const clamped = Math.max(0, tps)
+  return clamped >= 10 ? String(Math.round(clamped)) : String(Math.round(clamped * 10) / 10)
+}
+
+/**
  * Compact token count: 517 / 12.2K / 517K / 1.2M.
  * @param value - a non-negative token count.
  * @param t - translate seat supplying the magnitude suffixes.

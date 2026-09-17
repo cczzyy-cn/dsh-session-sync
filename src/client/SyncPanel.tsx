@@ -37,9 +37,7 @@ import {
   IconChecklistOutline14,
   IconChevronDownOutline14,
   IconChevronLeftOutline14,
-  IconClockOutline16,
   IconCopyOutline16,
-  IconDatabaseOutline16,
   IconEditOutline16,
   IconFolderClose16,
   IconFolderOpen16,
@@ -70,12 +68,7 @@ import {
 } from './session-chrome.ts'
 import { TrajectoryView } from './TrajectoryView.tsx'
 import {
-  billedInputTokens,
-  formatCacheHitPercent,
-  formatExactTokens,
   formatMessageClock,
-  formatRunDuration,
-  formatTokens,
   turnTotalTokens,
 } from './message-stats.ts'
 import {
@@ -96,7 +89,7 @@ import {
   webBlockLabels,
   webCard,
 } from './tool-cards.ts'
-import { toRows, type AssistantBlock, type NoticeRow, type RetryRow, type ToolRow, type TranscriptRow, type TurnFacts, type TurnUsage } from './transcript.ts'
+import { toRows, type AssistantBlock, type NoticeRow, type RetryRow, type ToolRow, type TranscriptRow, type TurnFacts } from './transcript.ts'
 import { toolPresentation, type ToolGlyph } from './tool-presentation.ts'
 import a11yCss from './accessibility.module.css'
 import css from './sync.module.css'
@@ -106,7 +99,7 @@ import css from './sync.module.css'
 import actionsCss from './MessageIconActions.module.css'
 import thinkCss from './ReasoningRow.module.css'
 import toolCss from './ToolRow.module.css'
-import usageCss from './TurnUsagePanel.module.css'
+import { TurnTimePill, TurnUsagePill } from './stat-panels.tsx'
 
 /**
  * How close to the floor still counts as being at it.
@@ -885,13 +878,13 @@ function assistantTextOf(blocks: readonly AssistantBlock[]): string {
 
 /**
  * Copy, turn usage, turn time, and the message clock — the shipped `IconActions`
- * row plus the turn-stat pills that sit in it.
+ * row plus the two turn-stat pills that sit in it.
  *
  * The copy feedback is local because the primitive that owns it
  * (`useCopyFeedback`) is not part of the published surface; the behaviour is the
- * shipped one: a one-second check swap, and no second write while it shows. The
- * pills are readings here: the shipped ones open detail dialogs through a
- * portal, and this row carries the same figures in a tooltip instead.
+ * shipped one: a one-second check swap, and no second write while it shows. Both
+ * pills are the shipped ones (`stat-panels.tsx`): a click opens their detail
+ * dialog in a portal above the trigger.
  */
 function MessageActions({ t, text, place, time, facts }: {
   t: SessionSyncTranslate
@@ -914,7 +907,6 @@ function MessageActions({ t, text, place, time, facts }: {
   const label = copied ? t('copiedCode') : t('messageCopy')
   const clock = <span className={place === 'user' ? actionsCss.timeStart : actionsCss.timeEnd}>{formatMessageClock(time, t)}</span>
   const total = facts === undefined ? 0 : turnTotalTokens(facts.usage)
-  const detail = facts === undefined ? '' : usageDetail(facts.usage, t)
   return (
     <div className={place === 'user' ? actionsCss.actions : `${actionsCss.actions} ${css.messageActions}`}>
       {place === 'user' && clock}
@@ -926,48 +918,14 @@ function MessageActions({ t, text, place, time, facts }: {
         </Tooltip>
       )}
       {facts !== undefined && total > 0 && (
-        <Tooltip label={detail} side="bottom">
-          <span className={usageCss.root}>
-            <span className={usageCss.trigger} tabIndex={0}>
-              <IconDatabaseOutline16 size={15} />
-              <span className={usageCss.label}>{t('turnUsageConsumed', { total: formatTokens(total, t) })}</span>
-            </span>
-          </span>
-        </Tooltip>
+        <TurnUsagePill t={t} usage={facts.usage} metrics={facts.metrics} />
       )}
-      {facts !== undefined && (
-        <Tooltip label={t('turnTimeTitle')} side="bottom">
-          <span className={usageCss.root}>
-            <span className={usageCss.trigger} tabIndex={0}>
-              <IconClockOutline16 size={15} />
-              <span className={usageCss.label}>
-                {t('messageRanFor', { duration: formatRunDuration(facts.runMs, t) })}
-              </span>
-            </span>
-          </span>
-        </Tooltip>
+      {facts !== undefined && facts.runMs !== undefined && (
+        <TurnTimePill t={t} runMs={facts.runMs} metrics={facts.metrics} />
       )}
       {place === 'assistant' && clock}
     </div>
   )
-}
-
-/** The tooltip's lines for one turn's usage, in the shipped dialog's order. */
-function usageDetail(usage: TurnUsage, t: SessionSyncTranslate): string {
-  const total = turnTotalTokens(usage)
-  const cacheHit = formatCacheHitPercent(usage.cacheRead, billedInputTokens(usage))
-  const lines = [
-    `${t('turnUsageTotal')} ${formatExactTokens(total, t)}`,
-    ...(cacheHit === null ? [] : [`${t('turnUsageCacheHit')} ${cacheHit}%`]),
-    `${t('turnUsageInput')} ${formatExactTokens(usage.input, t)}`,
-    `${t('turnUsageCacheRead')} ${formatExactTokens(usage.cacheRead, t)}`,
-    ...(usage.cacheWrite === 0 ? [] : [`${t('turnUsageCacheWrite')} ${formatExactTokens(usage.cacheWrite, t)}`]),
-    `${t('turnUsageOutput')} ${formatExactTokens(usage.output, t)}`,
-    ...(usage.reasoning === 0
-      ? []
-      : [t('turnUsageReasoning', { tokens: formatExactTokens(usage.reasoning, t) })]),
-  ]
-  return lines.join('\n')
 }
 
 /** One turn-end notice: why a turn stopped producing. */
