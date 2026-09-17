@@ -113,6 +113,13 @@ export interface SyncState {
    * held nothing at all.
    */
   publish?: { at: number; ok: boolean; error?: string }
+  /**
+   * What the follow streams are doing: the last failure, the frame types
+   * actually seen, and how many events arrived. The host half's logger output
+   * reaches no file this deployment can read, so the contract is reported here
+   * instead -- this is what says whether a follow yields anything at all.
+   */
+  follow?: { error?: string; sessionId?: string; frames: string[]; events: number }
 }
 
 /** One mirrored Session event, carried verbatim from the origin's log. */

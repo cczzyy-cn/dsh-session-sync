@@ -2806,6 +2806,8 @@ window.__ModuleLoader__.load({
 			const publish = state.state.publish;
 			if (publish === void 0) return `${role} · ${t("statusLinked")} · ${t("statusNeverPublished")}`;
 			if (!publish.ok) return `${role} · ${t("statusLinked")} · ${t("statusPublishFailed")}${publish.error === void 0 ? "" : `: ${publish.error}`}`;
+			const follow = state.state.follow;
+			if (follow !== void 0 && follow.events === 0) return `${role} · ${t("statusLinked")} · ${t("statusFollowSilent")}${follow.frames.length === 0 ? "" : ` (${follow.frames.join(", ")})`}`;
 			return Date.now() - publish.at > 3e4 ? `${role} · ${t("statusLinked")} · ${t("statusPublishStalled")}` : `${role} · ${t("statusLinked")} · ${t("statusPublishOk")}`;
 		}
 		/** What a machine row says on its trailing cell. */
@@ -3315,6 +3317,7 @@ window.__ModuleLoader__.load({
 			statusPublishOk: "正在发布",
 			statusPublishStalled: "发布停滞（30 秒内无成功发布）",
 			statusPublishFailed: "发布失败",
+			statusFollowSilent: "follow 未产出事件",
 			statusNotConfigured: "未填写服务器地址",
 			statusUnlinked: "未连接",
 			publishedCount: "已同步会话数",
@@ -3471,6 +3474,7 @@ window.__ModuleLoader__.load({
 			statusPublishOk: "publishing",
 			statusPublishStalled: "publishing stalled (nothing accepted for 30s)",
 			statusPublishFailed: "publish failed",
+			statusFollowSilent: "follow yields nothing",
 			statusNotConfigured: "No server address set",
 			statusUnlinked: "Not connected",
 			publishedCount: "Published Sessions",

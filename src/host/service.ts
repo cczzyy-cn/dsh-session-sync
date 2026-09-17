@@ -63,6 +63,11 @@ export class SessionSyncService {
   private linkError: string | undefined
   private reconcileTimer: ReturnType<typeof setInterval> | undefined
   private flushTimer: ReturnType<typeof setInterval> | undefined
+  /** Distinct follow frame types seen, bounded; the contract made visible. */
+  private readonly followFrameTypes = new Set<string>()
+  private followEvents = 0
+  private followError: string | undefined
+  private followErrorSession: string | undefined
   /** The Session whose frames are being absorbed right now. */
   private streamSessionId = ''
 
@@ -145,6 +150,14 @@ export class SessionSyncService {
       machines: this.config.isServer ? this.hub.machines() : [],
       published: Object.values(this.config.syncSessions).filter(Boolean).length,
       ...(this.lastPublish === undefined ? {} : { publish: this.lastPublish }),
+      ...(this.config.isServer ? {} : {
+        follow: {
+          frames: [...this.followFrameTypes],
+          events: this.followEvents,
+          ...(this.followError === undefined ? {} : { error: this.followError }),
+          ...(this.followErrorSession === undefined ? {} : { sessionId: this.followErrorSession }),
+        },
+      }),
     }
   }
 
@@ -379,6 +392,8 @@ export class SessionSyncService {
         for await (const frame of stream) this.absorb(handle, frame)
       } catch (error: unknown) {
         if (!handle.abort.signal.aborted) {
+          this.followError = describe(error)
+          this.followErrorSession = sessionId
           this.ctx.logger.warn(`dsh-session-sync: follow for "${sessionId}" ended: ${describe(error)}`)
         }
       } finally {
@@ -428,6 +443,9 @@ export class SessionSyncService {
   }
 
   private absorb(handle: FollowHandle, frame: FollowFrame): void {
+    const frameType = typeof (frame as { type?: unknown }).type === 'string' ? (frame as { type: string }).type : 'unknown'
+    if (this.followFrameTypes.size < 12) this.followFrameTypes.add(frameType)
+    this.followEvents += 1
     this.absorbStream(frame)
     if (frame.type === 'snapshot') {
       for (const record of frame.records) buffer(handle, record.event)

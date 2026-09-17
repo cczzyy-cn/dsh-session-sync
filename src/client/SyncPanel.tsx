@@ -963,6 +963,12 @@ function roleLine(state: SyncClientSnapshot, t: (key: SessionSyncKey) => string)
   if (!publish.ok) {
     return `${role} · ${t('statusLinked')} · ${t('statusPublishFailed')}${publish.error === undefined ? '' : `: ${publish.error}`}`
   }
+  // The follow contract, reported on the one line that is always visible: a
+  // stream that yields nothing is the failure this console could not see.
+  const follow = state.state.follow
+  if (follow !== undefined && follow.events === 0) {
+    return `${role} · ${t('statusLinked')} · ${t('statusFollowSilent')}${follow.frames.length === 0 ? '' : ` (${follow.frames.join(', ')})`}`
+  }
   return Date.now() - publish.at > 30_000
     ? `${role} · ${t('statusLinked')} · ${t('statusPublishStalled')}`
     : `${role} · ${t('statusLinked')} · ${t('statusPublishOk')}`
