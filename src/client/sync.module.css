@@ -1480,10 +1480,6 @@
   white-space: pre-wrap;
 }
 
-.thinkRow {
-  border-bottom: 0.5px solid var(--dsw-alias-border-l2);
-}
-
 /* The collapsed reasoning row's one-line gist, next to its title. */
 .thinkSummary {
   flex: 1 1 auto;

@@ -765,7 +765,6 @@ function ReasoningRow({ t, reasoning, streaming }: {
       expandable
       expandOnRowClick
       onToggle={() => { setOpen(current => !current) }}
-      className={css.thinkRow}
       titleClassName={css.thinkTitle}
       collapsedContent={(
         <>
