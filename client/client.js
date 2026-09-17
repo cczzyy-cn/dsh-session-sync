@@ -2322,23 +2322,36 @@ window.__ModuleLoader__.load({
 					ref: body,
 					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 						className: sync_module_css_default.viewColumn,
-						children: [state.error !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
-							className: sync_module_css_default.error,
-							children: state.error
-						}), state.transcript === void 0 && !state.loadingTranscript ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
-							className: sync_module_css_default.empty,
-							children: t("transcriptGone")
-						}) : state.loadingTranscript ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
-							className: sync_module_css_default.empty,
-							children: t("transcriptLoading")
-						}) : rows.length === 0 ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
-							className: sync_module_css_default.empty,
-							children: t("transcriptEmpty")
-						}) : rows.map((row) => /* @__PURE__ */ (0, react_jsx_runtime.jsx)(TranscriptLine, {
-							t,
-							row,
-							labels
-						}, row.key))]
+						children: [
+							state.error !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+								className: sync_module_css_default.error,
+								children: state.error
+							}),
+							state.transcript === void 0 && !state.loadingTranscript ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+								className: sync_module_css_default.empty,
+								children: t("transcriptGone")
+							}) : state.loadingTranscript ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+								className: sync_module_css_default.empty,
+								children: t("transcriptLoading")
+							}) : rows.length === 0 ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+								className: sync_module_css_default.empty,
+								children: t("transcriptEmpty")
+							}) : rows.map((row) => /* @__PURE__ */ (0, react_jsx_runtime.jsx)(TranscriptLine, {
+								t,
+								row,
+								labels
+							}, row.key)),
+							(state.live.reasoning !== "" || state.live.text !== "") && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+								className: sync_module_css_default.assistantRow,
+								children: [state.live.reasoning !== "" && /* @__PURE__ */ (0, react_jsx_runtime.jsx)(ReasoningRow, {
+									t,
+									reasoning: state.live.reasoning
+								}), state.live.text !== "" && /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.MarkdownText, {
+									text: state.live.text,
+									labels
+								})]
+							})
+						]
 					}), !atBottom && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
 						className: sync_module_css_default.toBottomSlot,
 						children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
@@ -2940,6 +2953,10 @@ window.__ModuleLoader__.load({
 					state: idleState(),
 					sessions: [],
 					loadingTranscript: false,
+					live: {
+						reasoning: "",
+						text: ""
+					},
 					stream: "connecting",
 					mirrorResets: 0
 				});
@@ -3148,9 +3165,29 @@ window.__ModuleLoader__.load({
 					if (open.machineName !== frame.machineName || open.sessionId !== frame.sessionId) return;
 					const transcript = snapshot.transcript;
 					if (transcript === void 0) return;
-					this.update({ transcript: {
-						...transcript,
-						events: [...transcript.events, ...frame.events]
+					this.update({
+						transcript: {
+							...transcript,
+							events: [...transcript.events, ...frame.events]
+						},
+						...frame.events.some((event) => event.type === "assistant/message") ? { live: {
+							reasoning: "",
+							text: ""
+						} } : {}
+					});
+					return;
+				}
+				if (frame.type === "stream") {
+					const open = this.store.getSnapshot().open;
+					if (open === void 0) return;
+					if (open.machineName !== frame.machineName || open.sessionId !== frame.sessionId) return;
+					const live = this.store.getSnapshot().live;
+					this.update({ live: frame.kind === "reasoning" ? {
+						...live,
+						reasoning: frame.text
+					} : {
+						...live,
+						text: frame.text
 					} });
 					return;
 				}

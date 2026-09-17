@@ -134,6 +134,27 @@ export class SyncHub {
    * @param machineName - publishing machine.
    * @param payload - the Session id and its new events.
    */
+  /**
+   * Relay one streaming update. Nothing is stored: streaming is presentation,
+   * and the durable events that follow are what the mirror keeps.
+   * @param machineName - the publishing machine.
+   * @param payload - the step's whole text so far for one kind.
+   */
+  publishStream(machineName: string, payload: StreamDeltaPayload): void {
+    const record = this.records.get(machineName)
+    if (record === undefined) return
+    record.lastSeen = Date.now()
+    this.broadcast({
+      type: 'stream',
+      machineName,
+      sessionId: payload.sessionId,
+      turn: payload.turn,
+      step: payload.step,
+      kind: payload.kind,
+      text: payload.text,
+    })
+  }
+
   publishFrames(machineName: string, payload: PublishFramesPayload): void {
     const record = this.machine(machineName)
     record.lastSeen = Date.now()

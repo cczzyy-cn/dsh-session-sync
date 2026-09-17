@@ -172,7 +172,21 @@ export interface CommandStatus {
   time: number
 }
 
-/** Origin → server: the outcome of one downstream command. */
+/** Origin -> server: streaming text for one step, never stored in the mirror.
+ *
+ * The whole text so far rather than an increment: a lost frame then self-heals
+ * on the next one, and the reader never sees a gap. The durable events remain
+ * the source of truth -- the completed message replaces this.
+ */
+export interface StreamDeltaPayload {
+  sessionId: string
+  turn: number
+  step: number
+  kind: 'reasoning' | 'text'
+  text: string
+}
+
+/** Origin -> server: the outcome of one downstream command. */
 export interface CommandAckPayload {
   commandId: string
   sessionId: string
@@ -230,6 +244,8 @@ export type SyncStreamFrame =
   | { type: 'state'; state: SyncState }
   | { type: 'events'; machineName: string; sessionId: string; events: MirrorEvent[] }
   | { type: 'command'; command: CommandStatus }
+  /** Transient streaming text for the open Session; never mirrored. */
+  | { type: 'stream'; machineName: string; sessionId: string; turn: number; step: number; kind: 'reasoning' | 'text'; text: string }
   | { type: 'error'; message: string }
 
 /** Build the config a fresh install starts from. */

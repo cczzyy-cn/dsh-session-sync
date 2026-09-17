@@ -19,6 +19,7 @@ import {
   type MirrorEvent,
   type MirrorTranscript,
   type PublishIndexPayload,
+  type StreamDeltaPayload,
   type SyncConfig,
   type SyncState,
   type SyncStreamFrame,
@@ -62,6 +63,13 @@ export class SessionSyncService {
   private linkError: string | undefined
   private reconcileTimer: ReturnType<typeof setInterval> | undefined
   private flushTimer: ReturnType<typeof setInterval> | undefined
+  /** The Session whose frames are being absorbed right now. */
+  private streamSessionId = ''
+
+  /** Streaming text per step, keyed session|turn|step|kind; relayed, never mirrored. */
+  private readonly liveText = new Map<string, StreamDeltaPayload>()
+  private readonly liveDirty = new Set<string>()
+
   /** The last publish attempt, as the settings page reports it. */
   private lastPublish: { at: number; ok: boolean; error?: string } | undefined
   private disposed = false
@@ -97,7 +105,7 @@ export class SessionSyncService {
       this.hub.expireCommands()
       void this.reconcile()
     }, RECONCILE_MS)
-    this.flushTimer = setInterval(() => { this.flush() }, FLUSH_MS)
+    this.flushTimer = setInterval(() => { this.flushStream(); this.flush() }, FLUSH_MS)
     void this.applyRole()
   }
 
@@ -359,6 +367,7 @@ export class SessionSyncService {
   /** Open one `follow` stream and absorb its frames into the pending buffer. */  private startFollow(sessionId: string): void {
     const controller = this.controller()
     if (controller === undefined) return
+    this.streamSessionId = sessionId
     const handle: FollowHandle = { abort: new AbortController(), pending: [] }
     this.follows.set(sessionId, handle)
     void (async () => {
@@ -379,7 +388,47 @@ export class SessionSyncService {
   }
 
   /** Record one follow frame's durable events. */
+  /**
+   * Take whatever streaming text a follow frame carries.
+   *
+   * The frame family is not ours to define: the contract is structural and the
+   * stream rides it as a variant we cannot name from here, so this reads the
+   * shapes defensively -- an opening baseline, a stream frame, or a bare chunk
+   * -- and accumulates the text each one carries. Anything it does not
+   * recognise is left alone, so the durable path is never at risk.
+   * @param frame - one frame from the follow stream.
+   */
+  private absorbStream(frame: unknown): void {
+    const seen = new Set<unknown>()
+    const visit = (value: unknown): void => {
+      if (typeof value !== 'object' || value === null || seen.has(value)) return
+      seen.add(value)
+      const record = value as Record<string, unknown>
+      if (Array.isArray(record['stream'])) { for (const item of record['stream']) visit(item) }
+      visit(record['chunk'])
+      visit(record['frame'])
+      visit(record['assistantStream'])
+      if (Array.isArray(record['chunks'])) { for (const item of record['chunks']) visit(item) }
+      const inner = record['chunk'] as Record<string, unknown> | undefined
+      const source = inner !== undefined && typeof inner === 'object' ? inner : record
+      const kind = source['type'] === 'reasoning' ? 'reasoning' : source['type'] === 'text' ? 'text' : undefined
+      if (kind === undefined) return
+      const text = typeof source['text'] === 'string' ? source['text'] : typeof source['delta'] === 'string' ? source['delta'] : undefined
+      if (text === undefined || text === '') return
+      const turn = typeof record['turn'] === 'number' ? record['turn'] : 0
+      const step = typeof record['step'] === 'number' ? record['step'] : 0
+      const sessionId = this.streamSessionId
+      if (sessionId === '') return
+      const key = `${sessionId}|${String(turn)}|${String(step)}|${kind}`
+      const previous = this.liveText.get(key)
+      this.liveText.set(key, { sessionId, turn, step, kind, text: (previous?.text ?? '') + text })
+      this.liveDirty.add(key)
+    }
+    visit(frame)
+  }
+
   private absorb(handle: FollowHandle, frame: FollowFrame): void {
+    this.absorbStream(frame)
     if (frame.type === 'snapshot') {
       for (const record of frame.records) buffer(handle, record.event)
       return
@@ -388,6 +437,17 @@ export class SessionSyncService {
   }
 
   /** Hand every buffered batch to the link, when there is a link to hand it to. */
+  /** Relay the streaming text accumulated since the last tick. */
+  private flushStream(): void {
+    if (this.liveDirty.size === 0) return
+    for (const key of this.liveDirty) {
+      const payload = this.liveText.get(key)
+      if (payload === undefined) continue
+      this.link?.publishStream(payload)
+    }
+    this.liveDirty.clear()
+  }
+
   private flush(): void {
     const link = this.link
     if (link === undefined || !link.linked) return

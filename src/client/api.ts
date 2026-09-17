@@ -90,6 +90,8 @@ export interface SyncClientSnapshot {
    * which is far too short to notice on its own.
    */
   mirrorResets: number
+  /** Streaming text for the open Session's current step; replaced by the durable message. */
+  live: { reasoning: string; text: string }
   /** Last failure text, cleared by the next successful action. */
   error?: string
 }
@@ -127,6 +129,7 @@ export class SyncClient {
       state: idleState(),
       sessions: [],
       loadingTranscript: false,
+      live: { reasoning: '', text: '' },
       stream: 'connecting',
       mirrorResets: 0,
     })
@@ -360,7 +363,21 @@ export class SyncClient {
       if (transcript === undefined) return
       this.update({
         transcript: { ...transcript, events: [...transcript.events, ...frame.events] },
+        // A durable message ends the streaming step it belongs to.
+        ...(frame.events.some(event => event.type === 'assistant/message') ? { live: { reasoning: '', text: '' } } : {}),
       })
+      return
+    }
+    if (frame.type === 'stream') {
+      const snapshot = this.store.getSnapshot()
+      const open = snapshot.open
+      if (open === undefined) return
+      if (open.machineName !== frame.machineName || open.sessionId !== frame.sessionId) return
+      // The origin sends the whole text so far, so this replaces rather than
+      // appends: a lost frame heals on the next one. The durable message that
+      // ends the step is what retires it.
+      const live = this.store.getSnapshot().live
+      this.update({ live: frame.kind === 'reasoning' ? { ...live, reasoning: frame.text } : { ...live, text: frame.text } })
       return
     }
     if (frame.type === 'command') {

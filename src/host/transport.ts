@@ -109,6 +109,22 @@ export async function startSyncServer(options: SyncServerOptions): Promise<SyncS
       return
     }
 
+    if (request.method === 'POST' && url.pathname === '/stream-delta') {
+      const body = await readJson(request)
+      const sessionId = typeof body?.['sessionId'] === 'string' ? body['sessionId'] : ''
+      const kind = body?.['kind'] === 'reasoning' ? 'reasoning' : body?.['kind'] === 'text' ? 'text' : ''
+      const text = typeof body?.['text'] === 'string' ? body['text'] : ''
+      const turn = typeof body?.['turn'] === 'number' ? body['turn'] : 0
+      const step = typeof body?.['step'] === 'number' ? body['step'] : 0
+      if (sessionId === '' || kind === '') {
+        sendJson(response, 400, { error: 'sessionId and kind are required' })
+        return
+      }
+      options.hub.publishStream(machineName, { sessionId, turn, step, kind, text })
+      sendJson(response, 200, { ok: true })
+      return
+    }
+
     if (request.method === 'POST' && url.pathname === '/frames') {
       const body = await readJson(request)
       const sessionId = typeof body?.['sessionId'] === 'string' ? body['sessionId'] : ''
@@ -325,6 +341,14 @@ export class OriginLink {
       ok,
       ...(error === undefined ? {} : { error }),
     })
+  }
+
+  /**
+   * Publish one step's streaming text.
+   * @param payload - the step, the kind, and the whole text so far.
+   */
+  publishStream(payload: StreamDeltaPayload): void {
+    void this.post('/stream-delta', { ...payload, machineName: this.options.machineName() })
   }
 
   private async post(path: string, body: unknown): Promise<void> {

@@ -482,6 +482,15 @@ function Conversation(props: {
                   : rows.length === 0
                     ? <p className={css.empty}>{t('transcriptEmpty')}</p>
                     : rows.map(row => <TranscriptLine key={row.key} t={t} row={row} labels={labels} />)}
+              {/* Streaming text arrives between durable messages: reasoning first,
+                  then the answer, each replacing itself as it grows. The durable
+                  message that ends the step retires both. */}
+              {(state.live.reasoning !== '' || state.live.text !== '') && (
+                <div className={css.assistantRow}>
+                  {state.live.reasoning !== '' && <ReasoningRow t={t} reasoning={state.live.reasoning} />}
+                  {state.live.text !== '' && <MarkdownText text={state.live.text} labels={labels} />}
+                </div>
+              )}
             </div>
             {/* The shipped control, copied from ui-chat's ChatView: a sticky slot
                 inside the scroller, so the button rides the live edge of the
