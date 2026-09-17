@@ -62,6 +62,14 @@ import { toRows, type ToolRow, type TranscriptRow } from './transcript.ts'
 import { toolPresentation, type ToolGlyph } from './tool-presentation.ts'
 import css from './sync.module.css'
 
+/**
+ * How close to the floor still counts as being at it.
+ *
+ * The shipped ChatView's own constant: a reader within this many pixels of the
+ * bottom is following the tail, and anything further is reading.
+ */
+const FOLLOW_THRESHOLD = 24
+
 /** Props the renderer binds for the `main` cell. */
 export interface SyncPanelProps {
   /** Localized copy, from the registration's `locale` namespace. */
@@ -344,6 +352,8 @@ function Conversation(props: {
   const [sending, setSending] = React.useState(false)
   const [tab, setTab] = React.useState<'chat' | 'trajectory'>('chat')
   const body = React.useRef<HTMLDivElement | null>(null)
+  /** The reading column, whose height is what growth moves. */
+  const column = React.useRef<HTMLDivElement | null>(null)
   /** Whether the reader is at the floor of the transcript. */
   const [atBottom, setAtBottom] = React.useState(true)
   const scrollToBottom = React.useCallback((smooth = true): void => {
@@ -359,12 +369,29 @@ function Conversation(props: {
     const el = body.current
     if (el === null) return
     const onScroll = (): void => {
-      setAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight <= 24)
+      setAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight <= FOLLOW_THRESHOLD)
     }
     onScroll()
     el.addEventListener('scroll', onScroll, { passive: true })
     return () => { el.removeEventListener('scroll', onScroll) }
   }, [tab, state.open?.sessionId])
+  // Growth is what the tail has to follow, and it arrives without a row count
+  // change: the live row's text grows, markdown reflows, a disclosure opens. The
+  // shipped ChatView watches the column for exactly this reason, and writes only
+  // while the reader is pinned, so a scrolled-up reader keeps their place.
+  React.useEffect(() => {
+    const node = column.current
+    if (node === null || typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(() => { if (atBottom) scrollToBottom(false) })
+    observer.observe(node)
+    return () => { observer.disconnect() }
+  }, [atBottom, scrollToBottom, tab, state.open?.sessionId])
+  // Opening a Session is a fresh read: it starts at the floor whatever the reader
+  // was doing in the previous one.
+  React.useEffect(() => {
+    setAtBottom(true)
+    scrollToBottom(false)
+  }, [state.open?.sessionId, scrollToBottom])
   const rows = React.useMemo(
     () => toRows(state.transcript?.events ?? []),
     [state.transcript],
@@ -375,9 +402,6 @@ function Conversation(props: {
     () => sessionChrome(state.transcript?.events ?? []),
     [state.transcript],
   )
-  React.useEffect(() => {
-    if (atBottom) scrollToBottom(false)
-  }, [rows.length, atBottom, scrollToBottom, tab])
 
   const cells = React.useMemo(
     () => trajectoryCells(state.transcript?.events ?? [], kindLabel(t)),
@@ -392,14 +416,6 @@ function Conversation(props: {
     }),
     [t],
   )
-
-  // Follow the tail as events arrive, which is the whole point of watching a
-  // Session that is running somewhere else.
-  React.useEffect(() => {
-    const element = body.current
-    if (element === null) return
-    element.scrollTop = element.scrollHeight
-  }, [rows.length])
 
   const send = (): void => {
     const text = draft.trim()
@@ -473,7 +489,7 @@ function Conversation(props: {
         ? <TrajectoryView t={t} cells={cells} stats={chrome.stats} labels={labels} />
         : (
           <div className={css.viewScroll} ref={body}>
-            <div className={css.viewColumn}>
+            <div className={css.viewColumn} ref={column}>
               {state.error !== undefined && <div className={css.error}>{state.error}</div>}
               {state.transcript === undefined && !state.loadingTranscript
                 ? <p className={css.empty}>{t('transcriptGone')}</p>

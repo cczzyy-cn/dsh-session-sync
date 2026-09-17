@@ -1955,6 +1955,13 @@ window.__ModuleLoader__.load({
 		* same place without either knowing about the other.
 		*/
 		/**
+		* How close to the floor still counts as being at it.
+		*
+		* The shipped ChatView's own constant: a reader within this many pixels of the
+		* bottom is following the tail, and anything further is reading.
+		*/
+		const FOLLOW_THRESHOLD = 24;
+		/**
 		* Render the sync panel.
 		* @param props - copy, the snapshot hook, and the actions.
 		* @returns the panel.
@@ -2189,6 +2196,8 @@ window.__ModuleLoader__.load({
 			const [sending, setSending] = react.useState(false);
 			const [tab, setTab] = react.useState("chat");
 			const body = react.useRef(null);
+			/** The reading column, whose height is what growth moves. */
+			const column = react.useRef(null);
 			/** Whether the reader is at the floor of the transcript. */
 			const [atBottom, setAtBottom] = react.useState(true);
 			const scrollToBottom = react.useCallback((smooth = true) => {
@@ -2204,7 +2213,7 @@ window.__ModuleLoader__.load({
 				const el = body.current;
 				if (el === null) return;
 				const onScroll = () => {
-					setAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight <= 24);
+					setAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight <= FOLLOW_THRESHOLD);
 				};
 				onScroll();
 				el.addEventListener("scroll", onScroll, { passive: true });
@@ -2212,16 +2221,28 @@ window.__ModuleLoader__.load({
 					el.removeEventListener("scroll", onScroll);
 				};
 			}, [tab, state.open?.sessionId]);
-			const rows = react.useMemo(() => toRows(state.transcript?.events ?? []), [state.transcript]);
-			const chrome = react.useMemo(() => sessionChrome(state.transcript?.events ?? []), [state.transcript]);
 			react.useEffect(() => {
-				if (atBottom) scrollToBottom(false);
+				const node = column.current;
+				if (node === null || typeof ResizeObserver === "undefined") return;
+				const observer = new ResizeObserver(() => {
+					if (atBottom) scrollToBottom(false);
+				});
+				observer.observe(node);
+				return () => {
+					observer.disconnect();
+				};
 			}, [
-				rows.length,
 				atBottom,
 				scrollToBottom,
-				tab
+				tab,
+				state.open?.sessionId
 			]);
+			react.useEffect(() => {
+				setAtBottom(true);
+				scrollToBottom(false);
+			}, [state.open?.sessionId, scrollToBottom]);
+			const rows = react.useMemo(() => toRows(state.transcript?.events ?? []), [state.transcript]);
+			const chrome = react.useMemo(() => sessionChrome(state.transcript?.events ?? []), [state.transcript]);
 			const cells = react.useMemo(() => trajectoryCells(state.transcript?.events ?? [], kindLabel(t)), [state.transcript, t]);
 			const labels = react.useMemo(() => ({
 				code: {
@@ -2230,11 +2251,6 @@ window.__ModuleLoader__.load({
 				},
 				footnotes: t("footnotes")
 			}), [t]);
-			react.useEffect(() => {
-				const element = body.current;
-				if (element === null) return;
-				element.scrollTop = element.scrollHeight;
-			}, [rows.length]);
 			const send = () => {
 				const text = draft.trim();
 				if (text === "" || sending) return;
@@ -2321,6 +2337,7 @@ window.__ModuleLoader__.load({
 					ref: body,
 					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 						className: sync_module_css_default.viewColumn,
+						ref: column,
 						children: [
 							state.error !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
 								className: sync_module_css_default.error,
