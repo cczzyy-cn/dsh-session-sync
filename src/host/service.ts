@@ -424,6 +424,28 @@ export class SessionSyncService {
       visit(record['frame'])
       visit(record['assistantStream'])
       if (Array.isArray(record['chunks'])) { for (const item of record['chunks']) visit(item) }
+      // The compact record families the Session stream carries: each is one run
+      // of deltas for a kind, in `texts`. This is the shape an assistant-stream
+      // frame actually holds (see @deepseek-ai/dsh-llm's AssistantStreamRecord),
+      // and it is why reading only a { type: 'text', text } chunk found nothing.
+      const recordType = record['type']
+      const texts = record['texts']
+      if (Array.isArray(texts) && (recordType === 'text-chunks' || recordType === 'reasoning-chunks')) {
+        const kind = recordType === 'reasoning-chunks' ? 'reasoning' : 'text'
+        const text = texts.filter(part => typeof part === 'string').join('')
+        if (text !== '') {
+          const sessionId = this.streamSessionId
+          if (sessionId !== '') {
+            const turn = typeof record['turn'] === 'number' ? record['turn'] : 0
+            const step = typeof record['step'] === 'number' ? record['step'] : 0
+            const key = sessionId + '|' + String(turn) + '|' + String(step) + '|' + kind
+            const previous = this.liveText.get(key)
+            this.liveText.set(key, { sessionId, turn, step, kind, text: (previous?.text ?? '') + text })
+            this.liveDirty.add(key)
+          }
+        }
+        return
+      }
       const inner = record['chunk'] as Record<string, unknown> | undefined
       const source = inner !== undefined && typeof inner === 'object' ? inner : record
       const kind = source['type'] === 'reasoning' ? 'reasoning' : source['type'] === 'text' ? 'text' : undefined
