@@ -487,7 +487,7 @@ function Conversation(props: {
                   settlement that ends the step retires both. */}
               {(state.live.reasoning !== '' || state.live.text !== '') && (
                 <div className={css.assistantRow}>
-                  {state.live.reasoning !== '' && <ReasoningRow t={t} reasoning={state.live.reasoning} />}
+                  {state.live.reasoning !== '' && <ReasoningRow t={t} reasoning={state.live.reasoning} streaming />}
                   {state.live.text !== '' && <MarkdownText text={state.live.text} labels={labels} />}
                 </div>
               )}
@@ -741,17 +741,22 @@ function TranscriptLine({ t, row, labels }: {
   return <ToolCallRow t={t} row={row} />
 }
 
-/** One assistant reasoning block, folded away by default. */
-function ReasoningRow({ t, reasoning }: {
+/**
+ * One assistant reasoning block, folded away by default.
+ *
+ * A block that is still streaming is summarised by its latest line rather than
+ * its first, as the shipped row does for a live block: on this deployment the
+ * first line is complete within milliseconds of the step starting, so a folded
+ * block summarised by it would never appear to move.
+ */
+function ReasoningRow({ t, reasoning, streaming }: {
   t: (key: SessionSyncKey) => string
   reasoning: string
+  streaming?: boolean
 }): React.ReactElement {
   const [open, setOpen] = React.useState(false)
-  // The collapsed row carries the first line of the reasoning, as the shipped
-  // ReasoningRow does. That first line is also what a block that is still
-  // streaming keeps showing, which is why it is the first and not the latest.
   // Its `**` markers are dropped so the gist reads as prose.
-  const summary = firstLineOf(reasoning).replaceAll('**', '')
+  const summary = (streaming === true ? lastLineOf(reasoning) : firstLineOf(reasoning)).replaceAll('**', '')
   return (
     <DisclosureRow
       icon={<IconThinkOutline14 size={14} />}
@@ -778,6 +783,21 @@ function ReasoningRow({ t, reasoning }: {
 function firstLineOf(text: string): string {
   const newline = text.indexOf('\n')
   return (newline === -1 ? text : text.slice(0, newline)).trim()
+}
+
+/**
+ * The newest line a streaming block has reached.
+ *
+ * Trailing blank lines are skipped: the text ends wherever the model is, so the
+ * last line is usually still being written and often empty.
+ */
+function lastLineOf(text: string): string {
+  const lines = text.split('\n')
+  for (let index = lines.length - 1; index >= 0; index -= 1) {
+    const line = lines[index].trim()
+    if (line !== '') return line
+  }
+  return ''
 }
 
 /** One tool call and its result, folded into a single row with an IN/OUT card. */

@@ -200,7 +200,9 @@ became of that command down the browser's own event stream:
 - **Live thinking and output are relayed while a step runs; the mirror does not
   keep them.** Each published Session's `follow` opts into the process-local
   assistant frames, their deltas are accumulated per Session and per step, and
-  the whole text so far is posted as a transient frame every 400 ms. The console
+  the whole text so far is posted as a transient frame every 150 ms — the tick
+  the deltas' own rate asks for, since they arrive at some 200 a second and a
+  whole thinking block is on the wire in under three seconds. The console
   renders it under the transcript, and the durable settlement — the
   `assistant/message` that ends the step, or the `assistant/attempt` a failed or
   aborted request leaves behind — is what retires it. None of it is stored, so

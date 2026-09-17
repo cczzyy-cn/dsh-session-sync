@@ -38,8 +38,17 @@ import { OriginLink, startSyncServer, type SyncServerHandle } from './transport.
 /** How often the local index is re-read and the follow set reconciled. */
 const RECONCILE_MS = 10_000
 
-/** How often buffered events are handed to the link. */
-const FLUSH_MS = 400
+/**
+ * How often buffered events, and the streaming text, are handed to the link.
+ *
+ * Measured on this deployment: the model's deltas arrive at roughly 200 a
+ * second, so a whole thinking block is on the wire in under three seconds. At
+ * the previous 400 ms that was three to six visible updates for an entire
+ * block, which reads as one shot however it is rendered; 150 ms keeps the relay
+ * ahead of the burst. Each update carries the step's whole text, so the cost of
+ * the finer tick is bounded by the text, not by the number of deltas.
+ */
+const FLUSH_MS = 150
 
 /** Bound on events buffered per Session while the link is down. */
 const BUFFER_LIMIT = 4_000

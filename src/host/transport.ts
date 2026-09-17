@@ -287,6 +287,8 @@ export interface OriginLinkOptions extends OriginLinkHandlers {
 /** The origin-role link to one sync server. */
 export class OriginLink {
   private controller: AbortController | undefined
+  /** The handshake-then-stream attempt in flight, aborted to force a reconnect. */
+  private connection: AbortController | undefined
   private token: string | undefined
   private isLinked = false
 
@@ -384,26 +386,50 @@ export class OriginLink {
         const reason = `server answered ${String(response.status)}`
         this.options.logger.warn(`dsh-session-sync: ${path} answered ${String(response.status)}`)
         this.options.onPost?.(path, false, reason)
-        this.setLinked(false, reason)
+        this.reconnect(reason)
         return
       }
       this.options.onPost?.(path, true)
     } catch (error: unknown) {
       const reason = describe(error)
       this.options.onPost?.(path, false, reason)
-      this.setLinked(false, reason)
+      this.reconnect(reason)
     }
+  }
+
+  /**
+   * Give up on the current attempt so the link handshakes again.
+   *
+   * A failed post used to be the end of publishing rather than a hiccup: the
+   * handler dropped the token, and the only thing that ever mints a new one is
+   * a reconnect, which the held-open downstream stream never triggers on its
+   * own. One transient `fetch failed` therefore stopped every publish — the
+   * index, the durable events, and the whole live stream — for as long as the
+   * stream stayed up, which is indefinitely. Aborting the attempt makes the
+   * failure heal the way the retry loop already knows how.
+   * @param reason - why the attempt is being abandoned.
+   */
+  private reconnect(reason: string): void {
+    this.setLinked(false, reason)
+    this.connection?.abort()
   }
 
   private async run(signal: AbortSignal): Promise<void> {
     let backoffMs = 1_000
     while (!signal.aborted) {
+      const attempt = new AbortController()
+      this.connection = attempt
+      const onAbort = (): void => { attempt.abort() }
+      signal.addEventListener('abort', onAbort, { once: true })
       try {
-        await this.connect(signal)
+        await this.connect(attempt.signal)
         backoffMs = 1_000
       } catch (error: unknown) {
         if (signal.aborted) break
         this.setLinked(false, describe(error))
+      } finally {
+        signal.removeEventListener('abort', onAbort)
+        if (this.connection === attempt) this.connection = undefined
       }
       await sleep(backoffMs, signal)
       backoffMs = Math.min(backoffMs * 2, 15_000)
@@ -475,10 +501,18 @@ export class OriginLink {
     }
   }
 
+  /**
+   * Record one link transition.
+   *
+   * A failure no longer discards the token: the token is what the *stream* is
+   * authenticated with, and dropping it on a failed post turned every publish
+   * that followed into "no session token" — a link that could not recover even
+   * once the network had. A reconnect mints a fresh one anyway, and {@link stop}
+   * is the one place the link is really over.
+   */
   private setLinked(linked: boolean, error?: string): void {
     if (this.isLinked === linked && error === undefined) return
     this.isLinked = linked
-    if (!linked) this.token = undefined
     this.options.onStatus(error === undefined ? { linked } : { linked, error })
   }
 }

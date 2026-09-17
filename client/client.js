@@ -2345,7 +2345,8 @@ window.__ModuleLoader__.load({
 								className: sync_module_css_default.assistantRow,
 								children: [state.live.reasoning !== "" && /* @__PURE__ */ (0, react_jsx_runtime.jsx)(ReasoningRow, {
 									t,
-									reasoning: state.live.reasoning
+									reasoning: state.live.reasoning,
+									streaming: true
 								}), state.live.text !== "" && /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.MarkdownText, {
 									text: state.live.text,
 									labels
@@ -2623,10 +2624,17 @@ window.__ModuleLoader__.load({
 				row
 			});
 		}
-		/** One assistant reasoning block, folded away by default. */
-		function ReasoningRow({ t, reasoning }) {
+		/**
+		* One assistant reasoning block, folded away by default.
+		*
+		* A block that is still streaming is summarised by its latest line rather than
+		* its first, as the shipped row does for a live block: on this deployment the
+		* first line is complete within milliseconds of the step starting, so a folded
+		* block summarised by it would never appear to move.
+		*/
+		function ReasoningRow({ t, reasoning, streaming }) {
 			const [open, setOpen] = react.useState(false);
-			const summary = firstLineOf(reasoning).replaceAll("**", "");
+			const summary = (streaming === true ? lastLineOf(reasoning) : firstLineOf(reasoning)).replaceAll("**", "");
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.DisclosureRow, {
 				icon: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconThinkOutline14, { size: 14 }),
 				title: t("reasoning"),
@@ -2652,6 +2660,20 @@ window.__ModuleLoader__.load({
 		function firstLineOf(text) {
 			const newline = text.indexOf("\n");
 			return (newline === -1 ? text : text.slice(0, newline)).trim();
+		}
+		/**
+		* The newest line a streaming block has reached.
+		*
+		* Trailing blank lines are skipped: the text ends wherever the model is, so the
+		* last line is usually still being written and often empty.
+		*/
+		function lastLineOf(text) {
+			const lines = text.split("\n");
+			for (let index = lines.length - 1; index >= 0; index -= 1) {
+				const line = lines[index].trim();
+				if (line !== "") return line;
+			}
+			return "";
 		}
 		/** One tool call and its result, folded into a single row with an IN/OUT card. */
 		function ToolCallRow({ t, row }) {
