@@ -3233,11 +3233,14 @@ window.__ModuleLoader__.load({
 					if (open.machineName !== frame.machineName || open.sessionId !== frame.sessionId) return;
 					const live = snapshot.live;
 					if (frame.turn < live.turn || frame.turn === live.turn && frame.step < live.step) return;
-					const base = frame.turn > live.turn || frame.turn === live.turn && frame.step > live.step ? {
+					const advanced = frame.turn > live.turn || frame.turn === live.turn && frame.step > live.step;
+					const base = advanced ? {
 						...noLive(),
 						turn: frame.turn,
 						step: frame.step
 					} : live;
+					const shown = frame.kind === "reasoning" ? base.reasoning : base.text;
+					if (!advanced && frame.text !== "" && frame.text.length < shown.length && shown.startsWith(frame.text)) return;
 					this.update({ live: frame.kind === "reasoning" ? {
 						...base,
 						reasoning: frame.text

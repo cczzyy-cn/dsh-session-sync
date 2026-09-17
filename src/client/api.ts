@@ -416,6 +416,13 @@ export class SyncClient {
       // starts both texts over, because its reasoning is a new one.
       const advanced = frame.turn > live.turn || (frame.turn === live.turn && frame.step > live.step)
       const base = advanced ? { ...noLive(), turn: frame.turn, step: frame.step } : live
+      // Within one step the text only grows, so a frame whose text is a strict
+      // prefix of what is already shown is an older snapshot that arrived late:
+      // every update is its own post, and the network does not order two posts
+      // that were issued together. An empty text is exempt -- that is how an
+      // abandoned attempt is dropped, and it is the only frame that may regress.
+      const shown = frame.kind === 'reasoning' ? base.reasoning : base.text
+      if (!advanced && frame.text !== '' && frame.text.length < shown.length && shown.startsWith(frame.text)) return
       this.update({ live: frame.kind === 'reasoning' ? { ...base, reasoning: frame.text } : { ...base, text: frame.text } })
       return
     }
