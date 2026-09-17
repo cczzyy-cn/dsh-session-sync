@@ -278,3 +278,13 @@ hot-swaps the **browser** half within about half a second (reload the page). The
 `scripts/restart-server.ps1` performs one from outside the host — the only way it
 can work, because the agent asking for the restart runs inside the process being
 restarted.
+
+On one real host a `pnpm update` of the `github:` dependency replaced the bundle
+without the watcher noticing: the shell kept serving the previous bytes with the
+previous `rev`, so the console went on rendering the old half. Touching the
+installed `client/client.js` made it re-publish within a second (`/plugins/events`
+reported a new `rev` for the plugin, and the bootstrap combo carried the new
+code). A restart re-reads it as well, because the module registry's cache lives
+in the process. That host also serves its browser bundles inside one
+`/plugins/??…` combo, so verifying a deploy means grepping that combo for a
+marker from the new build rather than fetching `/plugins/<id>/client.js`.
