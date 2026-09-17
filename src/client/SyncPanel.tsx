@@ -37,7 +37,9 @@ import {
   IconChecklistOutline14,
   IconChevronDownOutline14,
   IconChevronLeftOutline14,
+  IconClockOutline16,
   IconCopyOutline16,
+  IconDatabaseOutline16,
   IconEditOutline16,
   IconFolderClose16,
   IconFolderOpen16,
@@ -68,6 +70,15 @@ import {
 } from './session-chrome.ts'
 import { TrajectoryView } from './TrajectoryView.tsx'
 import {
+  billedInputTokens,
+  formatCacheHitPercent,
+  formatExactTokens,
+  formatMessageClock,
+  formatRunDuration,
+  formatTokens,
+  turnTotalTokens,
+} from './message-stats.ts'
+import {
   CHAT_DIFF_MAX_LINES,
   CHAT_READ_MAX_LINES,
   CHAT_SEARCH_MAX_LINES,
@@ -85,7 +96,7 @@ import {
   webBlockLabels,
   webCard,
 } from './tool-cards.ts'
-import { toRows, type AssistantBlock, type NoticeRow, type RetryRow, type ToolRow, type TranscriptRow } from './transcript.ts'
+import { toRows, type AssistantBlock, type NoticeRow, type RetryRow, type ToolRow, type TranscriptRow, type TurnFacts, type TurnUsage } from './transcript.ts'
 import { toolPresentation, type ToolGlyph } from './tool-presentation.ts'
 import css from './sync.module.css'
 
@@ -770,7 +781,7 @@ function TranscriptLine({ t, row, labels }: {
     return (
       <div className={css.userRow}>
         <div className={css.bubble}>{row.text}</div>
-        <MessageActions t={t} text={row.text} place="user" />
+        <MessageActions t={t} text={row.text} place="user" time={row.time} />
       </div>
     )
   }
@@ -784,7 +795,17 @@ function TranscriptLine({ t, row, labels }: {
           <AssistantBlockView key={index} t={t} block={block} labels={labels} />
         ))}
         {row.interrupted && <span className={css.stopped}>{t('stopped')}</span>}
-        <MessageActions t={t} text={assistantTextOf(row.blocks)} place="assistant" />
+        {/* A turn's actions belong to its closing message: one answer, one copy
+            button, however many steps the turn took. */}
+        {row.tail && (
+          <MessageActions
+            t={t}
+            text={assistantTextOf(row.blocks)}
+            place="assistant"
+            time={row.time}
+            {...(row.facts === undefined ? {} : { facts: row.facts })}
+          />
+        )}
       </div>
     )
   }
@@ -829,16 +850,21 @@ function assistantTextOf(blocks: readonly AssistantBlock[]): string {
 }
 
 /**
- * Copy chrome shared by user and assistant rows — the shipped `IconActions`.
+ * Copy, turn usage, turn time, and the message clock — the shipped `IconActions`
+ * row plus the turn-stat pills that sit in it.
  *
  * The copy feedback is local because the primitive that owns it
  * (`useCopyFeedback`) is not part of the published surface; the behaviour is the
- * shipped one: a one-second check swap, and no second write while it shows.
+ * shipped one: a one-second check swap, and no second write while it shows. The
+ * pills are readings here: the shipped ones open detail dialogs through a
+ * portal, and this row carries the same figures in a tooltip instead.
  */
-function MessageActions({ t, text, place }: {
+function MessageActions({ t, text, place, time, facts }: {
   t: SessionSyncTranslate
   text: string
   place: 'user' | 'assistant'
+  time: number
+  facts?: TurnFacts
 }): React.ReactElement | null {
   const [copied, setCopied] = React.useState(false)
   const timer = React.useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -851,17 +877,59 @@ function MessageActions({ t, text, place }: {
       timer.current = setTimeout(() => { timer.current = null; setCopied(false) }, 1_000)
     })
   }
-  if (text === '') return null
   const label = copied ? t('copiedCode') : t('messageCopy')
+  const clock = <span className={place === 'user' ? css.timeStart : css.timeEnd}>{formatMessageClock(time, t)}</span>
+  const total = facts === undefined ? 0 : turnTotalTokens(facts.usage)
+  const detail = facts === undefined ? '' : usageDetail(facts.usage, t)
   return (
     <div className={place === 'user' ? css.userActions : css.messageActions}>
-      <Tooltip label={label} side="bottom">
-        <button type="button" className={css.action} aria-label={label} onClick={onCopy}>
-          {copied ? <IconCheckOutline16 /> : <IconCopyOutline16 />}
-        </button>
-      </Tooltip>
+      {place === 'user' && clock}
+      {text !== '' && (
+        <Tooltip label={label} side="bottom">
+          <button type="button" className={css.action} aria-label={label} onClick={onCopy}>
+            {copied ? <IconCheckOutline16 /> : <IconCopyOutline16 />}
+          </button>
+        </Tooltip>
+      )}
+      {facts !== undefined && total > 0 && (
+        <Tooltip label={detail} side="bottom">
+          <span className={css.statPill} tabIndex={0}>
+            <IconDatabaseOutline16 size={15} />
+            <span className={css.statLabel}>{t('turnUsageConsumed', { total: formatTokens(total, t) })}</span>
+          </span>
+        </Tooltip>
+      )}
+      {facts !== undefined && (
+        <Tooltip label={t('turnTimeTitle')} side="bottom">
+          <span className={css.statPill} tabIndex={0}>
+            <IconClockOutline16 size={15} />
+            <span className={css.statLabel}>
+              {t('messageRanFor', { duration: formatRunDuration(facts.runMs, t) })}
+            </span>
+          </span>
+        </Tooltip>
+      )}
+      {place === 'assistant' && clock}
     </div>
   )
+}
+
+/** The tooltip's lines for one turn's usage, in the shipped dialog's order. */
+function usageDetail(usage: TurnUsage, t: SessionSyncTranslate): string {
+  const total = turnTotalTokens(usage)
+  const cacheHit = formatCacheHitPercent(usage.cacheRead, billedInputTokens(usage))
+  const lines = [
+    `${t('turnUsageTotal')} ${formatExactTokens(total, t)}`,
+    ...(cacheHit === null ? [] : [`${t('turnUsageCacheHit')} ${cacheHit}%`]),
+    `${t('turnUsageInput')} ${formatExactTokens(usage.input, t)}`,
+    `${t('turnUsageCacheRead')} ${formatExactTokens(usage.cacheRead, t)}`,
+    ...(usage.cacheWrite === 0 ? [] : [`${t('turnUsageCacheWrite')} ${formatExactTokens(usage.cacheWrite, t)}`]),
+    `${t('turnUsageOutput')} ${formatExactTokens(usage.output, t)}`,
+    ...(usage.reasoning === 0
+      ? []
+      : [t('turnUsageReasoning', { tokens: formatExactTokens(usage.reasoning, t) })]),
+  ]
+  return lines.join('\n')
 }
 
 /** One turn-end notice: why a turn stopped producing. */

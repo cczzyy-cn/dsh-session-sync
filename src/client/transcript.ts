@@ -27,10 +27,33 @@ export type AssistantBlock =
 /** One renderable transcript row. */
 export type TranscriptRow =
   | { kind: 'user'; key: string; time: number; text: string }
-  | { kind: 'assistant'; key: string; time: number; blocks: AssistantBlock[]; interrupted: boolean }
+  | { kind: 'assistant'; key: string; time: number; blocks: AssistantBlock[]; interrupted: boolean; facts?: TurnFacts; tail: boolean }
   | NoticeRow
   | RetryRow
   | ToolRow
+
+/** One turn's billed usage, summed over the assistant messages it committed. */
+export interface TurnUsage {
+  input: number
+  output: number
+  cacheRead: number
+  cacheWrite: number
+  reasoning: number
+}
+
+/**
+ * What a turn's tail shows about the turn itself.
+ *
+ * The shipped tail carries the turn's token total and its wall time in the
+ * message's own actions row; both ride the turn's events, so nothing extra is
+ * needed to render them.
+ */
+export interface TurnFacts {
+  usage: TurnUsage
+  /** Turn wall time: `turn/start` to `turn/end`, or to the newest event while it runs. */
+  runMs: number
+  running: boolean
+}
 
 /**
  * One turn-end notice — the shipped chat's `turn-error` / `turn-max-tokens`
@@ -128,7 +151,9 @@ export function toRows(events: readonly MirrorEvent[]): TranscriptRow[] {
   const calls = new Map<string, ToolRow>()
   /** Retry chains by `retryId`, so an attempt updates its chain's one row. */
   const chains = new Map<string, RetryRow>()
-  for (const event of applySurface(events)) {
+  const surface = applySurface(events)
+  const facts = turnFactsOf(surface)
+  for (const event of surface) {
     const data = asRecord(event.data)
     if (data === undefined) continue
 
@@ -218,10 +243,90 @@ export function toRows(events: readonly MirrorEvent[]): TranscriptRow[] {
       continue
     }
 
-    const row = toRow(event, data)
+    const row = toRow(event, data, facts)
     if (row !== undefined) rows.push(row)
   }
+  markTurnTails(rows)
   return rows
+}
+
+/**
+ * Fold each turn's own facts out of its events.
+ *
+ * A turn carries its billed usage on the assistant messages it commits, and its
+ * wall time between `turn/start` and `turn/end` — a running turn measures to its
+ * newest event, so the reading moves as the mirror does rather than on a timer.
+ * @param events - the surface events.
+ * @returns the facts of every turn the log holds.
+ */
+function turnFactsOf(events: readonly MirrorEvent[]): Map<number, TurnFacts> {
+  const facts = new Map<number, TurnFacts>()
+  const starts = new Map<number, number>()
+  for (const event of events) {
+    const data = asRecord(event.data)
+    const turn = number(data?.['turn'])
+    if (turn === undefined) continue
+    if (event.type === 'turn/start') {
+      starts.set(turn, event.time)
+      continue
+    }
+    if (event.type === 'turn/end') {
+      const started = starts.get(turn) ?? event.time
+      const existing = facts.get(turn)
+      facts.set(turn, {
+        usage: existing?.usage ?? emptyUsage(),
+        runMs: Math.max(0, event.time - started),
+        running: false,
+      })
+      continue
+    }
+    if (event.type !== 'assistant/message') continue
+    const current = facts.get(turn) ?? { usage: emptyUsage(), runMs: 0, running: true }
+    const reported = asRecord(data?.['usage'])
+    current.usage.input += number(reported?.['inputTokens']) ?? 0
+    current.usage.output += number(reported?.['outputTokens']) ?? 0
+    current.usage.cacheRead += number(reported?.['cacheReadTokens']) ?? 0
+    current.usage.cacheWrite += number(reported?.['cacheWriteTokens']) ?? 0
+    current.usage.reasoning += number(reported?.['reasoningTokens']) ?? 0
+    facts.set(turn, current)
+  }
+  // A turn that has not closed runs from its start to the newest thing it did.
+  const newest = events.reduce((latest, event) => Math.max(latest, event.time), 0)
+  for (const [turn, entry] of facts) {
+    if (!entry.running) continue
+    const started = starts.get(turn) ?? newest
+    entry.runMs = Math.max(0, newest - started)
+  }
+  return facts
+}
+
+/** A zeroed usage total. */
+function emptyUsage(): TurnUsage {
+  return { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, reasoning: 0 }
+}
+
+/**
+ * Mark the row each turn's actions belong to.
+ *
+ * The shipped conversation puts a turn's actions on its closing message, so one
+ * answer carries one copy button however many steps the turn took. A turn whose
+ * last row is reasoning only keeps its actions on the answer that preceded it,
+ * which is the row a reader copies.
+ * @param rows - the projected rows, in order.
+ */
+function markTurnTails(rows: readonly TranscriptRow[]): void {
+  const answered = new Map<number, number>()
+  const anyBlock = new Map<number, number>()
+  for (let index = 0; index < rows.length; index += 1) {
+    const row = rows[index]
+    if (row?.kind !== 'assistant' || row.blocks.length === 0) continue
+    anyBlock.set(row.turn, index)
+    if (row.blocks.some(block => block.kind === 'text')) answered.set(row.turn, index)
+  }
+  for (const [turn, index] of anyBlock) {
+    const target = rows[answered.get(turn) ?? index]
+    if (target?.kind === 'assistant') target.tail = true
+  }
 }
 
 /**
@@ -252,7 +357,7 @@ function applySurface(events: readonly MirrorEvent[]): MirrorEvent[] {
 }
 
 /** Project one non-tool event, or undefined when it is not conversation. */
-function toRow(event: MirrorEvent, data: Record<string, unknown>): TranscriptRow | undefined {
+function toRow(event: MirrorEvent, data: Record<string, unknown>, facts: ReadonlyMap<number, TurnFacts>): TranscriptRow | undefined {
   const key = String(event.seq)
 
   if (event.type === 'user/message') {
@@ -270,7 +375,18 @@ function toRow(event: MirrorEvent, data: Record<string, unknown>): TranscriptRow
     const blocks = blocksOf(message?.['content'])
     const interrupted = data['interrupted'] === true
     if (blocks.length === 0 && !interrupted) return undefined
-    return { kind: 'assistant', key, time: event.time, blocks, interrupted }
+    const turn = number(data['turn'])
+    const turnFacts = turn === undefined ? undefined : facts.get(turn)
+    return {
+      kind: 'assistant',
+      key,
+      time: event.time,
+      blocks,
+      interrupted,
+      ...(turnFacts === undefined ? {} : { facts: turnFacts }),
+      turn: turn ?? 0,
+      tail: false,
+    }
   }
 
   return undefined
