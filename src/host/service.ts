@@ -507,7 +507,9 @@ export class SessionSyncService {
       if (sessionId === '') return
       const key = `${sessionId}|${String(turn)}|${String(step)}|${kind}`
       const previous = this.liveText.get(key)
-      this.liveText.set(key, { sessionId, turn, step, kind, text: (previous?.text ?? '') + text })
+      const base = previous?.text ?? ''
+      if (text !== '' && base.endsWith(text)) { this.liveDirty.add(key); return }
+      this.liveText.set(key, { sessionId, turn, step, kind, text: base + text })
       this.liveDirty.add(key)
     }
     visit(frame)
