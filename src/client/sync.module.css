@@ -1481,15 +1481,13 @@
   white-space: pre-wrap;
 }
 
-/* The shipped ReasoningRow's own wrapper: its state drives the live sweep, and
-   the collapsed row is a fixed 24px line. */
+/* The shipped ReasoningRow's own wrapper: its state drives the live sweep. The
+   shipped rule also pins a collapsed row to 24px with `contain: size layout`;
+   that pair is an optimization tied to its markup, and a fixed height without
+   the containment would only risk shifting this row's own metrics. */
 .thinkRoot {
   display: flex;
   flex-direction: column;
-}
-
-.thinkRoot:not([data-expanded]) {
-  height: calc(24px + var(--dsh-content-font-delta, 0px));
 }
 
 /* The line the sweep rides. `overflow: hidden` is the shipped row's own. */
