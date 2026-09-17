@@ -1620,6 +1620,43 @@
 
 /* ── console: the composer ─────────────────────────────────────────────── */
 
+/* ── console: scroll-to-bottom, copied from ui-chat's ChatView ─────────── */
+
+/* A sticky slot inside the scroller: the button rides the live edge of the
+   transcript (16px above the floor) and is out of the way of the composer. */
+.toBottomSlot {
+  position: sticky;
+  bottom: 16px;
+  z-index: 2;
+  height: 0;
+  display: flex;
+  justify-content: flex-end;
+  padding-right: 8px;
+  pointer-events: none;
+}
+
+.toBottom {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  margin-top: -34px;
+  padding: 0;
+  border: 0;
+  --dsw-elevation-stroke-color: var(--dsw-alias-border-l3);
+  border-radius: 100px;
+  corner-shape: round;
+  color: var(--dsw-alias-label-primary);
+  background: var(--dsw-alias-button-floating-fill);
+  box-shadow: var(--dsw-elevation-panel);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.toBottom:hover {
+  background: var(--dsw-alias-button-floating-hover);
+}
 .composerRoot {
   display: flex;
   flex-direction: column;

@@ -28,6 +28,7 @@ import {
   IconApiOutline14,
   IconBrowseOutline16,
   IconChecklistOutline14,
+  IconChevronDownOutline14,
   IconChevronLeftOutline14,
   IconEditOutline16,
   IconFolderClose16,
@@ -343,6 +344,27 @@ function Conversation(props: {
   const [sending, setSending] = React.useState(false)
   const [tab, setTab] = React.useState<'chat' | 'trajectory'>('chat')
   const body = React.useRef<HTMLDivElement | null>(null)
+  /** Whether the reader is at the floor of the transcript. */
+  const [atBottom, setAtBottom] = React.useState(true)
+  const scrollToBottom = React.useCallback((smooth = true): void => {
+    const el = body.current
+    if (el === null) return
+    if (smooth && typeof el.scrollTo === 'function') el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
+    else el.scrollTop = el.scrollHeight
+  }, [])
+  // A reader who scrolled up owns the viewport until they come back down; while
+  // they are at the floor the mirrored tail keeps following, which is what a live
+  // Session wants (the shipped ChatView follows the same way).
+  React.useEffect(() => {
+    const el = body.current
+    if (el === null) return
+    const onScroll = (): void => {
+      setAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight <= 24)
+    }
+    onScroll()
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => { el.removeEventListener('scroll', onScroll) }
+  }, [tab, state.open?.sessionId])
   const rows = React.useMemo(
     () => toRows(state.transcript?.events ?? []),
     [state.transcript],
@@ -353,6 +375,10 @@ function Conversation(props: {
     () => sessionChrome(state.transcript?.events ?? []),
     [state.transcript],
   )
+  React.useEffect(() => {
+    if (atBottom) scrollToBottom(false)
+  }, [rows.length, atBottom, scrollToBottom, tab])
+
   const cells = React.useMemo(
     () => trajectoryCells(state.transcript?.events ?? [], kindLabel(t)),
     [state.transcript, t],
@@ -457,6 +483,21 @@ function Conversation(props: {
                     ? <p className={css.empty}>{t('transcriptEmpty')}</p>
                     : rows.map(row => <TranscriptLine key={row.key} t={t} row={row} labels={labels} />)}
             </div>
+            {/* The shipped control, copied from ui-chat's ChatView: a sticky slot
+                inside the scroller, so the button rides the live edge of the
+                transcript and disappears once the reader is back at the floor. */}
+            {!atBottom && (
+              <div className={css.toBottomSlot}>
+                <button
+                  type="button"
+                  className={css.toBottom}
+                  aria-label={t('chatToBottom')}
+                  onClick={() => { scrollToBottom() }}
+                >
+                  <IconChevronDownOutline14 />
+                </button>
+              </div>
+            )}
           </div>
         )}
       <div className={css.composerRoot}>
