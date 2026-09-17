@@ -83,9 +83,15 @@ export interface ToolRow {
   description: string
   /** One-line failure text, which replaces the summary on a failed call. */
   errorSummary: string
-  /** Formatted arguments, for the expanded body. */
+  /** The structured failure code, which says whether a call was interrupted. */
+  errorCode: string
+  /** The call's arguments exactly as the model wrote them, for the card models. */
+  argumentsRaw: string
+  /** Formatted arguments, for the fallback body. */
   argumentsText: string
-  /** Every visible result block joined, for the expanded body. */
+  /** The result's content blocks, which the card models validate. */
+  resultBlocks: readonly unknown[]
+  /** Every visible result block joined, for the fallback body. */
   resultText: string
   /** The result's structured presentation metadata, verbatim. */
   meta: unknown
@@ -143,7 +149,9 @@ export function toRows(events: readonly MirrorEvent[]): TranscriptRow[] {
         continue
       }
       row.resultText = resultTextOf(data)
+      row.resultBlocks = resultBlocksOf(data)
       row.isError = isErrorOf(data)
+      row.errorCode = errorCodeOf(data)
       row.errorSummary = row.isError ? firstLineOfText(row.resultText) : ''
       row.meta = data['meta']
       row.pending = false
@@ -326,7 +334,10 @@ function toolCallRow(event: MirrorEvent, data: Record<string, unknown>): ToolRow
     summary: summarize(raw),
     description: descriptionOf(raw),
     errorSummary: '',
+    errorCode: '',
+    argumentsRaw: raw,
     argumentsText: formatArguments(raw),
+    resultBlocks: [],
     resultText: '',
     meta: undefined,
     isError: false,
@@ -351,7 +362,10 @@ function toolResultOnlyRow(
     summary: '',
     description: '',
     errorSummary: isError ? firstLineOfText(resultText) : '',
+    errorCode: errorCodeOf(data),
+    argumentsRaw: '',
     argumentsText: '',
+    resultBlocks: resultBlocksOf(data),
     resultText,
     meta: data['meta'],
     isError,
@@ -363,6 +377,20 @@ function toolResultOnlyRow(
 function callIdOf(data: Record<string, unknown>): string {
   const source = asRecord(asRecord(data['message'])?.['source'])
   return typeof source?.['callId'] === 'string' ? source['callId'] : ''
+}
+
+/** The result's content blocks, unwrapped from the `tool-result` envelope. */
+function resultBlocksOf(data: Record<string, unknown>): readonly unknown[] {
+  const message = asRecord(data['message'])
+  const outer = Array.isArray(message?.['content']) ? message['content'] : []
+  const first = asRecord(outer[0])
+  return Array.isArray(first?.['content']) ? first['content'] : []
+}
+
+/** The structured failure code a result carries, when it carries one. */
+function errorCodeOf(data: Record<string, unknown>): string {
+  const error = asRecord(data['error'])
+  return typeof error?.['code'] === 'string' ? error['code'] : ''
 }
 
 /** Join every visible text block of one tool result. */

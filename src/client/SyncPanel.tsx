@@ -19,13 +19,18 @@
 import * as React from 'react'
 import {
   Button,
+  DiffBlock,
   DisclosureRow,
   FishLogo,
   Input,
   JsonBlock,
   MarkdownText,
+  ReadBlock,
+  SearchBlock,
   StateDot,
+  TerminalBlock,
   Tooltip,
+  WebBlock,
   IconApiOutline14,
   IconBrowseOutline16,
   IconCheckOutline16,
@@ -51,7 +56,7 @@ import {
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { MirroredMachine, MirroredSession } from '../shared/protocol.ts'
 import type { CommandDelivery, SyncClientSnapshot } from './api.ts'
-import type { SessionSyncKey } from './locales.ts'
+import type { SessionSyncKey, SessionSyncTranslate } from './locales.ts'
 import {
   compactTokens,
   sessionChrome,
@@ -62,6 +67,24 @@ import {
   type TrajectoryKind,
 } from './session-chrome.ts'
 import { TrajectoryView } from './TrajectoryView.tsx'
+import {
+  CHAT_DIFF_MAX_LINES,
+  CHAT_READ_MAX_LINES,
+  CHAT_SEARCH_MAX_LINES,
+  diffBlockLabels,
+  diffCard,
+  diffStat,
+  readBlockLabels,
+  readCard,
+  searchBlockLabels,
+  searchCard,
+  terminalBlockLabels,
+  terminalCard,
+  terminalFailed,
+  toolRowModel,
+  webBlockLabels,
+  webCard,
+} from './tool-cards.ts'
 import { toRows, type AssistantBlock, type NoticeRow, type RetryRow, type ToolRow, type TranscriptRow } from './transcript.ts'
 import { toolPresentation, type ToolGlyph } from './tool-presentation.ts'
 import css from './sync.module.css'
@@ -77,7 +100,7 @@ const FOLLOW_THRESHOLD = 24
 /** Props the renderer binds for the `main` cell. */
 export interface SyncPanelProps {
   /** Localized copy, from the registration's `locale` namespace. */
-  t: (key: SessionSyncKey) => string
+  t: SessionSyncTranslate
   /** The bound snapshot hook, from the registration's `hooks` compartment. */
   useSync: <Value>(selector: (snapshot: SyncClientSnapshot) => Value) => Value
   /** Open one mirrored Session. */
@@ -341,7 +364,7 @@ const TreeRow = React.memo(function TreeRow(props: {
  * call site in a child would depend on how that binding is cached.
  */
 function Conversation(props: {
-  t: (key: SessionSyncKey) => string
+  t: SessionSyncTranslate
   state: SyncClientSnapshot
   session: MirroredSession
   machineName: string
@@ -584,7 +607,7 @@ function Conversation(props: {
  * pretending a click would do something.
  */
 function ChromeChips({ t, chrome }: {
-  t: (key: SessionSyncKey) => string
+  t: SessionSyncTranslate
   chrome: SessionChrome
 }): React.ReactElement {
   const { model, context, policy, subagents } = chrome
@@ -627,7 +650,7 @@ function ChromeChips({ t, chrome }: {
  * numbers instead of the projection.
  */
 function ContextRing({ t, context }: {
-  t: (key: SessionSyncKey) => string
+  t: SessionSyncTranslate
   context: SessionContext
 }): React.ReactElement {
   const [open, setOpen] = React.useState(false)
@@ -677,7 +700,7 @@ function ContextRing({ t, context }: {
 
 /** The status row under the composer card: turns, steps, throughput, cache. */
 function StatusRow({ t, stats }: {
-  t: (key: SessionSyncKey) => string
+  t: SessionSyncTranslate
   stats: SessionStats
 }): React.ReactElement | null {
   if (stats.turns === 0 && stats.steps === 0) return null
@@ -739,7 +762,7 @@ function HeroPlaceholder({ t }: { t: (key: SessionSyncKey) => string }): React.R
 
 /** One transcript row, in the shapes the DSH conversation uses. */
 function TranscriptLine({ t, row, labels }: {
-  t: (key: SessionSyncKey) => string
+  t: SessionSyncTranslate
   row: TranscriptRow
   labels: MarkdownLabels
 }): React.ReactElement {
@@ -772,7 +795,7 @@ function TranscriptLine({ t, row, labels }: {
 
 /** One block of an assistant message. */
 function AssistantBlockView({ t, block, labels }: {
-  t: (key: SessionSyncKey) => string
+  t: SessionSyncTranslate
   block: AssistantBlock
   labels: MarkdownLabels
 }): React.ReactElement {
@@ -813,7 +836,7 @@ function assistantTextOf(blocks: readonly AssistantBlock[]): string {
  * shipped one: a one-second check swap, and no second write while it shows.
  */
 function MessageActions({ t, text, place }: {
-  t: (key: SessionSyncKey) => string
+  t: SessionSyncTranslate
   text: string
   place: 'user' | 'assistant'
 }): React.ReactElement | null {
@@ -843,7 +866,7 @@ function MessageActions({ t, text, place }: {
 
 /** One turn-end notice: why a turn stopped producing. */
 function NoticeLine({ t, row }: {
-  t: (key: SessionSyncKey) => string
+  t: SessionSyncTranslate
   row: NoticeRow
 }): React.ReactElement {
   return (
@@ -864,7 +887,7 @@ function NoticeLine({ t, row }: {
 
 /** One model-retry chain, as the shipped chat renders it. */
 function RetryLine({ t, row }: {
-  t: (key: SessionSyncKey) => string
+  t: SessionSyncTranslate
   row: RetryRow
 }): React.ReactElement {
   // The delay is counted from this row's first render, not from the event time:
@@ -916,7 +939,7 @@ function countdownSeconds(deadline: number): number {
  * block summarised by it would never appear to move.
  */
 function ReasoningRow({ t, reasoning, streaming }: {
-  t: (key: SessionSyncKey) => string
+  t: SessionSyncTranslate
   reasoning: string
   streaming?: boolean
 }): React.ReactElement {
@@ -974,139 +997,120 @@ function lastLineOf(text: string): string {
   return ''
 }
 
-/** One tool call and its result, folded into a single row with an IN/OUT card. */
+/**
+ * One tool call, folded into a single row — the shipped `ToolRow` chassis.
+ *
+ * One row, never two: the shipped generic card puts the arguments and the
+ * result in the expanded body's IN/OUT sections rather than spending a second
+ * row on the result. The collapsed line is the failure line, or a terminal
+ * card's own description, or the arguments' gist; a diff row carries its
+ * `+added -removed` size; and the body is the first shipped card the call and
+ * its result can build, falling back to the IN/OUT sections.
+ */
 function ToolCallRow({ t, row }: {
-  t: (key: SessionSyncKey) => string
+  t: SessionSyncTranslate
   row: ToolRow
 }): React.ReactElement {
   const [open, setOpen] = React.useState(false)
-  const [resultOpen, setResultOpen] = React.useState(false)
-  const presentation = toolPresentation(row.name)
-  const generic = presentation.glyph === 'generic' && presentation.wire !== undefined
+  const model = toolRowModel(row)
+  const terminal = terminalCard(row)
+  const diff = diffCard(row)
+  const read = readCard(row)
+  const search = searchCard(row)
+  const web = webCard(row)
+  // A failing command settles as a successful call: the red state is the
+  // terminal card's own reading of the exit status.
+  const state = model.state === 'ok' && terminal !== null && terminalFailed(terminal) ? 'error' : model.state
+  const card = terminal ?? diff ?? read ?? search ?? web
+  const failureLine = state === 'error' ? model.errorSummary : null
+  const summaryText = failureLine ?? terminal?.description ?? model.summary
+  // A single-file tool never expands to raw arguments: its card, or nothing.
+  const singleFile = model.filePath !== undefined
+  const bodyRaw = singleFile ? null : model.bodyRaw
+  const stat = failureLine === null && diff !== null ? diffStat(diff.diffs) : null
+  const expandable = bodyRaw !== null || model.output !== null || card !== null
 
-  // A family row is titled with the family's word and its own gist below, and
-  // keeps the request and the result in one card. The shipped client's generic
-  // card instead spends two rows —the call, then its result —so this does the
-  // same for a tool no family claims, and only then.
-  const label = presentation.labelKey === undefined
-    ? (row.name === '' ? t('toolResult') : row.name)
-    : t(presentation.labelKey)
-  const summary = presentation.wire === undefined
-    ? row.summary
-    : [presentation.wire, row.summary].filter(part => part !== '').join(' · ')
-  // The shipped row replaces the summary on failure, and lets a terminal card's
-  // own description stand in for the command it runs.
-  const summaryText = row.errorSummary !== ''
-    ? row.errorSummary
-    : presentation.glyph === 'terminal' && row.description !== ''
-      ? row.description
-      : summary
-
-  const glyph = (): React.ReactElement => (
-    <span className={row.isError ? `${css.toolGlyph} ${css.toolGlyphError}` : css.toolGlyph}>
-      <ToolGlyphIcon glyph={presentation.glyph} />
-    </span>
-  )
-  const argumentsCard = row.argumentsText === '' ? undefined : (
-    <div className={css.ioCard}>
-      <div className={css.ioSection}>
-        <span className={css.ioLabel}>{t('toolArguments')}</span>
-        <span className={css.ioText}>{row.argumentsText}</span>
-      </div>
-    </div>
-  )
-
-  if (generic) {
+  const leading = (): React.ReactElement => {
+    if (state === 'error') return <span className={css.toolGlyph}><StateDot state="error" /></span>
+    if (state === 'stopped') return <span className={css.toolGlyph}><StateDot state="warning" /></span>
     return (
-      <>
-        <DisclosureRow
-          icon={glyph()}
-          title={label}
-          open={open}
-          expandable
-          expandOnRowClick
-          onToggle={() => { setOpen(current => !current) }}
-          className={toolRowClass(row.pending)}
-          titleClassName={css.toolName}
-          collapsedContent={<span className={css.toolSummary}>{summaryText}</span>}
-        >
-          {argumentsCard}
-        </DisclosureRow>
-        {row.pending
-          ? null
-          : (
-            <DisclosureRow
-              icon={<span className={css.toolGlyph}><StateDot state={row.isError ? 'error' : 'done'} /></span>}
-              title={t('toolResult')}
-              open={resultOpen}
-              expandable
-              expandOnRowClick
-              onToggle={() => { setResultOpen(current => !current) }}
-              className={css.toolRow}
-              titleClassName={css.toolName}
-              collapsedContent={(
-                <span className={css.toolSummary}>{timeLabel(row.time, t)}</span>
-              )}
-            >
-              <div className={css.ioCard}>
-                <div className={css.ioSection}>
-                  <span className={css.ioLabel}>{t('toolResult')}</span>
-                  {row.resultText === ''
-                    ? <span className={css.ioText}>{t('toolNoOutput')}</span>
-                    : (
-                      <span className={row.isError ? `${css.ioText} ${css.ioTextError}` : css.ioText}>
-                        {row.resultText}
-                      </span>
-                    )}
-                </div>
-              </div>
-            </DisclosureRow>
-          )}
-      </>
+      <span className={css.toolGlyph}>
+        <ToolGlyphIcon glyph={toolPresentation(row.name).glyph} />
+      </span>
     )
   }
+  const status = state === 'running'
+    ? t('rowRunning')
+    : state === 'error' ? t('rowFailed') : state === 'stopped' ? t('rowStopped') : null
 
   return (
-    <DisclosureRow
-      icon={glyph()}
-      title={label}
-      open={open}
-      expandable
-      expandOnRowClick
-      onToggle={() => { setOpen(current => !current) }}
-      className={toolRowClass(row.pending)}
-      titleClassName={css.toolName}
-      collapsedContent={(
-        <>
-          <span className={css.toolSep} />
-          <span className={css.toolSummary}>
-            {summaryText !== '' ? summaryText : timeLabel(row.time, t)}
-          </span>
-        </>
-      )}
-    >
-      <div className={css.ioCard}>
-        {row.argumentsText !== '' && (
+    <div className={css.toolRoot} data-state={state}>
+      <DisclosureRow
+        icon={leading()}
+        title={t(model.titleKey)}
+        open={open && expandable}
+        expandable={expandable}
+        expandOnRowClick
+        onToggle={() => { setOpen(current => !current) }}
+        className={toolRowClass(model.state === 'running')}
+        titleClassName={css.toolName}
+        collapsedContent={summaryText !== '' && (
           <>
-            <div className={css.ioSection}>
-              <span className={css.ioLabel}>{t('toolArguments')}</span>
-              <span className={css.ioText}>{row.argumentsText}</span>
-            </div>
-            <div className={css.ioDivider} />
+            <span className={css.toolSep} />
+            <span className={failureLine !== null ? `${css.toolSummary} ${css.toolSummaryError}` : css.toolSummary}>
+              {summaryText}
+            </span>
+            {stat !== null && <span className={css.diffStat}>{stat}</span>}
           </>
         )}
-        <div className={css.ioSection}>
-          <span className={css.ioLabel}>{t('toolResult')}</span>
-          {row.resultText === ''
-            ? <span className={css.ioText}>{row.pending ? t('toolRunning') : t('toolNoOutput')}</span>
-            : (
-              <span className={row.isError ? `${css.ioText} ${css.ioTextError}` : css.ioText}>
-                {row.resultText}
-              </span>
-            )}
-        </div>
-      </div>
-    </DisclosureRow>
+      >
+        {terminal !== null
+          ? <TerminalBlock {...terminal} maxLines={Infinity} labels={terminalBlockLabels(t)} />
+          : diff !== null
+            ? <DiffBlock diffs={[...diff.diffs]} labels={diffBlockLabels(t)} maxLines={CHAT_DIFF_MAX_LINES} />
+            : read !== null
+              ? <ReadBlock {...read} labels={readBlockLabels(t)} maxLines={CHAT_READ_MAX_LINES} />
+              : search !== null
+                ? (
+                  <>
+                    <SearchBlock {...search.card} labels={searchBlockLabels(t)} maxLines={CHAT_SEARCH_MAX_LINES} />
+                    {search.recovery !== undefined && <div className={css.searchRecovery}>{search.recovery}</div>}
+                  </>
+                )
+                : web !== null
+                  ? <WebBlock {...web} labels={webBlockLabels(t)} />
+                  : (
+                    <div className={css.ioCard}>
+                      {bodyRaw !== null && (
+                        <>
+                          <div className={css.ioSection}>
+                            <span className={css.ioLabel}>{t('rowInput')}</span>
+                            <span className={css.ioText}>{row.argumentsText}</span>
+                          </div>
+                          {model.output !== null && <div className={css.ioDivider} />}
+                        </>
+                      )}
+                      {model.output !== null && (
+                        <div className={css.ioSection}>
+                          <span className={css.ioLabel}>{t('rowOutput')}</span>
+                          <span className={state === 'error' ? `${css.ioText} ${css.ioTextError}` : css.ioText}>
+                            {model.output}
+                          </span>
+                        </div>
+                      )}
+                      {bodyRaw === null && model.output === null && (
+                        <div className={css.ioSection}>
+                          <span className={css.ioLabel}>{t('rowOutput')}</span>
+                          <span className={css.ioText}>
+                            {model.state === 'running' ? t('toolRunning') : t('toolNoOutput')}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+      </DisclosureRow>
+      {status !== null && <span className={css.visuallyHidden}>{status}</span>}
+    </div>
   )
 }
 

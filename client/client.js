@@ -32,7 +32,7 @@ window.__ModuleLoader__.load({
 		let react_jsx_runtime = require("react/jsx-runtime");
 		let _deepseek_ai_dsh_client_store = require("@deepseek-ai/dsh-client-store");
 		//#region \0dsh-css:C:\Users\14339\Desktop\git\AI\dsh-session-sync\src\client\sync.module.css.mjs
-		const css = ".exFxyG_section{flex-direction:column;gap:14px;padding:4px 0 8px;display:flex}.exFxyG_lede{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xs-13);margin:0}.exFxyG_group{flex-direction:column;gap:10px;display:flex}.exFxyG_groupTitle{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-strong-13);margin:0}.exFxyG_card{border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);border-radius:10px;flex-direction:column;gap:10px;padding:12px 14px;display:flex}.exFxyG_field{flex-direction:column;gap:4px;display:flex}.exFxyG_fieldRow{justify-content:space-between;align-items:center;gap:12px;display:flex}.exFxyG_fieldText{flex-direction:column;gap:2px;min-width:0;display:flex}.exFxyG_label{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13)}.exFxyG_hint{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12)}.exFxyG_pair{grid-template-columns:minmax(0,1fr) 120px;gap:10px;display:grid}.exFxyG_actions{align-items:center;gap:8px;display:flex}.exFxyG_saved{color:var(--dsw-alias-state-success-primary);font:var(--dsw-font-xxs-12)}.exFxyG_dirty{color:var(--dsw-alias-state-warn-primary);font:var(--dsw-font-xxs-12)}.exFxyG_failed{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12)}.exFxyG_sessionList{flex-direction:column;max-height:280px;display:flex;overflow-y:auto}.exFxyG_sessionRow{justify-content:space-between;align-items:center;gap:12px;min-height:40px;padding:5px 2px;display:flex}.exFxyG_sessionRow+.exFxyG_sessionRow{border-top:.5px solid var(--dsw-alias-border-l1)}.exFxyG_sessionText{flex-direction:column;gap:2px;min-width:0;display:flex}.exFxyG_sessionTitle{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.exFxyG_sessionMeta{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);align-items:center;gap:6px;display:flex}.exFxyG_empty{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);padding:12px 2px}.exFxyG_status{flex-wrap:wrap;gap:6px 18px;display:flex}.exFxyG_statusItem{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12);align-items:center;gap:6px;display:flex}.exFxyG_statusValue{color:var(--dsw-alias-label-primary)}.exFxyG_statusBad{color:var(--dsw-alias-state-error-primary)}.exFxyG_statusGood{color:var(--dsw-alias-state-success-primary)}.exFxyG_panel{height:100%;min-height:0;color:var(--dsw-alias-label-primary);display:flex}.exFxyG_listPane{background:var(--dsw-specific-sidebar-fill);border-right:.5px solid var(--dsw-alias-border-l3);flex-direction:column;flex:none;width:280px;min-height:0;display:flex}.exFxyG_listHead{flex-direction:column;flex:none;gap:6px;padding:10px 10px 8px;display:flex}.exFxyG_panel ::placeholder,.exFxyG_panel input::placeholder,.exFxyG_panel textarea::placeholder{color:var(--dsw-alias-label-caption);opacity:1}.exFxyG_listToggle{color:var(--dsw-alias-button-info-fill)}.exFxyG_panel[data-list=hidden] .exFxyG_listPane{display:none}.exFxyG_listStatus{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.exFxyG_list{flex-direction:column;flex:1;gap:3px;min-height:0;margin-right:2px;padding:0 6px 8px;display:flex;overflow-y:auto}.exFxyG_notice{background:var(--dsw-alias-state-warn-tertiary);color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);border-radius:8px;align-items:flex-start;gap:6px;margin:2px 2px 6px;padding:6px 8px;display:flex}.exFxyG_noticeText{flex:1;min-width:0}.exFxyG_noticeClose{width:14px;height:14px;color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:0;border-radius:4px;flex:none;justify-content:center;align-items:center;padding:0;font-size:13px;line-height:13px;display:inline-flex}.exFxyG_noticeClose:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_treeRow,.exFxyG_treeSession{box-sizing:border-box;width:100%;color:var(--dsw-alias-label-primary);text-align:left;cursor:pointer;user-select:none;transition:background var(--ds-transition-duration-fast) var(--ds-ease-in-out);background:0 0;border:0;border-radius:8px;align-items:center;gap:6px;padding:0 8px;display:flex}.exFxyG_treeRow{height:34px}.exFxyG_treeSession{gap:0;height:32px}.exFxyG_treeRow:hover,.exFxyG_treeSession:hover,.exFxyG_treeSessionSelected{background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_treeRow:focus-visible,.exFxyG_treeSession:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.exFxyG_panel [data-level=\"1\"]{padding-left:24px}.exFxyG_panel [data-level=\"2\"]{padding-left:40px}.exFxyG_treeSlot{width:16px;height:20px;color:var(--dsw-alias-label-tertiary);flex:none;justify-content:center;align-items:center;display:inline-flex}.exFxyG_treeChevron{color:var(--dsw-alias-label-caption);display:none}.exFxyG_treeRow:hover .exFxyG_treeFolder,.exFxyG_treeRow:focus-visible .exFxyG_treeFolder{display:none}.exFxyG_treeRow:hover .exFxyG_treeChevron,.exFxyG_treeRow:focus-visible .exFxyG_treeChevron{display:inline-flex}.exFxyG_arrowOpen{transform:rotate(90deg)}.exFxyG_treeChevron svg{transition:transform .15s var(--ds-ease-in-out)}.exFxyG_rowTitle{min-width:0;font:var(--dsw-font-s-14);text-overflow:ellipsis;white-space:nowrap;flex:1;overflow:hidden}.exFxyG_treeSession .exFxyG_rowTitle{margin:0 6px 0 4px}.exFxyG_rowTime{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);flex:none}.exFxyG_treeRowDim .exFxyG_rowTitle,.exFxyG_treeRowDim .exFxyG_rowTime{color:var(--dsw-alias-label-secondary)}.exFxyG_heroRoot{justify-content:center;align-items:center;min-width:0;height:100%;padding:0 24px;display:flex}.exFxyG_heroStack{flex-direction:column;align-items:center;gap:12px;width:100%;max-width:calc(min(920px,100%) + 32px);display:flex}.exFxyG_heroHeadline{color:var(--dsw-alias-label-primary);flex-wrap:wrap;justify-content:center;align-items:center;gap:12px 10px;font-size:26px;font-weight:500;line-height:32px;display:flex}.exFxyG_heroFish{color:var(--dsw-alias-label-primary);flex:none;justify-content:center;align-items:center;display:inline-flex}.exFxyG_heroTitleGroup{flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 7px;min-width:0;display:flex}.exFxyG_heroBadge{border:.5px solid var(--dsw-alias-interactive-bg-hover);background:var(--dsw-alias-state-business-tertiary);color:var(--dsw-alias-label-primary-bluish);font-family:var(--ds-font-family-code);white-space:nowrap;border-radius:24px;align-self:flex-start;margin-top:2px;padding:1px 7px 0;font-size:12px;font-weight:500;line-height:18px}.exFxyG_heroHint{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);text-align:center;margin:0}.exFxyG_tjRoot{width:100%;min-height:0;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-1);flex-direction:column;flex:1;display:flex;overflow:hidden}.exFxyG_tjToolbar{z-index:4;box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);flex:none;align-items:center;gap:2px;height:32px;padding:0 6px;display:flex;position:sticky;top:0}.exFxyG_tjToggle{height:20px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);cursor:pointer;background:0 0;border:0;border-radius:3px;flex:none;align-items:center;gap:4px;padding:0 7px;display:inline-flex}.exFxyG_tjToggleIcon{stroke:currentColor;stroke-width:1.25px;stroke-linecap:round;stroke-linejoin:round;flex:none;width:12px;height:12px}.exFxyG_tjToggle:hover,.exFxyG_tjToggle[aria-pressed=true],.exFxyG_tjAction:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_tjToggle:focus-visible,.exFxyG_tjAction:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary);outline-offset:1px}.exFxyG_tjAction{height:20px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);cursor:pointer;background:0 0;border:0;border-radius:3px;flex:none;align-items:center;gap:4px;padding:0 5px;display:inline-flex}.exFxyG_tjActionIcon{color:var(--dsw-alias-label-tertiary);font:14px/14px var(--ds-font-family-code)}.exFxyG_tjSearch{border:.5px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-bg-layer-2);min-width:84px;height:22px;color:var(--dsw-alias-label-caption);border-radius:4px;flex:0 164px;align-items:center;gap:4px;margin-left:auto;padding:0 6px;display:flex}.exFxyG_tjSearch:focus-within{border-color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-bg-layer-1)}.exFxyG_tjSearchIcon{flex:none}.exFxyG_tjSearchInput{width:100%;min-width:0;color:var(--dsw-alias-label-primary);font:var(--dsw-font-xxs-12);background:0 0;border:0;outline:0;padding:0}.exFxyG_tjSearchInput::placeholder{color:var(--dsw-alias-label-caption)}.exFxyG_tjStrip{border-bottom:.5px solid var(--dsw-alias-border-l2);flex:none}.exFxyG_tjPlot{background:var(--dsw-alias-bg-layer-2);grid-template-columns:44px minmax(0,1fr);height:50px;display:grid;overflow:hidden}.exFxyG_tjLaneLabels{border-right:.5px solid var(--dsw-alias-border-l1);color:var(--dsw-alias-label-caption);font-size:10px;line-height:1;position:relative}.exFxyG_tjLaneLabels span{justify-content:flex-end;align-items:center;height:8px;display:flex;position:absolute;right:3px}.exFxyG_tjLaneLabels span:first-child{top:7px}.exFxyG_tjLaneLabels span:nth-child(2){top:21px}.exFxyG_tjLaneLabels span:nth-child(3){top:35px}.exFxyG_tjTrack{position:relative;overflow:hidden}.exFxyG_tjLanes,.exFxyG_tjTurnBoundaries{position:absolute;inset:7px 0}.exFxyG_tjSpan{top:calc(var(--tj-span-lane) * 14px);left:var(--tj-span-left);width:max(2px, var(--tj-span-width));background:var(--dsw-alias-label-secondary);opacity:.78;cursor:pointer;border:0;border-radius:1px;min-width:2px;height:8px;padding:0;position:absolute}.exFxyG_tjSpan[data-kind=user]{background:var(--dsw-alias-state-business-primary)}.exFxyG_tjSpan[data-kind=assistant],.exFxyG_tjSpan[data-kind=think]{background:var(--dsw-alias-label-primary);opacity:1}.exFxyG_tjSpan[data-kind=tool]{background:var(--dsw-alias-state-warn-label);opacity:1}.exFxyG_tjSpan[data-kind=context]{background:var(--dsw-alias-state-success-primary)}.exFxyG_tjSpan[data-error=true]{background:var(--dsw-alias-state-error-primary)}.exFxyG_tjSpan[data-selected=false]{opacity:.14}.exFxyG_tjSpan[data-current=true]{z-index:1;box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary)}.exFxyG_tjTurnBoundary{background:var(--dsw-alias-border-l2);width:.5px;position:absolute;top:0;bottom:0}.exFxyG_tjSplit{background:var(--dsw-alias-bg-layer-1);flex:1;min-width:0;min-height:0;display:flex;overflow:hidden}.exFxyG_tjTablePane{flex:1;min-width:0;overflow:hidden auto}.exFxyG_ledgerTable tbody tr[data-selected=true]{background:var(--dsw-alias-interactive-bg-active)}.exFxyG_ledgerTable tbody tr[data-dimmed=true]{opacity:.3}.exFxyG_ledgerTable tbody tr[data-folded=true]{cursor:pointer}.exFxyG_ledgerTable tbody tr[data-folded=true] td{height:20px}.exFxyG_tjFolded{min-width:0;color:var(--dsw-alias-label-secondary);align-items:center;gap:6px;font-size:12px;line-height:16px;display:flex}.exFxyG_tjFoldedEllipsis{color:var(--dsw-alias-label-tertiary);flex:none;font-weight:600}.exFxyG_tjFoldedText{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.exFxyG_tjDetails{border-left:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);flex-direction:column;flex:none;width:clamp(320px,38%,440px);min-width:0;min-height:0;display:flex}.exFxyG_tjDetailsHeader{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);flex:none;justify-content:space-between;align-items:center;height:42px;padding:0 8px 0 12px;display:flex}.exFxyG_tjDetailsTitle{align-items:center;gap:8px;min-width:0;display:flex}.exFxyG_tjDetailsDot{corner-shape:round;background:var(--dsw-alias-label-secondary);border-radius:50%;flex:none;width:5px;height:5px}.exFxyG_tjDetailsName{font:500 12px/16px var(--ds-font-family-code);flex:none}.exFxyG_tjDetailsLocation{min-width:0;color:var(--dsw-alias-label-tertiary);font:11px/16px var(--ds-font-family-code);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.exFxyG_tjClose{width:28px;height:28px;color:var(--dsw-alias-label-secondary);cursor:pointer;background:0 0;border:0;border-radius:6px;flex:none;justify-content:center;align-items:center;padding:0;font-size:18px;line-height:18px;display:inline-flex}.exFxyG_tjClose:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_tjDetailTabs{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);white-space:nowrap;flex:none;gap:1px;width:100%;height:34px;padding:0 8px;display:flex;overflow-x:auto}.exFxyG_tjDetailTab{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);cursor:pointer;background:0 0;border:0;flex:none;padding:0 9px;position:relative}.exFxyG_tjDetailTab:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_tjDetailTabActive{color:var(--dsw-alias-state-business-primary)}.exFxyG_tjDetailTabActive:after{background:var(--dsw-alias-state-business-primary);content:\"\";border-radius:1px 1px 0 0;height:2px;position:absolute;bottom:0;left:9px;right:9px}.exFxyG_tjDetailBody{flex:1;min-height:0;overflow:hidden auto}.exFxyG_tjOverview{font:var(--dsw-font-xs-13);margin:0;padding:8px 0}.exFxyG_tjOverview>div{grid-template-columns:94px minmax(0,1fr);align-items:center;min-height:22px;padding:0 14px;display:grid}.exFxyG_tjOverview dt{color:var(--dsw-alias-label-tertiary)}.exFxyG_tjOverview dd{min-width:0;color:var(--dsw-alias-label-primary);text-overflow:ellipsis;white-space:nowrap;margin:0;overflow:hidden}.exFxyG_tjPayload{box-sizing:border-box;overflow-wrap:anywhere;background:var(--dsw-alias-markdown-code-block);min-height:100%;color:var(--dsw-alias-label-primary);font:12px/19px var(--ds-font-family-code);tab-size:2;white-space:pre-wrap;margin:0;padding:14px}.exFxyG_tjMarkdown{padding:6px 14px 8px}.exFxyG_viewPane{background:var(--dsw-alias-bg-base);flex-direction:column;flex:1;min-width:0;min-height:0;display:flex}.exFxyG_viewHeader{border-bottom:.5px solid var(--dsw-alias-border-l3);flex-direction:column;flex:none;padding:10px 20px 0;display:flex}.exFxyG_viewTitleRow{align-items:center;gap:8px;min-width:0;min-height:30px;display:flex}.exFxyG_viewSpacer{flex:1}.exFxyG_viewTabs{z-index:1;gap:36px;margin-top:10px;padding-left:8px;display:flex;position:relative}.exFxyG_viewTab{color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:0;padding:0 0 9px;font-size:13px;font-weight:500;line-height:16px;position:relative}.exFxyG_viewTab:after{content:\"\";background:0 0;border-radius:2px;height:2px;position:absolute;bottom:-1px;left:0;right:0}.exFxyG_viewTabActive{color:var(--dsw-alias-state-business-primary)}.exFxyG_viewTabActive:after{background:var(--dsw-alias-state-business-primary)}.exFxyG_viewTab:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.exFxyG_chromeCluster{flex:none;align-items:center;gap:8px;min-width:0;display:flex}.exFxyG_chromeChip{border:.5px solid var(--dsw-alias-border-l2);corner-shape:round;max-width:200px;min-height:24px;color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);text-overflow:ellipsis;white-space:nowrap;border-radius:999px;align-items:center;gap:4px;padding:0 8px;display:inline-flex;overflow:hidden}.exFxyG_ringRoot{flex:none;display:inline-flex;position:relative}.exFxyG_ringTrigger{corner-shape:round;cursor:pointer;background:0 0;border:0;border-radius:50%;place-items:center;width:20px;height:20px;padding:0;display:grid}.exFxyG_ringTrigger:hover{background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_ringTrigger:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.exFxyG_ringTrack{fill:none;stroke:var(--dsw-alias-border-l3);stroke-width:2px}.exFxyG_ringFill{fill:none;stroke:var(--dsw-alias-state-business-primary);stroke-width:2px;stroke-linecap:round}.exFxyG_ringPanel{z-index:9;--dsw-elevation-stroke-color:var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-overlay);box-shadow:var(--dsw-elevation-prominent);white-space:nowrap;border:0;border-radius:10px;flex-direction:column;gap:2px;padding:8px 10px;display:flex;position:absolute;top:26px;right:0}.exFxyG_ringHeadline{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12)}.exFxyG_ringFigures{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11)}.exFxyG_statusRow{width:100%;max-width:calc(min(920px,100%) + 32px);color:var(--dsw-alias-label-caption);font:var(--dsw-font-xxxs-11);font-variant-numeric:tabular-nums;flex-wrap:wrap;justify-content:center;gap:12px;padding:6px 0 0;display:flex}.exFxyG_ledger{background:var(--dsw-alias-bg-layer-1);flex:1;min-height:0;margin-right:2px;overflow-y:auto}.exFxyG_ledgerTable{border-spacing:0;table-layout:fixed;width:100%;color:var(--dsw-alias-label-primary);font:var(--dsw-font-xxs-12)}.exFxyG_ledgerTable th{z-index:3;box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-specific-sidebar-fill);height:30px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);text-align:left;text-overflow:ellipsis;white-space:nowrap;padding:0 8px;font-weight:500;position:sticky;top:0;overflow:hidden}.exFxyG_ledgerEventHead{text-align:right;width:122px;padding-right:4px}.exFxyG_ledgerTable td{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l1);text-overflow:ellipsis;white-space:nowrap;height:30px;padding:0 8px;overflow:hidden}.exFxyG_ledgerTable tbody tr:hover{background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_ledgerEventCell{text-align:right;padding-left:36px;padding-right:4px;position:relative;overflow:visible}.exFxyG_ledgerRail{z-index:4;background:var(--dsw-alias-border-l3);pointer-events:none;width:2px;position:absolute;top:-1px;bottom:-1px;left:0}.exFxyG_ledgerTable tbody tr[data-error=true] .exFxyG_ledgerRail{background:var(--dsw-alias-state-error-primary)}.exFxyG_ledgerTable tbody tr[data-turn-start=true] td:before{z-index:1;background:var(--dsw-alias-border-l1);content:\"\";pointer-events:none;height:2px;position:absolute;top:0;left:0;right:0;transform:translateY(-50%)}.exFxyG_ledgerTable tbody tr[data-turn-start=true]:first-child td:before{content:none}.exFxyG_ledgerTurnLabel{z-index:3;box-sizing:border-box;background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-tertiary);font:8px/10px var(--ds-font-family-code);font-variant-numeric:tabular-nums;white-space:nowrap;border-radius:0 0 2px;align-items:center;padding:1px 5px;display:inline-grid;position:absolute;top:0;left:0}.exFxyG_ledgerKindSlot{justify-content:flex-end;align-items:center;width:76px;display:inline-flex}.exFxyG_ledgerKind{box-sizing:border-box;letter-spacing:.035em;user-select:none;border:1px solid #0000;border-radius:4px;align-items:center;height:19px;padding:0 5px;font-size:10px;font-weight:650;line-height:16px;display:inline-flex}.exFxyG_kind_user{color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-state-business-tertiary)}.exFxyG_kind_assistant,.exFxyG_kind_think{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-2)}.exFxyG_kind_tool{color:var(--dsw-alias-state-warn-label);background:var(--dsw-alias-state-warn-tertiary)}.exFxyG_kind_error{color:var(--dsw-alias-state-error-primary);background:var(--dsw-alias-bg-layer-2)}.exFxyG_kind_system,.exFxyG_kind_policy,.exFxyG_kind_title,.exFxyG_kind_other,.exFxyG_kind_compaction{color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-bg-module-platform)}.exFxyG_kind_turn,.exFxyG_kind_step,.exFxyG_kind_context{color:var(--dsw-alias-label-tertiary);background:var(--dsw-alias-bg-layer-2)}.exFxyG_ledgerContentCell{padding-left:4px}.exFxyG_ledgerText{color:var(--dsw-alias-label-primary)}.exFxyG_ledgerMono{color:var(--dsw-alias-label-secondary);font-family:var(--ds-font-family-code);font-size:12px}.exFxyG_ledgerResult{grid-template-columns:clamp(180px,36cqw,480px) minmax(0,1fr);align-items:center;gap:8px;min-width:0;display:grid}.exFxyG_ledgerResult>*{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.exFxyG_ledgerErrorText{color:var(--dsw-alias-state-error-primary)}.exFxyG_ledgerArrow{color:var(--dsw-alias-label-caption);display:none}.exFxyG_ledgerDuration{color:var(--dsw-alias-label-caption);font:var(--dsw-font-xxxs-11);font-variant-numeric:tabular-nums;margin-left:8px}.exFxyG_viewTitle{min-width:0;font:var(--dsw-font-s-strong-14);text-overflow:ellipsis;white-space:nowrap;flex:0 auto;margin:0;overflow:hidden}.exFxyG_viewMachine{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);white-space:nowrap;flex:none}.exFxyG_viewScroll{flex:1;min-height:0;margin-right:2px;padding:16px 32px;overflow-y:auto}.exFxyG_viewColumn{flex-direction:column;width:100%;max-width:min(920px,100%);margin:0 auto;display:flex}.exFxyG_viewColumn>*+*{margin-top:16px}.exFxyG_userRow{flex-direction:column;align-items:flex-end;display:flex}.exFxyG_bubble{background:var(--dsw-specific-bubble);max-width:min(82%,640px);color:var(--dsw-alias-label-primary);font:var(--dsw-font-s-14);white-space:pre-wrap;word-break:break-word;border-radius:22px;padding:10px 16px}.exFxyG_assistantRow{flex-direction:column;gap:16px;min-width:0;display:flex}.exFxyG_reasoning{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);white-space:pre-wrap}.exFxyG_thinkRoot{flex-direction:column;display:flex}.exFxyG_thinkLine{position:relative;overflow:hidden}.exFxyG_thinkRoot[data-state=running] .exFxyG_thinkLine:after{content:\"\";inset-block:0;background:linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--dsw-alias-bg-base) 60%, transparent) 55%, transparent 100%);pointer-events:none;width:300px;animation:2.6s ease-out infinite exFxyG_dsh-sync-reasoning-sweep;position:absolute;left:0}@keyframes exFxyG_dsh-sync-reasoning-sweep{0%{left:-300px}90%,to{left:100%}}@media (prefers-reduced-motion:reduce){.exFxyG_thinkRoot[data-state=running] .exFxyG_thinkLine:after{animation:none}}.exFxyG_thinkSummary{min-width:0;color:var(--dsw-alias-label-tertiary);font-size:13px;line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px));text-overflow:ellipsis;white-space:nowrap;flex:auto;overflow:hidden}.exFxyG_thinkSummaryText{text-overflow:ellipsis;display:block;overflow:hidden}.exFxyG_thinkSummary[data-follow-end]{justify-content:flex-end;display:flex}.exFxyG_thinkSummary[data-follow-end] .exFxyG_thinkSummaryText{text-align:start;text-overflow:clip;flex:none;width:max-content;min-width:100%;overflow:visible}.exFxyG_thinkTitle{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xs-13)}.exFxyG_stopped,.exFxyG_mediaChip{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-tertiary);border-radius:6px;align-self:flex-start;padding:0 6px;font-size:11px;line-height:18px}.exFxyG_messageActions{height:calc(28px + var(--dsh-content-font-delta,0px));align-items:center;gap:8px;margin-top:16px;margin-left:-6px;display:flex}.exFxyG_userActions{height:calc(28px + var(--dsh-content-font-delta,0px));align-items:center;gap:8px;margin-top:-2px;display:flex}.exFxyG_action{width:calc(28px + var(--dsh-content-font-delta,0px));height:calc(28px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;border-radius:28px;justify-content:center;align-items:center;padding:6px;display:inline-flex}.exFxyG_action svg{width:calc(15px + var(--dsh-content-font-delta,0px));height:calc(15px + var(--dsh-content-font-delta,0px))}.exFxyG_action:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary)}.exFxyG_noticeRow{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px));grid-template-columns:10px minmax(0,1fr) auto;align-items:start;gap:8px;padding:2px 0;display:grid}.exFxyG_noticeDot{margin-top:5px}.exFxyG_noticeCopy{overflow-wrap:anywhere;min-width:0}.exFxyG_noticeTitleError{color:var(--dsw-alias-state-error-primary);margin-right:6px;font-weight:600}.exFxyG_noticeTitleWarn{color:var(--dsw-alias-state-warn-primary);margin-right:6px;font-weight:600}.exFxyG_noticeMessage{color:var(--dsw-alias-label-secondary)}.exFxyG_noticeCode{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-markdown-code-block-small)}.exFxyG_retryRow{color:var(--dsw-alias-label-tertiary);font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px))}.exFxyG_retrySummary{width:fit-content;color:inherit;cursor:pointer;user-select:none;border-radius:3px;align-items:center;gap:7px;padding:2px 0;list-style:none;display:inline-flex}.exFxyG_retrySummary::-webkit-details-marker{display:none}.exFxyG_retrySummary:after{content:\"\";opacity:.8;border-bottom:1.5px solid;border-right:1.5px solid;width:6px;height:6px;transition:transform .12s;transform:rotate(-45deg)}.exFxyG_retrySummary:hover{color:var(--dsw-alias-label-secondary)}.exFxyG_retrySummary:focus-visible{outline:1.5px solid var(--dsw-alias-button-info-fill);outline-offset:2px}.exFxyG_retryText{color:inherit}.exFxyG_retryRow[data-active] .exFxyG_retryText{background:linear-gradient(90deg, var(--dsw-alias-label-tertiary) 0%, var(--dsw-alias-label-tertiary) 40%, var(--dsw-alias-label-secondary) 50%, var(--dsw-alias-label-tertiary) 60%, var(--dsw-alias-label-tertiary) 100%);color:#0000;background-position:100%;background-size:200% 100%;background-clip:text;animation:1.6s ease-in-out infinite exFxyG_dsh-sync-retry-shimmer}@keyframes exFxyG_dsh-sync-retry-shimmer{0%{background-position:100%}to{background-position:0%}}@media (prefers-reduced-motion:reduce){.exFxyG_retryRow[data-active] .exFxyG_retryText{color:inherit;background:0 0;animation:none}}.exFxyG_retryRow[open] .exFxyG_retrySummary:after{transform:rotate(45deg)}.exFxyG_retryDetails{overflow-wrap:anywhere;font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(18px + var(--dsh-content-font-delta-secondary,0px));gap:2px;margin-top:3px;padding-left:14px;display:grid}.exFxyG_retryDetailLabel{color:var(--dsw-alias-label-secondary)}.exFxyG_toolName{color:var(--dsw-alias-label-primary);font-size:13px;font-weight:400;line-height:24px}.exFxyG_toolRow{position:relative;overflow:hidden}.exFxyG_toolRowRunning:after{content:\"\";background:linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--dsw-alias-bg-base) 60%, transparent) 55%, transparent 100%);pointer-events:none;width:300px;animation:2.6s ease-out infinite exFxyG_tool-row-sweep;position:absolute;top:0;bottom:0;left:0}@keyframes exFxyG_tool-row-sweep{0%{left:-300px}90%,to{left:100%}}.exFxyG_toolGlyph{width:16px;height:16px;color:var(--dsw-alias-label-secondary);justify-content:center;align-items:center;display:inline-flex}.exFxyG_toolGlyphError{color:var(--dsw-alias-state-error-primary)}.exFxyG_toolSep{background:var(--dsw-alias-label-caption);border-radius:1px;flex:none;width:2px;height:2px;margin:0 8px}.exFxyG_toolSummary{min-width:0;color:var(--dsw-alias-label-tertiary);text-overflow:ellipsis;white-space:nowrap;flex:auto;font-size:13px;line-height:24px;overflow:hidden}.exFxyG_ioCard{border:.5px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-markdown-code-block);font:var(--dsw-font-markdown-code-block-small);border-radius:12px;flex-direction:column;margin:4px 0 4px 4px;display:flex}.exFxyG_ioSection{grid-template-columns:max-content 1fr;align-items:baseline;column-gap:14px;max-height:150px;padding:12px 16px;display:grid;overflow-y:auto}.exFxyG_ioLabel{color:var(--dsw-alias-label-caption);align-self:start;position:sticky;top:0}.exFxyG_ioDivider{background:var(--dsw-alias-border-l2);flex:none;height:.5px}.exFxyG_ioText{min-width:0;color:var(--dsw-alias-label-secondary);white-space:pre-wrap;word-break:break-word}.exFxyG_ioTextError{color:var(--dsw-alias-state-error-primary)}.exFxyG_toBottomSlot{z-index:2;pointer-events:none;justify-content:flex-end;height:0;padding-right:8px;display:flex;position:sticky;bottom:16px}.exFxyG_toBottom{--dsw-elevation-stroke-color:var(--dsw-alias-border-l3);corner-shape:round;width:34px;height:34px;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-button-floating-fill);box-shadow:var(--dsw-elevation-panel);cursor:pointer;pointer-events:auto;border:0;border-radius:100px;justify-content:center;align-items:center;margin-top:-34px;padding:0;display:flex}.exFxyG_toBottom:hover{background:var(--dsw-alias-button-floating-hover)}.exFxyG_composerRoot{flex-direction:column;flex:none;align-items:center;padding:0 16px 8px;display:flex}.exFxyG_composerCard{box-sizing:border-box;--dsw-elevation-stroke-color:var(--dsw-alias-border-l2);background:var(--dsw-specific-input-major);width:100%;max-width:calc(min(920px,100%) + 32px);box-shadow:var(--dsw-elevation-soft);font:var(--dsw-font-s-14);border:0;border-radius:22px;flex-direction:column;gap:12px;padding-top:8px;display:flex}.exFxyG_composerText{box-sizing:border-box;width:100%;min-height:44px;max-height:200px;color:var(--dsw-alias-label-primary);font:inherit;resize:none;background:0 0;border:0;margin:0;padding:8px 16px 0}.exFxyG_composerText::placeholder{color:var(--dsw-alias-placeholder)}.exFxyG_composerText:focus-visible{outline:none}.exFxyG_composerBar{align-items:center;gap:8px;padding:0 10px 10px 16px;display:flex}.exFxyG_composerTarget{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);flex:none}.exFxyG_composerDelivery{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11)}.exFxyG_composerOffline{color:var(--dsw-alias-state-warn-label);font:var(--dsw-font-xxxs-11)}.exFxyG_composerSpacer{flex:1}.exFxyG_sendButton{corner-shape:round;background:var(--dsw-alias-button-info-fill);color:#fff;cursor:pointer;width:34px;height:34px;transition:background-color var(--ds-transition-duration-fast) var(--ds-ease-in-out);border:0;border-radius:999px;flex:none;place-items:center;display:grid}.exFxyG_sendButton:hover:not(:disabled){background:var(--dsw-alias-button-info-hover)}.exFxyG_sendButton:disabled{opacity:.4;cursor:default}.exFxyG_sendButton:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.exFxyG_error{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12);margin-bottom:10px}.exFxyG_narrowOnly{display:none}@media (width<=719px){.exFxyG_listPane{border-right:0;width:100%}.exFxyG_panel[data-open=true] .exFxyG_listPane,.exFxyG_panel[data-open=false] .exFxyG_viewPane{display:none}.exFxyG_narrowOnly{display:inline-flex}}@media (prefers-reduced-motion:reduce){.exFxyG_treeRow,.exFxyG_treeSession,.exFxyG_treeChevron svg,.exFxyG_sendButton{transition:none}.exFxyG_toolRowRunning:after{animation:none}}";
+		const css = ".exFxyG_section{flex-direction:column;gap:14px;padding:4px 0 8px;display:flex}.exFxyG_lede{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xs-13);margin:0}.exFxyG_group{flex-direction:column;gap:10px;display:flex}.exFxyG_groupTitle{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-strong-13);margin:0}.exFxyG_card{border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);border-radius:10px;flex-direction:column;gap:10px;padding:12px 14px;display:flex}.exFxyG_field{flex-direction:column;gap:4px;display:flex}.exFxyG_fieldRow{justify-content:space-between;align-items:center;gap:12px;display:flex}.exFxyG_fieldText{flex-direction:column;gap:2px;min-width:0;display:flex}.exFxyG_label{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13)}.exFxyG_hint{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12)}.exFxyG_pair{grid-template-columns:minmax(0,1fr) 120px;gap:10px;display:grid}.exFxyG_actions{align-items:center;gap:8px;display:flex}.exFxyG_saved{color:var(--dsw-alias-state-success-primary);font:var(--dsw-font-xxs-12)}.exFxyG_dirty{color:var(--dsw-alias-state-warn-primary);font:var(--dsw-font-xxs-12)}.exFxyG_failed{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12)}.exFxyG_sessionList{flex-direction:column;max-height:280px;display:flex;overflow-y:auto}.exFxyG_sessionRow{justify-content:space-between;align-items:center;gap:12px;min-height:40px;padding:5px 2px;display:flex}.exFxyG_sessionRow+.exFxyG_sessionRow{border-top:.5px solid var(--dsw-alias-border-l1)}.exFxyG_sessionText{flex-direction:column;gap:2px;min-width:0;display:flex}.exFxyG_sessionTitle{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.exFxyG_sessionMeta{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);align-items:center;gap:6px;display:flex}.exFxyG_empty{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);padding:12px 2px}.exFxyG_status{flex-wrap:wrap;gap:6px 18px;display:flex}.exFxyG_statusItem{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12);align-items:center;gap:6px;display:flex}.exFxyG_statusValue{color:var(--dsw-alias-label-primary)}.exFxyG_statusBad{color:var(--dsw-alias-state-error-primary)}.exFxyG_statusGood{color:var(--dsw-alias-state-success-primary)}.exFxyG_panel{height:100%;min-height:0;color:var(--dsw-alias-label-primary);display:flex}.exFxyG_listPane{background:var(--dsw-specific-sidebar-fill);border-right:.5px solid var(--dsw-alias-border-l3);flex-direction:column;flex:none;width:280px;min-height:0;display:flex}.exFxyG_listHead{flex-direction:column;flex:none;gap:6px;padding:10px 10px 8px;display:flex}.exFxyG_panel ::placeholder,.exFxyG_panel input::placeholder,.exFxyG_panel textarea::placeholder{color:var(--dsw-alias-label-caption);opacity:1}.exFxyG_listToggle{color:var(--dsw-alias-button-info-fill)}.exFxyG_panel[data-list=hidden] .exFxyG_listPane{display:none}.exFxyG_listStatus{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.exFxyG_list{flex-direction:column;flex:1;gap:3px;min-height:0;margin-right:2px;padding:0 6px 8px;display:flex;overflow-y:auto}.exFxyG_notice{background:var(--dsw-alias-state-warn-tertiary);color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);border-radius:8px;align-items:flex-start;gap:6px;margin:2px 2px 6px;padding:6px 8px;display:flex}.exFxyG_noticeText{flex:1;min-width:0}.exFxyG_noticeClose{width:14px;height:14px;color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:0;border-radius:4px;flex:none;justify-content:center;align-items:center;padding:0;font-size:13px;line-height:13px;display:inline-flex}.exFxyG_noticeClose:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_treeRow,.exFxyG_treeSession{box-sizing:border-box;width:100%;color:var(--dsw-alias-label-primary);text-align:left;cursor:pointer;user-select:none;transition:background var(--ds-transition-duration-fast) var(--ds-ease-in-out);background:0 0;border:0;border-radius:8px;align-items:center;gap:6px;padding:0 8px;display:flex}.exFxyG_treeRow{height:34px}.exFxyG_treeSession{gap:0;height:32px}.exFxyG_treeRow:hover,.exFxyG_treeSession:hover,.exFxyG_treeSessionSelected{background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_treeRow:focus-visible,.exFxyG_treeSession:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.exFxyG_panel [data-level=\"1\"]{padding-left:24px}.exFxyG_panel [data-level=\"2\"]{padding-left:40px}.exFxyG_treeSlot{width:16px;height:20px;color:var(--dsw-alias-label-tertiary);flex:none;justify-content:center;align-items:center;display:inline-flex}.exFxyG_treeChevron{color:var(--dsw-alias-label-caption);display:none}.exFxyG_treeRow:hover .exFxyG_treeFolder,.exFxyG_treeRow:focus-visible .exFxyG_treeFolder{display:none}.exFxyG_treeRow:hover .exFxyG_treeChevron,.exFxyG_treeRow:focus-visible .exFxyG_treeChevron{display:inline-flex}.exFxyG_arrowOpen{transform:rotate(90deg)}.exFxyG_treeChevron svg{transition:transform .15s var(--ds-ease-in-out)}.exFxyG_rowTitle{min-width:0;font:var(--dsw-font-s-14);text-overflow:ellipsis;white-space:nowrap;flex:1;overflow:hidden}.exFxyG_treeSession .exFxyG_rowTitle{margin:0 6px 0 4px}.exFxyG_rowTime{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);flex:none}.exFxyG_treeRowDim .exFxyG_rowTitle,.exFxyG_treeRowDim .exFxyG_rowTime{color:var(--dsw-alias-label-secondary)}.exFxyG_heroRoot{justify-content:center;align-items:center;min-width:0;height:100%;padding:0 24px;display:flex}.exFxyG_heroStack{flex-direction:column;align-items:center;gap:12px;width:100%;max-width:calc(min(920px,100%) + 32px);display:flex}.exFxyG_heroHeadline{color:var(--dsw-alias-label-primary);flex-wrap:wrap;justify-content:center;align-items:center;gap:12px 10px;font-size:26px;font-weight:500;line-height:32px;display:flex}.exFxyG_heroFish{color:var(--dsw-alias-label-primary);flex:none;justify-content:center;align-items:center;display:inline-flex}.exFxyG_heroTitleGroup{flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 7px;min-width:0;display:flex}.exFxyG_heroBadge{border:.5px solid var(--dsw-alias-interactive-bg-hover);background:var(--dsw-alias-state-business-tertiary);color:var(--dsw-alias-label-primary-bluish);font-family:var(--ds-font-family-code);white-space:nowrap;border-radius:24px;align-self:flex-start;margin-top:2px;padding:1px 7px 0;font-size:12px;font-weight:500;line-height:18px}.exFxyG_heroHint{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);text-align:center;margin:0}.exFxyG_tjRoot{width:100%;min-height:0;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-1);flex-direction:column;flex:1;display:flex;overflow:hidden}.exFxyG_tjToolbar{z-index:4;box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);flex:none;align-items:center;gap:2px;height:32px;padding:0 6px;display:flex;position:sticky;top:0}.exFxyG_tjToggle{height:20px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);cursor:pointer;background:0 0;border:0;border-radius:3px;flex:none;align-items:center;gap:4px;padding:0 7px;display:inline-flex}.exFxyG_tjToggleIcon{stroke:currentColor;stroke-width:1.25px;stroke-linecap:round;stroke-linejoin:round;flex:none;width:12px;height:12px}.exFxyG_tjToggle:hover,.exFxyG_tjToggle[aria-pressed=true],.exFxyG_tjAction:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_tjToggle:focus-visible,.exFxyG_tjAction:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary);outline-offset:1px}.exFxyG_tjAction{height:20px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);cursor:pointer;background:0 0;border:0;border-radius:3px;flex:none;align-items:center;gap:4px;padding:0 5px;display:inline-flex}.exFxyG_tjActionIcon{color:var(--dsw-alias-label-tertiary);font:14px/14px var(--ds-font-family-code)}.exFxyG_tjSearch{border:.5px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-bg-layer-2);min-width:84px;height:22px;color:var(--dsw-alias-label-caption);border-radius:4px;flex:0 164px;align-items:center;gap:4px;margin-left:auto;padding:0 6px;display:flex}.exFxyG_tjSearch:focus-within{border-color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-bg-layer-1)}.exFxyG_tjSearchIcon{flex:none}.exFxyG_tjSearchInput{width:100%;min-width:0;color:var(--dsw-alias-label-primary);font:var(--dsw-font-xxs-12);background:0 0;border:0;outline:0;padding:0}.exFxyG_tjSearchInput::placeholder{color:var(--dsw-alias-label-caption)}.exFxyG_tjStrip{border-bottom:.5px solid var(--dsw-alias-border-l2);flex:none}.exFxyG_tjPlot{background:var(--dsw-alias-bg-layer-2);grid-template-columns:44px minmax(0,1fr);height:50px;display:grid;overflow:hidden}.exFxyG_tjLaneLabels{border-right:.5px solid var(--dsw-alias-border-l1);color:var(--dsw-alias-label-caption);font-size:10px;line-height:1;position:relative}.exFxyG_tjLaneLabels span{justify-content:flex-end;align-items:center;height:8px;display:flex;position:absolute;right:3px}.exFxyG_tjLaneLabels span:first-child{top:7px}.exFxyG_tjLaneLabels span:nth-child(2){top:21px}.exFxyG_tjLaneLabels span:nth-child(3){top:35px}.exFxyG_tjTrack{position:relative;overflow:hidden}.exFxyG_tjLanes,.exFxyG_tjTurnBoundaries{position:absolute;inset:7px 0}.exFxyG_tjSpan{top:calc(var(--tj-span-lane) * 14px);left:var(--tj-span-left);width:max(2px, var(--tj-span-width));background:var(--dsw-alias-label-secondary);opacity:.78;cursor:pointer;border:0;border-radius:1px;min-width:2px;height:8px;padding:0;position:absolute}.exFxyG_tjSpan[data-kind=user]{background:var(--dsw-alias-state-business-primary)}.exFxyG_tjSpan[data-kind=assistant],.exFxyG_tjSpan[data-kind=think]{background:var(--dsw-alias-label-primary);opacity:1}.exFxyG_tjSpan[data-kind=tool]{background:var(--dsw-alias-state-warn-label);opacity:1}.exFxyG_tjSpan[data-kind=context]{background:var(--dsw-alias-state-success-primary)}.exFxyG_tjSpan[data-error=true]{background:var(--dsw-alias-state-error-primary)}.exFxyG_tjSpan[data-selected=false]{opacity:.14}.exFxyG_tjSpan[data-current=true]{z-index:1;box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary)}.exFxyG_tjTurnBoundary{background:var(--dsw-alias-border-l2);width:.5px;position:absolute;top:0;bottom:0}.exFxyG_tjSplit{background:var(--dsw-alias-bg-layer-1);flex:1;min-width:0;min-height:0;display:flex;overflow:hidden}.exFxyG_tjTablePane{flex:1;min-width:0;overflow:hidden auto}.exFxyG_ledgerTable tbody tr[data-selected=true]{background:var(--dsw-alias-interactive-bg-active)}.exFxyG_ledgerTable tbody tr[data-dimmed=true]{opacity:.3}.exFxyG_ledgerTable tbody tr[data-folded=true]{cursor:pointer}.exFxyG_ledgerTable tbody tr[data-folded=true] td{height:20px}.exFxyG_tjFolded{min-width:0;color:var(--dsw-alias-label-secondary);align-items:center;gap:6px;font-size:12px;line-height:16px;display:flex}.exFxyG_tjFoldedEllipsis{color:var(--dsw-alias-label-tertiary);flex:none;font-weight:600}.exFxyG_tjFoldedText{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.exFxyG_tjDetails{border-left:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);flex-direction:column;flex:none;width:clamp(320px,38%,440px);min-width:0;min-height:0;display:flex}.exFxyG_tjDetailsHeader{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);flex:none;justify-content:space-between;align-items:center;height:42px;padding:0 8px 0 12px;display:flex}.exFxyG_tjDetailsTitle{align-items:center;gap:8px;min-width:0;display:flex}.exFxyG_tjDetailsDot{corner-shape:round;background:var(--dsw-alias-label-secondary);border-radius:50%;flex:none;width:5px;height:5px}.exFxyG_tjDetailsName{font:500 12px/16px var(--ds-font-family-code);flex:none}.exFxyG_tjDetailsLocation{min-width:0;color:var(--dsw-alias-label-tertiary);font:11px/16px var(--ds-font-family-code);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.exFxyG_tjClose{width:28px;height:28px;color:var(--dsw-alias-label-secondary);cursor:pointer;background:0 0;border:0;border-radius:6px;flex:none;justify-content:center;align-items:center;padding:0;font-size:18px;line-height:18px;display:inline-flex}.exFxyG_tjClose:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_tjDetailTabs{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);white-space:nowrap;flex:none;gap:1px;width:100%;height:34px;padding:0 8px;display:flex;overflow-x:auto}.exFxyG_tjDetailTab{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);cursor:pointer;background:0 0;border:0;flex:none;padding:0 9px;position:relative}.exFxyG_tjDetailTab:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_tjDetailTabActive{color:var(--dsw-alias-state-business-primary)}.exFxyG_tjDetailTabActive:after{background:var(--dsw-alias-state-business-primary);content:\"\";border-radius:1px 1px 0 0;height:2px;position:absolute;bottom:0;left:9px;right:9px}.exFxyG_tjDetailBody{flex:1;min-height:0;overflow:hidden auto}.exFxyG_tjOverview{font:var(--dsw-font-xs-13);margin:0;padding:8px 0}.exFxyG_tjOverview>div{grid-template-columns:94px minmax(0,1fr);align-items:center;min-height:22px;padding:0 14px;display:grid}.exFxyG_tjOverview dt{color:var(--dsw-alias-label-tertiary)}.exFxyG_tjOverview dd{min-width:0;color:var(--dsw-alias-label-primary);text-overflow:ellipsis;white-space:nowrap;margin:0;overflow:hidden}.exFxyG_tjPayload{box-sizing:border-box;overflow-wrap:anywhere;background:var(--dsw-alias-markdown-code-block);min-height:100%;color:var(--dsw-alias-label-primary);font:12px/19px var(--ds-font-family-code);tab-size:2;white-space:pre-wrap;margin:0;padding:14px}.exFxyG_tjMarkdown{padding:6px 14px 8px}.exFxyG_viewPane{background:var(--dsw-alias-bg-base);flex-direction:column;flex:1;min-width:0;min-height:0;display:flex}.exFxyG_viewHeader{border-bottom:.5px solid var(--dsw-alias-border-l3);flex-direction:column;flex:none;padding:10px 20px 0;display:flex}.exFxyG_viewTitleRow{align-items:center;gap:8px;min-width:0;min-height:30px;display:flex}.exFxyG_viewSpacer{flex:1}.exFxyG_viewTabs{z-index:1;gap:36px;margin-top:10px;padding-left:8px;display:flex;position:relative}.exFxyG_viewTab{color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:0;padding:0 0 9px;font-size:13px;font-weight:500;line-height:16px;position:relative}.exFxyG_viewTab:after{content:\"\";background:0 0;border-radius:2px;height:2px;position:absolute;bottom:-1px;left:0;right:0}.exFxyG_viewTabActive{color:var(--dsw-alias-state-business-primary)}.exFxyG_viewTabActive:after{background:var(--dsw-alias-state-business-primary)}.exFxyG_viewTab:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.exFxyG_chromeCluster{flex:none;align-items:center;gap:8px;min-width:0;display:flex}.exFxyG_chromeChip{border:.5px solid var(--dsw-alias-border-l2);corner-shape:round;max-width:200px;min-height:24px;color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);text-overflow:ellipsis;white-space:nowrap;border-radius:999px;align-items:center;gap:4px;padding:0 8px;display:inline-flex;overflow:hidden}.exFxyG_ringRoot{flex:none;display:inline-flex;position:relative}.exFxyG_ringTrigger{corner-shape:round;cursor:pointer;background:0 0;border:0;border-radius:50%;place-items:center;width:20px;height:20px;padding:0;display:grid}.exFxyG_ringTrigger:hover{background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_ringTrigger:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.exFxyG_ringTrack{fill:none;stroke:var(--dsw-alias-border-l3);stroke-width:2px}.exFxyG_ringFill{fill:none;stroke:var(--dsw-alias-state-business-primary);stroke-width:2px;stroke-linecap:round}.exFxyG_ringPanel{z-index:9;--dsw-elevation-stroke-color:var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-overlay);box-shadow:var(--dsw-elevation-prominent);white-space:nowrap;border:0;border-radius:10px;flex-direction:column;gap:2px;padding:8px 10px;display:flex;position:absolute;top:26px;right:0}.exFxyG_ringHeadline{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12)}.exFxyG_ringFigures{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11)}.exFxyG_statusRow{width:100%;max-width:calc(min(920px,100%) + 32px);color:var(--dsw-alias-label-caption);font:var(--dsw-font-xxxs-11);font-variant-numeric:tabular-nums;flex-wrap:wrap;justify-content:center;gap:12px;padding:6px 0 0;display:flex}.exFxyG_ledger{background:var(--dsw-alias-bg-layer-1);flex:1;min-height:0;margin-right:2px;overflow-y:auto}.exFxyG_ledgerTable{border-spacing:0;table-layout:fixed;width:100%;color:var(--dsw-alias-label-primary);font:var(--dsw-font-xxs-12)}.exFxyG_ledgerTable th{z-index:3;box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-specific-sidebar-fill);height:30px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);text-align:left;text-overflow:ellipsis;white-space:nowrap;padding:0 8px;font-weight:500;position:sticky;top:0;overflow:hidden}.exFxyG_ledgerEventHead{text-align:right;width:122px;padding-right:4px}.exFxyG_ledgerTable td{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l1);text-overflow:ellipsis;white-space:nowrap;height:30px;padding:0 8px;overflow:hidden}.exFxyG_ledgerTable tbody tr:hover{background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_ledgerEventCell{text-align:right;padding-left:36px;padding-right:4px;position:relative;overflow:visible}.exFxyG_ledgerRail{z-index:4;background:var(--dsw-alias-border-l3);pointer-events:none;width:2px;position:absolute;top:-1px;bottom:-1px;left:0}.exFxyG_ledgerTable tbody tr[data-error=true] .exFxyG_ledgerRail{background:var(--dsw-alias-state-error-primary)}.exFxyG_ledgerTable tbody tr[data-turn-start=true] td:before{z-index:1;background:var(--dsw-alias-border-l1);content:\"\";pointer-events:none;height:2px;position:absolute;top:0;left:0;right:0;transform:translateY(-50%)}.exFxyG_ledgerTable tbody tr[data-turn-start=true]:first-child td:before{content:none}.exFxyG_ledgerTurnLabel{z-index:3;box-sizing:border-box;background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-tertiary);font:8px/10px var(--ds-font-family-code);font-variant-numeric:tabular-nums;white-space:nowrap;border-radius:0 0 2px;align-items:center;padding:1px 5px;display:inline-grid;position:absolute;top:0;left:0}.exFxyG_ledgerKindSlot{justify-content:flex-end;align-items:center;width:76px;display:inline-flex}.exFxyG_ledgerKind{box-sizing:border-box;letter-spacing:.035em;user-select:none;border:1px solid #0000;border-radius:4px;align-items:center;height:19px;padding:0 5px;font-size:10px;font-weight:650;line-height:16px;display:inline-flex}.exFxyG_kind_user{color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-state-business-tertiary)}.exFxyG_kind_assistant,.exFxyG_kind_think{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-2)}.exFxyG_kind_tool{color:var(--dsw-alias-state-warn-label);background:var(--dsw-alias-state-warn-tertiary)}.exFxyG_kind_error{color:var(--dsw-alias-state-error-primary);background:var(--dsw-alias-bg-layer-2)}.exFxyG_kind_system,.exFxyG_kind_policy,.exFxyG_kind_title,.exFxyG_kind_other,.exFxyG_kind_compaction{color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-bg-module-platform)}.exFxyG_kind_turn,.exFxyG_kind_step,.exFxyG_kind_context{color:var(--dsw-alias-label-tertiary);background:var(--dsw-alias-bg-layer-2)}.exFxyG_ledgerContentCell{padding-left:4px}.exFxyG_ledgerText{color:var(--dsw-alias-label-primary)}.exFxyG_ledgerMono{color:var(--dsw-alias-label-secondary);font-family:var(--ds-font-family-code);font-size:12px}.exFxyG_ledgerResult{grid-template-columns:clamp(180px,36cqw,480px) minmax(0,1fr);align-items:center;gap:8px;min-width:0;display:grid}.exFxyG_ledgerResult>*{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.exFxyG_ledgerErrorText{color:var(--dsw-alias-state-error-primary)}.exFxyG_ledgerArrow{color:var(--dsw-alias-label-caption);display:none}.exFxyG_ledgerDuration{color:var(--dsw-alias-label-caption);font:var(--dsw-font-xxxs-11);font-variant-numeric:tabular-nums;margin-left:8px}.exFxyG_viewTitle{min-width:0;font:var(--dsw-font-s-strong-14);text-overflow:ellipsis;white-space:nowrap;flex:0 auto;margin:0;overflow:hidden}.exFxyG_viewMachine{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);white-space:nowrap;flex:none}.exFxyG_viewScroll{flex:1;min-height:0;margin-right:2px;padding:16px 32px;overflow-y:auto}.exFxyG_viewColumn{flex-direction:column;width:100%;max-width:min(920px,100%);margin:0 auto;display:flex}.exFxyG_viewColumn>*+*{margin-top:16px}.exFxyG_userRow{flex-direction:column;align-items:flex-end;display:flex}.exFxyG_bubble{background:var(--dsw-specific-bubble);max-width:min(82%,640px);color:var(--dsw-alias-label-primary);font:var(--dsw-font-s-14);white-space:pre-wrap;word-break:break-word;border-radius:22px;padding:10px 16px}.exFxyG_assistantRow{flex-direction:column;gap:16px;min-width:0;display:flex}.exFxyG_reasoning{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);white-space:pre-wrap}.exFxyG_thinkRoot{flex-direction:column;display:flex}.exFxyG_thinkLine{position:relative;overflow:hidden}.exFxyG_thinkRoot[data-state=running] .exFxyG_thinkLine:after{content:\"\";inset-block:0;background:linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--dsw-alias-bg-base) 60%, transparent) 55%, transparent 100%);pointer-events:none;width:300px;animation:2.6s ease-out infinite exFxyG_dsh-sync-reasoning-sweep;position:absolute;left:0}@keyframes exFxyG_dsh-sync-reasoning-sweep{0%{left:-300px}90%,to{left:100%}}@media (prefers-reduced-motion:reduce){.exFxyG_thinkRoot[data-state=running] .exFxyG_thinkLine:after{animation:none}}.exFxyG_thinkSummary{min-width:0;color:var(--dsw-alias-label-tertiary);font-size:13px;line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px));text-overflow:ellipsis;white-space:nowrap;flex:auto;overflow:hidden}.exFxyG_thinkSummaryText{text-overflow:ellipsis;display:block;overflow:hidden}.exFxyG_thinkSummary[data-follow-end]{justify-content:flex-end;display:flex}.exFxyG_thinkSummary[data-follow-end] .exFxyG_thinkSummaryText{text-align:start;text-overflow:clip;flex:none;width:max-content;min-width:100%;overflow:visible}.exFxyG_thinkTitle{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xs-13)}.exFxyG_stopped,.exFxyG_mediaChip{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-tertiary);border-radius:6px;align-self:flex-start;padding:0 6px;font-size:11px;line-height:18px}.exFxyG_messageActions{height:calc(28px + var(--dsh-content-font-delta,0px));align-items:center;gap:8px;margin-top:16px;margin-left:-6px;display:flex}.exFxyG_userActions{height:calc(28px + var(--dsh-content-font-delta,0px));align-items:center;gap:8px;margin-top:-2px;display:flex}.exFxyG_action{width:calc(28px + var(--dsh-content-font-delta,0px));height:calc(28px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;border-radius:28px;justify-content:center;align-items:center;padding:6px;display:inline-flex}.exFxyG_action svg{width:calc(15px + var(--dsh-content-font-delta,0px));height:calc(15px + var(--dsh-content-font-delta,0px))}.exFxyG_action:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary)}.exFxyG_noticeRow{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px));grid-template-columns:10px minmax(0,1fr) auto;align-items:start;gap:8px;padding:2px 0;display:grid}.exFxyG_noticeDot{margin-top:5px}.exFxyG_noticeCopy{overflow-wrap:anywhere;min-width:0}.exFxyG_noticeTitleError{color:var(--dsw-alias-state-error-primary);margin-right:6px;font-weight:600}.exFxyG_noticeTitleWarn{color:var(--dsw-alias-state-warn-primary);margin-right:6px;font-weight:600}.exFxyG_noticeMessage{color:var(--dsw-alias-label-secondary)}.exFxyG_noticeCode{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-markdown-code-block-small)}.exFxyG_retryRow{color:var(--dsw-alias-label-tertiary);font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px))}.exFxyG_retrySummary{width:fit-content;color:inherit;cursor:pointer;user-select:none;border-radius:3px;align-items:center;gap:7px;padding:2px 0;list-style:none;display:inline-flex}.exFxyG_retrySummary::-webkit-details-marker{display:none}.exFxyG_retrySummary:after{content:\"\";opacity:.8;border-bottom:1.5px solid;border-right:1.5px solid;width:6px;height:6px;transition:transform .12s;transform:rotate(-45deg)}.exFxyG_retrySummary:hover{color:var(--dsw-alias-label-secondary)}.exFxyG_retrySummary:focus-visible{outline:1.5px solid var(--dsw-alias-button-info-fill);outline-offset:2px}.exFxyG_retryText{color:inherit}.exFxyG_retryRow[data-active] .exFxyG_retryText{background:linear-gradient(90deg, var(--dsw-alias-label-tertiary) 0%, var(--dsw-alias-label-tertiary) 40%, var(--dsw-alias-label-secondary) 50%, var(--dsw-alias-label-tertiary) 60%, var(--dsw-alias-label-tertiary) 100%);color:#0000;background-position:100%;background-size:200% 100%;background-clip:text;animation:1.6s ease-in-out infinite exFxyG_dsh-sync-retry-shimmer}@keyframes exFxyG_dsh-sync-retry-shimmer{0%{background-position:100%}to{background-position:0%}}@media (prefers-reduced-motion:reduce){.exFxyG_retryRow[data-active] .exFxyG_retryText{color:inherit;background:0 0;animation:none}}.exFxyG_retryRow[open] .exFxyG_retrySummary:after{transform:rotate(45deg)}.exFxyG_retryDetails{overflow-wrap:anywhere;font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(18px + var(--dsh-content-font-delta-secondary,0px));gap:2px;margin-top:3px;padding-left:14px;display:grid}.exFxyG_retryDetailLabel{color:var(--dsw-alias-label-secondary)}.exFxyG_toolName{color:var(--dsw-alias-label-primary);font-size:13px;font-weight:400;line-height:24px}.exFxyG_toolRow{position:relative;overflow:hidden}.exFxyG_toolRowRunning:after{content:\"\";background:linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--dsw-alias-bg-base) 60%, transparent) 55%, transparent 100%);pointer-events:none;width:300px;animation:2.6s ease-out infinite exFxyG_tool-row-sweep;position:absolute;top:0;bottom:0;left:0}@keyframes exFxyG_tool-row-sweep{0%{left:-300px}90%,to{left:100%}}.exFxyG_toolRoot{flex-direction:column;display:flex}.exFxyG_toolSummaryError{color:var(--dsw-alias-state-error-primary)}.exFxyG_diffStat{color:var(--dsw-alias-label-tertiary);font-size:var(--dsh-content-font-size-secondary,13px);font-variant-numeric:tabular-nums;flex:none;margin-left:6px}.exFxyG_searchRecovery{color:var(--dsw-alias-label-tertiary);font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(18px + var(--dsh-content-font-delta-secondary,0px));overflow-wrap:anywhere;padding-left:14px}.exFxyG_visuallyHidden{clip:rect(0 0 0 0);white-space:nowrap;width:1px;height:1px;position:absolute;overflow:hidden}.exFxyG_toolGlyph{width:16px;height:16px;color:var(--dsw-alias-label-secondary);justify-content:center;align-items:center;display:inline-flex}.exFxyG_toolGlyphError{color:var(--dsw-alias-state-error-primary)}.exFxyG_toolSep{background:var(--dsw-alias-label-caption);border-radius:1px;flex:none;width:2px;height:2px;margin:0 8px}.exFxyG_toolSummary{min-width:0;color:var(--dsw-alias-label-tertiary);text-overflow:ellipsis;white-space:nowrap;flex:auto;font-size:13px;line-height:24px;overflow:hidden}.exFxyG_ioCard{border:.5px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-markdown-code-block);font:var(--dsw-font-markdown-code-block-small);border-radius:12px;flex-direction:column;margin:4px 0 4px 4px;display:flex}.exFxyG_ioSection{grid-template-columns:max-content 1fr;align-items:baseline;column-gap:14px;max-height:150px;padding:12px 16px;display:grid;overflow-y:auto}.exFxyG_ioLabel{color:var(--dsw-alias-label-caption);align-self:start;position:sticky;top:0}.exFxyG_ioDivider{background:var(--dsw-alias-border-l2);flex:none;height:.5px}.exFxyG_ioText{min-width:0;color:var(--dsw-alias-label-secondary);white-space:pre-wrap;word-break:break-word}.exFxyG_ioTextError{color:var(--dsw-alias-state-error-primary)}.exFxyG_toBottomSlot{z-index:2;pointer-events:none;justify-content:flex-end;height:0;padding-right:8px;display:flex;position:sticky;bottom:16px}.exFxyG_toBottom{--dsw-elevation-stroke-color:var(--dsw-alias-border-l3);corner-shape:round;width:34px;height:34px;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-button-floating-fill);box-shadow:var(--dsw-elevation-panel);cursor:pointer;pointer-events:auto;border:0;border-radius:100px;justify-content:center;align-items:center;margin-top:-34px;padding:0;display:flex}.exFxyG_toBottom:hover{background:var(--dsw-alias-button-floating-hover)}.exFxyG_composerRoot{flex-direction:column;flex:none;align-items:center;padding:0 16px 8px;display:flex}.exFxyG_composerCard{box-sizing:border-box;--dsw-elevation-stroke-color:var(--dsw-alias-border-l2);background:var(--dsw-specific-input-major);width:100%;max-width:calc(min(920px,100%) + 32px);box-shadow:var(--dsw-elevation-soft);font:var(--dsw-font-s-14);border:0;border-radius:22px;flex-direction:column;gap:12px;padding-top:8px;display:flex}.exFxyG_composerText{box-sizing:border-box;width:100%;min-height:44px;max-height:200px;color:var(--dsw-alias-label-primary);font:inherit;resize:none;background:0 0;border:0;margin:0;padding:8px 16px 0}.exFxyG_composerText::placeholder{color:var(--dsw-alias-placeholder)}.exFxyG_composerText:focus-visible{outline:none}.exFxyG_composerBar{align-items:center;gap:8px;padding:0 10px 10px 16px;display:flex}.exFxyG_composerTarget{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);flex:none}.exFxyG_composerDelivery{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11)}.exFxyG_composerOffline{color:var(--dsw-alias-state-warn-label);font:var(--dsw-font-xxxs-11)}.exFxyG_composerSpacer{flex:1}.exFxyG_sendButton{corner-shape:round;background:var(--dsw-alias-button-info-fill);color:#fff;cursor:pointer;width:34px;height:34px;transition:background-color var(--ds-transition-duration-fast) var(--ds-ease-in-out);border:0;border-radius:999px;flex:none;place-items:center;display:grid}.exFxyG_sendButton:hover:not(:disabled){background:var(--dsw-alias-button-info-hover)}.exFxyG_sendButton:disabled{opacity:.4;cursor:default}.exFxyG_sendButton:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.exFxyG_error{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12);margin-bottom:10px}.exFxyG_narrowOnly{display:none}@media (width<=719px){.exFxyG_listPane{border-right:0;width:100%}.exFxyG_panel[data-open=true] .exFxyG_listPane,.exFxyG_panel[data-open=false] .exFxyG_viewPane{display:none}.exFxyG_narrowOnly{display:inline-flex}}@media (prefers-reduced-motion:reduce){.exFxyG_treeRow,.exFxyG_treeSession,.exFxyG_treeChevron svg,.exFxyG_sendButton{transition:none}.exFxyG_toolRowRunning:after{animation:none}}";
 		const tagId = "dsh-session-sync/sync.module.css";
 		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagId) + "]") === null) {
 			const tag = document.createElement("style");
@@ -58,6 +58,7 @@ window.__ModuleLoader__.load({
 			"composerSpacer": "exFxyG_composerSpacer",
 			"composerTarget": "exFxyG_composerTarget",
 			"composerText": "exFxyG_composerText",
+			"diffStat": "exFxyG_diffStat",
 			"dirty": "exFxyG_dirty",
 			"dsh-sync-reasoning-sweep": "exFxyG_dsh-sync-reasoning-sweep",
 			"dsh-sync-retry-shimmer": "exFxyG_dsh-sync-retry-shimmer",
@@ -149,6 +150,7 @@ window.__ModuleLoader__.load({
 			"rowTime": "exFxyG_rowTime",
 			"rowTitle": "exFxyG_rowTitle",
 			"saved": "exFxyG_saved",
+			"searchRecovery": "exFxyG_searchRecovery",
 			"section": "exFxyG_section",
 			"sendButton": "exFxyG_sendButton",
 			"sessionList": "exFxyG_sessionList",
@@ -210,10 +212,12 @@ window.__ModuleLoader__.load({
 			"toolGlyph": "exFxyG_toolGlyph",
 			"toolGlyphError": "exFxyG_toolGlyphError",
 			"toolName": "exFxyG_toolName",
+			"toolRoot": "exFxyG_toolRoot",
 			"toolRow": "exFxyG_toolRow",
 			"toolRowRunning": "exFxyG_toolRowRunning",
 			"toolSep": "exFxyG_toolSep",
 			"toolSummary": "exFxyG_toolSummary",
+			"toolSummaryError": "exFxyG_toolSummaryError",
 			"treeChevron": "exFxyG_treeChevron",
 			"treeFolder": "exFxyG_treeFolder",
 			"treeRow": "exFxyG_treeRow",
@@ -233,7 +237,8 @@ window.__ModuleLoader__.load({
 			"viewTabActive": "exFxyG_viewTabActive",
 			"viewTabs": "exFxyG_viewTabs",
 			"viewTitle": "exFxyG_viewTitle",
-			"viewTitleRow": "exFxyG_viewTitleRow"
+			"viewTitleRow": "exFxyG_viewTitleRow",
+			"visuallyHidden": "exFxyG_visuallyHidden"
 		};
 		//#endregion
 		//#region src/client/ConfigSection.tsx
@@ -649,11 +654,11 @@ window.__ModuleLoader__.load({
 			const subagents = /* @__PURE__ */ new Map();
 			const stepStarts = /* @__PURE__ */ new Map();
 			for (const event of events) {
-				const data = asRecord$1(event.data);
+				const data = asRecord$2(event.data);
 				if (firstTime === void 0) firstTime = event.time;
 				lastTime = event.time;
 				if (event.type === "request/header") {
-					const config = asRecord$1(asRecord$1(data?.["header"])?.["config"]);
+					const config = asRecord$2(asRecord$2(data?.["header"])?.["config"]);
 					const provider = text$1(config?.["provider"]);
 					const name = text$1(config?.["model"]);
 					if (provider !== void 0 && name !== void 0) model = {
@@ -700,7 +705,7 @@ window.__ModuleLoader__.load({
 					continue;
 				}
 				if (event.type === "assistant/message") {
-					const reported = asRecord$1(data?.["usage"]);
+					const reported = asRecord$2(data?.["usage"]);
 					usage.inputTokens += number$1(reported?.["inputTokens"]) ?? 0;
 					usage.outputTokens += number$1(reported?.["outputTokens"]) ?? 0;
 					usage.cacheReadTokens += number$1(reported?.["cacheReadTokens"]) ?? 0;
@@ -740,7 +745,7 @@ window.__ModuleLoader__.load({
 					continue;
 				}
 				if (event.type === "tool/result") {
-					const callId = text$1(asRecord$1(asRecord$1(data?.["message"])?.["source"])?.["callId"]);
+					const callId = text$1(asRecord$2(asRecord$2(data?.["message"])?.["source"])?.["callId"]);
 					const seen = callId === void 0 ? void 0 : subagents.get(callId);
 					if (seen === void 0) continue;
 					seen.done = true;
@@ -791,7 +796,7 @@ window.__ModuleLoader__.load({
 			let currentStep;
 			for (const event of events) {
 				if (HIDDEN_EVENTS.has(event.type)) continue;
-				const data = asRecord$1(event.data);
+				const data = asRecord$2(event.data);
 				if (data === void 0) continue;
 				const key = String(event.seq);
 				if (event.type === "turn/start") {
@@ -816,7 +821,7 @@ window.__ModuleLoader__.load({
 					continue;
 				}
 				if (event.type === "turn/end") {
-					const reason = text$1(asRecord$1(data["reason"])?.["kind"]);
+					const reason = text$1(asRecord$2(data["reason"])?.["kind"]);
 					const cell = base(key, "turn", label, event, {
 						turn,
 						step,
@@ -845,7 +850,7 @@ window.__ModuleLoader__.load({
 					continue;
 				}
 				if (event.type === "tool/result") {
-					const callId = text$1(asRecord$1(asRecord$1(data["message"])?.["source"])?.["callId"]) ?? "";
+					const callId = text$1(asRecord$2(asRecord$2(data["message"])?.["source"])?.["callId"]) ?? "";
 					const cell = calls.get(callId);
 					if (cell !== void 0) {
 						cell.result = resultExcerpt(data);
@@ -866,7 +871,7 @@ window.__ModuleLoader__.load({
 				}
 				const assistant = event.type === "assistant/message";
 				const kind = kindOf(event.type, data);
-				const message = asRecord$1(data["message"]);
+				const message = asRecord$2(data["message"]);
 				const textBody = textOf$1(message?.["content"] ?? data["content"]);
 				const cell = base(key, kind, label, event, {
 					turn,
@@ -875,7 +880,7 @@ window.__ModuleLoader__.load({
 				});
 				cell.title = excerpt(textBody);
 				if (assistant) {
-					const output = number$1(asRecord$1(data["usage"])?.["outputTokens"]);
+					const output = number$1(asRecord$2(data["usage"])?.["outputTokens"]);
 					if (output !== void 0 && output > 0) cell.tokens = output;
 					const reasoning = reasoningOf(message?.["content"]);
 					if (cell.title === "" && reasoning !== "") {
@@ -908,7 +913,7 @@ window.__ModuleLoader__.load({
 				case "step/start":
 				case "step/end": return "step";
 				case "assistant/message": return "assistant";
-				case "user/message": return asRecord$1(data["source"])?.["kind"] === "user" ? "user" : "system";
+				case "user/message": return asRecord$2(data["source"])?.["kind"] === "user" ? "user" : "system";
 				case "system/message": return "system";
 				case "request/header":
 				case "request/context": return "context";
@@ -1047,8 +1052,8 @@ window.__ModuleLoader__.load({
 		}
 		/** The request header's route and tool count, as one line. */
 		function requestHeaderText(data) {
-			const header = asRecord$1(data["header"]);
-			const config = asRecord$1(header?.["config"]);
+			const header = asRecord$2(data["header"]);
+			const config = asRecord$2(header?.["config"]);
 			const tools = Array.isArray(header?.["tools"]) ? header["tools"].length : void 0;
 			const parts = [];
 			const provider = text$1(config?.["provider"]);
@@ -1085,7 +1090,7 @@ window.__ModuleLoader__.load({
 		function summarizeArguments(raw) {
 			if (raw === "") return "";
 			try {
-				const record = asRecord$1(JSON.parse(raw));
+				const record = asRecord$2(JSON.parse(raw));
 				if (record !== void 0) {
 					for (const key of [
 						"command",
@@ -1114,7 +1119,7 @@ window.__ModuleLoader__.load({
 			const args = typeof raw === "string" ? raw : "";
 			if (args === "") return void 0;
 			try {
-				const record = asRecord$1(JSON.parse(args));
+				const record = asRecord$2(JSON.parse(args));
 				const description = record === void 0 ? void 0 : text$1(record["description"]);
 				if (description !== void 0) return excerpt(oneLine$1(description), LABEL_LIMIT);
 				const prompt = record === void 0 ? void 0 : text$1(record["prompt"]);
@@ -1125,11 +1130,11 @@ window.__ModuleLoader__.load({
 		}
 		/** Every visible result block's text, bounded. */
 		function resultExcerpt(data) {
-			const message = asRecord$1(data["message"]);
+			const message = asRecord$2(data["message"]);
 			const blocks = Array.isArray(message?.["content"]) ? message["content"] : [];
 			const parts = [];
 			for (const block of blocks) {
-				const record = asRecord$1(block);
+				const record = asRecord$2(block);
 				if (record === void 0) continue;
 				const text = textOf$1(Array.isArray(record["content"]) ? record["content"] : [record]);
 				if (text !== "") parts.push(text);
@@ -1138,15 +1143,15 @@ window.__ModuleLoader__.load({
 		}
 		/** Whether a tool result reports failure on any block. */
 		function resultIsError(data) {
-			const message = asRecord$1(data["message"]);
-			return (Array.isArray(message?.["content"]) ? message["content"] : []).some((block) => asRecord$1(block)?.["isError"] === true);
+			const message = asRecord$2(data["message"]);
+			return (Array.isArray(message?.["content"]) ? message["content"] : []).some((block) => asRecord$2(block)?.["isError"] === true);
 		}
 		/** Join the visible text blocks of one content array. */
 		function textOf$1(content) {
 			if (!Array.isArray(content)) return "";
 			const parts = [];
 			for (const block of content) {
-				const record = asRecord$1(block);
+				const record = asRecord$2(block);
 				if (record === void 0) continue;
 				if (record["type"] === "text" && typeof record["text"] === "string") parts.push(record["text"]);
 			}
@@ -1157,14 +1162,14 @@ window.__ModuleLoader__.load({
 			if (!Array.isArray(content)) return "";
 			const parts = [];
 			for (const block of content) {
-				const record = asRecord$1(block);
+				const record = asRecord$2(block);
 				if (record === void 0) continue;
 				if (record["type"] === "reasoning" && typeof record["text"] === "string") parts.push(record["text"]);
 			}
 			return parts.join("\n").trim();
 		}
 		/** Narrow one unknown value to a plain record. */
-		function asRecord$1(value) {
+		function asRecord$2(value) {
 			if (typeof value !== "object" || value === null || Array.isArray(value)) return void 0;
 			return value;
 		}
@@ -1669,6 +1674,768 @@ window.__ModuleLoader__.load({
 			return rows;
 		}
 		//#endregion
+		//#region src/client/tool-cards.ts
+		/** Variant titles, plus the wire names the shipped client titles individually. */
+		const VARIANT_TITLE_KEYS = {
+			search: "toolLabelSearch",
+			read: "toolLabelRead",
+			bash: "toolTitleBash",
+			write: "toolTitleWrite",
+			edit: "toolLabelEdit",
+			code: "toolLabelCode",
+			others: "toolLabelGeneric"
+		};
+		const TOOL_TITLE_KEYS = {
+			pwsh: "toolTitlePwsh",
+			bash: "toolTitleBash",
+			write: "toolTitleWrite",
+			grep: "toolTitleGrep",
+			glob: "toolTitleGlob",
+			web_search: "toolTitleWebSearch",
+			web_fetch: "toolTitleWebFetch",
+			read_image: "toolTitleReadImage"
+		};
+		/** `deriveSummary`'s key priority per variant. */
+		const SUMMARY_KEYS$1 = {
+			bash: ["description", "command"],
+			read: [
+				"path",
+				"file_path",
+				"url"
+			],
+			search: [
+				"query",
+				"pattern",
+				"url"
+			],
+			write: ["path", "file_path"],
+			edit: ["path", "file_path"],
+			code: ["description"],
+			others: []
+		};
+		/** Variants whose path argument is worth opening, and the keys it can hide in. */
+		const FILE_PATH_VARIANTS = [
+			"read",
+			"write",
+			"edit"
+		];
+		const FILE_PATH_KEYS = ["path", "file_path"];
+		/** Classify one wire tool name — `TOOL_VARIANTS`. */
+		function classifyTool(name) {
+			const wire = name.trim().toLowerCase();
+			if (wire === "bash" || wire === "pwsh") return "bash";
+			if (wire === "read" || wire === "read_image" || wire === "web_fetch" || wire === "cordis_package_inspect" || wire === "cordis_runtime_inspect") return "read";
+			if (wire === "web_search" || wire === "grep" || wire === "glob") return "search";
+			if (wire === "write") return "write";
+			if (wire === "edit") return "edit";
+			if (wire === "run_code") return "code";
+			return "others";
+		}
+		/**
+		* Reduce one mirrored tool row to the shipped row model.
+		* @param row - the projected tool row.
+		* @param cwd - the Session workspace, when the mirror knows it.
+		* @param home - the Host account home, when the mirror knows it.
+		* @returns the variant, title key, summary, state, and body inputs.
+		*/
+		function toolRowModel(row, cwd, home) {
+			const variant = classifyTool(row.name);
+			const argsRaw = row.argumentsRaw;
+			const state = row.pending ? "running" : row.errorCode === "interrupted" ? "stopped" : row.isError ? "error" : "ok";
+			const titleKey = TOOL_TITLE_KEYS[row.name.trim().toLowerCase()] ?? VARIANT_TITLE_KEYS[variant];
+			const base = argsRaw === "" ? row.callId : abbreviateHomePath(relativizeToCwd(deriveSummary(variant, argsRaw), cwd), home);
+			const summary = variant === "others" && row.name !== "" ? `${row.name} · ${base}` : base;
+			const filePath = FILE_PATH_VARIANTS.includes(variant) ? pickString(parseArgs(argsRaw), FILE_PATH_KEYS) : void 0;
+			const output = row.pending ? null : resultText(row) || null;
+			return {
+				variant,
+				titleKey,
+				summary,
+				...filePath === void 0 ? {} : { filePath },
+				bodyRaw: argsRaw === "" ? null : argsRaw,
+				output,
+				errorSummary: state === "error" && output !== null ? firstLine(output) : null,
+				state
+			};
+		}
+		/** One-line gist for a row that has no card — `deriveSummary`. */
+		function deriveSummary(variant, argsRaw) {
+			const args = parseArgs(argsRaw);
+			if (args === void 0) return firstLine(argsRaw);
+			if (variant === "search" && Array.isArray(args["queries"])) {
+				const queries = args["queries"].filter((entry) => typeof entry === "string" && entry !== "").map(firstLine);
+				if (queries.length > 0) return queries.join(", ");
+			}
+			const named = pickString(args, SUMMARY_KEYS$1[variant]);
+			if (named !== void 0) return firstLine(named);
+			for (const value of Object.values(args)) if (typeof value === "string" && value !== "") return firstLine(value);
+			return firstLine(argsRaw);
+		}
+		/**
+		* Derive the terminal card — `terminalCardModel`.
+		* @param row - the projected tool row.
+		* @param sessionCwd - the Session workspace, used when the call names no workdir.
+		* @returns the card, or null when the shipped card declines this call.
+		*/
+		function terminalCard(row, sessionCwd) {
+			const parsed = parseCall(row);
+			if (parsed === void 0) return null;
+			const call = shellCall(parsed.name, parsed.args) ?? terminalSendCall(parsed.name, parsed.args);
+			if (call === null || call.kind === "shell" && call.background) return null;
+			const cwd = resolveTerminalCwd(call.kind === "shell" ? call.workdir : void 0, sessionCwd);
+			if (row.pending) return {
+				command: call.kind === "shell" ? call.command : call.text,
+				...cwd === void 0 ? {} : { cwd },
+				running: true
+			};
+			if (row.isError || call.kind === "shell" && call.persistent || isSpilledShell(row, call)) return null;
+			const text = singleResultText(row);
+			if (text === void 0) return null;
+			const status = call.kind === "terminal-send" ? { output: text } : parseExitStatus(text);
+			return {
+				command: call.kind === "shell" ? call.command : call.text,
+				...cwd === void 0 ? {} : { cwd },
+				output: status.output,
+				...status.exitCode === void 0 ? {} : { exitCode: status.exitCode },
+				...status.signal === void 0 ? {} : { signal: status.signal },
+				...call.kind === "shell" && call.description !== void 0 ? { description: call.description } : {},
+				running: false
+			};
+		}
+		/** Whether a settled terminal card reports failure — `terminalFailed`. */
+		function terminalFailed(card) {
+			return card.running !== true && (card.exitCode !== void 0 && card.exitCode !== 0 || card.signal !== void 0);
+		}
+		/** Validate one `bash`/`pwsh` call — `shellCall`. */
+		function shellCall(name, args) {
+			if (name !== "bash" && name !== "pwsh") return null;
+			const command = args["command"];
+			if (typeof command !== "string" || command.trim() === "") return null;
+			const timeoutMs = args["timeoutMs"];
+			if (timeoutMs !== void 0 && (typeof timeoutMs !== "number" || !Number.isFinite(timeoutMs) || timeoutMs <= 0)) return null;
+			const workdir = args["workdir"];
+			if (workdir !== void 0 && typeof workdir !== "string") return null;
+			const background = args["run_in_background"];
+			if (background !== void 0 && typeof background !== "boolean") return null;
+			if (!validEscalationFields(args)) return null;
+			const description = args["description"];
+			if (description === void 0) return {
+				kind: "shell",
+				command,
+				description: void 0,
+				workdir: void 0,
+				background: false,
+				persistent: true
+			};
+			if (typeof description !== "string" || description.trim() === "") return null;
+			return {
+				kind: "shell",
+				command,
+				description,
+				workdir: typeof workdir === "string" ? workdir : void 0,
+				background: background === true,
+				persistent: false
+			};
+		}
+		/** Validate one `terminal_send` call. */
+		function terminalSendCall(name, args) {
+			if (name !== "terminal_send") return null;
+			const sessionId = args["sessionId"];
+			const text = args["text"];
+			if (typeof sessionId !== "string" || sessionId === "" || typeof text !== "string") return null;
+			return {
+				kind: "terminal-send",
+				text,
+				sessionId
+			};
+		}
+		/** Split a settled shell's trailing status marker off its output. */
+		function parseExitStatus(text) {
+			const killed = /\n\[killed by signal: ([^\]\n]+)\]$/.exec(text);
+			if (killed !== null) return {
+				output: text.slice(0, killed.index),
+				signal: killed[1]
+			};
+			const exit = /\n\[exit code: (\d+)\]$/.exec(text);
+			if (exit !== null) return {
+				output: text.slice(0, exit.index),
+				exitCode: Number(exit[1])
+			};
+			return {
+				output: text,
+				exitCode: 0
+			};
+		}
+		/** Whether a settled shell's output was spilled to a file — `isSpilledShellCall`. */
+		function isSpilledShell(row, call) {
+			if (call.kind !== "shell" || call.background) return false;
+			const text = singleResultText(row);
+			return text !== void 0 && hasSpillNotice(text);
+		}
+		/**
+		* Whether text ends with the spill notice that hides a result behind a file.
+		* @param text - the result text.
+		* @returns true when the last segment is that notice.
+		*/
+		function hasSpillNotice(text) {
+			const segment = text.split("\n\n").at(-1) ?? "";
+			if (!segment.startsWith("(")) return false;
+			const at = segment.indexOf(" Full formatted result stored at: ");
+			if (at < 0) return false;
+			const omitted = segment.slice(1, at);
+			return (omitted === "" || omitted === "More bytes were omitted." || /^Omitted \d+ bytes\.$/.test(omitted)) && segment.slice(at + 34).includes(". ");
+		}
+		/**
+		* Derive the read card — `readCardModel`.
+		* @param row - the projected tool row.
+		* @param cwd - the Session workspace, when known.
+		* @param home - the Host account home, when known.
+		* @returns the card, or null when the shipped card declines this read.
+		*/
+		function readCard(row, cwd, home) {
+			if (!row.pending && row.isError) return null;
+			if (row.pending) return null;
+			const parsed = parseCall(row);
+			if (parsed === void 0 || parsed.name !== "read") return null;
+			const filePath = parsed.args["file_path"];
+			if (typeof filePath !== "string" || filePath.trim() === "") return null;
+			if (!validPositiveInteger(parsed.args["offset"]) && parsed.args["offset"] !== void 0) return null;
+			if (!validPositiveInteger(parsed.args["limit"]) && parsed.args["limit"] !== void 0) return null;
+			const meta = readMeta(row);
+			if (meta === void 0) return null;
+			const text = singleResultText(row);
+			if (text === void 0) return null;
+			if (!/^<path>[^\n]*<\/path>\n<type>file<\/type>\n<content>\n([\s\S]*)\n<\/content>$/u.test(text)) return null;
+			return {
+				label: abbreviateHomePath(relativizeToCwd(meta.path, cwd), home),
+				lines: meta.lines,
+				totalLines: meta.totalLines,
+				...meta.lang === void 0 ? {} : { lang: meta.lang }
+			};
+		}
+		/** The read `meta` shape, validated line by line. */
+		function readMeta(row) {
+			const meta = asRecord$1(row.meta);
+			if (meta === void 0) return void 0;
+			const path = meta["path"];
+			if (typeof path !== "string") return void 0;
+			const offset = meta["offset"];
+			if (!validPositiveInteger(offset)) return void 0;
+			const totalLines = meta["totalLines"];
+			if (typeof totalLines !== "number" || !Number.isInteger(totalLines) || totalLines < 0) return void 0;
+			const raw = meta["lines"];
+			if (!Array.isArray(raw)) return void 0;
+			const lang = meta["lang"];
+			if (lang !== void 0 && typeof lang !== "string") return void 0;
+			const lines = [];
+			let previous = offset - 1;
+			for (const candidate of raw) {
+				const line = asRecord$1(candidate);
+				if (line === void 0) return void 0;
+				const number = line["number"];
+				if (typeof number !== "number" || !Number.isInteger(number) || number <= previous) return void 0;
+				if (number > totalLines) return void 0;
+				if (typeof line["text"] !== "string") return void 0;
+				previous = number;
+				lines.push({
+					number,
+					text: line["text"]
+				});
+			}
+			return {
+				path,
+				offset,
+				lines,
+				totalLines,
+				...lang === void 0 ? {} : { lang }
+			};
+		}
+		/**
+		* Derive the file-mutation card — `diffCardModel`.
+		* @param row - the projected tool row.
+		* @returns the card, or null when the shipped card declines this call.
+		*/
+		function diffCard(row) {
+			const intended = intendedDiff(row);
+			if (intended === null) return null;
+			if (row.pending) return { diffs: [intended.diff] };
+			if (intended.tool === "str_replace_editor" || row.isError) return null;
+			const applied = appliedDiffs(row.meta);
+			if (applied === null || applied === "empty") return intended.tool === "write" ? { diffs: [intended.diff] } : null;
+			return { diffs: applied };
+		}
+		/** The change a call intends, before any result is read. */
+		function intendedDiff(row) {
+			const parsed = parseCall(row);
+			if (parsed === void 0) return null;
+			const args = parsed.args;
+			if (parsed.name === "str_replace_editor") {
+				const path = args["path"];
+				if (typeof path !== "string" || path.trim() === "") return null;
+				const command = args["command"];
+				if (command === "create") {
+					const fileText = args["file_text"];
+					if (fileText !== void 0 && typeof fileText !== "string") return null;
+					return {
+						tool: parsed.name,
+						diff: {
+							path,
+							oldText: null,
+							newText: typeof fileText === "string" ? fileText : ""
+						}
+					};
+				}
+				if (command === "str_replace") {
+					const oldStr = args["old_str"];
+					const newStr = args["new_str"];
+					if (oldStr !== void 0 && typeof oldStr !== "string") return null;
+					if (newStr !== void 0 && typeof newStr !== "string") return null;
+					return {
+						tool: parsed.name,
+						diff: {
+							path,
+							oldText: typeof oldStr === "string" ? oldStr : null,
+							newText: typeof newStr === "string" ? newStr : ""
+						}
+					};
+				}
+				return null;
+			}
+			const filePath = args["file_path"];
+			if (typeof filePath !== "string" || filePath.trim() === "") return null;
+			if (!validEscalationFields(args)) return null;
+			if (parsed.name === "write") {
+				const content = args["content"];
+				if (typeof content !== "string") return null;
+				return {
+					tool: "write",
+					diff: {
+						path: filePath,
+						oldText: null,
+						newText: content
+					}
+				};
+			}
+			if (parsed.name === "edit") {
+				const oldString = args["old_string"];
+				const newString = args["new_string"];
+				if (typeof oldString !== "string" || typeof newString !== "string") return null;
+				const replaceAll = args["replace_all"];
+				if (replaceAll !== void 0 && typeof replaceAll !== "boolean") return null;
+				return {
+					tool: "edit",
+					diff: {
+						path: filePath,
+						oldText: oldString || null,
+						newText: newString
+					}
+				};
+			}
+			return null;
+		}
+		/** The applied hunks a result carries, all-or-nothing. */
+		function appliedDiffs(meta) {
+			const record = asRecord$1(meta);
+			if (record === void 0) return null;
+			const diffs = record["diffs"];
+			if (!Array.isArray(diffs)) return null;
+			if (diffs.length === 0) return "empty";
+			const hunks = [];
+			for (const candidate of diffs) {
+				const hunk = asRecord$1(candidate);
+				if (hunk === void 0) return null;
+				const path = hunk["path"];
+				const oldText = hunk["oldText"];
+				const newText = hunk["newText"];
+				if (typeof path !== "string") return null;
+				if (oldText !== null && typeof oldText !== "string") return null;
+				if (typeof newText !== "string") return null;
+				hunks.push({
+					path,
+					oldText,
+					newText
+				});
+			}
+			return hunks;
+		}
+		/** `+added -removed` over every hunk, as the shipped footer counts them. */
+		function diffStat(diffs) {
+			let added = 0;
+			let removed = 0;
+			for (const hunk of diffs) {
+				if (hunk.oldText !== null) removed += contentLines(hunk.oldText).length;
+				added += contentLines(hunk.newText).length;
+			}
+			return `+${String(added)} -${String(removed)}`;
+		}
+		/** A diff side's content lines: a single trailing newline is a terminator. */
+		function contentLines(text) {
+			if (text === "") return [];
+			const lines = text.split("\n");
+			if (lines.length > 1 && lines.at(-1) === "") lines.pop();
+			return lines;
+		}
+		/**
+		* Derive the search card — `searchCardModel`.
+		* @param row - the projected tool row.
+		* @returns the card and the recovery text, or null when the card declines.
+		*/
+		function searchCard(row) {
+			if (row.pending || row.isError) return null;
+			const parsed = parseCall(row);
+			if (parsed === void 0) return null;
+			const name = parsed.name;
+			if (name !== "grep" && name !== "glob") return null;
+			const pattern = parsed.args["pattern"];
+			if (typeof pattern !== "string") return null;
+			if (name === "grep" && pattern === "") return null;
+			if (name === "glob" && pattern.trim() === "") return null;
+			const path = parsed.args["path"];
+			if (path !== void 0 && (typeof path !== "string" || path.trim() === "")) return null;
+			const include = parsed.args["include"];
+			if (include !== void 0 && (typeof include !== "string" || !validInclude(include))) return null;
+			const meta = asRecord$1(row.meta);
+			if (meta === void 0) return null;
+			const truncated = meta["truncated"];
+			const total = meta["total"];
+			if (typeof truncated !== "boolean") return null;
+			if (typeof total !== "number" || !Number.isInteger(total) || total < 0) return null;
+			const recovery = truncated ? flattenContent(row) || void 0 : void 0;
+			if (name === "grep") {
+				if (meta["shape"] !== "matches") return null;
+				const files = searchFiles(meta["files"]);
+				if (files === null) return null;
+				return {
+					card: {
+						kind: "matches",
+						files,
+						truncated,
+						total
+					},
+					...recovery === void 0 ? {} : { recovery }
+				};
+			}
+			if (meta["shape"] !== "paths" || !Array.isArray(meta["paths"])) return null;
+			if (!meta["paths"].every((entry) => typeof entry === "string")) return null;
+			return {
+				card: {
+					kind: "paths",
+					paths: [...meta["paths"]],
+					truncated,
+					total
+				},
+				...recovery === void 0 ? {} : { recovery }
+			};
+		}
+		/** An include glob the tool actually accepts. */
+		function validInclude(include) {
+			if (include.trim() === "") return false;
+			if (include.startsWith("!")) return false;
+			let depth = 0;
+			for (const character of include) if (character === "{") depth += 1;
+			else if (character === "}") depth = Math.max(0, depth - 1);
+			else if (character === "," && depth === 0) return false;
+			return true;
+		}
+		/** Validate one result's file groups. */
+		function searchFiles(value) {
+			if (!Array.isArray(value)) return null;
+			const files = [];
+			for (const candidate of value) {
+				const group = asRecord$1(candidate);
+				if (group === void 0) return null;
+				const path = group["path"];
+				const matches = group["matches"];
+				if (typeof path !== "string" || !Array.isArray(matches)) return null;
+				const lines = [];
+				for (const entry of matches) {
+					const match = asRecord$1(entry);
+					if (match === void 0) return null;
+					const lineNumber = match["lineNumber"];
+					if (typeof lineNumber !== "number" || !Number.isInteger(lineNumber) || lineNumber < 1) return null;
+					if (typeof match["line"] !== "string") return null;
+					lines.push({
+						lineNumber,
+						line: match["line"]
+					});
+				}
+				files.push({
+					path,
+					matches: lines
+				});
+			}
+			return files;
+		}
+		/**
+		* Derive the web card — `webCardModel`.
+		* @param row - the projected tool row.
+		* @returns the card, or null when the shipped card declines this call.
+		*/
+		function webCard(row) {
+			if (row.pending || row.isError) return null;
+			const parsed = parseCall(row);
+			if (parsed === void 0) return null;
+			const meta = asRecord$1(row.meta);
+			if (meta === void 0 || typeof meta["truncated"] !== "boolean") return null;
+			const truncated = meta["truncated"];
+			if (parsed.name === "web_search") {
+				const queries = parsed.args["queries"];
+				if (!Array.isArray(queries) || queries.length === 0) return null;
+				if (!queries.every((entry) => typeof entry === "string" && entry.trim() !== "")) return null;
+				const answer = meta["answer"];
+				if (answer !== void 0 && typeof answer !== "string") return null;
+				const sources = webSources(meta["sources"]);
+				if (sources === null) return null;
+				return {
+					kind: "search",
+					...answer === void 0 ? {} : { answer },
+					sources,
+					truncated
+				};
+			}
+			if (parsed.name === "web_fetch") {
+				const url = parsed.args["url"];
+				if (typeof url !== "string" || url.trim() === "") return null;
+				if (typeof meta["url"] !== "string") return null;
+				const statusCode = meta["statusCode"];
+				if (typeof statusCode !== "number" || !Number.isInteger(statusCode)) return null;
+				return {
+					kind: "fetch",
+					url: meta["url"],
+					statusCode,
+					truncated
+				};
+			}
+			return null;
+		}
+		/** Validate one result's cited sources. */
+		function webSources(value) {
+			if (!Array.isArray(value)) return null;
+			const sources = [];
+			for (const candidate of value) {
+				const source = asRecord$1(candidate);
+				if (source === void 0) return null;
+				const url = source["url"];
+				if (typeof url !== "string") return null;
+				const titles = {};
+				for (const key of [
+					"title",
+					"snippet",
+					"publishedAt"
+				]) {
+					const field = source[key];
+					if (field === void 0) continue;
+					if (typeof field !== "string") return null;
+					titles[key] = field;
+				}
+				sources.push({
+					url,
+					...titles
+				});
+			}
+			return sources;
+		}
+		/** Localized chrome for `TerminalBlock`. */
+		function terminalBlockLabels(t) {
+			return {
+				signal: (signal) => t("terminalSignal", { signal }),
+				exitCode: (code) => t("terminalExitCode", { code }),
+				running: t("terminalRunning"),
+				failed: t("terminalFailed"),
+				done: t("terminalDone"),
+				copy: t("copyCode"),
+				copied: t("copiedCode"),
+				noOutput: t("terminalNoOutput"),
+				collapseAria: t("terminalCollapseAria"),
+				collapse: t("collapse"),
+				expandAria: (hidden) => t("terminalExpandAria", { n: hidden }),
+				expand: (hidden) => t("terminalExpandRest", { n: hidden })
+			};
+		}
+		/** Localized chrome for `DiffBlock`. */
+		function diffBlockLabels(t) {
+			return {
+				copy: t("copyCode"),
+				copied: t("copiedCode"),
+				collapseAria: t("diffCollapseAria"),
+				expandAria: (count) => t("diffExpandAria", { count }),
+				collapse: t("collapse"),
+				expand: (count) => t("diffExpandRest", { count }),
+				files: (count) => t(count === 1 ? "diffFilesOne" : "diffFilesOther", { count })
+			};
+		}
+		/** Localized chrome for `ReadBlock`. */
+		function readBlockLabels(t) {
+			return {
+				window: (shown, total) => t("readWindow", {
+					shown,
+					total
+				}),
+				copy: t("copyCode"),
+				copied: t("copiedCode"),
+				collapseAria: t("readCollapseAria"),
+				expandAria: (count) => t("readExpandAria", { count }),
+				collapse: t("collapse"),
+				expand: (count) => t("readExpandRest", { count })
+			};
+		}
+		/** Localized chrome for `SearchBlock`. */
+		function searchBlockLabels(t) {
+			return {
+				pathsSummary: (shown, total, truncated) => t(truncated ? "searchPathsTruncated" : "searchPaths", {
+					shown,
+					total
+				}),
+				matchesSummary: (shown, total, files, truncated) => t(truncated ? "searchMatchesTruncated" : "searchMatches", {
+					shown,
+					total,
+					files
+				}),
+				copy: t("copyCode"),
+				copied: t("copiedCode"),
+				noResults: t("searchNoResults"),
+				collapseAria: t("searchCollapseAria"),
+				expandAria: (count) => t("searchExpandAria", { count }),
+				collapse: t("collapse"),
+				expand: (count) => t("searchExpandRest", { count })
+			};
+		}
+		/** Localized chrome for `WebBlock`. */
+		function webBlockLabels(t) {
+			return {
+				noResults: t("webNoResults"),
+				sourcesTruncated: t("webSourcesTruncated"),
+				http: t("webHttp"),
+				contentTruncated: t("webContentTruncated"),
+				markdown: {
+					code: {
+						copyLabel: t("copyCode"),
+						copiedLabel: t("copiedCode")
+					},
+					footnotes: t("footnotes")
+				}
+			};
+		}
+		/** A parsed tool call, or undefined when the arguments are not an object. */
+		function parseCall(row) {
+			const args = parseArgs(row.argumentsRaw);
+			if (args === void 0) return void 0;
+			return {
+				name: row.name,
+				args
+			};
+		}
+		/** Parse a raw arguments string into an object — `parsedToolCall`. */
+		function parseArgs(raw) {
+			return asRecord$1(parseJson$1(raw));
+		}
+		/** The result's text when it is exactly one text block — `singleResultText`. */
+		function singleResultText(row) {
+			if (row.resultBlocks.length !== 1) return void 0;
+			const only = asRecord$1(row.resultBlocks[0]);
+			return only?.["type"] === "text" && typeof only["text"] === "string" ? only["text"] : void 0;
+		}
+		/** Every text block joined — `flattenContent`. */
+		function flattenContent(row) {
+			const parts = [];
+			for (const block of row.resultBlocks) {
+				const record = asRecord$1(block);
+				if (record?.["type"] === "text" && typeof record["text"] === "string") parts.push(record["text"]);
+			}
+			return parts.join("\n");
+		}
+		/** The flattened result text a generic row shows — `resultText`. */
+		function resultText(row) {
+			const parts = [];
+			for (const block of row.resultBlocks) {
+				const record = asRecord$1(block);
+				if (record === void 0) continue;
+				if (record["type"] === "text" && typeof record["text"] === "string") parts.push(record["text"]);
+				else parts.push(JSON.stringify(record, null, 2));
+			}
+			return parts.join("\n");
+		}
+		/** Both escalation fields must be absent, or a valid pair. */
+		function validEscalationFields(args) {
+			const permissions = args["sandbox_permissions"];
+			const justification = args["justification"];
+			if (permissions === void 0 && justification === void 0) return true;
+			if (permissions !== "workspace-write" && permissions !== "danger-full-access") return false;
+			return typeof justification === "string" && justification.trim() !== "";
+		}
+		/** First key in `keys` whose value is a non-empty string. */
+		function pickString(args, keys) {
+			for (const key of keys) {
+				const value = args[key];
+				if (typeof value === "string" && value !== "") return value;
+			}
+		}
+		/** One optional positive integer. */
+		function validPositiveInteger(value) {
+			return typeof value === "number" && Number.isInteger(value) && value >= 1;
+		}
+		/** The first line of a possibly multi-line value. */
+		function firstLine(text) {
+			const newline = text.indexOf("\n");
+			return newline === -1 ? text : text.slice(0, newline);
+		}
+		/** Resolve a call's workdir against the Session workspace — `resolveTerminalCwd`. */
+		function resolveTerminalCwd(workdir, sessionCwd) {
+			if (workdir === void 0 || workdir === "") return sessionCwd;
+			if (sessionCwd === void 0 || sessionCwd === "") return normalizeSegments(workdir);
+			return normalizeSegments(resolveWorkspacePath(sessionCwd, workdir));
+		}
+		/** Collapse `.`/`..` segments without changing the authored separators. */
+		function normalizeSegments(path) {
+			const separator = path.includes("\\") ? "\\" : "/";
+			const segments = path.split(/[/\\]+/);
+			const kept = [];
+			for (const segment of segments) {
+				if (segment === "" || segment === ".") continue;
+				if (segment === ".." && kept.length > 0 && kept.at(-1) !== "..") kept.pop();
+				else if (segment === ".." && kept.length === 0) kept.push(segment);
+				else kept.push(segment);
+			}
+			return (/^[/\\]/.test(path) ? separator : "") + kept.join(separator);
+		}
+		/** Resolve a workspace-relative path — `resolveWorkspacePath`. */
+		function resolveWorkspacePath(cwd, path) {
+			if (/^([/\\]|[A-Za-z]:[/\\])/.test(path)) return path;
+			const separator = /^[A-Za-z]:\\/.test(cwd) && cwd.includes("\\") ? "\\" : "/";
+			return `${cwd.replace(/[/\\]+$/, "")}${separator}${path.replace(/^[/\\]+/, "")}`;
+		}
+		/** Strip the Session workspace prefix — `relativizeToCwd`. */
+		function relativizeToCwd(text, cwd) {
+			if (cwd === void 0 || cwd === "") return text;
+			const root = cwd.replace(/[/\\]+$/, "");
+			if (text.startsWith(`${root}/`) || text.startsWith(`${root}\\`)) return text.slice(root.length + 1);
+			return text;
+		}
+		/** Collapse a POSIX path under the account home — `abbreviateHomePath`. */
+		function abbreviateHomePath(path, home) {
+			if (home === void 0 || home === "") return path;
+			if (/^[A-Za-z]:[/\\]/.test(path) || path.startsWith("\\\\")) return path;
+			if (/^[A-Za-z]:[/\\]/.test(home) || home.startsWith("\\\\")) return path;
+			const root = home.replace(/\/+$/, "");
+			if (root === "" || root === "/") return path;
+			if (path.replace(/\/+$/, "") === root) return "~";
+			if (path.startsWith(`${root}/`)) return `~${path.slice(root.length)}`;
+			return path;
+		}
+		/** One optional JSON object. */
+		function asRecord$1(value) {
+			if (typeof value !== "object" || value === null || Array.isArray(value)) return void 0;
+			return value;
+		}
+		/** Parse JSON, treating failure as "not an object". */
+		function parseJson$1(raw) {
+			try {
+				return JSON.parse(raw);
+			} catch {
+				return;
+			}
+		}
+		//#endregion
 		//#region src/client/transcript.ts
 		/** Longest argument gist shown on the collapsed row. */
 		const SUMMARY_LIMIT = 140;
@@ -1723,7 +2490,9 @@ window.__ModuleLoader__.load({
 						continue;
 					}
 					row.resultText = resultTextOf(data);
+					row.resultBlocks = resultBlocksOf(data);
 					row.isError = isErrorOf(data);
+					row.errorCode = errorCodeOf(data);
 					row.errorSummary = row.isError ? firstLineOfText(row.resultText) : "";
 					row.meta = data["meta"];
 					row.pending = false;
@@ -1907,7 +2676,10 @@ window.__ModuleLoader__.load({
 				summary: summarize(raw),
 				description: descriptionOf(raw),
 				errorSummary: "",
+				errorCode: "",
+				argumentsRaw: raw,
 				argumentsText: formatArguments(raw),
+				resultBlocks: [],
 				resultText: "",
 				meta: void 0,
 				isError: false,
@@ -1927,7 +2699,10 @@ window.__ModuleLoader__.load({
 				summary: "",
 				description: "",
 				errorSummary: isError ? firstLineOfText(resultText) : "",
+				errorCode: errorCodeOf(data),
+				argumentsRaw: "",
 				argumentsText: "",
+				resultBlocks: resultBlocksOf(data),
 				resultText,
 				meta: data["meta"],
 				isError,
@@ -1938,6 +2713,17 @@ window.__ModuleLoader__.load({
 		function callIdOf(data) {
 			const source = asRecord(asRecord(data["message"])?.["source"]);
 			return typeof source?.["callId"] === "string" ? source["callId"] : "";
+		}
+		/** The result's content blocks, unwrapped from the `tool-result` envelope. */
+		function resultBlocksOf(data) {
+			const message = asRecord(data["message"]);
+			const first = asRecord((Array.isArray(message?.["content"]) ? message["content"] : [])[0]);
+			return Array.isArray(first?.["content"]) ? first["content"] : [];
+		}
+		/** The structured failure code a result carries, when it carries one. */
+		function errorCodeOf(data) {
+			const error = asRecord(data["error"]);
+			return typeof error?.["code"] === "string" ? error["code"] : "";
 		}
 		/** Join every visible text block of one tool result. */
 		function resultTextOf(data) {
@@ -3046,123 +3832,132 @@ window.__ModuleLoader__.load({
 			}
 			return "";
 		}
-		/** One tool call and its result, folded into a single row with an IN/OUT card. */
+		/**
+		* One tool call, folded into a single row — the shipped `ToolRow` chassis.
+		*
+		* One row, never two: the shipped generic card puts the arguments and the
+		* result in the expanded body's IN/OUT sections rather than spending a second
+		* row on the result. The collapsed line is the failure line, or a terminal
+		* card's own description, or the arguments' gist; a diff row carries its
+		* `+added -removed` size; and the body is the first shipped card the call and
+		* its result can build, falling back to the IN/OUT sections.
+		*/
 		function ToolCallRow({ t, row }) {
 			const [open, setOpen] = react.useState(false);
-			const [resultOpen, setResultOpen] = react.useState(false);
-			const presentation = toolPresentation(row.name);
-			const generic = presentation.glyph === "generic" && presentation.wire !== void 0;
-			const label = presentation.labelKey === void 0 ? row.name === "" ? t("toolResult") : row.name : t(presentation.labelKey);
-			const summary = presentation.wire === void 0 ? row.summary : [presentation.wire, row.summary].filter((part) => part !== "").join(" · ");
-			const summaryText = row.errorSummary !== "" ? row.errorSummary : presentation.glyph === "terminal" && row.description !== "" ? row.description : summary;
-			const glyph = () => /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-				className: row.isError ? `${sync_module_css_default.toolGlyph} ${sync_module_css_default.toolGlyphError}` : sync_module_css_default.toolGlyph,
-				children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(ToolGlyphIcon, { glyph: presentation.glyph })
-			});
-			const argumentsCard = row.argumentsText === "" ? void 0 : /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
-				className: sync_module_css_default.ioCard,
-				children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-					className: sync_module_css_default.ioSection,
-					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-						className: sync_module_css_default.ioLabel,
-						children: t("toolArguments")
-					}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-						className: sync_module_css_default.ioText,
-						children: row.argumentsText
-					})]
-				})
-			});
-			if (generic) return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.DisclosureRow, {
-				icon: glyph(),
-				title: label,
-				open,
-				expandable: true,
-				expandOnRowClick: true,
-				onToggle: () => {
-					setOpen((current) => !current);
-				},
-				className: toolRowClass(row.pending),
-				titleClassName: sync_module_css_default.toolName,
-				collapsedContent: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-					className: sync_module_css_default.toolSummary,
-					children: summaryText
-				}),
-				children: argumentsCard
-			}), row.pending ? null : /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.DisclosureRow, {
-				icon: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+			const model = toolRowModel(row);
+			const terminal = terminalCard(row);
+			const diff = diffCard(row);
+			const read = readCard(row);
+			const search = searchCard(row);
+			const web = webCard(row);
+			const state = model.state === "ok" && terminal !== null && terminalFailed(terminal) ? "error" : model.state;
+			const card = terminal ?? diff ?? read ?? search ?? web;
+			const failureLine = state === "error" ? model.errorSummary : null;
+			const summaryText = failureLine ?? terminal?.description ?? model.summary;
+			const bodyRaw = model.filePath !== void 0 ? null : model.bodyRaw;
+			const stat = failureLine === null && diff !== null ? diffStat(diff.diffs) : null;
+			const expandable = bodyRaw !== null || model.output !== null || card !== null;
+			const leading = () => {
+				if (state === "error") return /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 					className: sync_module_css_default.toolGlyph,
-					children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.StateDot, { state: row.isError ? "error" : "done" })
-				}),
-				title: t("toolResult"),
-				open: resultOpen,
-				expandable: true,
-				expandOnRowClick: true,
-				onToggle: () => {
-					setResultOpen((current) => !current);
-				},
-				className: sync_module_css_default.toolRow,
-				titleClassName: sync_module_css_default.toolName,
-				collapsedContent: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-					className: sync_module_css_default.toolSummary,
-					children: timeLabel(row.time, t)
-				}),
-				children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
-					className: sync_module_css_default.ioCard,
-					children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-						className: sync_module_css_default.ioSection,
-						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-							className: sync_module_css_default.ioLabel,
-							children: t("toolResult")
-						}), row.resultText === "" ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-							className: sync_module_css_default.ioText,
-							children: t("toolNoOutput")
-						}) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-							className: row.isError ? `${sync_module_css_default.ioText} ${sync_module_css_default.ioTextError}` : sync_module_css_default.ioText,
-							children: row.resultText
-						})]
+					children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.StateDot, { state: "error" })
+				});
+				if (state === "stopped") return /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+					className: sync_module_css_default.toolGlyph,
+					children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.StateDot, { state: "warning" })
+				});
+				return /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+					className: sync_module_css_default.toolGlyph,
+					children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(ToolGlyphIcon, { glyph: toolPresentation(row.name).glyph })
+				});
+			};
+			const status = state === "running" ? t("rowRunning") : state === "error" ? t("rowFailed") : state === "stopped" ? t("rowStopped") : null;
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+				className: sync_module_css_default.toolRoot,
+				"data-state": state,
+				children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.DisclosureRow, {
+					icon: leading(),
+					title: t(model.titleKey),
+					open: open && expandable,
+					expandable,
+					expandOnRowClick: true,
+					onToggle: () => {
+						setOpen((current) => !current);
+					},
+					className: toolRowClass(model.state === "running"),
+					titleClassName: sync_module_css_default.toolName,
+					collapsedContent: summaryText !== "" && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [
+						/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { className: sync_module_css_default.toolSep }),
+						/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+							className: failureLine !== null ? `${sync_module_css_default.toolSummary} ${sync_module_css_default.toolSummaryError}` : sync_module_css_default.toolSummary,
+							children: summaryText
+						}),
+						stat !== null && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+							className: sync_module_css_default.diffStat,
+							children: stat
+						})
+					] }),
+					children: terminal !== null ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.TerminalBlock, {
+						...terminal,
+						maxLines: Infinity,
+						labels: terminalBlockLabels(t)
+					}) : diff !== null ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.DiffBlock, {
+						diffs: [...diff.diffs],
+						labels: diffBlockLabels(t),
+						maxLines: 8
+					}) : read !== null ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.ReadBlock, {
+						...read,
+						labels: readBlockLabels(t),
+						maxLines: 8
+					}) : search !== null ? /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.SearchBlock, {
+						...search.card,
+						labels: searchBlockLabels(t),
+						maxLines: 8
+					}), search.recovery !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+						className: sync_module_css_default.searchRecovery,
+						children: search.recovery
+					})] }) : web !== null ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.WebBlock, {
+						...web,
+						labels: webBlockLabels(t)
+					}) : /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+						className: sync_module_css_default.ioCard,
+						children: [
+							bodyRaw !== null && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+								className: sync_module_css_default.ioSection,
+								children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+									className: sync_module_css_default.ioLabel,
+									children: t("rowInput")
+								}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+									className: sync_module_css_default.ioText,
+									children: row.argumentsText
+								})]
+							}), model.output !== null && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", { className: sync_module_css_default.ioDivider })] }),
+							model.output !== null && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+								className: sync_module_css_default.ioSection,
+								children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+									className: sync_module_css_default.ioLabel,
+									children: t("rowOutput")
+								}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+									className: state === "error" ? `${sync_module_css_default.ioText} ${sync_module_css_default.ioTextError}` : sync_module_css_default.ioText,
+									children: model.output
+								})]
+							}),
+							bodyRaw === null && model.output === null && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+								className: sync_module_css_default.ioSection,
+								children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+									className: sync_module_css_default.ioLabel,
+									children: t("rowOutput")
+								}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+									className: sync_module_css_default.ioText,
+									children: model.state === "running" ? t("toolRunning") : t("toolNoOutput")
+								})]
+							})
+						]
 					})
-				})
-			})] });
-			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.DisclosureRow, {
-				icon: glyph(),
-				title: label,
-				open,
-				expandable: true,
-				expandOnRowClick: true,
-				onToggle: () => {
-					setOpen((current) => !current);
-				},
-				className: toolRowClass(row.pending),
-				titleClassName: sync_module_css_default.toolName,
-				collapsedContent: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { className: sync_module_css_default.toolSep }), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-					className: sync_module_css_default.toolSummary,
-					children: summaryText !== "" ? summaryText : timeLabel(row.time, t)
-				})] }),
-				children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-					className: sync_module_css_default.ioCard,
-					children: [row.argumentsText !== "" && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-						className: sync_module_css_default.ioSection,
-						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-							className: sync_module_css_default.ioLabel,
-							children: t("toolArguments")
-						}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-							className: sync_module_css_default.ioText,
-							children: row.argumentsText
-						})]
-					}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", { className: sync_module_css_default.ioDivider })] }), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-						className: sync_module_css_default.ioSection,
-						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-							className: sync_module_css_default.ioLabel,
-							children: t("toolResult")
-						}), row.resultText === "" ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-							className: sync_module_css_default.ioText,
-							children: row.pending ? t("toolRunning") : t("toolNoOutput")
-						}) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-							className: row.isError ? `${sync_module_css_default.ioText} ${sync_module_css_default.ioTextError}` : sync_module_css_default.ioText,
-							children: row.resultText
-						})]
-					})]
-				})
+				}), status !== null && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+					className: sync_module_css_default.visuallyHidden,
+					children: status
+				})]
 			});
 		}
 		/**
@@ -3884,7 +4679,53 @@ window.__ModuleLoader__.load({
 			turnFailed: "本轮失败",
 			turnMaxTokens: "已达输出上限",
 			turnMaxTokensHint: "本轮达到模型输出上限，回答可能被截断。",
-			messageCopy: "复制这条消息"
+			messageCopy: "复制这条消息",
+			toolTitleWrite: "写入",
+			toolTitlePwsh: "Pwsh",
+			toolTitleBash: "Bash",
+			toolTitleGrep: "Grep",
+			toolTitleGlob: "Glob",
+			toolTitleWebSearch: "网页搜索",
+			toolTitleWebFetch: "网页获取",
+			toolTitleReadImage: "读取图片",
+			rowInput: "输入",
+			rowOutput: "输出",
+			collapse: "收起",
+			diffCollapseAria: "收起差异",
+			diffExpandAria: "展开其余 {count} 行差异",
+			diffExpandRest: "… 其余 {count} 行",
+			diffFilesOne: "{count} 个文件",
+			diffFilesOther: "{count} 个文件",
+			readWindow: "显示 {shown} / {total} 行",
+			readCollapseAria: "收起内容",
+			readExpandAria: "展开其余 {count} 行",
+			readExpandRest: "… 其余 {count} 行",
+			searchPaths: "{shown} 个·径",
+			searchPathsTruncated: "显示 {shown} / 共 {total} 个·径",
+			searchMatches: "{shown} 处匹配 · {files} 个文件",
+			searchMatchesTruncated: "显示 {shown} / 共 {total} 处匹配 · {files} 个文件",
+			searchNoResults: "无结果",
+			searchCollapseAria: "收起结果",
+			searchExpandAria: "展开其余 {count} 行结果",
+			searchExpandRest: "… 其余 {count} 行",
+			webNoResults: "未找到结果",
+			webSourcesTruncated: "来源列表已截断",
+			webHttp: "HTTP",
+			webContentTruncated: "内容已截断",
+			terminalSignal: "信号 {signal}",
+			terminalExitCode: "退出码 {code}",
+			terminalRunning: "执行中",
+			terminalFailed: "失败",
+			terminalDone: "完成",
+			terminalNoOutput: "（无输出）",
+			terminalCollapseAria: "收起输出",
+			terminalExpandAria: "展开其余 {n} 行输出",
+			terminalExpandRest: "… 其余 {n} 行",
+			terminalSendInput: "（发送输入）",
+			terminalSession: "终端 {sessionId}",
+			rowRunning: "执行中",
+			rowFailed: "失败",
+			rowStopped: "已停止"
 		};
 		const en = {
 			sectionNav: "Session sync",
@@ -4060,7 +4901,53 @@ window.__ModuleLoader__.load({
 			turnFailed: "Turn failed",
 			turnMaxTokens: "Output limit reached",
 			turnMaxTokensHint: "This turn reached the model output limit; the answer may be cut short.",
-			messageCopy: "Copy this message"
+			messageCopy: "Copy this message",
+			toolTitleWrite: "Write",
+			toolTitlePwsh: "Pwsh",
+			toolTitleBash: "Bash",
+			toolTitleGrep: "Grep",
+			toolTitleGlob: "Glob",
+			toolTitleWebSearch: "Search",
+			toolTitleWebFetch: "Fetch",
+			toolTitleReadImage: "Read image",
+			rowInput: "IN",
+			rowOutput: "OUT",
+			collapse: "Collapse",
+			diffCollapseAria: "Collapse diff",
+			diffExpandAria: "Expand {count} more diff lines",
+			diffExpandRest: "… {count} more lines",
+			diffFilesOne: "{count} file",
+			diffFilesOther: "{count} files",
+			readWindow: "Showing {shown} of {total} lines",
+			readCollapseAria: "Collapse content",
+			readExpandAria: "Expand {count} more lines",
+			readExpandRest: "… {count} more lines",
+			searchPaths: "{shown} paths",
+			searchPathsTruncated: "Showing {shown} of {total} paths",
+			searchMatches: "{shown} matches · {files} files",
+			searchMatchesTruncated: "Showing {shown} of {total} matches · {files} files",
+			searchNoResults: "No results",
+			searchCollapseAria: "Collapse results",
+			searchExpandAria: "Expand {count} more result lines",
+			searchExpandRest: "… {count} more lines",
+			webNoResults: "No results found",
+			webSourcesTruncated: "Source list truncated",
+			webHttp: "HTTP",
+			webContentTruncated: "Content truncated",
+			terminalSignal: "signal {signal}",
+			terminalExitCode: "exit code {code}",
+			terminalRunning: "Running",
+			terminalFailed: "Failed",
+			terminalDone: "Done",
+			terminalNoOutput: "No output",
+			terminalCollapseAria: "Collapse output",
+			terminalExpandAria: "Expand the remaining {n} output lines",
+			terminalExpandRest: "… {n} more lines",
+			terminalSendInput: "(send input)",
+			terminalSession: "Terminal {sessionId}",
+			rowRunning: "Running",
+			rowFailed: "Failed",
+			rowStopped: "Stopped"
 		};
 		//#endregion
 		//#region src/client/index.ts

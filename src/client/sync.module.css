@@ -1815,6 +1815,45 @@
   100% { left: 100%; }
 }
 
+/* The row plus its card body stack; the shipped row's own wrapper. */
+.toolRoot {
+  display: flex;
+  flex-direction: column;
+}
+
+/* A failed call's line: the failure replaces the summary (shipped errorSummary). */
+.toolSummaryError {
+  color: var(--dsw-alias-state-error-primary);
+}
+
+/* A diff row's size, in its own span outside the ellipsized summary. */
+.diffStat {
+  flex: none;
+  margin-left: 6px;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: var(--dsh-content-font-size-secondary, 13px);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A capped search's recovery locator, which is where its dropped rows went. */
+.searchRecovery {
+  padding-left: 14px;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: var(--dsh-content-font-size-secondary, 13px);
+  line-height: calc(18px + var(--dsh-content-font-delta-secondary, 0px));
+  overflow-wrap: anywhere;
+}
+
+/* Status text for assistive technology, which the state marks do not carry. */
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
 .toolGlyph {
   display: inline-flex;
   align-items: center;
