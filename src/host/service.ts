@@ -71,6 +71,8 @@ export class SessionSyncService {
   /** What the controller listed, and what survived the row filter. */
   private localItems = 0
   private localRows = 0
+  /** Field names seen in the opening frames, recorded once. */
+  private readonly followShapes: string[] = []
   private followError: string | undefined
   private followErrorSession: string | undefined
   /** The Session whose frames are being absorbed right now. */
@@ -162,6 +164,7 @@ export class SessionSyncService {
           historyMisses: this.historyMisses,
           localItems: this.localItems,
           localRows: this.localRows,
+          shapes: this.followShapes,
           ...(this.followError === undefined ? {} : { error: this.followError }),
           ...(this.followErrorSession === undefined ? {} : { sessionId: this.followErrorSession }),
         },
@@ -502,6 +505,13 @@ export class SessionSyncService {
       ? carrier['records'] as readonly { event?: unknown }[]
       : Array.isArray(page?.['records']) ? page['records'] as readonly { event?: unknown }[] : undefined
     if (records !== undefined) {
+      // What the opening frame actually looks like, recorded once: the field
+      // names are the one thing this reader has had to guess, and a guess that
+      // is wrong reads as "the Session has no history" rather than as an error.
+      if (this.followShapes.length < 4 && records.length > 0) {
+        const keys = (value: unknown): string => value !== null && typeof value === 'object' ? Object.keys(value as Record<string, unknown>).slice(0, 8).join(',') : typeof value
+        this.followShapes.push(frameType + '{' + keys(frame) + '} rec{' + keys(records[0]) + '}')
+      }
       for (const record of records) {
         if (record !== null && typeof record === 'object' && record.event !== undefined) {
           buffer(handle, record.event as MirrorEvent)
