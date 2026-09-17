@@ -738,9 +738,14 @@ function ReasoningRow({ t, reasoning }: {
   reasoning: string
 }): React.ReactElement {
   const [open, setOpen] = React.useState(false)
+  // The collapsed row carries the first line of the reasoning, as the shipped
+  // ReasoningRow does — a streaming block would show its latest line instead,
+  // but a mirrored block only ever arrives whole. Its `**` markers are dropped
+  // so the gist reads as prose.
+  const summary = firstLineOf(reasoning).replaceAll('**', '')
   return (
     <DisclosureRow
-      icon={<IconThinkOutline14 />}
+      icon={<IconThinkOutline14 size={14} />}
       title={t('reasoning')}
       open={open}
       expandable
@@ -748,10 +753,22 @@ function ReasoningRow({ t, reasoning }: {
       onToggle={() => { setOpen(current => !current) }}
       className={css.thinkRow}
       titleClassName={css.thinkTitle}
+      collapsedContent={(
+        <>
+          <span className={css.toolSep} />
+          <span className={css.thinkSummary}>{summary}</span>
+        </>
+      )}
     >
       <div className={css.reasoning}>{reasoning}</div>
     </DisclosureRow>
   )
+}
+
+/** The first line of a reasoning block, which is what its collapsed row shows. */
+function firstLineOf(text: string): string {
+  const newline = text.indexOf('\n')
+  return (newline === -1 ? text : text.slice(0, newline)).trim()
 }
 
 /** One tool call and its result, folded into a single row with an IN/OUT card. */
