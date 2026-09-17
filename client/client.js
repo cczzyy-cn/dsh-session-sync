@@ -4327,30 +4327,33 @@ window.__ModuleLoader__.load({
 					time: row.time
 				})]
 			});
-			if (row.kind === "assistant") return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-				className: sync_module_css_default.assistantRow,
-				"data-chat-flow-kind": "assistant",
-				"data-chat-turn": row.turn,
-				...row.tail ? { "data-actions-reveal": row.turn >= latestTurn ? "always" : "hover" } : {},
-				children: [
-					row.blocks.map((block, index) => /* @__PURE__ */ (0, react_jsx_runtime.jsx)(AssistantBlockView, {
-						t,
-						block,
-						labels
-					}, index)),
-					row.interrupted && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-						className: sync_module_css_default.stopped,
-						children: t("stopped")
-					}),
-					row.tail && /* @__PURE__ */ (0, react_jsx_runtime.jsx)(MessageActions, {
-						t,
-						text: assistantTextOf(row.blocks),
-						place: "assistant",
-						time: row.time,
-						...row.facts === void 0 ? {} : { facts: row.facts }
-					})
-				]
-			});
+			if (row.kind === "assistant") {
+				const settled = row.tail && row.facts?.running !== true;
+				return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+					className: sync_module_css_default.assistantRow,
+					"data-chat-flow-kind": "assistant",
+					"data-chat-turn": row.turn,
+					...settled ? { "data-actions-reveal": row.turn >= latestTurn ? "always" : "hover" } : {},
+					children: [
+						row.blocks.map((block, index) => /* @__PURE__ */ (0, react_jsx_runtime.jsx)(AssistantBlockView, {
+							t,
+							block,
+							labels
+						}, index)),
+						row.interrupted && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+							className: sync_module_css_default.stopped,
+							children: t("stopped")
+						}),
+						settled && /* @__PURE__ */ (0, react_jsx_runtime.jsx)(MessageActions, {
+							t,
+							text: assistantTextOf(row.blocks),
+							place: "assistant",
+							time: row.time,
+							...row.facts === void 0 ? {} : { facts: row.facts }
+						})
+					]
+				});
+			}
 			if (row.kind === "notice") return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(NoticeLine, {
 				t,
 				row

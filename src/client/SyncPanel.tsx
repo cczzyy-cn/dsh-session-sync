@@ -804,6 +804,14 @@ function TranscriptLine({ t, row, labels, latestTurn }: {
     )
   }
   if (row.kind === 'assistant') {
+    // A turn's actions belong to its closing message: one answer, one copy
+    // button, however many steps the turn took. A turn that is still running has
+    // no closing message yet, so its narration stays chrome-free — the shipped
+    // footer "never appears and then moves" (chat-view.client.spec:
+    // 'withholds assistant IconActions while the turn is still running'). The
+    // previous turn keeps its seat meanwhile, and the recency rule below is what
+    // retires it to hover.
+    const settled = row.tail && row.facts?.running !== true
     return (
       <div
         className={css.assistantRow}
@@ -811,7 +819,7 @@ function TranscriptLine({ t, row, labels, latestTurn }: {
         data-chat-turn={row.turn}
         // Shipped semantics (ui-chat TurnTailNodeView): the newest turn's
         // actions are always there, an older turn's appear on hover or focus.
-        {...row.tail
+        {...settled
           ? { 'data-actions-reveal': row.turn >= latestTurn ? 'always' : 'hover' }
           : {}}
       >
@@ -822,9 +830,7 @@ function TranscriptLine({ t, row, labels, latestTurn }: {
           <AssistantBlockView key={index} t={t} block={block} labels={labels} />
         ))}
         {row.interrupted && <span className={css.stopped}>{t('stopped')}</span>}
-        {/* A turn's actions belong to its closing message: one answer, one copy
-            button, however many steps the turn took. */}
-        {row.tail && (
+        {settled && (
           <MessageActions
             t={t}
             text={assistantTextOf(row.blocks)}
