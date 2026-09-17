@@ -53,16 +53,19 @@ registered `main` keys.
   the row lives, not of what the row is.
 - **The talk column is the conversation.** A centered reading column capped at
   920px, user prompts as right-aligned bubbles, assistant answers as Markdown,
-  thinking folded behind one row, each tool call one 24px summary line with its
-  arguments and result in an IN/OUT card, and an elevated 22px-radius composer
-  card with a circular send button. A step that is still running shows its
-  thinking and its answer under that row as they arrive, the folded thinking row
-  sweeps while it streams and follows its newest line, an interrupted answer
-  carries the shipped `已停止` chip, a model retry shows the shipped `details`
-  row with its countdown, a turn that failed or hit the output cap shows the
-  shipped notice, and each message carries a copy action. Assistant blocks keep
-  the order the model wrote them in: reasoning and prose interleave, and hoisting
-  every reasoning block to the top rewrites what it actually said.
+  thinking folded behind one row, each tool call one summary line that opens into
+  the card its tool calls for — a terminal transcript, a diff with its totals, a
+  line-capped file read, search hits, a fetched page — and an elevated
+  22px-radius composer card with a circular send button. A step that is still
+  running shows its thinking and its answer under that row as they arrive, the
+  folded thinking row sweeps while it streams and follows its newest line, an
+  interrupted answer carries the shipped `已停止` chip, a model retry shows the
+  shipped `details` row with its countdown, a turn that failed or hit the output
+  cap shows the shipped notice, and a turn's closing answer carries the copy,
+  usage and run-time actions — one row of them per turn, plus one per user
+  prompt. Assistant blocks keep the order the model wrote them in: reasoning and
+  prose interleave, and hoisting every reasoning block to the top rewrites what
+  it actually said.
 - **There is no machine pane.** The machine is a level of the tree, so choosing
   one and opening a Session are the same gesture; a separate column would only
   restate what the row already says.
@@ -241,9 +244,15 @@ became of that command down the browser's own event stream:
   instead of appearing beside them.
 - **The console copies the shipped UI; it does not import it.** A browser plugin
   cannot import another plugin's components, so the tree and the conversation are
-  this package's own markup wearing `ui-primitives` and the shipped tokens. They
-  follow the visual system, not every future change to `ui-workspace` or
-  `ui-chat`.
+  this package's own markup. The chat rows go further than wearing the tokens:
+  `ToolRow`, `ReasoningRow`, `MessageIconActions`, `TurnUsagePanel` and the
+  accessibility helpers are the shipped `ui-chat` stylesheets copied verbatim,
+  and `SyncPanel` uses their class vocabulary and data attributes, so a row's
+  metrics are the product's own. Only the two parent offsets `ui-chat` keeps out
+  of those shared sheets stay here — the user row's 6px action gap
+  (`MessageItem.module.css`) and the tail's 4px/-6px IconActions offset
+  (`TurnTailNodeView.module.css`). Anything `ui-chat` does beyond that — a
+  refactor of the row markup itself — still needs a re-copy, not a re-derivation.
 - The mirror is lost on server restart; origins re-publish on their next
   reconcile tick (within 10 s) plus their follow snapshots.
 
@@ -259,6 +268,9 @@ src/host/service.ts      the engine: config, follow set, publish, takeover
 src/index.ts             Host plugin entry and the browser routes
 src/client/api.ts        transport plus the one snapshot every surface reads
 src/client/transcript.ts mirrored events projected onto readable rows
+src/client/tool-cards.ts  tool-row models: card choice, labels, caps
+src/client/message-stats.ts  clock, run time and token figures for a row
+src/client/*.module.css   the shipped chat stylesheets, copied verbatim
 src/client/ConfigSection.tsx  the settings page
 src/client/PanelIcon.tsx      the sidebar panel row's glyph
 src/client/SyncPanel.tsx      the console: the tree, the conversation, takeover
