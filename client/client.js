@@ -1861,7 +1861,7 @@ window.__ModuleLoader__.load({
 		/** Wire names whose row reads as one family, checked in order. */
 		const FAMILIES = [
 			{
-				glyph: "file",
+				glyph: "browse",
 				labelKey: "toolLabelRead",
 				match: /^(read|view|cat|notebook_read|read_image|read_family)/
 			},
@@ -1873,17 +1873,32 @@ window.__ModuleLoader__.load({
 			{
 				glyph: "search",
 				labelKey: "toolLabelSearch",
-				match: /^(grep|glob|search|find|list_dir|ls)/
+				match: /^(grep|glob|find|list_dir|ls)/
 			},
 			{
-				glyph: "web",
+				glyph: "browse",
+				labelKey: "toolLabelSearch",
+				match: /^(web_search|search_web)/
+			},
+			{
+				glyph: "globe",
 				labelKey: "toolLabelWeb",
-				match: /^(web_search|web_fetch|web|fetch|browse)/
+				match: /^(web_fetch|fetch|browse|web)/
 			},
 			{
-				glyph: "subagent",
-				labelKey: "toolLabelSubagent",
-				match: /^(subagent|workflow|task)/
+				glyph: "terminal",
+				labelKey: "toolLabelTerminal",
+				match: /^(pwsh|powershell|bash|sh|shell|zsh|cmd|term|terminal|exec|process)/
+			},
+			{
+				glyph: "terminal",
+				labelKey: "toolLabelCode",
+				match: /^(run_code|code|python|node|eval)/
+			},
+			{
+				glyph: "question",
+				labelKey: "toolLabelAsk",
+				match: /^(ask_user_question|ask_question|question|elicit)/
 			},
 			{
 				glyph: "plan",
@@ -1891,37 +1906,23 @@ window.__ModuleLoader__.load({
 				match: /^(todo|plan|update_plan|checklist)/
 			},
 			{
-				glyph: "ask",
-				labelKey: "toolLabelAsk",
-				match: /^(ask_user_question|ask_question|question|elicit)/
-			},
-			{
-				glyph: "code",
-				labelKey: "toolLabelTerminal",
-				match: /^(pwsh|powershell|bash|sh|shell|zsh|cmd|term|terminal|exec|process)/
-			},
-			{
-				glyph: "code",
-				labelKey: "toolLabelCode",
-				match: /^(run_code|code|python|node|eval|workflow_run)/
+				glyph: "share",
+				labelKey: "toolLabelSubagent",
+				match: /^(subagent|workflow|task)/
 			}
 		];
 		/**
 		* Present one tool call.
 		* @param name - the wire tool name, as the origin logged it.
-		* @param request - the row's one-line request preview, which for a file-family
-		*   tool is its path and therefore what the glyph is classified from.
-		* @returns the glyph, the title key, and the path when the glyph wants one.
+		* @returns the glyph and the title key, or the generic fallback.
 		*/
-		function toolPresentation(name, request) {
+		function toolPresentation(name) {
 			const wire = name.trim().toLowerCase();
 			for (const family of FAMILIES) {
 				if (!family.match.test(wire)) continue;
-				const wantsPath = family.glyph === "file" || family.glyph === "edit";
 				return {
 					glyph: family.glyph,
-					labelKey: family.labelKey,
-					...wantsPath && request !== void 0 && request !== "" ? { path: request } : {}
+					labelKey: family.labelKey
 				};
 			}
 			return wire === "" ? { glyph: "generic" } : {
@@ -2562,16 +2563,13 @@ window.__ModuleLoader__.load({
 		function ToolCallRow({ t, row }) {
 			const [open, setOpen] = react.useState(false);
 			const [resultOpen, setResultOpen] = react.useState(false);
-			const presentation = toolPresentation(row.name, row.request);
+			const presentation = toolPresentation(row.name);
 			const generic = presentation.glyph === "generic" && presentation.wire !== void 0;
 			const label = presentation.labelKey === void 0 ? row.name === "" ? t("toolResult") : row.name : t(presentation.labelKey);
 			const summary = presentation.wire === void 0 ? row.summary : [presentation.wire, row.summary].filter((part) => part !== "").join(" · ");
 			const glyph = () => /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 				className: row.isError ? `${sync_module_css_default.toolGlyph} ${sync_module_css_default.toolGlyphError}` : sync_module_css_default.toolGlyph,
-				children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(ToolGlyphIcon, {
-					glyph: presentation.glyph,
-					path: presentation.path
-				})
+				children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(ToolGlyphIcon, { glyph: presentation.glyph })
 			});
 			const argumentsCard = row.argumentsText === "" ? void 0 : /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
 				className: sync_module_css_default.ioCard,
@@ -2689,25 +2687,19 @@ window.__ModuleLoader__.load({
 			return running ? `${sync_module_css_default.toolRow} ${sync_module_css_default.toolRowRunning}` : sync_module_css_default.toolRow;
 		}
 		/**
-		* The glyph a tool family leads with.
-		*
-		* File families classify the path the call named, so a `.ts` read shows the same
-		* file-type mark the shipped client draws; everything else uses the closest
-		* shipped outline at 14px inside the row's 16px leading box (ui-tool
-		* GenericToolCard's own figure).
+		* The glyph a tool family leads with — the same mark the shipped toolview for
+		* that family registers, at 14 inside the row's 16px leading box.
 		*/
-		function ToolGlyphIcon({ glyph, path }) {
-			if (glyph === "file" || glyph === "edit") return path === void 0 ? glyph === "edit" ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconEditOutline16, { size: 14 }) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconFolderOpenOutline16, { size: 14 }) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.FileTypeIcon, {
-				path,
-				size: 14
-			});
+		function ToolGlyphIcon({ glyph }) {
 			switch (glyph) {
+				case "browse": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconBrowseOutline16, { size: 14 });
+				case "edit": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconEditOutline16, { size: 14 });
 				case "search": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconSearchOutline16, { size: 14 });
-				case "code": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconCodeOutline16, { size: 14 });
-				case "web": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconGlobeOutline14, { size: 14 });
-				case "subagent": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconShareOutline16, { size: 14 });
+				case "terminal": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconApiOutline14, { size: 14 });
+				case "globe": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconGlobeOutline14, { size: 14 });
+				case "question": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconQuestionOutline14, { size: 14 });
 				case "plan": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconChecklistOutline14, { size: 14 });
-				case "ask": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconListPenOutline16, { size: 14 });
+				case "share": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconShareOutline16, { size: 14 });
 				default: return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconSparkle16, { size: 14 });
 			}
 		}

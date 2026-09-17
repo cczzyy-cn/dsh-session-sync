@@ -20,21 +20,20 @@ import * as React from 'react'
 import {
   Button,
   DisclosureRow,
-  FileTypeIcon,
   FishLogo,
   Input,
   MarkdownText,
   StateDot,
   Tooltip,
+  IconApiOutline14,
+  IconBrowseOutline16,
   IconChecklistOutline14,
   IconChevronLeftOutline14,
-  IconCodeOutline16,
   IconEditOutline16,
   IconFolderClose16,
   IconFolderOpen16,
-  IconFolderOpenOutline16,
   IconGlobeOutline14,
-  IconListPenOutline16,
+  IconQuestionOutline14,
   IconRightUpOutline16,
   IconSearchOutline16,
   IconShareOutline16,
@@ -692,7 +691,7 @@ function ToolCallRow({ t, row }: {
 }): React.ReactElement {
   const [open, setOpen] = React.useState(false)
   const [resultOpen, setResultOpen] = React.useState(false)
-  const presentation = toolPresentation(row.name, row.request)
+  const presentation = toolPresentation(row.name)
   const generic = presentation.glyph === 'generic' && presentation.wire !== undefined
 
   // A family row is titled with the family's word and its own gist below, and
@@ -708,7 +707,7 @@ function ToolCallRow({ t, row }: {
 
   const glyph = (): React.ReactElement => (
     <span className={row.isError ? `${css.toolGlyph} ${css.toolGlyphError}` : css.toolGlyph}>
-      <ToolGlyphIcon glyph={presentation.glyph} path={presentation.path} />
+      <ToolGlyphIcon glyph={presentation.glyph} />
     </span>
   )
   const argumentsCard = row.argumentsText === '' ? undefined : (
@@ -825,38 +824,30 @@ function toolRowClass(running: boolean): string {
 }
 
 /**
- * The glyph a tool family leads with.
- *
- * File families classify the path the call named, so a `.ts` read shows the same
- * file-type mark the shipped client draws; everything else uses the closest
- * shipped outline at 14px inside the row's 16px leading box (ui-tool
- * GenericToolCard's own figure).
+ * The glyph a tool family leads with — the same mark the shipped toolview for
+ * that family registers, at 14 inside the row's 16px leading box.
  */
-function ToolGlyphIcon({ glyph, path }: {
-  glyph: ToolGlyph
-  path?: string
-}): React.ReactElement {
-  if (glyph === 'file' || glyph === 'edit') {
-    return path === undefined
-      ? (glyph === 'edit' ? <IconEditOutline16 size={14} /> : <IconFolderOpenOutline16 size={14} />)
-      : <FileTypeIcon path={path} size={14} />
-  }
+function ToolGlyphIcon({ glyph }: { glyph: ToolGlyph }): React.ReactElement {
   switch (glyph) {
+    case 'browse':
+      return <IconBrowseOutline16 size={14} />
+    case 'edit':
+      return <IconEditOutline16 size={14} />
     case 'search':
       return <IconSearchOutline16 size={14} />
-    case 'code':
-      return <IconCodeOutline16 size={14} />
-    case 'web':
+    case 'terminal':
+      return <IconApiOutline14 size={14} />
+    case 'globe':
       return <IconGlobeOutline14 size={14} />
-    case 'subagent':
-      return <IconShareOutline16 size={14} />
+    case 'question':
+      return <IconQuestionOutline14 size={14} />
     case 'plan':
       return <IconChecklistOutline14 size={14} />
-    case 'ask':
-      return <IconListPenOutline16 size={14} />
+    case 'share':
+      return <IconShareOutline16 size={14} />
     default:
-      // No family claims it: the shipped client's generic card leads with its
-      // own neutral mark, so this uses the same one instead of the status dot.
+      // No family claims it: the shipped generic card leads with this same
+      // neutral mark (GenericToolCard's own fallback).
       return <IconSparkle16 size={14} />
   }
 }
