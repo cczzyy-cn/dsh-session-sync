@@ -68,6 +68,9 @@ export class SessionSyncService {
   private followEvents = 0
   /** Opening frames that carried no readable history. */
   private historyMisses = 0
+  /** What the controller listed, and what survived the row filter. */
+  private localItems = 0
+  private localRows = 0
   private followError: string | undefined
   private followErrorSession: string | undefined
   /** The Session whose frames are being absorbed right now. */
@@ -157,6 +160,8 @@ export class SessionSyncService {
           frames: [...this.followFrameTypes],
           events: this.followEvents,
           historyMisses: this.historyMisses,
+          localItems: this.localItems,
+          localRows: this.localRows,
           ...(this.followError === undefined ? {} : { error: this.followError }),
           ...(this.followErrorSession === undefined ? {} : { sessionId: this.followErrorSession }),
         },
@@ -172,11 +177,16 @@ export class SessionSyncService {
     const controller = this.controller()
     if (controller === undefined) return []
     const { items } = await controller.list({}, new AbortController().signal)
-    return items
+    this.localItems = items.length
+    // A top-level Session may report no parent as either null or undefined, and
+    // testing only for undefined dropped every row when it was null -- which read
+    // as "this machine has no Sessions" while the publish marks still said three.
+    const rows = items
       // Subagent children are part of their parent's story, not separate rows.
-      .filter(item => item.parentSessionId === undefined && item.origin !== 'subagent')
+      .filter(item => (item.parentSessionId ?? undefined) === undefined && item.origin !== 'subagent')
       .map(item => this.row(item))
-      .sort((left, right) => right.updatedAt - left.updatedAt)
+    this.localRows = rows.length
+    return rows.sort((left, right) => right.updatedAt - left.updatedAt)
   }
 
   /**
