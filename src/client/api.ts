@@ -90,8 +90,12 @@ export interface SyncClientSnapshot {
    * which is far too short to notice on its own.
    */
   mirrorResets: number
-  /** Streaming text for the open Session's current step; replaced by the durable message. */
-  live: { reasoning: string; text: string }
+  /**
+   * Streaming text for the open Session's current step, replaced by the durable
+   * settlement. `turn` and `step` say which step it belongs to, so a frame that
+   * arrives late cannot overwrite a newer one.
+   */
+  live: { reasoning: string; text: string; turn: number; step: number }
   /** Last failure text, cleared by the next successful action. */
   error?: string
 }
@@ -107,6 +111,33 @@ function idleState(): SyncState {
     machines: [],
     published: 0,
   }
+}
+
+/** The step number that means "no step is streaming". */
+const NO_STEP = -1
+
+/**
+ * The empty live row.
+ *
+ * A blank row rather than `undefined`: the panel asks whether either text is
+ * non-empty, and a step's first frame is what fills one.
+ */
+function noLive(): SyncClientSnapshot['live'] {
+  return { reasoning: '', text: '', turn: NO_STEP, step: NO_STEP }
+}
+
+/**
+ * Whether one mirrored event settles the attempt a live row belongs to.
+ *
+ * Both spellings matter: a step that produced a message commits
+ * `assistant/message`, while a stream that failed or was aborted with nothing
+ * to keep commits `assistant/attempt`. Clearing only on the first left a
+ * failed step's thinking on screen indefinitely.
+ * @param event - one mirrored durable event.
+ * @returns true when the live row for its step is over.
+ */
+function isSettlement(event: MirrorEvent): boolean {
+  return event.type === 'assistant/message' || event.type === 'assistant/attempt'
 }
 
 /** The sync plugin's browser client. */
@@ -129,7 +160,7 @@ export class SyncClient {
       state: idleState(),
       sessions: [],
       loadingTranscript: false,
-      live: { reasoning: '', text: '' },
+      live: noLive(),
       stream: 'connecting',
       mirrorResets: 0,
     })
@@ -249,6 +280,9 @@ export class SyncClient {
       open: { machineName, sessionId },
       transcript: undefined,
       loadingTranscript: true,
+      // Live text belongs to the Session that streamed it. Whatever the last
+      // one left behind must not read as the new one's current step.
+      live: noLive(),
       // Delivery belongs to the prompt that was sent, not to the panel: another
       // Session's composer must not inherit the previous one's outcome.
       delivery: undefined,
@@ -265,7 +299,7 @@ export class SyncClient {
 
   /** Leave the open remote Session. */
   closeSession(): void {
-    this.update({ open: undefined, transcript: undefined, delivery: undefined })
+    this.update({ open: undefined, transcript: undefined, delivery: undefined, live: noLive() })
   }
 
   /**
@@ -363,8 +397,8 @@ export class SyncClient {
       if (transcript === undefined) return
       this.update({
         transcript: { ...transcript, events: [...transcript.events, ...frame.events] },
-        // A durable message ends the streaming step it belongs to.
-        ...(frame.events.some(event => event.type === 'assistant/message') ? { live: { reasoning: '', text: '' } } : {}),
+        // A durable settlement ends the streaming step it belongs to.
+        ...(frame.events.some(isSettlement) ? { live: noLive() } : {}),
       })
       return
     }
@@ -373,11 +407,16 @@ export class SyncClient {
       const open = snapshot.open
       if (open === undefined) return
       if (open.machineName !== frame.machineName || open.sessionId !== frame.sessionId) return
-      // The origin sends the whole text so far, so this replaces rather than
-      // appends: a lost frame heals on the next one. The durable message that
-      // ends the step is what retires it.
-      const live = this.store.getSnapshot().live
-      this.update({ live: frame.kind === 'reasoning' ? { ...live, reasoning: frame.text } : { ...live, text: frame.text } })
+      const live = snapshot.live
+      // Frames for an older step must not overwrite a newer one: every delta is
+      // its own post, so two steps' frames can arrive out of order.
+      if (frame.turn < live.turn || (frame.turn === live.turn && frame.step < live.step)) return
+      // A step's text is replaced, not appended: the origin sends the whole text
+      // so far, so a lost frame heals on the next one. A step that moved on
+      // starts both texts over, because its reasoning is a new one.
+      const advanced = frame.turn > live.turn || (frame.turn === live.turn && frame.step > live.step)
+      const base = advanced ? { ...noLive(), turn: frame.turn, step: frame.step } : live
+      this.update({ live: frame.kind === 'reasoning' ? { ...base, reasoning: frame.text } : { ...base, text: frame.text } })
       return
     }
     if (frame.type === 'command') {

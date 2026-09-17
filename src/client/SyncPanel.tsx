@@ -482,9 +482,9 @@ function Conversation(props: {
                   : rows.length === 0
                     ? <p className={css.empty}>{t('transcriptEmpty')}</p>
                     : rows.map(row => <TranscriptLine key={row.key} t={t} row={row} labels={labels} />)}
-              {/* Streaming text arrives between durable messages: reasoning first,
-                  then the answer, each replacing itself as it grows. The durable
-                  message that ends the step retires both. */}
+              {/* Streaming text arrives between durable settlements: reasoning
+                  first, then the answer, each replacing itself as it grows. The
+                  settlement that ends the step retires both. */}
               {(state.live.reasoning !== '' || state.live.text !== '') && (
                 <div className={css.assistantRow}>
                   {state.live.reasoning !== '' && <ReasoningRow t={t} reasoning={state.live.reasoning} />}
@@ -748,9 +748,9 @@ function ReasoningRow({ t, reasoning }: {
 }): React.ReactElement {
   const [open, setOpen] = React.useState(false)
   // The collapsed row carries the first line of the reasoning, as the shipped
-  // ReasoningRow does — a streaming block would show its latest line instead,
-  // but a mirrored block only ever arrives whole. Its `**` markers are dropped
-  // so the gist reads as prose.
+  // ReasoningRow does. That first line is also what a block that is still
+  // streaming keeps showing, which is why it is the first and not the latest.
+  // Its `**` markers are dropped so the gist reads as prose.
   const summary = firstLineOf(reasoning).replaceAll('**', '')
   return (
     <DisclosureRow

@@ -55,7 +55,8 @@ registered `main` keys.
   920px, user prompts as right-aligned bubbles, assistant answers as Markdown,
   thinking folded behind one row, each tool call one 24px summary line with its
   arguments and result in an IN/OUT card, and an elevated 22px-radius composer
-  card with a circular send button.
+  card with a circular send button. A step that is still running shows its
+  thinking and its answer under that row as they arrive.
 - **There is no machine pane.** The machine is a level of the tree, so choosing
   one and opening a Session are the same gesture; a separate column would only
   restate what the row already says.
@@ -97,6 +98,7 @@ normal way to edit it.
    ───────────────                         ──────
    ctx.sessionController.list()   ──POST /publish──▶  SyncHub index
    follow(sessionId) ──durable events──POST /frames──▶  SyncHub events
+   follow(sessionId) ──whole step text──POST /stream-delta──▶  transient frame
    prompt(sessionId, text)  ◀──SSE /stream──  DownstreamCommand
         │                                            │
         └────────POST /ack (ok | reason)─────────────▶│ command status
@@ -105,7 +107,8 @@ normal way to edit it.
 ```
 
 - The origin keeps one `ctx.sessionController.follow` stream open per published
-  Session and forwards its durable events.
+  Session and forwards its durable events, plus the streamed step text its
+  assistant frames carry while a step is still running.
 - The server keeps an in-memory mirror. Sequence numbers make a replayed window
   idempotent, so a reconnect re-opens every follow and re-sends its opening
   snapshot without duplicating or losing anything.
@@ -194,8 +197,15 @@ became of that command down the browser's own event stream:
 - **The server can take over a Session; it cannot start one.** A prompt is
   admitted into the origin's Session, so takeover works for Sessions that
   already exist there.
-- **Assistant output appears when a step commits**, not token by token. The
-  Follow stream's process-local assistant frames are not forwarded.
+- **Live thinking and output are relayed while a step runs; the mirror does not
+  keep them.** Each published Session's `follow` opts into the process-local
+  assistant frames, their deltas are accumulated per Session and per step, and
+  the whole text so far is posted as a transient frame every 400 ms. The console
+  renders it under the transcript, and the durable settlement — the
+  `assistant/message` that ends the step, or the `assistant/attempt` a failed or
+  aborted request leaves behind — is what retires it. None of it is stored, so
+  the mirror and a console opened mid-step fill from the next relay rather than
+  from a replay.
 - **A mirror shows the last 4,000 events** of a Session; older history is
   trimmed. Remote history paging is not implemented.
 - **One origin per machine name.** Two origins configured with the same

@@ -2936,6 +2936,35 @@ window.__ModuleLoader__.load({
 				published: 0
 			};
 		}
+		/** The step number that means "no step is streaming". */
+		const NO_STEP = -1;
+		/**
+		* The empty live row.
+		*
+		* A blank row rather than `undefined`: the panel asks whether either text is
+		* non-empty, and a step's first frame is what fills one.
+		*/
+		function noLive() {
+			return {
+				reasoning: "",
+				text: "",
+				turn: NO_STEP,
+				step: NO_STEP
+			};
+		}
+		/**
+		* Whether one mirrored event settles the attempt a live row belongs to.
+		*
+		* Both spellings matter: a step that produced a message commits
+		* `assistant/message`, while a stream that failed or was aborted with nothing
+		* to keep commits `assistant/attempt`. Clearing only on the first left a
+		* failed step's thinking on screen indefinitely.
+		* @param event - one mirrored durable event.
+		* @returns true when the live row for its step is over.
+		*/
+		function isSettlement(event) {
+			return event.type === "assistant/message" || event.type === "assistant/attempt";
+		}
 		/** The sync plugin's browser client. */
 		var SyncClient = class {
 			store;
@@ -2955,10 +2984,7 @@ window.__ModuleLoader__.load({
 					state: idleState(),
 					sessions: [],
 					loadingTranscript: false,
-					live: {
-						reasoning: "",
-						text: ""
-					},
+					live: noLive(),
 					stream: "connecting",
 					mirrorResets: 0
 				});
@@ -3064,6 +3090,7 @@ window.__ModuleLoader__.load({
 					},
 					transcript: void 0,
 					loadingTranscript: true,
+					live: noLive(),
 					delivery: void 0
 				});
 				try {
@@ -3085,7 +3112,8 @@ window.__ModuleLoader__.load({
 				this.update({
 					open: void 0,
 					transcript: void 0,
-					delivery: void 0
+					delivery: void 0,
+					live: noLive()
 				});
 			}
 			/**
@@ -3172,23 +3200,27 @@ window.__ModuleLoader__.load({
 							...transcript,
 							events: [...transcript.events, ...frame.events]
 						},
-						...frame.events.some((event) => event.type === "assistant/message") ? { live: {
-							reasoning: "",
-							text: ""
-						} } : {}
+						...frame.events.some(isSettlement) ? { live: noLive() } : {}
 					});
 					return;
 				}
 				if (frame.type === "stream") {
-					const open = this.store.getSnapshot().open;
+					const snapshot = this.store.getSnapshot();
+					const open = snapshot.open;
 					if (open === void 0) return;
 					if (open.machineName !== frame.machineName || open.sessionId !== frame.sessionId) return;
-					const live = this.store.getSnapshot().live;
+					const live = snapshot.live;
+					if (frame.turn < live.turn || frame.turn === live.turn && frame.step < live.step) return;
+					const base = frame.turn > live.turn || frame.turn === live.turn && frame.step > live.step ? {
+						...noLive(),
+						turn: frame.turn,
+						step: frame.step
+					} : live;
 					this.update({ live: frame.kind === "reasoning" ? {
-						...live,
+						...base,
 						reasoning: frame.text
 					} : {
-						...live,
+						...base,
 						text: frame.text
 					} });
 					return;
