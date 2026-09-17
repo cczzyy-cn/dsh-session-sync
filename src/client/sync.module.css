@@ -1832,10 +1832,11 @@
 /* A diff row's size, in its own span outside the ellipsized summary. */
 .diffStat {
   flex: none;
-  margin-left: 6px;
+  margin-left: 10px;
   color: var(--dsw-alias-label-caption);
-  font-size: var(--dsh-content-font-size-secondary, 13px);
-  font-variant-numeric: tabular-nums;
+  font-family: var(--ds-font-family-code);
+  font-size: calc(var(--dsh-content-font-size-secondary, 13px) - 2px);
+  transform: translateY(0.5px);
 }
 
 /* A capped search's recovery locator, which is where its dropped rows went. */
