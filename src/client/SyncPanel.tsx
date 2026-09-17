@@ -387,7 +387,17 @@ function Conversation(props: {
     <>
       <header className={css.viewHeader}>
         <div className={css.viewTitleRow}>
+          {/* The list is this console's own column, so putting it away is a
+              control here rather than in the Host sidebar. It sits first, where
+              the eye already looks for the column it controls. */}
           <Button
+            variant="ghost"
+            size="sm"
+            className={css.listToggle}
+            icon={<IconPanelLeftOutline16 />}
+            aria-label={props.listHidden ? t('listShow') : t('listHide')}
+            onClick={props.toggleList}
+          />          <Button
             variant="ghost"
             size="sm"
             className={css.narrowOnly}
@@ -404,16 +414,7 @@ function Conversation(props: {
             </>
           )}
           <span className={css.viewSpacer} />
-          {/* The list is this console's own column, so putting it away is a
-              control here rather than in the Host sidebar — and it lives in the
-              view header so it is reachable while the list is hidden. */}
-          <Button
-            variant="ghost"
-            size="sm"
-            icon={<IconPanelLeftOutline16 />}
-            aria-label={props.listHidden ? t('listShow') : t('listHide')}
-            onClick={props.toggleList}
-          />
+
           <ChromeChips t={t} chrome={chrome} />
         </div>
         {/* The two views the shipped header switches between (figma Tab_Group):

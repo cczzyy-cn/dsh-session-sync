@@ -235,9 +235,17 @@
 
 /* Placeholder text is a hint, not content: it wears the caption label the
    shipped inputs use, rather than the browser's default of the value colour. */
-.panel ::placeholder {
+.panel ::placeholder,
+.panel input::placeholder,
+.panel textarea::placeholder {
   color: var(--dsw-alias-label-caption);
   opacity: 1;
+}
+
+/* The list control reads as an action, so it wears the same light blue the
+   composer's send control does. */
+.listToggle {
+  color: var(--dsw-alias-button-info-fill);
 }
 
 /* The list column is this console's own, so putting it away gives the
