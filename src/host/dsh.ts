@@ -51,6 +51,11 @@ export interface SessionSummaryRow {
   }
 }
 
+/** Where one event sits on the Session surface — `SessionWireSurfaceOp`. */
+export type WireSurfaceOp =
+  | 'append'
+  | { readonly op: 'replace'; readonly startSeq: number; readonly endSeq: number }
+
 /** One durable Session event on the browser wire — `SessionWireEvent`. */
 export interface WireEvent {
   readonly type: string
@@ -58,7 +63,7 @@ export interface WireEvent {
   readonly time: number
   readonly data: unknown
   /** Surface placement, read so a replacement window survives the mirror. */
-  readonly surfaceOp?: unknown
+  readonly surfaceOp?: WireSurfaceOp
 }
 
 /** One history record — `SessionEventEntry`. */

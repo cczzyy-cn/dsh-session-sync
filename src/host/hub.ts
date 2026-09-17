@@ -157,11 +157,24 @@ export class SyncHub {
     })
   }
 
+  /**
+   * Append durable events to one mirrored Session, dropping any the mirror
+   * already holds so a reconnect that replays a window stays idempotent.
+   *
+   * The Session is created when the index has not listed it yet. A reconnect
+   * restarts the origin's follows immediately while its index waits for the
+   * next reconcile tick, so a replayed snapshot routinely arrives first;
+   * dropping it left an idle Session with an empty transcript until something
+   * happened to re-open its follow. The index publish that follows corrects the
+   * placeholder's title, and a Session the origin really did stop publishing is
+   * removed by that same publish.
+   * @param machineName - publishing machine.
+   * @param payload - the Session id and its new events.
+   */
   publishFrames(machineName: string, payload: PublishFramesPayload): void {
     const record = this.machine(machineName)
     record.lastSeen = Date.now()
-    const session = record.sessions.get(payload.sessionId)
-    if (session === undefined) return
+    const session = this.session(record, payload.sessionId)
     const fresh = payload.events.filter(event => event.seq > session.maxSeq)
     if (fresh.length === 0) return
     session.events.push(...fresh)
@@ -350,6 +363,30 @@ export class SyncHub {
       commands: new Map(),
     }
     this.records.set(machineName, created)
+    return created
+  }
+
+  /**
+   * Read one mirrored Session, creating its placeholder when frames arrive
+   * before the index that names it.
+   * @param record - the owning machine.
+   * @param sessionId - the Session the frames belong to.
+   * @returns the record to append to.
+   */
+  private session(record: MachineRecord, sessionId: string): SessionRecord {
+    const existing = record.sessions.get(sessionId)
+    if (existing !== undefined) return existing
+    const created: SessionRecord = {
+      sessionId,
+      // Until the index arrives the id is the only name the events came with;
+      // `publishIndex` replaces it with the Session's own title.
+      title: sessionId,
+      updatedAt: Date.now(),
+      running: false,
+      events: [],
+      maxSeq: -1,
+    }
+    record.sessions.set(sessionId, created)
     return created
   }
 

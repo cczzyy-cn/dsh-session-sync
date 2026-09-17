@@ -386,7 +386,13 @@ export class SessionSyncService {
     // Events published during an outage are gone with the socket. Re-opening
     // each follow replays its snapshot, and the server's sequence dedupe makes
     // the replay idempotent, so nothing is lost and nothing is doubled.
-    if (status.linked && !wasLinked) this.restartFollows()
+    if (status.linked && !wasLinked) {
+      this.restartFollows()
+      // The index follows the replay out rather than waiting for the next
+      // reconcile tick: a replayed snapshot names a Session the fresh mirror has
+      // not listed yet, and a mirror with no Session to append to would drop it.
+      void this.reconcile()
+    }
     this.broadcast({ type: 'state', state: this.view() })
   }
 
