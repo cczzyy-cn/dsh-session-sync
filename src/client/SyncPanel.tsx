@@ -98,7 +98,15 @@ import {
 } from './tool-cards.ts'
 import { toRows, type AssistantBlock, type NoticeRow, type RetryRow, type ToolRow, type TranscriptRow, type TurnFacts, type TurnUsage } from './transcript.ts'
 import { toolPresentation, type ToolGlyph } from './tool-presentation.ts'
+import a11yCss from './accessibility.module.css'
 import css from './sync.module.css'
+// Verbatim copies of the shipped stylesheets for the rows this console renders
+// itself: the class vocabulary below is theirs, so a future upstream change is
+// re-copied rather than re-derived.
+import actionsCss from './MessageIconActions.module.css'
+import thinkCss from './ReasoningRow.module.css'
+import toolCss from './ToolRow.module.css'
+import usageCss from './TurnUsagePanel.module.css'
 
 /**
  * How close to the floor still counts as being at it.
@@ -191,7 +199,6 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
         <div className={css.listHead}>
           <Input
             icon={<IconSearchOutline16 />}
-            className={css.inputWrap}
             value={query}
             placeholder={t('searchSessions')}
             aria-label={t('searchSessions')}
@@ -878,33 +885,37 @@ function MessageActions({ t, text, place, time, facts }: {
     })
   }
   const label = copied ? t('copiedCode') : t('messageCopy')
-  const clock = <span className={place === 'user' ? css.timeStart : css.timeEnd}>{formatMessageClock(time, t)}</span>
+  const clock = <span className={place === 'user' ? actionsCss.timeStart : actionsCss.timeEnd}>{formatMessageClock(time, t)}</span>
   const total = facts === undefined ? 0 : turnTotalTokens(facts.usage)
   const detail = facts === undefined ? '' : usageDetail(facts.usage, t)
   return (
-    <div className={place === 'user' ? css.userActions : css.messageActions}>
+    <div className={place === 'user' ? actionsCss.actions : `${actionsCss.actions} ${css.messageActions}`}>
       {place === 'user' && clock}
       {text !== '' && (
         <Tooltip label={label} side="bottom">
-          <button type="button" className={css.action} aria-label={label} onClick={onCopy}>
+          <button type="button" className={actionsCss.action} aria-label={label} onClick={onCopy}>
             {copied ? <IconCheckOutline16 /> : <IconCopyOutline16 />}
           </button>
         </Tooltip>
       )}
       {facts !== undefined && total > 0 && (
         <Tooltip label={detail} side="bottom">
-          <span className={css.statPill} tabIndex={0}>
-            <IconDatabaseOutline16 size={15} />
-            <span className={css.statLabel}>{t('turnUsageConsumed', { total: formatTokens(total, t) })}</span>
+          <span className={usageCss.root}>
+            <span className={usageCss.trigger} tabIndex={0}>
+              <IconDatabaseOutline16 size={15} />
+              <span className={usageCss.label}>{t('turnUsageConsumed', { total: formatTokens(total, t) })}</span>
+            </span>
           </span>
         </Tooltip>
       )}
       {facts !== undefined && (
         <Tooltip label={t('turnTimeTitle')} side="bottom">
-          <span className={css.statPill} tabIndex={0}>
-            <IconClockOutline16 size={15} />
-            <span className={css.statLabel}>
-              {t('messageRanFor', { duration: formatRunDuration(facts.runMs, t) })}
+          <span className={usageCss.root}>
+            <span className={usageCss.trigger} tabIndex={0}>
+              <IconClockOutline16 size={15} />
+              <span className={usageCss.label}>
+                {t('messageRanFor', { duration: formatRunDuration(facts.runMs, t) })}
+              </span>
             </span>
           </span>
         </Tooltip>
@@ -1016,29 +1027,33 @@ function ReasoningRow({ t, reasoning, streaming }: {
   const summary = (streaming === true ? lastLineOf(reasoning) : firstLineOf(reasoning)).replaceAll('**', '')
   return (
     <div
-      className={css.thinkRoot}
+      className={thinkCss.root}
+      data-variant="think"
       data-state={streaming === true ? 'running' : 'ok'}
       data-expanded={open || undefined}
     >
+      {streaming === true && <span className={a11yCss.visuallyHidden}>{t('rowRunning')}</span>}
       <DisclosureRow
-        rowClassName={css.thinkLine}
+        rowClassName={thinkCss.row}
+        leadingClassName={thinkCss.leading}
+        titleClassName={thinkCss.title}
+        chevronClassName={thinkCss.chevron}
         icon={<IconThinkOutline14 size={14} />}
         title={t('reasoning')}
         open={open}
         expandable
         expandOnRowClick
         onToggle={() => { setOpen(current => !current) }}
-        titleClassName={css.thinkTitle}
         collapsedContent={(
           <>
-            <span className={css.toolSep} />
-            <span className={css.thinkSummary} data-follow-end={streaming === true || undefined}>
-              <span className={css.thinkSummaryText}>{summary}</span>
+            <span className={thinkCss.separator} aria-hidden />
+            <span className={thinkCss.summary} data-follow-end={streaming === true || undefined}>
+              <span className={thinkCss.summaryText}>{summary}</span>
             </span>
           </>
         )}
       >
-        <div className={css.reasoning}>{reasoning}</div>
+        <div className={thinkCss.thinkBody}>{reasoning}</div>
       </DisclosureRow>
     </div>
   )
@@ -1099,10 +1114,10 @@ function ToolCallRow({ t, row }: {
   const expandable = bodyRaw !== null || model.output !== null || card !== null
 
   const leading = (): React.ReactElement => {
-    if (state === 'error') return <span className={css.toolGlyph}><StateDot state="error" /></span>
-    if (state === 'stopped') return <span className={css.toolGlyph}><StateDot state="warning" /></span>
+    if (state === 'error') return <span className={toolCss.leading}><StateDot state="error" /></span>
+    if (state === 'stopped') return <span className={toolCss.leading}><StateDot state="warning" /></span>
     return (
-      <span className={css.toolGlyph}>
+      <span className={toolCss.leading}>
         <ToolGlyphIcon glyph={toolPresentation(row.name).glyph} />
       </span>
     )
@@ -1112,84 +1127,78 @@ function ToolCallRow({ t, row }: {
     : state === 'error' ? t('rowFailed') : state === 'stopped' ? t('rowStopped') : null
 
   return (
-    <div className={css.toolRoot} data-state={state}>
+    <div className={toolCss.root} data-state={state} data-variant={model.variant} data-tool={row.name}>
       <DisclosureRow
+        rowClassName={toolCss.row}
+        leadingClassName={toolCss.leading}
+        titleClassName={toolCss.title}
+        chevronClassName={toolCss.chevron}
         icon={leading()}
         title={t(model.titleKey)}
         open={open && expandable}
         expandable={expandable}
         expandOnRowClick
         onToggle={() => { setOpen(current => !current) }}
-        className={toolRowClass(model.state === 'running')}
-        titleClassName={css.toolName}
         collapsedContent={summaryText !== '' && (
           <>
-            <span className={css.toolSep} />
-            <span className={failureLine !== null ? `${css.toolSummary} ${css.toolSummaryError}` : css.toolSummary}>
+            <span className={toolCss.sep} aria-hidden />
+            <span className={failureLine !== null ? toolCss.errorSummary : toolCss.summary}>
               {summaryText}
             </span>
-            {stat !== null && <span className={css.diffStat}>{stat}</span>}
+            {stat !== null && <span className={toolCss.diffStat}>{stat}</span>}
           </>
         )}
       >
-        {terminal !== null
-          ? <TerminalBlock {...terminal} maxLines={Infinity} labels={terminalBlockLabels(t)} />
-          : diff !== null
-            ? <DiffBlock diffs={[...diff.diffs]} labels={diffBlockLabels(t)} maxLines={CHAT_DIFF_MAX_LINES} />
-            : read !== null
-              ? <ReadBlock {...read} labels={readBlockLabels(t)} maxLines={CHAT_READ_MAX_LINES} />
-              : search !== null
-                ? (
-                  <>
-                    <SearchBlock {...search.card} labels={searchBlockLabels(t)} maxLines={CHAT_SEARCH_MAX_LINES} />
-                    {search.recovery !== undefined && <div className={css.searchRecovery}>{search.recovery}</div>}
-                  </>
-                )
-                : web !== null
-                  ? <WebBlock {...web} labels={webBlockLabels(t)} />
-                  : (
-                    <div className={css.ioCard}>
-                      {bodyRaw !== null && (
-                        <>
-                          <div className={css.ioSection}>
-                            <span className={css.ioLabel}>{t('rowInput')}</span>
-                            <span className={css.ioText}>{row.argumentsText}</span>
+        <div className={toolCss.bodyWrap}>
+          {terminal !== null
+            ? <TerminalBlock {...terminal} maxLines={Infinity} labels={terminalBlockLabels(t)} className={toolCss.terminalBody} />
+            : diff !== null
+              ? <DiffBlock diffs={[...diff.diffs]} labels={diffBlockLabels(t)} maxLines={CHAT_DIFF_MAX_LINES} className={toolCss.diffBody} />
+              : read !== null
+                ? <ReadBlock {...read} labels={readBlockLabels(t)} maxLines={CHAT_READ_MAX_LINES} className={toolCss.readBody} />
+                : search !== null
+                  ? (
+                    <>
+                      <SearchBlock {...search.card} labels={searchBlockLabels(t)} maxLines={CHAT_SEARCH_MAX_LINES} className={toolCss.searchBody} />
+                      {search.recovery !== undefined && <div className={toolCss.searchRecovery}>{search.recovery}</div>}
+                    </>
+                  )
+                  : web !== null
+                    ? <WebBlock {...web} labels={webBlockLabels(t)} className={toolCss.webBody} />
+                    : (
+                      <div className={toolCss.ioCard}>
+                        {bodyRaw !== null && (
+                          <>
+                            <div className={toolCss.ioSection}>
+                              <span className={toolCss.ioLabel}>{t('rowInput')}</span>
+                              <span className={toolCss.ioText}>{row.argumentsText}</span>
+                            </div>
+                            {model.output !== null && <div className={toolCss.ioDivider} aria-hidden />}
+                          </>
+                        )}
+                        {model.output !== null && (
+                          <div className={toolCss.ioSection}>
+                            <span className={toolCss.ioLabel}>{t('rowOutput')}</span>
+                            <span className={toolCss.ioText} data-error={state === 'error' || undefined}>
+                              {model.output}
+                            </span>
                           </div>
-                          {model.output !== null && <div className={css.ioDivider} />}
-                        </>
-                      )}
-                      {model.output !== null && (
-                        <div className={css.ioSection}>
-                          <span className={css.ioLabel}>{t('rowOutput')}</span>
-                          <span className={state === 'error' ? `${css.ioText} ${css.ioTextError}` : css.ioText}>
-                            {model.output}
-                          </span>
-                        </div>
-                      )}
-                      {bodyRaw === null && model.output === null && (
-                        <div className={css.ioSection}>
-                          <span className={css.ioLabel}>{t('rowOutput')}</span>
-                          <span className={css.ioText}>
-                            {model.state === 'running' ? t('toolRunning') : t('toolNoOutput')}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                        )}
+                        {bodyRaw === null && model.output === null && (
+                          <div className={toolCss.ioSection}>
+                            <span className={toolCss.ioLabel}>{t('rowOutput')}</span>
+                            <span className={toolCss.ioText}>
+                              {model.state === 'running' ? t('toolRunning') : t('toolNoOutput')}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+        </div>
       </DisclosureRow>
-      {status !== null && <span className={css.visuallyHidden}>{status}</span>}
+      {status !== null && <span className={toolCss.visuallyHidden}>{status}</span>}
     </div>
   )
-}
-
-/**
- * A tool row's class: a call in flight carries the sweep the shipped row uses
- * for the same state, and every other row carries the plain one.
- * @param running - whether the call is still waiting for its result.
- * @returns the row's class names.
- */
-function toolRowClass(running: boolean): string {
-  return running ? `${css.toolRow} ${css.toolRowRunning}` : css.toolRow
 }
 
 /**

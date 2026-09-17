@@ -116,7 +116,6 @@ export function ConfigSection(props: ConfigSectionProps): React.ReactElement {
           <label className={css.field}>
             <span className={css.label}>{t('machineName')}</span>
             <Input
-              className={css.inputWrap}
               value={draft.machineName}
               onChange={(event) => { edit({ machineName: event.target.value }) }}
             />
@@ -126,7 +125,6 @@ export function ConfigSection(props: ConfigSectionProps): React.ReactElement {
           <label className={css.field}>
             <span className={css.label}>{t('serverUrl')}</span>
             <Input
-              className={css.inputWrap}
               value={draft.serverUrl}
               placeholder="192.168.1.10:8791"
               disabled={draft.isServer}
@@ -150,7 +148,6 @@ export function ConfigSection(props: ConfigSectionProps): React.ReactElement {
           <label className={css.field}>
             <span className={css.label}>{t('password')}</span>
             <Input
-              className={css.inputWrap}
               type="password"
               autoComplete="off"
               value={draft.password}
@@ -163,7 +160,6 @@ export function ConfigSection(props: ConfigSectionProps): React.ReactElement {
             <label className={css.field}>
               <span className={css.label}>{t('listenHost')}</span>
               <Input
-                className={css.inputWrap}
                 value={draft.listenHost}
                 disabled={!draft.isServer}
                 onChange={(event) => { edit({ listenHost: event.target.value }) }}
@@ -172,7 +168,6 @@ export function ConfigSection(props: ConfigSectionProps): React.ReactElement {
             <label className={css.field}>
               <span className={css.label}>{t('listenPort')}</span>
               <Input
-                className={css.inputWrap}
                 inputMode="numeric"
                 value={draft.listenPort}
                 disabled={!draft.isServer}
