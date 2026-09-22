@@ -16,7 +16,7 @@
  * metric the log does not carry.
  */
 import * as React from 'react'
-import { MarkdownText, StateDot, IconSearchOutline16, type MarkdownLabels } from '@deepseek-ai/dsh-client-ui-primitives'
+import { MarkdownText, StateDot, IconSearchOutlineRegular, type MarkdownLabels } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { SessionSyncKey } from './locales.ts'
 import {
   clockLabel,
@@ -130,7 +130,7 @@ export function TrajectoryView(props: TrajectoryViewProps): React.ReactElement {
           {t('tjCalls')}
         </button>
         <span className={css.tjSearch}>
-          <IconSearchOutline16 size={11} className={css.tjSearchIcon} />
+          <IconSearchOutlineRegular size={11} className={css.tjSearchIcon} />
           <input
             type="search"
             className={css.tjSearchInput}

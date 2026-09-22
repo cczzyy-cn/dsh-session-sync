@@ -12,8 +12,8 @@
 import * as React from 'react'
 import { createPortal } from 'react-dom'
 import {
-  IconClockOutline16,
-  IconDatabaseOutline16,
+  IconClockOutlineRegular,
+  IconDatabaseOutlineRegular,
   useAnchoredPosition,
   useDismissOnOutsidePointer,
 } from '@deepseek-ai/dsh-client-ui-primitives'
@@ -131,7 +131,7 @@ export function TurnUsagePill({ usage, metrics, t }: {
         aria-expanded={open}
         onClick={() => { setOpen(!open) }}
       >
-        <IconDatabaseOutline16 />
+        <IconDatabaseOutlineRegular />
         <span className={css.label}>{t('turnUsageConsumed', { total: formatTokens(total, t) })}</span>
       </button>
       {open && createPortal(
@@ -144,7 +144,7 @@ export function TurnUsagePill({ usage, metrics, t }: {
         >
           <div className={dialogCss.title}>
             <span className={dialogCss.titleLabel}>
-              <IconDatabaseOutline16 />
+              <IconDatabaseOutlineRegular />
               {t('turnUsageTitle')}
             </span>
             <span className={dialogCss.titleValue}>{exactCount(total, t)}</span>
@@ -197,7 +197,7 @@ export function TurnTimePill({ runMs, metrics, t }: {
         aria-expanded={open}
         onClick={() => { setOpen(!open) }}
       >
-        <IconClockOutline16 />
+        <IconClockOutlineRegular />
         <span className={css.label}>{t('messageRanFor', { duration: formatRunDuration(runMs, t) })}</span>
       </button>
       {open && createPortal(
@@ -210,7 +210,7 @@ export function TurnTimePill({ runMs, metrics, t }: {
         >
           <div className={dialogCss.title}>
             <span className={dialogCss.titleLabel}>
-              <IconClockOutline16 />
+              <IconClockOutlineRegular />
               {t('turnTimeTitle')}
             </span>
           </div>

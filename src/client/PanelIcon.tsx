@@ -7,7 +7,7 @@
  * which is a `.ts` module.
  */
 import * as React from 'react'
-import { IconGlobeOutline14 } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconGlobeOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
 
 /** Props the sidebar's panel-list owner share supplies. */
 export interface PanelIconProps {
@@ -23,5 +23,5 @@ export interface PanelIconProps {
  * @returns the icon; selection is the row's own styling, not the glyph's.
  */
 export function PanelIcon(props: PanelIconProps): React.ReactElement {
-  return <IconGlobeOutline14 size={props.size} />
+  return <IconGlobeOutlineRegular size={props.size} />
 }

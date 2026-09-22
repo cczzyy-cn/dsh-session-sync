@@ -30,21 +30,21 @@ export interface ToolPresentation {
 
 /** Wire names whose row reads as one family, checked in order. */
 const FAMILIES: readonly { glyph: ToolGlyph; labelKey: SessionSyncKey; match: RegExp }[] = [
-  // read-family-row.tsx leads with IconBrowseOutline16.
+  // read-family-row.tsx leads with IconBrowseOutlineRegular.
   { glyph: 'browse', labelKey: 'toolLabelRead', match: /^(read|view|cat|notebook_read|read_image|read_family)/ },
-  // file-mutation-row.tsx leads with IconEditOutline16.
+  // file-mutation-row.tsx leads with IconEditOutlineRegular.
   { glyph: 'edit', labelKey: 'toolLabelEdit', match: /^(write|edit|str_replace|apply_patch|file_mutation|patch|create_file)/ },
-  // search-row.tsx leads with IconSearchOutline16.
+  // search-row.tsx leads with IconSearchOutlineRegular.
   { glyph: 'search', labelKey: 'toolLabelSearch', match: /^(grep|glob|find|list_dir|ls)/ },
   // web-row.tsx draws web_search with the browse mark and web_fetch with the globe.
   { glyph: 'browse', labelKey: 'toolLabelSearch', match: /^(web_search|search_web)/ },
   { glyph: 'globe', labelKey: 'toolLabelWeb', match: /^(web_fetch|fetch|browse|web)/ },
-  // bash-sample.tsx leads with IconApiOutline14.
+  // bash-sample.tsx leads with IconApiOutlineRegular.
   { glyph: 'terminal', labelKey: 'toolLabelTerminal', match: /^(pwsh|powershell|bash|sh|shell|zsh|cmd|term|terminal|exec|process)/ },
   { glyph: 'terminal', labelKey: 'toolLabelCode', match: /^(run_code|code|python|node|eval)/ },
-  // ask-question-row.tsx leads with IconQuestionOutline14.
+  // ask-question-row.tsx leads with IconQuestionOutlineRegular.
   { glyph: 'question', labelKey: 'toolLabelAsk', match: /^(ask_user_question|ask_question|question|elicit)/ },
-  // todo-row.tsx leads with IconChecklistOutline14.
+  // todo-row.tsx leads with IconChecklistOutlineRegular.
   { glyph: 'plan', labelKey: 'toolLabelPlan', match: /^(todo|plan|update_plan|checklist)/ },
   // No shipped row exists for these, so the share mark is this console's own.
   { glyph: 'share', labelKey: 'toolLabelSubagent', match: /^(subagent|workflow|task)/ },
