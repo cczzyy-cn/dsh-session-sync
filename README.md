@@ -78,6 +78,17 @@ registered `main` keys.
   (`DisclosureRow`, `MarkdownText`, `Input`, `StateDot`, `Button`) and the shipped
   tokens, so the console follows a theme change, a font-size preference, and a
   hairline change with the rest of the product.
+- **The conversation is the shipped one where the build allows it.** A DSH whose
+  client context offers `ctx.sessions.adopt` gets the real
+  `conversation.content` factory for the open remote Session: the plugin adopts
+  the Session under a synthetic local id, replaces it with the mirror's window,
+  and feeds every later frame into it, so the transcript, the composer, and the
+  tool cards are the product's own components rather than copies of them. Every
+  other build — including every build that exists today — keeps the hand-drawn
+  pane described above, unchanged. The adoption route is feature-detected
+  (`src/client/official-session.tsx`); `sessions` is deliberately not in this
+  plugin's required `inject` list, because the console has to load on builds that
+  predate the API.
 
 ## Configuration
 
@@ -250,7 +261,9 @@ became of that command down the browser's own event stream:
   instead of appearing beside them.
 - **The console copies the shipped UI; it does not import it.** A browser plugin
   cannot import another plugin's components, so the tree and the conversation are
-  this package's own markup. The chat rows go further than wearing the tokens:
+  this package's own markup — unless the build supports the adoption API, in
+  which case the conversation *is* the shipped renderer (see above) and only the
+  tree is this package's own. The chat rows go further than wearing the tokens:
   `ToolRow`, `ReasoningRow`, `MessageIconActions`, `TurnUsagePanel`,
   `stat-dialog` and the accessibility helpers are the shipped `ui-chat`
   stylesheets copied verbatim, and `SyncPanel` uses their class vocabulary and
@@ -283,6 +296,7 @@ src/host/transport.ts    the sync listener and the origin link
 src/host/service.ts      the engine: config, follow set, publish, takeover
 src/index.ts             Host plugin entry and the browser routes
 src/client/api.ts        transport plus the one snapshot every surface reads
+src/client/official-session.tsx  the adopted Session: the shipped renderer's pane
 src/client/transcript.ts mirrored events projected onto readable rows
 src/client/tool-cards.ts  tool-row models: card choice, labels, caps
 src/client/message-stats.ts  clock, run time and token figures for a row

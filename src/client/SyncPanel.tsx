@@ -31,25 +31,25 @@ import {
   TerminalBlock,
   Tooltip,
   WebBlock,
-  IconApiOutline14,
-  IconBrowseOutline16,
-  IconCheckOutline16,
-  IconChecklistOutline14,
-  IconChevronDownOutline14,
-  IconChevronLeftOutline14,
-  IconCopyOutline16,
-  IconEditOutline16,
-  IconFolderClose16,
-  IconFolderOpen16,
-  IconGlobeOutline14,
-  IconPanelLeftOutline16,
-  IconQuestionOutline14,
-  IconRightUpOutline16,
-  IconSearchOutline16,
-  IconShareOutline16,
-  IconSparkle16,
-  IconThinkOutline14,
-  IconTriangleRightFill14,
+  IconApiOutlineRegular,
+  IconBrowseOutlineRegular,
+  IconCheckOutlineRegular,
+  IconChecklistOutlineRegular,
+  IconChevronDownOutlineRegular,
+  IconChevronLeftOutlineRegular,
+  IconCopyOutlineRegular,
+  IconEditOutlineRegular,
+  IconFolderCloseRegular,
+  IconFolderOpenRegular,
+  IconGlobeOutlineRegular,
+  IconPanelLeftOutlineRegular,
+  IconQuestionOutlineRegular,
+  IconRightUpOutlineRegular,
+  IconSearchOutlineRegular,
+  IconShareOutlineRegular,
+  IconSparkleRegular,
+  IconThinkOutlineRegular,
+  IconTriangleRightFillRegular,
   relativeTime,
   writeClipboard,
   type MarkdownLabels,
@@ -91,6 +91,12 @@ import {
 } from './tool-cards.ts'
 import { toRows, type AssistantBlock, type NoticeRow, type RetryRow, type ToolRow, type TranscriptRow, type TurnFacts } from './transcript.ts'
 import { toolPresentation, type ToolGlyph } from './tool-presentation.ts'
+import {
+  OFFICIAL_SLOT,
+  type OfficialBridgeFace,
+  type RenderSlotLike,
+  type SessionProviderComponent,
+} from './official-session.tsx'
 import a11yCss from './accessibility.module.css'
 import css from './sync.module.css'
 // Verbatim copies of the shipped stylesheets for the rows this console renders
@@ -121,6 +127,18 @@ export interface SyncPanelProps {
   closeSession: () => void
   /** Send one takeover prompt to the open Session's machine. */
   sendPrompt: (text: string) => Promise<boolean>
+  /**
+   * The feature-detected bridge to the shipped conversation renderer.
+   *
+   * Present on every build: it reports `supported === false` where the
+   * adoption API does not exist, which is what keeps the hand-drawn pane below
+   * in charge there.
+   */
+  official: OfficialBridgeFace
+  /** Dispatch of the session-scoped child slot this panel declares. */
+  renderSlot: RenderSlotLike
+  /** The session-scope provider the child slot's declaration seats here. */
+  SessionProvider: SessionProviderComponent
 }
 
 /** One directory's Sessions, inside one machine. */
@@ -191,7 +209,7 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
       <aside className={css.listPane} aria-label={t('sessionsTitle')} aria-hidden={listHidden}>
         <div className={css.listHead}>
           <Input
-            icon={<IconSearchOutline16 />}
+            icon={<IconSearchOutlineRegular />}
             value={query}
             placeholder={t('searchSessions')}
             aria-label={t('searchSessions')}
@@ -314,6 +332,9 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
               online={online}
               closeSession={props.closeSession}
               sendPrompt={props.sendPrompt}
+              official={props.official}
+              renderSlot={props.renderSlot}
+              SessionProvider={props.SessionProvider}
               listHidden={listHidden}
               toggleList={() => { setListHidden(current => !current) }}
             />
@@ -355,11 +376,11 @@ const TreeRow = React.memo(function TreeRow(props: {
     >
       <span className={`${css.treeSlot} ${css.treeFolder}`}>
         {props.icon === 'machine'
-          ? <IconGlobeOutline14 size={16} />
-          : (props.open ? <IconFolderOpen16 /> : <IconFolderClose16 />)}
+          ? <IconGlobeOutlineRegular size={16} />
+          : (props.open ? <IconFolderOpenRegular /> : <IconFolderCloseRegular />)}
       </span>
       <span className={`${css.treeSlot} ${css.treeChevron}`}>
-        <IconTriangleRightFill14 className={props.open ? css.arrowOpen : undefined} />
+        <IconTriangleRightFillRegular className={props.open ? css.arrowOpen : undefined} />
       </span>
       <span className={css.rowTitle}>{props.label}</span>
       <span className={css.rowTime}>{props.trailing}</span>
@@ -382,6 +403,9 @@ function Conversation(props: {
   online: boolean
   closeSession: () => void
   sendPrompt: (text: string) => Promise<boolean>
+  official: OfficialBridgeFace
+  renderSlot: RenderSlotLike
+  SessionProvider: SessionProviderComponent
   listHidden: boolean
   toggleList: () => void
 }): React.ReactElement {
@@ -477,6 +501,17 @@ function Conversation(props: {
   }
 
   const delivery = state.delivery
+  // The shipped conversation, when this DSH build can adopt the open Session,
+  // the mirror has something to replace it with, and the renderer gave this
+  // panel the seats the child slot's declaration earns it. The reference must
+  // exist before the pane renders: the SessionProvider binds it, and an absent
+  // one would inherit whatever local Session the shell has selected.
+  const shipped = props.official.supported
+    && props.renderSlot !== undefined
+    && props.SessionProvider !== undefined
+    && state.transcript !== undefined
+    ? props.official.referenceFor(props.machineName, session.sessionId)
+    : undefined
   return (
     <>
       <header className={css.viewHeader}>
@@ -488,14 +523,14 @@ function Conversation(props: {
             variant="ghost"
             size="sm"
             className={css.listToggle}
-            icon={<IconPanelLeftOutline16 />}
+            icon={<IconPanelLeftOutlineRegular />}
             aria-label={props.listHidden ? t('listShow') : t('listHide')}
             onClick={props.toggleList}
           />          <Button
             variant="ghost"
             size="sm"
             className={css.narrowOnly}
-            icon={<IconChevronLeftOutline14 />}
+            icon={<IconChevronLeftOutlineRegular />}
             aria-label={t('back')}
             onClick={props.closeSession}
           />
@@ -536,87 +571,104 @@ function Conversation(props: {
       </header>
       {tab === 'trajectory'
         ? <TrajectoryView t={t} cells={cells} stats={chrome.stats} labels={labels} />
-        : (
-          <div className={css.viewScroll} ref={body}>
-            <div className={css.viewColumn} ref={column}>
-              {state.error !== undefined && <div className={css.error}>{state.error}</div>}
-              {state.transcript === undefined && !state.loadingTranscript
-                ? <p className={css.empty}>{t('transcriptGone')}</p>
-                : state.loadingTranscript
-                  ? <p className={css.empty}>{t('transcriptLoading')}</p>
-                  : rows.length === 0
-                    ? <p className={css.empty}>{t('transcriptEmpty')}</p>
-                    : rows.map(row => (
-                      <TranscriptLine key={row.key} t={t} row={row} labels={labels} latestTurn={latestTurn} />
-                    ))}
-              {/* Streaming text arrives between durable settlements: reasoning
-                  first, then the answer, each replacing itself as it grows. The
-                  settlement that ends the step retires both. */}
-              {(state.live.reasoning !== '' || state.live.text !== '') && (
-                <div className={css.assistantRow}>
-                  {state.live.reasoning !== '' && <ReasoningRow t={t} reasoning={state.live.reasoning} streaming />}
-                  {state.live.text !== '' && <MarkdownText text={state.live.text} labels={labels} />}
+        : shipped !== undefined
+          ? (
+            // The shipped conversation draws the Session, its own scroll body,
+            // and its own composer: this pane hands it the adopted reference
+            // and nothing else. Everything the console draws for itself below
+            // is the fallback on a build without the adoption API.
+            <div className={css.officialPane}>
+              <props.SessionProvider session={shipped}>
+                {props.renderSlot(OFFICIAL_SLOT, {})}
+              </props.SessionProvider>
+            </div>
+          )
+          : (
+            <div className={css.viewScroll} ref={body}>
+              <div className={css.viewColumn} ref={column}>
+                {state.error !== undefined && <div className={css.error}>{state.error}</div>}
+                {state.transcript === undefined && !state.loadingTranscript
+                  ? <p className={css.empty}>{t('transcriptGone')}</p>
+                  : state.loadingTranscript
+                    ? <p className={css.empty}>{t('transcriptLoading')}</p>
+                    : rows.length === 0
+                      ? <p className={css.empty}>{t('transcriptEmpty')}</p>
+                      : rows.map(row => (
+                        <TranscriptLine key={row.key} t={t} row={row} labels={labels} latestTurn={latestTurn} />
+                      ))}
+                {/* Streaming text arrives between durable settlements: reasoning
+                    first, then the answer, each replacing itself as it grows. The
+                    settlement that ends the step retires both. */}
+                {(state.live.reasoning !== '' || state.live.text !== '') && (
+                  <div className={css.assistantRow}>
+                    {state.live.reasoning !== '' && <ReasoningRow t={t} reasoning={state.live.reasoning} streaming />}
+                    {state.live.text !== '' && <MarkdownText text={state.live.text} labels={labels} />}
+                  </div>
+                )}
+              </div>
+              {/* The shipped control, copied from ui-chat's ChatView: a sticky slot
+                  inside the scroller, so the button rides the live edge of the
+                  transcript and disappears once the reader is back at the floor. */}
+              {!atBottom && (
+                <div className={css.toBottomSlot}>
+                  <button
+                    type="button"
+                    className={css.toBottom}
+                    aria-label={t('chatToBottom')}
+                    onClick={() => { scrollToBottom() }}
+                  >
+                    <IconChevronDownOutlineRegular />
+                  </button>
                 </div>
               )}
             </div>
-            {/* The shipped control, copied from ui-chat's ChatView: a sticky slot
-                inside the scroller, so the button rides the live edge of the
-                transcript and disappears once the reader is back at the floor. */}
-            {!atBottom && (
-              <div className={css.toBottomSlot}>
-                <button
-                  type="button"
-                  className={css.toBottom}
-                  aria-label={t('chatToBottom')}
-                  onClick={() => { scrollToBottom() }}
-                >
-                  <IconChevronDownOutline14 />
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      <div className={css.composerRoot}>
-        <form
-          className={css.composerCard}
-          onSubmit={(event) => { event.preventDefault(); send() }}
-        >
-          <textarea
-            className={css.composerText}
-            value={draft}
-            rows={2}
-            placeholder={t('composerPlaceholder')}
-            aria-label={t('composerPlaceholder')}
-            onChange={(event) => { setDraft(event.target.value) }}
-            onKeyDown={(event) => {
-              if (event.key !== 'Enter' || event.shiftKey) return
-              event.preventDefault()
-              send()
-            }}
-          />
-          <div className={css.composerBar}>
-            <span className={css.composerTarget}>
-              {t('composerTarget')}
-              {' '}
-              {props.machineName}
-            </span>
-            {delivery !== undefined && (
-              <span className={css.composerDelivery}>{deliveryLine(delivery, t)}</span>
-            )}
-            {!props.online && <span className={css.composerOffline}>{t('offlineQueueHint')}</span>}
-            <span className={css.composerSpacer} />
-            <button
-              type="submit"
-              className={css.sendButton}
-              disabled={sending || draft.trim() === ''}
-              aria-label={sending ? t('sending') : t('send')}
-            >
-              <IconRightUpOutline16 />
-            </button>
-          </div>
-        </form>
-        <StatusRow t={t} stats={chrome.stats} />
-      </div>
+          )}
+      {/* One composer per Session: the shipped one rides inside the shipped
+          conversation, so the console's own card stands down on the chat tab
+          while still carrying the takeover prompt on its trajectory tab. */}
+      {(shipped === undefined || tab === 'trajectory') && (
+        <div className={css.composerRoot}>
+          <form
+            className={css.composerCard}
+            onSubmit={(event) => { event.preventDefault(); send() }}
+          >
+            <textarea
+              className={css.composerText}
+              value={draft}
+              rows={2}
+              placeholder={t('composerPlaceholder')}
+              aria-label={t('composerPlaceholder')}
+              onChange={(event) => { setDraft(event.target.value) }}
+              onKeyDown={(event) => {
+                if (event.key !== 'Enter' || event.shiftKey) return
+                event.preventDefault()
+                send()
+              }}
+            />
+            <div className={css.composerBar}>
+              <span className={css.composerTarget}>
+                {t('composerTarget')}
+                {' '}
+                {props.machineName}
+              </span>
+              {delivery !== undefined && (
+                <span className={css.composerDelivery}>{deliveryLine(delivery, t)}</span>
+              )}
+              {!props.online && <span className={css.composerOffline}>{t('offlineQueueHint')}</span>}
+              <span className={css.composerSpacer} />
+              <button
+                type="submit"
+                className={css.sendButton}
+                disabled={sending || draft.trim() === ''}
+                aria-label={sending ? t('sending') : t('send')}
+              >
+                <IconRightUpOutlineRegular />
+              </button>
+            </div>
+          </form>
+          <StatusRow t={t} stats={chrome.stats} />
+        </div>
+      )}
     </>
   )
 }
@@ -919,7 +971,7 @@ function MessageActions({ t, text, place, time, facts }: {
       {text !== '' && (
         <Tooltip label={label} side="bottom">
           <button type="button" className={actionsCss.action} aria-label={label} onClick={onCopy}>
-            {copied ? <IconCheckOutline16 /> : <IconCopyOutline16 />}
+            {copied ? <IconCheckOutlineRegular /> : <IconCopyOutlineRegular />}
           </button>
         </Tooltip>
       )}
@@ -1029,7 +1081,7 @@ function ReasoningRow({ t, reasoning, streaming }: {
         leadingClassName={thinkCss.leading}
         titleClassName={thinkCss.title}
         chevronClassName={thinkCss.chevron}
-        icon={<IconThinkOutline14 size={14} />}
+        icon={<IconThinkOutlineRegular size={14} />}
         title={t('reasoning')}
         open={open}
         expandable
@@ -1199,25 +1251,25 @@ function ToolCallRow({ t, row }: {
 function ToolGlyphIcon({ glyph }: { glyph: ToolGlyph }): React.ReactElement {
   switch (glyph) {
     case 'browse':
-      return <IconBrowseOutline16 size={14} />
+      return <IconBrowseOutlineRegular size={14} />
     case 'edit':
-      return <IconEditOutline16 size={14} />
+      return <IconEditOutlineRegular size={14} />
     case 'search':
-      return <IconSearchOutline16 size={14} />
+      return <IconSearchOutlineRegular size={14} />
     case 'terminal':
-      return <IconApiOutline14 size={14} />
+      return <IconApiOutlineRegular size={14} />
     case 'globe':
-      return <IconGlobeOutline14 size={14} />
+      return <IconGlobeOutlineRegular size={14} />
     case 'question':
-      return <IconQuestionOutline14 size={14} />
+      return <IconQuestionOutlineRegular size={14} />
     case 'plan':
-      return <IconChecklistOutline14 size={14} />
+      return <IconChecklistOutlineRegular size={14} />
     case 'share':
-      return <IconShareOutline16 size={14} />
+      return <IconShareOutlineRegular size={14} />
     default:
       // No family claims it: the shipped generic card leads with this same
       // neutral mark (GenericToolCard's own fallback).
-      return <IconSparkle16 size={14} />
+      return <IconSparkleRegular size={14} />
   }
 }
 

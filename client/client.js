@@ -30,10 +30,10 @@ window.__ModuleLoader__.load({
 		react = __toESM(react, 1);
 		let _deepseek_ai_dsh_client_ui_primitives = require("@deepseek-ai/dsh-client-ui-primitives");
 		let react_jsx_runtime = require("react/jsx-runtime");
-		let react_dom = require("react-dom");
 		let _deepseek_ai_dsh_client_store = require("@deepseek-ai/dsh-client-store");
-		//#region \0dsh-css:C:\Users\14339\Desktop\git\AI\dsh-session-sync\src\client\sync.module.css.mjs
-		const css$6 = ".exFxyG_section{flex-direction:column;gap:14px;padding:4px 0 8px;display:flex}.exFxyG_lede{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xs-13);margin:0}.exFxyG_group{flex-direction:column;gap:10px;display:flex}.exFxyG_groupTitle{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-strong-13);margin:0}.exFxyG_card{border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);border-radius:10px;flex-direction:column;gap:10px;padding:12px 14px;display:flex}.exFxyG_field{flex-direction:column;gap:4px;display:flex}.exFxyG_fieldRow{justify-content:space-between;align-items:center;gap:12px;display:flex}.exFxyG_fieldText{flex-direction:column;gap:2px;min-width:0;display:flex}.exFxyG_label{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13)}.exFxyG_hint{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12)}.exFxyG_pair{grid-template-columns:minmax(0,1fr) 120px;gap:10px;display:grid}.exFxyG_actions{align-items:center;gap:8px;display:flex}.exFxyG_saved{color:var(--dsw-alias-state-success-primary);font:var(--dsw-font-xxs-12)}.exFxyG_dirty{color:var(--dsw-alias-state-warn-primary);font:var(--dsw-font-xxs-12)}.exFxyG_failed{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12)}.exFxyG_sessionList{flex-direction:column;max-height:280px;display:flex;overflow-y:auto}.exFxyG_sessionRow{justify-content:space-between;align-items:center;gap:12px;min-height:40px;padding:5px 2px;display:flex}.exFxyG_sessionRow+.exFxyG_sessionRow{border-top:.5px solid var(--dsw-alias-border-l1)}.exFxyG_sessionText{flex-direction:column;gap:2px;min-width:0;display:flex}.exFxyG_sessionTitle{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.exFxyG_sessionMeta{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);align-items:center;gap:6px;display:flex}.exFxyG_empty{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);padding:12px 2px}.exFxyG_status{flex-wrap:wrap;gap:6px 18px;display:flex}.exFxyG_statusItem{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12);align-items:center;gap:6px;display:flex}.exFxyG_statusValue{color:var(--dsw-alias-label-primary)}.exFxyG_statusBad{color:var(--dsw-alias-state-error-primary)}.exFxyG_statusGood{color:var(--dsw-alias-state-success-primary)}.exFxyG_panel{height:100%;min-height:0;color:var(--dsw-alias-label-primary);display:flex}.exFxyG_listPane{background:var(--dsw-specific-sidebar-fill);border-right:.5px solid var(--dsw-alias-border-l3);flex-direction:column;flex:none;width:280px;min-height:0;display:flex}.exFxyG_listHead{flex-direction:column;flex:none;gap:6px;padding:10px 10px 8px;display:flex}.exFxyG_panel ::placeholder,.exFxyG_panel input::placeholder,.exFxyG_panel textarea::placeholder{color:var(--dsw-alias-label-caption);opacity:1}.exFxyG_listToggle{color:var(--dsw-alias-button-info-fill)}.exFxyG_panel[data-list=hidden] .exFxyG_listPane{display:none}.exFxyG_listStatus{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.exFxyG_list{flex-direction:column;flex:1;gap:3px;min-height:0;margin-right:2px;padding:0 6px 8px;display:flex;overflow-y:auto}.exFxyG_notice{background:var(--dsw-alias-state-warn-tertiary);color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);border-radius:8px;align-items:flex-start;gap:6px;margin:2px 2px 6px;padding:6px 8px;display:flex}.exFxyG_noticeText{flex:1;min-width:0}.exFxyG_noticeClose{width:14px;height:14px;color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:0;border-radius:4px;flex:none;justify-content:center;align-items:center;padding:0;font-size:13px;line-height:13px;display:inline-flex}.exFxyG_noticeClose:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_treeRow,.exFxyG_treeSession{box-sizing:border-box;width:100%;color:var(--dsw-alias-label-primary);text-align:left;cursor:pointer;user-select:none;transition:background var(--ds-transition-duration-fast) var(--ds-ease-in-out);background:0 0;border:0;border-radius:8px;align-items:center;gap:6px;padding:0 8px;display:flex}.exFxyG_treeRow{height:34px}.exFxyG_treeSession{gap:0;height:32px}.exFxyG_treeRow:hover,.exFxyG_treeSession:hover,.exFxyG_treeSessionSelected{background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_treeRow:focus-visible,.exFxyG_treeSession:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.exFxyG_panel [data-level=\"1\"]{padding-left:24px}.exFxyG_panel [data-level=\"2\"]{padding-left:40px}.exFxyG_treeSlot{width:16px;height:20px;color:var(--dsw-alias-label-tertiary);flex:none;justify-content:center;align-items:center;display:inline-flex}.exFxyG_treeChevron{color:var(--dsw-alias-label-caption);display:none}.exFxyG_treeRow:hover .exFxyG_treeFolder,.exFxyG_treeRow:focus-visible .exFxyG_treeFolder{display:none}.exFxyG_treeRow:hover .exFxyG_treeChevron,.exFxyG_treeRow:focus-visible .exFxyG_treeChevron{display:inline-flex}.exFxyG_arrowOpen{transform:rotate(90deg)}.exFxyG_treeChevron svg{transition:transform .15s var(--ds-ease-in-out)}.exFxyG_rowTitle{min-width:0;font:var(--dsw-font-s-14);text-overflow:ellipsis;white-space:nowrap;flex:1;overflow:hidden}.exFxyG_treeSession .exFxyG_rowTitle{margin:0 6px 0 4px}.exFxyG_rowTime{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);flex:none}.exFxyG_treeRowDim .exFxyG_rowTitle,.exFxyG_treeRowDim .exFxyG_rowTime{color:var(--dsw-alias-label-secondary)}.exFxyG_heroRoot{justify-content:center;align-items:center;min-width:0;height:100%;padding:0 24px;display:flex}.exFxyG_heroStack{flex-direction:column;align-items:center;gap:12px;width:100%;max-width:calc(min(920px,100%) + 32px);display:flex}.exFxyG_heroHeadline{color:var(--dsw-alias-label-primary);flex-wrap:wrap;justify-content:center;align-items:center;gap:12px 10px;font-size:26px;font-weight:500;line-height:32px;display:flex}.exFxyG_heroFish{color:var(--dsw-alias-label-primary);flex:none;justify-content:center;align-items:center;display:inline-flex}.exFxyG_heroTitleGroup{flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 7px;min-width:0;display:flex}.exFxyG_heroBadge{border:.5px solid var(--dsw-alias-interactive-bg-hover);background:var(--dsw-alias-state-business-tertiary);color:var(--dsw-alias-label-primary-bluish);font-family:var(--ds-font-family-code);white-space:nowrap;border-radius:24px;align-self:flex-start;margin-top:2px;padding:1px 7px 0;font-size:12px;font-weight:500;line-height:18px}.exFxyG_heroHint{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);text-align:center;margin:0}.exFxyG_tjRoot{width:100%;min-height:0;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-1);flex-direction:column;flex:1;display:flex;overflow:hidden}.exFxyG_tjToolbar{z-index:4;box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);flex:none;align-items:center;gap:2px;height:32px;padding:0 6px;display:flex;position:sticky;top:0}.exFxyG_tjToggle{height:20px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);cursor:pointer;background:0 0;border:0;border-radius:3px;flex:none;align-items:center;gap:4px;padding:0 7px;display:inline-flex}.exFxyG_tjToggleIcon{stroke:currentColor;stroke-width:1.25px;stroke-linecap:round;stroke-linejoin:round;flex:none;width:12px;height:12px}.exFxyG_tjToggle:hover,.exFxyG_tjToggle[aria-pressed=true],.exFxyG_tjAction:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_tjToggle:focus-visible,.exFxyG_tjAction:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary);outline-offset:1px}.exFxyG_tjAction{height:20px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);cursor:pointer;background:0 0;border:0;border-radius:3px;flex:none;align-items:center;gap:4px;padding:0 5px;display:inline-flex}.exFxyG_tjActionIcon{color:var(--dsw-alias-label-tertiary);font:14px/14px var(--ds-font-family-code)}.exFxyG_tjSearch{border:.5px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-bg-layer-2);min-width:84px;height:22px;color:var(--dsw-alias-label-caption);border-radius:4px;flex:0 164px;align-items:center;gap:4px;margin-left:auto;padding:0 6px;display:flex}.exFxyG_tjSearch:focus-within{border-color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-bg-layer-1)}.exFxyG_tjSearchIcon{flex:none}.exFxyG_tjSearchInput{width:100%;min-width:0;color:var(--dsw-alias-label-primary);font:var(--dsw-font-xxs-12);background:0 0;border:0;outline:0;padding:0}.exFxyG_tjSearchInput::placeholder{color:var(--dsw-alias-label-caption)}.exFxyG_tjStrip{border-bottom:.5px solid var(--dsw-alias-border-l2);flex:none}.exFxyG_tjPlot{background:var(--dsw-alias-bg-layer-2);grid-template-columns:44px minmax(0,1fr);height:50px;display:grid;overflow:hidden}.exFxyG_tjLaneLabels{border-right:.5px solid var(--dsw-alias-border-l1);color:var(--dsw-alias-label-caption);font-size:10px;line-height:1;position:relative}.exFxyG_tjLaneLabels span{justify-content:flex-end;align-items:center;height:8px;display:flex;position:absolute;right:3px}.exFxyG_tjLaneLabels span:first-child{top:7px}.exFxyG_tjLaneLabels span:nth-child(2){top:21px}.exFxyG_tjLaneLabels span:nth-child(3){top:35px}.exFxyG_tjTrack{position:relative;overflow:hidden}.exFxyG_tjLanes,.exFxyG_tjTurnBoundaries{position:absolute;inset:7px 0}.exFxyG_tjSpan{top:calc(var(--tj-span-lane) * 14px);left:var(--tj-span-left);width:max(2px, var(--tj-span-width));background:var(--dsw-alias-label-secondary);opacity:.78;cursor:pointer;border:0;border-radius:1px;min-width:2px;height:8px;padding:0;position:absolute}.exFxyG_tjSpan[data-kind=user]{background:var(--dsw-alias-state-business-primary)}.exFxyG_tjSpan[data-kind=assistant],.exFxyG_tjSpan[data-kind=think]{background:var(--dsw-alias-label-primary);opacity:1}.exFxyG_tjSpan[data-kind=tool]{background:var(--dsw-alias-state-warn-label);opacity:1}.exFxyG_tjSpan[data-kind=context]{background:var(--dsw-alias-state-success-primary)}.exFxyG_tjSpan[data-error=true]{background:var(--dsw-alias-state-error-primary)}.exFxyG_tjSpan[data-selected=false]{opacity:.14}.exFxyG_tjSpan[data-current=true]{z-index:1;box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary)}.exFxyG_tjTurnBoundary{background:var(--dsw-alias-border-l2);width:.5px;position:absolute;top:0;bottom:0}.exFxyG_tjSplit{background:var(--dsw-alias-bg-layer-1);flex:1;min-width:0;min-height:0;display:flex;overflow:hidden}.exFxyG_tjTablePane{flex:1;min-width:0;overflow:hidden auto}.exFxyG_ledgerTable tbody tr[data-selected=true]{background:var(--dsw-alias-interactive-bg-active)}.exFxyG_ledgerTable tbody tr[data-dimmed=true]{opacity:.3}.exFxyG_ledgerTable tbody tr[data-folded=true]{cursor:pointer}.exFxyG_ledgerTable tbody tr[data-folded=true] td{height:20px}.exFxyG_tjFolded{min-width:0;color:var(--dsw-alias-label-secondary);align-items:center;gap:6px;font-size:12px;line-height:16px;display:flex}.exFxyG_tjFoldedEllipsis{color:var(--dsw-alias-label-tertiary);flex:none;font-weight:600}.exFxyG_tjFoldedText{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.exFxyG_tjDetails{border-left:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);flex-direction:column;flex:none;width:clamp(320px,38%,440px);min-width:0;min-height:0;display:flex}.exFxyG_tjDetailsHeader{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);flex:none;justify-content:space-between;align-items:center;height:42px;padding:0 8px 0 12px;display:flex}.exFxyG_tjDetailsTitle{align-items:center;gap:8px;min-width:0;display:flex}.exFxyG_tjDetailsDot{corner-shape:round;background:var(--dsw-alias-label-secondary);border-radius:50%;flex:none;width:5px;height:5px}.exFxyG_tjDetailsName{font:500 12px/16px var(--ds-font-family-code);flex:none}.exFxyG_tjDetailsLocation{min-width:0;color:var(--dsw-alias-label-tertiary);font:11px/16px var(--ds-font-family-code);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.exFxyG_tjClose{width:28px;height:28px;color:var(--dsw-alias-label-secondary);cursor:pointer;background:0 0;border:0;border-radius:6px;flex:none;justify-content:center;align-items:center;padding:0;font-size:18px;line-height:18px;display:inline-flex}.exFxyG_tjClose:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_tjDetailTabs{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);white-space:nowrap;flex:none;gap:1px;width:100%;height:34px;padding:0 8px;display:flex;overflow-x:auto}.exFxyG_tjDetailTab{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);cursor:pointer;background:0 0;border:0;flex:none;padding:0 9px;position:relative}.exFxyG_tjDetailTab:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_tjDetailTabActive{color:var(--dsw-alias-state-business-primary)}.exFxyG_tjDetailTabActive:after{background:var(--dsw-alias-state-business-primary);content:\"\";border-radius:1px 1px 0 0;height:2px;position:absolute;bottom:0;left:9px;right:9px}.exFxyG_tjDetailBody{flex:1;min-height:0;overflow:hidden auto}.exFxyG_tjOverview{font:var(--dsw-font-xs-13);margin:0;padding:8px 0}.exFxyG_tjOverview>div{grid-template-columns:94px minmax(0,1fr);align-items:center;min-height:22px;padding:0 14px;display:grid}.exFxyG_tjOverview dt{color:var(--dsw-alias-label-tertiary)}.exFxyG_tjOverview dd{min-width:0;color:var(--dsw-alias-label-primary);text-overflow:ellipsis;white-space:nowrap;margin:0;overflow:hidden}.exFxyG_tjPayload{box-sizing:border-box;overflow-wrap:anywhere;background:var(--dsw-alias-markdown-code-block);min-height:100%;color:var(--dsw-alias-label-primary);font:12px/19px var(--ds-font-family-code);tab-size:2;white-space:pre-wrap;margin:0;padding:14px}.exFxyG_tjMarkdown{padding:6px 14px 8px}.exFxyG_viewPane{background:var(--dsw-alias-bg-base);flex-direction:column;flex:1;min-width:0;min-height:0;display:flex}.exFxyG_viewHeader{border-bottom:.5px solid var(--dsw-alias-border-l3);flex-direction:column;flex:none;padding:10px 20px 0;display:flex}.exFxyG_viewTitleRow{align-items:center;gap:8px;min-width:0;min-height:30px;display:flex}.exFxyG_viewSpacer{flex:1}.exFxyG_viewTabs{z-index:1;gap:36px;margin-top:10px;padding-left:8px;display:flex;position:relative}.exFxyG_viewTab{color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:0;padding:0 0 9px;font-size:13px;font-weight:500;line-height:16px;position:relative}.exFxyG_viewTab:after{content:\"\";background:0 0;border-radius:2px;height:2px;position:absolute;bottom:-1px;left:0;right:0}.exFxyG_viewTabActive{color:var(--dsw-alias-state-business-primary)}.exFxyG_viewTabActive:after{background:var(--dsw-alias-state-business-primary)}.exFxyG_viewTab:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.exFxyG_chromeCluster{flex:none;align-items:center;gap:8px;min-width:0;display:flex}.exFxyG_chromeChip{border:.5px solid var(--dsw-alias-border-l2);corner-shape:round;max-width:200px;min-height:24px;color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);text-overflow:ellipsis;white-space:nowrap;border-radius:999px;align-items:center;gap:4px;padding:0 8px;display:inline-flex;overflow:hidden}.exFxyG_ringRoot{flex:none;display:inline-flex;position:relative}.exFxyG_ringTrigger{corner-shape:round;cursor:pointer;background:0 0;border:0;border-radius:50%;place-items:center;width:20px;height:20px;padding:0;display:grid}.exFxyG_ringTrigger:hover{background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_ringTrigger:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.exFxyG_ringTrack{fill:none;stroke:var(--dsw-alias-border-l3);stroke-width:2px}.exFxyG_ringFill{fill:none;stroke:var(--dsw-alias-state-business-primary);stroke-width:2px;stroke-linecap:round}.exFxyG_ringPanel{z-index:9;--dsw-elevation-stroke-color:var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-overlay);box-shadow:var(--dsw-elevation-prominent);white-space:nowrap;border:0;border-radius:10px;flex-direction:column;gap:2px;padding:8px 10px;display:flex;position:absolute;top:26px;right:0}.exFxyG_ringHeadline{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12)}.exFxyG_ringFigures{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11)}.exFxyG_statusRow{width:100%;max-width:calc(min(920px,100%) + 32px);color:var(--dsw-alias-label-caption);font:var(--dsw-font-xxxs-11);font-variant-numeric:tabular-nums;flex-wrap:wrap;justify-content:center;gap:12px;padding:6px 0 0;display:flex}.exFxyG_ledger{background:var(--dsw-alias-bg-layer-1);flex:1;min-height:0;margin-right:2px;overflow-y:auto}.exFxyG_ledgerTable{border-spacing:0;table-layout:fixed;width:100%;color:var(--dsw-alias-label-primary);font:var(--dsw-font-xxs-12)}.exFxyG_ledgerTable th{z-index:3;box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-specific-sidebar-fill);height:30px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);text-align:left;text-overflow:ellipsis;white-space:nowrap;padding:0 8px;font-weight:500;position:sticky;top:0;overflow:hidden}.exFxyG_ledgerEventHead{text-align:right;width:122px;padding-right:4px}.exFxyG_ledgerTable td{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l1);text-overflow:ellipsis;white-space:nowrap;height:30px;padding:0 8px;overflow:hidden}.exFxyG_ledgerTable tbody tr:hover{background:var(--dsw-alias-interactive-bg-hover)}.exFxyG_ledgerEventCell{text-align:right;padding-left:36px;padding-right:4px;position:relative;overflow:visible}.exFxyG_ledgerRail{z-index:4;background:var(--dsw-alias-border-l3);pointer-events:none;width:2px;position:absolute;top:-1px;bottom:-1px;left:0}.exFxyG_ledgerTable tbody tr[data-error=true] .exFxyG_ledgerRail{background:var(--dsw-alias-state-error-primary)}.exFxyG_ledgerTable tbody tr[data-turn-start=true] td:before{z-index:1;background:var(--dsw-alias-border-l1);content:\"\";pointer-events:none;height:2px;position:absolute;top:0;left:0;right:0;transform:translateY(-50%)}.exFxyG_ledgerTable tbody tr[data-turn-start=true]:first-child td:before{content:none}.exFxyG_ledgerTurnLabel{z-index:3;box-sizing:border-box;background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-tertiary);font:8px/10px var(--ds-font-family-code);font-variant-numeric:tabular-nums;white-space:nowrap;border-radius:0 0 2px;align-items:center;padding:1px 5px;display:inline-grid;position:absolute;top:0;left:0}.exFxyG_ledgerKindSlot{justify-content:flex-end;align-items:center;width:76px;display:inline-flex}.exFxyG_ledgerKind{box-sizing:border-box;letter-spacing:.035em;user-select:none;border:1px solid #0000;border-radius:4px;align-items:center;height:19px;padding:0 5px;font-size:10px;font-weight:650;line-height:16px;display:inline-flex}.exFxyG_kind_user{color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-state-business-tertiary)}.exFxyG_kind_assistant,.exFxyG_kind_think{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-2)}.exFxyG_kind_tool{color:var(--dsw-alias-state-warn-label);background:var(--dsw-alias-state-warn-tertiary)}.exFxyG_kind_error{color:var(--dsw-alias-state-error-primary);background:var(--dsw-alias-bg-layer-2)}.exFxyG_kind_system,.exFxyG_kind_policy,.exFxyG_kind_title,.exFxyG_kind_other,.exFxyG_kind_compaction{color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-bg-module-platform)}.exFxyG_kind_turn,.exFxyG_kind_step,.exFxyG_kind_context{color:var(--dsw-alias-label-tertiary);background:var(--dsw-alias-bg-layer-2)}.exFxyG_ledgerContentCell{padding-left:4px}.exFxyG_ledgerText{color:var(--dsw-alias-label-primary)}.exFxyG_ledgerMono{color:var(--dsw-alias-label-secondary);font-family:var(--ds-font-family-code);font-size:12px}.exFxyG_ledgerResult{grid-template-columns:clamp(180px,36cqw,480px) minmax(0,1fr);align-items:center;gap:8px;min-width:0;display:grid}.exFxyG_ledgerResult>*{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.exFxyG_ledgerErrorText{color:var(--dsw-alias-state-error-primary)}.exFxyG_ledgerDuration{color:var(--dsw-alias-label-caption);font:var(--dsw-font-xxxs-11);font-variant-numeric:tabular-nums;margin-left:8px}.exFxyG_viewTitle{min-width:0;font:var(--dsw-font-s-strong-14);text-overflow:ellipsis;white-space:nowrap;flex:0 auto;margin:0;overflow:hidden}.exFxyG_viewMachine{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);white-space:nowrap;flex:none}.exFxyG_viewScroll{flex:1;min-height:0;margin-right:2px;padding:16px 32px;overflow-y:auto}.exFxyG_viewColumn{flex-direction:column;width:100%;max-width:min(920px,100%);margin:0 auto;display:flex}.exFxyG_viewColumn>*+*{margin-top:16px}.exFxyG_userRow{flex-direction:column;align-items:flex-end;gap:6px;display:flex}.exFxyG_bubble{max-width:min(calc(var(--dsh-chat-content-width,748px) * .702), 82%);background:var(--dsw-specific-bubble);font-size:var(--dsh-content-font-size,14px);line-height:calc(22px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-primary);white-space:pre-wrap;word-break:break-word;border-radius:22px;padding:10px 16px}.exFxyG_assistantRow{flex-direction:column;gap:16px;min-width:0;display:flex}.exFxyG_messageActions{margin-top:4px;margin-left:-6px}.exFxyG_stopped,.exFxyG_mediaChip{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-tertiary);border-radius:6px;align-self:flex-start;padding:0 6px;font-size:11px;line-height:18px}.exFxyG_action{width:calc(28px + var(--dsh-content-font-delta,0px));height:calc(28px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;border-radius:28px;justify-content:center;align-items:center;padding:6px;display:inline-flex}.exFxyG_action svg{width:calc(15px + var(--dsh-content-font-delta,0px));height:calc(15px + var(--dsh-content-font-delta,0px))}.exFxyG_action:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary)}.exFxyG_timeStart{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);white-space:nowrap;padding-right:12px}.exFxyG_timeEnd{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);white-space:nowrap}.exFxyG_noticeRow{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px));grid-template-columns:10px minmax(0,1fr) auto;align-items:start;gap:8px;padding:2px 0;display:grid}.exFxyG_noticeDot{margin-top:5px}.exFxyG_noticeCopy{overflow-wrap:anywhere;min-width:0}.exFxyG_noticeTitleError{color:var(--dsw-alias-state-error-primary);margin-right:6px;font-weight:600}.exFxyG_noticeTitleWarn{color:var(--dsw-alias-state-warn-primary);margin-right:6px;font-weight:600}.exFxyG_noticeMessage{color:var(--dsw-alias-label-secondary)}.exFxyG_noticeCode{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-markdown-code-block-small)}.exFxyG_retryRow{color:var(--dsw-alias-label-tertiary);font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px))}.exFxyG_retrySummary{width:fit-content;color:inherit;cursor:pointer;user-select:none;border-radius:3px;align-items:center;gap:7px;padding:2px 0;list-style:none;display:inline-flex}.exFxyG_retrySummary::-webkit-details-marker{display:none}.exFxyG_retrySummary:after{content:\"\";opacity:.8;border-bottom:1.5px solid;border-right:1.5px solid;width:6px;height:6px;transition:transform .12s;transform:rotate(-45deg)}.exFxyG_retrySummary:hover{color:var(--dsw-alias-label-secondary)}.exFxyG_retrySummary:focus-visible{outline:1.5px solid var(--dsw-alias-button-info-fill);outline-offset:2px}.exFxyG_retryText{color:inherit}.exFxyG_retryRow[data-active] .exFxyG_retryText{background:linear-gradient(90deg, var(--dsw-alias-label-tertiary) 0%, var(--dsw-alias-label-tertiary) 40%, var(--dsw-alias-label-secondary) 50%, var(--dsw-alias-label-tertiary) 60%, var(--dsw-alias-label-tertiary) 100%);color:#0000;background-position:100%;background-size:200% 100%;background-clip:text;animation:1.6s ease-in-out infinite exFxyG_dsh-sync-retry-shimmer}@keyframes exFxyG_dsh-sync-retry-shimmer{0%{background-position:100%}to{background-position:0%}}@media (prefers-reduced-motion:reduce){.exFxyG_retryRow[data-active] .exFxyG_retryText{color:inherit;background:0 0;animation:none}}.exFxyG_retryRow[open] .exFxyG_retrySummary:after{transform:rotate(45deg)}.exFxyG_retryDetails{overflow-wrap:anywhere;font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(18px + var(--dsh-content-font-delta-secondary,0px));gap:2px;margin-top:3px;padding-left:14px;display:grid}.exFxyG_retryDetailLabel{color:var(--dsw-alias-label-secondary)}.exFxyG_toBottomSlot{z-index:2;pointer-events:none;justify-content:flex-end;height:0;padding-right:8px;display:flex;position:sticky;bottom:16px}.exFxyG_toBottom{--dsw-elevation-stroke-color:var(--dsw-alias-border-l3);corner-shape:round;width:34px;height:34px;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-button-floating-fill);box-shadow:var(--dsw-elevation-panel);cursor:pointer;pointer-events:auto;border:0;border-radius:100px;justify-content:center;align-items:center;margin-top:-34px;padding:0;display:flex}.exFxyG_toBottom:hover{background:var(--dsw-alias-button-floating-hover)}.exFxyG_composerRoot{flex-direction:column;flex:none;align-items:center;padding:0 16px 8px;display:flex}.exFxyG_composerCard{box-sizing:border-box;--dsw-elevation-stroke-color:var(--dsw-alias-border-l2);background:var(--dsw-specific-input-major);width:100%;max-width:calc(min(920px,100%) + 32px);box-shadow:var(--dsw-elevation-soft);font:var(--dsw-font-s-14);border:0;border-radius:22px;flex-direction:column;gap:12px;padding-top:8px;display:flex}.exFxyG_composerText{box-sizing:border-box;width:100%;min-height:44px;max-height:200px;color:var(--dsw-alias-label-primary);font:inherit;resize:none;background:0 0;border:0;margin:0;padding:8px 16px 0}.exFxyG_composerText::placeholder{color:var(--dsw-alias-placeholder)}.exFxyG_composerText:focus-visible{outline:none}.exFxyG_composerBar{align-items:center;gap:8px;padding:0 10px 10px 16px;display:flex}.exFxyG_composerTarget{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);flex:none}.exFxyG_composerDelivery{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11)}.exFxyG_composerOffline{color:var(--dsw-alias-state-warn-label);font:var(--dsw-font-xxxs-11)}.exFxyG_composerSpacer{flex:1}.exFxyG_sendButton{corner-shape:round;background:var(--dsw-alias-button-info-fill);color:#fff;cursor:pointer;width:34px;height:34px;transition:background-color var(--ds-transition-duration-fast) var(--ds-ease-in-out);border:0;border-radius:999px;flex:none;place-items:center;display:grid}.exFxyG_sendButton:hover:not(:disabled){background:var(--dsw-alias-button-info-hover)}.exFxyG_sendButton:disabled{opacity:.4;cursor:default}.exFxyG_sendButton:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.exFxyG_error{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12);margin-bottom:10px}.exFxyG_narrowOnly{display:none}@media (width<=719px){.exFxyG_listPane{border-right:0;width:100%}.exFxyG_panel[data-open=true] .exFxyG_listPane,.exFxyG_panel[data-open=false] .exFxyG_viewPane{display:none}.exFxyG_narrowOnly{display:inline-flex}}@media (prefers-reduced-motion:reduce){.exFxyG_treeRow,.exFxyG_treeSession,.exFxyG_treeChevron svg,.exFxyG_sendButton{transition:none}}";
+		let react_dom = require("react-dom");
+		//#region \0dsh-css:C:\Users\14339\Desktop\git\dsh-session-sync\src\client\sync.module.css.mjs
+		const css$6 = ".Emn1LG_section{flex-direction:column;gap:14px;padding:4px 0 8px;display:flex}.Emn1LG_lede{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xs-13);margin:0}.Emn1LG_group{flex-direction:column;gap:10px;display:flex}.Emn1LG_groupTitle{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-strong-13);margin:0}.Emn1LG_card{border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);border-radius:10px;flex-direction:column;gap:10px;padding:12px 14px;display:flex}.Emn1LG_field{flex-direction:column;gap:4px;display:flex}.Emn1LG_fieldRow{justify-content:space-between;align-items:center;gap:12px;display:flex}.Emn1LG_fieldText{flex-direction:column;gap:2px;min-width:0;display:flex}.Emn1LG_label{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13)}.Emn1LG_hint{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12)}.Emn1LG_pair{grid-template-columns:minmax(0,1fr) 120px;gap:10px;display:grid}.Emn1LG_actions{align-items:center;gap:8px;display:flex}.Emn1LG_saved{color:var(--dsw-alias-state-success-primary);font:var(--dsw-font-xxs-12)}.Emn1LG_dirty{color:var(--dsw-alias-state-warn-primary);font:var(--dsw-font-xxs-12)}.Emn1LG_failed{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12)}.Emn1LG_sessionList{flex-direction:column;max-height:280px;display:flex;overflow-y:auto}.Emn1LG_sessionRow{justify-content:space-between;align-items:center;gap:12px;min-height:40px;padding:5px 2px;display:flex}.Emn1LG_sessionRow+.Emn1LG_sessionRow{border-top:.5px solid var(--dsw-alias-border-l1)}.Emn1LG_sessionText{flex-direction:column;gap:2px;min-width:0;display:flex}.Emn1LG_sessionTitle{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.Emn1LG_sessionMeta{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);align-items:center;gap:6px;display:flex}.Emn1LG_empty{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);padding:12px 2px}.Emn1LG_status{flex-wrap:wrap;gap:6px 18px;display:flex}.Emn1LG_statusItem{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12);align-items:center;gap:6px;display:flex}.Emn1LG_statusValue{color:var(--dsw-alias-label-primary)}.Emn1LG_statusBad{color:var(--dsw-alias-state-error-primary)}.Emn1LG_statusGood{color:var(--dsw-alias-state-success-primary)}.Emn1LG_panel{height:100%;min-height:0;color:var(--dsw-alias-label-primary);display:flex}.Emn1LG_listPane{background:var(--dsw-specific-sidebar-fill);border-right:.5px solid var(--dsw-alias-border-l3);flex-direction:column;flex:none;width:280px;min-height:0;display:flex}.Emn1LG_listHead{flex-direction:column;flex:none;gap:6px;padding:10px 10px 8px;display:flex}.Emn1LG_panel ::placeholder,.Emn1LG_panel input::placeholder,.Emn1LG_panel textarea::placeholder{color:var(--dsw-alias-label-caption);opacity:1}.Emn1LG_listToggle{color:var(--dsw-alias-button-info-fill)}.Emn1LG_panel[data-list=hidden] .Emn1LG_listPane{display:none}.Emn1LG_listStatus{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.Emn1LG_list{flex-direction:column;flex:1;gap:3px;min-height:0;margin-right:2px;padding:0 6px 8px;display:flex;overflow-y:auto}.Emn1LG_notice{background:var(--dsw-alias-state-warn-tertiary);color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);border-radius:8px;align-items:flex-start;gap:6px;margin:2px 2px 6px;padding:6px 8px;display:flex}.Emn1LG_noticeText{flex:1;min-width:0}.Emn1LG_noticeClose{width:14px;height:14px;color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:0;border-radius:4px;flex:none;justify-content:center;align-items:center;padding:0;font-size:13px;line-height:13px;display:inline-flex}.Emn1LG_noticeClose:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_treeRow,.Emn1LG_treeSession{box-sizing:border-box;width:100%;color:var(--dsw-alias-label-primary);text-align:left;cursor:pointer;user-select:none;transition:background var(--ds-transition-duration-fast) var(--ds-ease-in-out);background:0 0;border:0;border-radius:8px;align-items:center;gap:6px;padding:0 8px;display:flex}.Emn1LG_treeRow{height:34px}.Emn1LG_treeSession{gap:0;height:32px}.Emn1LG_treeRow:hover,.Emn1LG_treeSession:hover,.Emn1LG_treeSessionSelected{background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_treeRow:focus-visible,.Emn1LG_treeSession:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.Emn1LG_panel [data-level=\"1\"]{padding-left:24px}.Emn1LG_panel [data-level=\"2\"]{padding-left:40px}.Emn1LG_treeSlot{width:16px;height:20px;color:var(--dsw-alias-label-tertiary);flex:none;justify-content:center;align-items:center;display:inline-flex}.Emn1LG_treeChevron{color:var(--dsw-alias-label-caption);display:none}.Emn1LG_treeRow:hover .Emn1LG_treeFolder,.Emn1LG_treeRow:focus-visible .Emn1LG_treeFolder{display:none}.Emn1LG_treeRow:hover .Emn1LG_treeChevron,.Emn1LG_treeRow:focus-visible .Emn1LG_treeChevron{display:inline-flex}.Emn1LG_arrowOpen{transform:rotate(90deg)}.Emn1LG_treeChevron svg{transition:transform .15s var(--ds-ease-in-out)}.Emn1LG_rowTitle{min-width:0;font:var(--dsw-font-s-14);text-overflow:ellipsis;white-space:nowrap;flex:1;overflow:hidden}.Emn1LG_treeSession .Emn1LG_rowTitle{margin:0 6px 0 4px}.Emn1LG_rowTime{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);flex:none}.Emn1LG_treeRowDim .Emn1LG_rowTitle,.Emn1LG_treeRowDim .Emn1LG_rowTime{color:var(--dsw-alias-label-secondary)}.Emn1LG_heroRoot{justify-content:center;align-items:center;min-width:0;height:100%;padding:0 24px;display:flex}.Emn1LG_heroStack{flex-direction:column;align-items:center;gap:12px;width:100%;max-width:calc(min(920px,100%) + 32px);display:flex}.Emn1LG_heroHeadline{color:var(--dsw-alias-label-primary);flex-wrap:wrap;justify-content:center;align-items:center;gap:12px 10px;font-size:26px;font-weight:500;line-height:32px;display:flex}.Emn1LG_heroFish{color:var(--dsw-alias-label-primary);flex:none;justify-content:center;align-items:center;display:inline-flex}.Emn1LG_heroTitleGroup{flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 7px;min-width:0;display:flex}.Emn1LG_heroBadge{border:.5px solid var(--dsw-alias-interactive-bg-hover);background:var(--dsw-alias-state-business-tertiary);color:var(--dsw-alias-label-primary-bluish);font-family:var(--ds-font-family-code);white-space:nowrap;border-radius:24px;align-self:flex-start;margin-top:2px;padding:1px 7px 0;font-size:12px;font-weight:500;line-height:18px}.Emn1LG_heroHint{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);text-align:center;margin:0}.Emn1LG_tjRoot{width:100%;min-height:0;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-1);flex-direction:column;flex:1;display:flex;overflow:hidden}.Emn1LG_tjToolbar{z-index:4;box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);flex:none;align-items:center;gap:2px;height:32px;padding:0 6px;display:flex;position:sticky;top:0}.Emn1LG_tjToggle{height:20px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);cursor:pointer;background:0 0;border:0;border-radius:3px;flex:none;align-items:center;gap:4px;padding:0 7px;display:inline-flex}.Emn1LG_tjToggleIcon{stroke:currentColor;stroke-width:1.25px;stroke-linecap:round;stroke-linejoin:round;flex:none;width:12px;height:12px}.Emn1LG_tjToggle:hover,.Emn1LG_tjToggle[aria-pressed=true],.Emn1LG_tjAction:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_tjToggle:focus-visible,.Emn1LG_tjAction:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary);outline-offset:1px}.Emn1LG_tjAction{height:20px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);cursor:pointer;background:0 0;border:0;border-radius:3px;flex:none;align-items:center;gap:4px;padding:0 5px;display:inline-flex}.Emn1LG_tjActionIcon{color:var(--dsw-alias-label-tertiary);font:14px/14px var(--ds-font-family-code)}.Emn1LG_tjSearch{border:.5px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-bg-layer-2);min-width:84px;height:22px;color:var(--dsw-alias-label-caption);border-radius:4px;flex:0 164px;align-items:center;gap:4px;margin-left:auto;padding:0 6px;display:flex}.Emn1LG_tjSearch:focus-within{border-color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-bg-layer-1)}.Emn1LG_tjSearchIcon{flex:none}.Emn1LG_tjSearchInput{width:100%;min-width:0;color:var(--dsw-alias-label-primary);font:var(--dsw-font-xxs-12);background:0 0;border:0;outline:0;padding:0}.Emn1LG_tjSearchInput::placeholder{color:var(--dsw-alias-label-caption)}.Emn1LG_tjStrip{border-bottom:.5px solid var(--dsw-alias-border-l2);flex:none}.Emn1LG_tjPlot{background:var(--dsw-alias-bg-layer-2);grid-template-columns:44px minmax(0,1fr);height:50px;display:grid;overflow:hidden}.Emn1LG_tjLaneLabels{border-right:.5px solid var(--dsw-alias-border-l1);color:var(--dsw-alias-label-caption);font-size:10px;line-height:1;position:relative}.Emn1LG_tjLaneLabels span{justify-content:flex-end;align-items:center;height:8px;display:flex;position:absolute;right:3px}.Emn1LG_tjLaneLabels span:first-child{top:7px}.Emn1LG_tjLaneLabels span:nth-child(2){top:21px}.Emn1LG_tjLaneLabels span:nth-child(3){top:35px}.Emn1LG_tjTrack{position:relative;overflow:hidden}.Emn1LG_tjLanes,.Emn1LG_tjTurnBoundaries{position:absolute;inset:7px 0}.Emn1LG_tjSpan{top:calc(var(--tj-span-lane) * 14px);left:var(--tj-span-left);width:max(2px, var(--tj-span-width));background:var(--dsw-alias-label-secondary);opacity:.78;cursor:pointer;border:0;border-radius:1px;min-width:2px;height:8px;padding:0;position:absolute}.Emn1LG_tjSpan[data-kind=user]{background:var(--dsw-alias-state-business-primary)}.Emn1LG_tjSpan[data-kind=assistant],.Emn1LG_tjSpan[data-kind=think]{background:var(--dsw-alias-label-primary);opacity:1}.Emn1LG_tjSpan[data-kind=tool]{background:var(--dsw-alias-state-warn-label);opacity:1}.Emn1LG_tjSpan[data-kind=context]{background:var(--dsw-alias-state-success-primary)}.Emn1LG_tjSpan[data-error=true]{background:var(--dsw-alias-state-error-primary)}.Emn1LG_tjSpan[data-selected=false]{opacity:.14}.Emn1LG_tjSpan[data-current=true]{z-index:1;box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary)}.Emn1LG_tjTurnBoundary{background:var(--dsw-alias-border-l2);width:.5px;position:absolute;top:0;bottom:0}.Emn1LG_tjSplit{background:var(--dsw-alias-bg-layer-1);flex:1;min-width:0;min-height:0;display:flex;overflow:hidden}.Emn1LG_tjTablePane{flex:1;min-width:0;overflow:hidden auto}.Emn1LG_ledgerTable tbody tr[data-selected=true]{background:var(--dsw-alias-interactive-bg-active)}.Emn1LG_ledgerTable tbody tr[data-dimmed=true]{opacity:.3}.Emn1LG_ledgerTable tbody tr[data-folded=true]{cursor:pointer}.Emn1LG_ledgerTable tbody tr[data-folded=true] td{height:20px}.Emn1LG_tjFolded{min-width:0;color:var(--dsw-alias-label-secondary);align-items:center;gap:6px;font-size:12px;line-height:16px;display:flex}.Emn1LG_tjFoldedEllipsis{color:var(--dsw-alias-label-tertiary);flex:none;font-weight:600}.Emn1LG_tjFoldedText{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.Emn1LG_tjDetails{border-left:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);flex-direction:column;flex:none;width:clamp(320px,38%,440px);min-width:0;min-height:0;display:flex}.Emn1LG_tjDetailsHeader{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);flex:none;justify-content:space-between;align-items:center;height:42px;padding:0 8px 0 12px;display:flex}.Emn1LG_tjDetailsTitle{align-items:center;gap:8px;min-width:0;display:flex}.Emn1LG_tjDetailsDot{corner-shape:round;background:var(--dsw-alias-label-secondary);border-radius:50%;flex:none;width:5px;height:5px}.Emn1LG_tjDetailsName{font:500 12px/16px var(--ds-font-family-code);flex:none}.Emn1LG_tjDetailsLocation{min-width:0;color:var(--dsw-alias-label-tertiary);font:11px/16px var(--ds-font-family-code);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.Emn1LG_tjClose{width:28px;height:28px;color:var(--dsw-alias-label-secondary);cursor:pointer;background:0 0;border:0;border-radius:6px;flex:none;justify-content:center;align-items:center;padding:0;font-size:18px;line-height:18px;display:inline-flex}.Emn1LG_tjClose:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_tjDetailTabs{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);white-space:nowrap;flex:none;gap:1px;width:100%;height:34px;padding:0 8px;display:flex;overflow-x:auto}.Emn1LG_tjDetailTab{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);cursor:pointer;background:0 0;border:0;flex:none;padding:0 9px;position:relative}.Emn1LG_tjDetailTab:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_tjDetailTabActive{color:var(--dsw-alias-state-business-primary)}.Emn1LG_tjDetailTabActive:after{background:var(--dsw-alias-state-business-primary);content:\"\";border-radius:1px 1px 0 0;height:2px;position:absolute;bottom:0;left:9px;right:9px}.Emn1LG_tjDetailBody{flex:1;min-height:0;overflow:hidden auto}.Emn1LG_tjOverview{font:var(--dsw-font-xs-13);margin:0;padding:8px 0}.Emn1LG_tjOverview>div{grid-template-columns:94px minmax(0,1fr);align-items:center;min-height:22px;padding:0 14px;display:grid}.Emn1LG_tjOverview dt{color:var(--dsw-alias-label-tertiary)}.Emn1LG_tjOverview dd{min-width:0;color:var(--dsw-alias-label-primary);text-overflow:ellipsis;white-space:nowrap;margin:0;overflow:hidden}.Emn1LG_tjPayload{box-sizing:border-box;overflow-wrap:anywhere;background:var(--dsw-alias-markdown-code-block);min-height:100%;color:var(--dsw-alias-label-primary);font:12px/19px var(--ds-font-family-code);tab-size:2;white-space:pre-wrap;margin:0;padding:14px}.Emn1LG_tjMarkdown{padding:6px 14px 8px}.Emn1LG_viewPane{background:var(--dsw-alias-bg-base);flex-direction:column;flex:1;min-width:0;min-height:0;display:flex}.Emn1LG_viewHeader{border-bottom:.5px solid var(--dsw-alias-border-l3);flex-direction:column;flex:none;padding:10px 20px 0;display:flex}.Emn1LG_viewTitleRow{align-items:center;gap:8px;min-width:0;min-height:30px;display:flex}.Emn1LG_viewSpacer{flex:1}.Emn1LG_viewTabs{z-index:1;gap:36px;margin-top:10px;padding-left:8px;display:flex;position:relative}.Emn1LG_viewTab{color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:0;padding:0 0 9px;font-size:13px;font-weight:500;line-height:16px;position:relative}.Emn1LG_viewTab:after{content:\"\";background:0 0;border-radius:2px;height:2px;position:absolute;bottom:-1px;left:0;right:0}.Emn1LG_viewTabActive{color:var(--dsw-alias-state-business-primary)}.Emn1LG_viewTabActive:after{background:var(--dsw-alias-state-business-primary)}.Emn1LG_viewTab:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.Emn1LG_chromeCluster{flex:none;align-items:center;gap:8px;min-width:0;display:flex}.Emn1LG_chromeChip{border:.5px solid var(--dsw-alias-border-l2);corner-shape:round;max-width:200px;min-height:24px;color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);text-overflow:ellipsis;white-space:nowrap;border-radius:999px;align-items:center;gap:4px;padding:0 8px;display:inline-flex;overflow:hidden}.Emn1LG_ringRoot{flex:none;display:inline-flex;position:relative}.Emn1LG_ringTrigger{corner-shape:round;cursor:pointer;background:0 0;border:0;border-radius:50%;place-items:center;width:20px;height:20px;padding:0;display:grid}.Emn1LG_ringTrigger:hover{background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_ringTrigger:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.Emn1LG_ringTrack{fill:none;stroke:var(--dsw-alias-border-l3);stroke-width:2px}.Emn1LG_ringFill{fill:none;stroke:var(--dsw-alias-state-business-primary);stroke-width:2px;stroke-linecap:round}.Emn1LG_ringPanel{z-index:9;--dsw-elevation-stroke-color:var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-overlay);box-shadow:var(--dsw-elevation-prominent);white-space:nowrap;border:0;border-radius:10px;flex-direction:column;gap:2px;padding:8px 10px;display:flex;position:absolute;top:26px;right:0}.Emn1LG_ringHeadline{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12)}.Emn1LG_ringFigures{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11)}.Emn1LG_statusRow{width:100%;max-width:calc(min(920px,100%) + 32px);color:var(--dsw-alias-label-caption);font:var(--dsw-font-xxxs-11);font-variant-numeric:tabular-nums;flex-wrap:wrap;justify-content:center;gap:12px;padding:6px 0 0;display:flex}.Emn1LG_ledger{background:var(--dsw-alias-bg-layer-1);flex:1;min-height:0;margin-right:2px;overflow-y:auto}.Emn1LG_ledgerTable{border-spacing:0;table-layout:fixed;width:100%;color:var(--dsw-alias-label-primary);font:var(--dsw-font-xxs-12)}.Emn1LG_ledgerTable th{z-index:3;box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-specific-sidebar-fill);height:30px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);text-align:left;text-overflow:ellipsis;white-space:nowrap;padding:0 8px;font-weight:500;position:sticky;top:0;overflow:hidden}.Emn1LG_ledgerEventHead{text-align:right;width:122px;padding-right:4px}.Emn1LG_ledgerTable td{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l1);text-overflow:ellipsis;white-space:nowrap;height:30px;padding:0 8px;overflow:hidden}.Emn1LG_ledgerTable tbody tr:hover{background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_ledgerEventCell{text-align:right;padding-left:36px;padding-right:4px;position:relative;overflow:visible}.Emn1LG_ledgerRail{z-index:4;background:var(--dsw-alias-border-l3);pointer-events:none;width:2px;position:absolute;top:-1px;bottom:-1px;left:0}.Emn1LG_ledgerTable tbody tr[data-error=true] .Emn1LG_ledgerRail{background:var(--dsw-alias-state-error-primary)}.Emn1LG_ledgerTable tbody tr[data-turn-start=true] td:before{z-index:1;background:var(--dsw-alias-border-l1);content:\"\";pointer-events:none;height:2px;position:absolute;top:0;left:0;right:0;transform:translateY(-50%)}.Emn1LG_ledgerTable tbody tr[data-turn-start=true]:first-child td:before{content:none}.Emn1LG_ledgerTurnLabel{z-index:3;box-sizing:border-box;background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-tertiary);font:8px/10px var(--ds-font-family-code);font-variant-numeric:tabular-nums;white-space:nowrap;border-radius:0 0 2px;align-items:center;padding:1px 5px;display:inline-grid;position:absolute;top:0;left:0}.Emn1LG_ledgerKindSlot{justify-content:flex-end;align-items:center;width:76px;display:inline-flex}.Emn1LG_ledgerKind{box-sizing:border-box;letter-spacing:.035em;user-select:none;border:1px solid #0000;border-radius:4px;align-items:center;height:19px;padding:0 5px;font-size:10px;font-weight:650;line-height:16px;display:inline-flex}.Emn1LG_kind_user{color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-state-business-tertiary)}.Emn1LG_kind_assistant,.Emn1LG_kind_think{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-2)}.Emn1LG_kind_tool{color:var(--dsw-alias-state-warn-label);background:var(--dsw-alias-state-warn-tertiary)}.Emn1LG_kind_error{color:var(--dsw-alias-state-error-primary);background:var(--dsw-alias-bg-layer-2)}.Emn1LG_kind_system,.Emn1LG_kind_policy,.Emn1LG_kind_title,.Emn1LG_kind_other,.Emn1LG_kind_compaction{color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-bg-module-platform)}.Emn1LG_kind_turn,.Emn1LG_kind_step,.Emn1LG_kind_context{color:var(--dsw-alias-label-tertiary);background:var(--dsw-alias-bg-layer-2)}.Emn1LG_ledgerContentCell{padding-left:4px}.Emn1LG_ledgerText{color:var(--dsw-alias-label-primary)}.Emn1LG_ledgerMono{color:var(--dsw-alias-label-secondary);font-family:var(--ds-font-family-code);font-size:12px}.Emn1LG_ledgerResult{grid-template-columns:clamp(180px,36cqw,480px) minmax(0,1fr);align-items:center;gap:8px;min-width:0;display:grid}.Emn1LG_ledgerResult>*{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.Emn1LG_ledgerErrorText{color:var(--dsw-alias-state-error-primary)}.Emn1LG_ledgerDuration{color:var(--dsw-alias-label-caption);font:var(--dsw-font-xxxs-11);font-variant-numeric:tabular-nums;margin-left:8px}.Emn1LG_viewTitle{min-width:0;font:var(--dsw-font-s-strong-14);text-overflow:ellipsis;white-space:nowrap;flex:0 auto;margin:0;overflow:hidden}.Emn1LG_viewMachine{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);white-space:nowrap;flex:none}.Emn1LG_viewScroll{flex:1;min-height:0;margin-right:2px;padding:16px 32px;overflow-y:auto}.Emn1LG_officialPane{flex-direction:column;flex:1;min-height:0;display:flex;overflow:hidden}.Emn1LG_officialPane>*{flex:1;min-height:0}.Emn1LG_viewColumn{flex-direction:column;width:100%;max-width:min(920px,100%);margin:0 auto;display:flex}.Emn1LG_viewColumn>*+*{margin-top:16px}.Emn1LG_userRow{flex-direction:column;align-items:flex-end;gap:6px;display:flex}.Emn1LG_bubble{max-width:min(calc(var(--dsh-chat-content-width,748px) * .702), 82%);background:var(--dsw-specific-bubble);font-size:var(--dsh-content-font-size,14px);line-height:calc(22px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-primary);white-space:pre-wrap;word-break:break-word;border-radius:22px;padding:10px 16px}.Emn1LG_assistantRow{flex-direction:column;gap:16px;min-width:0;display:flex}.Emn1LG_messageActions{margin-top:4px;margin-left:-6px}.Emn1LG_stopped,.Emn1LG_mediaChip{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-tertiary);border-radius:6px;align-self:flex-start;padding:0 6px;font-size:11px;line-height:18px}.Emn1LG_action{width:calc(28px + var(--dsh-content-font-delta,0px));height:calc(28px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;border-radius:28px;justify-content:center;align-items:center;padding:6px;display:inline-flex}.Emn1LG_action svg{width:calc(15px + var(--dsh-content-font-delta,0px));height:calc(15px + var(--dsh-content-font-delta,0px))}.Emn1LG_action:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary)}.Emn1LG_timeStart{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);white-space:nowrap;padding-right:12px}.Emn1LG_timeEnd{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);white-space:nowrap}.Emn1LG_noticeRow{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px));grid-template-columns:10px minmax(0,1fr) auto;align-items:start;gap:8px;padding:2px 0;display:grid}.Emn1LG_noticeDot{margin-top:5px}.Emn1LG_noticeCopy{overflow-wrap:anywhere;min-width:0}.Emn1LG_noticeTitleError{color:var(--dsw-alias-state-error-primary);margin-right:6px;font-weight:600}.Emn1LG_noticeTitleWarn{color:var(--dsw-alias-state-warn-primary);margin-right:6px;font-weight:600}.Emn1LG_noticeMessage{color:var(--dsw-alias-label-secondary)}.Emn1LG_noticeCode{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-markdown-code-block-small)}.Emn1LG_retryRow{color:var(--dsw-alias-label-tertiary);font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px))}.Emn1LG_retrySummary{width:fit-content;color:inherit;cursor:pointer;user-select:none;border-radius:3px;align-items:center;gap:7px;padding:2px 0;list-style:none;display:inline-flex}.Emn1LG_retrySummary::-webkit-details-marker{display:none}.Emn1LG_retrySummary:after{content:\"\";opacity:.8;border-bottom:1.5px solid;border-right:1.5px solid;width:6px;height:6px;transition:transform .12s;transform:rotate(-45deg)}.Emn1LG_retrySummary:hover{color:var(--dsw-alias-label-secondary)}.Emn1LG_retrySummary:focus-visible{outline:1.5px solid var(--dsw-alias-button-info-fill);outline-offset:2px}.Emn1LG_retryText{color:inherit}.Emn1LG_retryRow[data-active] .Emn1LG_retryText{background:linear-gradient(90deg, var(--dsw-alias-label-tertiary) 0%, var(--dsw-alias-label-tertiary) 40%, var(--dsw-alias-label-secondary) 50%, var(--dsw-alias-label-tertiary) 60%, var(--dsw-alias-label-tertiary) 100%);color:#0000;background-position:100%;background-size:200% 100%;background-clip:text;animation:1.6s ease-in-out infinite Emn1LG_dsh-sync-retry-shimmer}@keyframes Emn1LG_dsh-sync-retry-shimmer{0%{background-position:100%}to{background-position:0%}}@media (prefers-reduced-motion:reduce){.Emn1LG_retryRow[data-active] .Emn1LG_retryText{color:inherit;background:0 0;animation:none}}.Emn1LG_retryRow[open] .Emn1LG_retrySummary:after{transform:rotate(45deg)}.Emn1LG_retryDetails{overflow-wrap:anywhere;font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(18px + var(--dsh-content-font-delta-secondary,0px));gap:2px;margin-top:3px;padding-left:14px;display:grid}.Emn1LG_retryDetailLabel{color:var(--dsw-alias-label-secondary)}.Emn1LG_toBottomSlot{z-index:2;pointer-events:none;justify-content:flex-end;height:0;padding-right:8px;display:flex;position:sticky;bottom:16px}.Emn1LG_toBottom{--dsw-elevation-stroke-color:var(--dsw-alias-border-l3);corner-shape:round;width:34px;height:34px;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-button-floating-fill);box-shadow:var(--dsw-elevation-panel);cursor:pointer;pointer-events:auto;border:0;border-radius:100px;justify-content:center;align-items:center;margin-top:-34px;padding:0;display:flex}.Emn1LG_toBottom:hover{background:var(--dsw-alias-button-floating-hover)}.Emn1LG_composerRoot{flex-direction:column;flex:none;align-items:center;padding:0 16px 8px;display:flex}.Emn1LG_composerCard{box-sizing:border-box;--dsw-elevation-stroke-color:var(--dsw-alias-border-l2);background:var(--dsw-specific-input-major);width:100%;max-width:calc(min(920px,100%) + 32px);box-shadow:var(--dsw-elevation-soft);font:var(--dsw-font-s-14);border:0;border-radius:22px;flex-direction:column;gap:12px;padding-top:8px;display:flex}.Emn1LG_composerText{box-sizing:border-box;width:100%;min-height:44px;max-height:200px;color:var(--dsw-alias-label-primary);font:inherit;resize:none;background:0 0;border:0;margin:0;padding:8px 16px 0}.Emn1LG_composerText::placeholder{color:var(--dsw-alias-placeholder)}.Emn1LG_composerText:focus-visible{outline:none}.Emn1LG_composerBar{align-items:center;gap:8px;padding:0 10px 10px 16px;display:flex}.Emn1LG_composerTarget{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);flex:none}.Emn1LG_composerDelivery{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11)}.Emn1LG_composerOffline{color:var(--dsw-alias-state-warn-label);font:var(--dsw-font-xxxs-11)}.Emn1LG_composerSpacer{flex:1}.Emn1LG_sendButton{corner-shape:round;background:var(--dsw-alias-button-info-fill);color:#fff;cursor:pointer;width:34px;height:34px;transition:background-color var(--ds-transition-duration-fast) var(--ds-ease-in-out);border:0;border-radius:999px;flex:none;place-items:center;display:grid}.Emn1LG_sendButton:hover:not(:disabled){background:var(--dsw-alias-button-info-hover)}.Emn1LG_sendButton:disabled{opacity:.4;cursor:default}.Emn1LG_sendButton:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.Emn1LG_error{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12);margin-bottom:10px}.Emn1LG_narrowOnly{display:none}@media (width<=719px){.Emn1LG_listPane{border-right:0;width:100%}.Emn1LG_panel[data-open=true] .Emn1LG_listPane,.Emn1LG_panel[data-open=false] .Emn1LG_viewPane{display:none}.Emn1LG_narrowOnly{display:inline-flex}}@media (prefers-reduced-motion:reduce){.Emn1LG_treeRow,.Emn1LG_treeSession,.Emn1LG_treeChevron svg,.Emn1LG_sendButton{transition:none}}";
 		const tagId$6 = "dsh-session-sync/sync.module.css";
 		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagId$6) + "]") === null) {
 			const tag = document.createElement("style");
@@ -43,177 +43,178 @@ window.__ModuleLoader__.load({
 			document.head.appendChild(tag);
 		}
 		var sync_module_css_default = {
-			"action": "exFxyG_action",
-			"actions": "exFxyG_actions",
-			"arrowOpen": "exFxyG_arrowOpen",
-			"assistantRow": "exFxyG_assistantRow",
-			"bubble": "exFxyG_bubble",
-			"card": "exFxyG_card",
-			"chromeChip": "exFxyG_chromeChip",
-			"chromeCluster": "exFxyG_chromeCluster",
-			"composerBar": "exFxyG_composerBar",
-			"composerCard": "exFxyG_composerCard",
-			"composerDelivery": "exFxyG_composerDelivery",
-			"composerOffline": "exFxyG_composerOffline",
-			"composerRoot": "exFxyG_composerRoot",
-			"composerSpacer": "exFxyG_composerSpacer",
-			"composerTarget": "exFxyG_composerTarget",
-			"composerText": "exFxyG_composerText",
-			"dirty": "exFxyG_dirty",
-			"dsh-sync-retry-shimmer": "exFxyG_dsh-sync-retry-shimmer",
-			"empty": "exFxyG_empty",
-			"error": "exFxyG_error",
-			"failed": "exFxyG_failed",
-			"field": "exFxyG_field",
-			"fieldRow": "exFxyG_fieldRow",
-			"fieldText": "exFxyG_fieldText",
-			"group": "exFxyG_group",
-			"groupTitle": "exFxyG_groupTitle",
-			"heroBadge": "exFxyG_heroBadge",
-			"heroFish": "exFxyG_heroFish",
-			"heroHeadline": "exFxyG_heroHeadline",
-			"heroHint": "exFxyG_heroHint",
-			"heroRoot": "exFxyG_heroRoot",
-			"heroStack": "exFxyG_heroStack",
-			"heroTitleGroup": "exFxyG_heroTitleGroup",
-			"hint": "exFxyG_hint",
-			"kind_assistant": "exFxyG_kind_assistant",
-			"kind_compaction": "exFxyG_kind_compaction",
-			"kind_context": "exFxyG_kind_context",
-			"kind_error": "exFxyG_kind_error",
-			"kind_other": "exFxyG_kind_other",
-			"kind_policy": "exFxyG_kind_policy",
-			"kind_step": "exFxyG_kind_step",
-			"kind_system": "exFxyG_kind_system",
-			"kind_think": "exFxyG_kind_think",
-			"kind_title": "exFxyG_kind_title",
-			"kind_tool": "exFxyG_kind_tool",
-			"kind_turn": "exFxyG_kind_turn",
-			"kind_user": "exFxyG_kind_user",
-			"label": "exFxyG_label",
-			"lede": "exFxyG_lede",
-			"ledger": "exFxyG_ledger",
-			"ledgerContentCell": "exFxyG_ledgerContentCell",
-			"ledgerDuration": "exFxyG_ledgerDuration",
-			"ledgerErrorText": "exFxyG_ledgerErrorText",
-			"ledgerEventCell": "exFxyG_ledgerEventCell",
-			"ledgerEventHead": "exFxyG_ledgerEventHead",
-			"ledgerKind": "exFxyG_ledgerKind",
-			"ledgerKindSlot": "exFxyG_ledgerKindSlot",
-			"ledgerMono": "exFxyG_ledgerMono",
-			"ledgerRail": "exFxyG_ledgerRail",
-			"ledgerResult": "exFxyG_ledgerResult",
-			"ledgerTable": "exFxyG_ledgerTable",
-			"ledgerText": "exFxyG_ledgerText",
-			"ledgerTurnLabel": "exFxyG_ledgerTurnLabel",
-			"list": "exFxyG_list",
-			"listHead": "exFxyG_listHead",
-			"listPane": "exFxyG_listPane",
-			"listStatus": "exFxyG_listStatus",
-			"listToggle": "exFxyG_listToggle",
-			"mediaChip": "exFxyG_mediaChip",
-			"messageActions": "exFxyG_messageActions",
-			"narrowOnly": "exFxyG_narrowOnly",
-			"notice": "exFxyG_notice",
-			"noticeClose": "exFxyG_noticeClose",
-			"noticeCode": "exFxyG_noticeCode",
-			"noticeCopy": "exFxyG_noticeCopy",
-			"noticeDot": "exFxyG_noticeDot",
-			"noticeMessage": "exFxyG_noticeMessage",
-			"noticeRow": "exFxyG_noticeRow",
-			"noticeText": "exFxyG_noticeText",
-			"noticeTitleError": "exFxyG_noticeTitleError",
-			"noticeTitleWarn": "exFxyG_noticeTitleWarn",
-			"pair": "exFxyG_pair",
-			"panel": "exFxyG_panel",
-			"retryDetailLabel": "exFxyG_retryDetailLabel",
-			"retryDetails": "exFxyG_retryDetails",
-			"retryRow": "exFxyG_retryRow",
-			"retrySummary": "exFxyG_retrySummary",
-			"retryText": "exFxyG_retryText",
-			"ringFigures": "exFxyG_ringFigures",
-			"ringFill": "exFxyG_ringFill",
-			"ringHeadline": "exFxyG_ringHeadline",
-			"ringPanel": "exFxyG_ringPanel",
-			"ringRoot": "exFxyG_ringRoot",
-			"ringTrack": "exFxyG_ringTrack",
-			"ringTrigger": "exFxyG_ringTrigger",
-			"rowTime": "exFxyG_rowTime",
-			"rowTitle": "exFxyG_rowTitle",
-			"saved": "exFxyG_saved",
-			"section": "exFxyG_section",
-			"sendButton": "exFxyG_sendButton",
-			"sessionList": "exFxyG_sessionList",
-			"sessionMeta": "exFxyG_sessionMeta",
-			"sessionRow": "exFxyG_sessionRow",
-			"sessionText": "exFxyG_sessionText",
-			"sessionTitle": "exFxyG_sessionTitle",
-			"status": "exFxyG_status",
-			"statusBad": "exFxyG_statusBad",
-			"statusGood": "exFxyG_statusGood",
-			"statusItem": "exFxyG_statusItem",
-			"statusRow": "exFxyG_statusRow",
-			"statusValue": "exFxyG_statusValue",
-			"stopped": "exFxyG_stopped",
-			"timeEnd": "exFxyG_timeEnd",
-			"timeStart": "exFxyG_timeStart",
-			"tjAction": "exFxyG_tjAction",
-			"tjActionIcon": "exFxyG_tjActionIcon",
-			"tjClose": "exFxyG_tjClose",
-			"tjDetailBody": "exFxyG_tjDetailBody",
-			"tjDetailTab": "exFxyG_tjDetailTab",
-			"tjDetailTabActive": "exFxyG_tjDetailTabActive",
-			"tjDetailTabs": "exFxyG_tjDetailTabs",
-			"tjDetails": "exFxyG_tjDetails",
-			"tjDetailsDot": "exFxyG_tjDetailsDot",
-			"tjDetailsHeader": "exFxyG_tjDetailsHeader",
-			"tjDetailsLocation": "exFxyG_tjDetailsLocation",
-			"tjDetailsName": "exFxyG_tjDetailsName",
-			"tjDetailsTitle": "exFxyG_tjDetailsTitle",
-			"tjFolded": "exFxyG_tjFolded",
-			"tjFoldedEllipsis": "exFxyG_tjFoldedEllipsis",
-			"tjFoldedText": "exFxyG_tjFoldedText",
-			"tjLaneLabels": "exFxyG_tjLaneLabels",
-			"tjLanes": "exFxyG_tjLanes",
-			"tjMarkdown": "exFxyG_tjMarkdown",
-			"tjOverview": "exFxyG_tjOverview",
-			"tjPayload": "exFxyG_tjPayload",
-			"tjPlot": "exFxyG_tjPlot",
-			"tjRoot": "exFxyG_tjRoot",
-			"tjSearch": "exFxyG_tjSearch",
-			"tjSearchIcon": "exFxyG_tjSearchIcon",
-			"tjSearchInput": "exFxyG_tjSearchInput",
-			"tjSpan": "exFxyG_tjSpan",
-			"tjSplit": "exFxyG_tjSplit",
-			"tjStrip": "exFxyG_tjStrip",
-			"tjTablePane": "exFxyG_tjTablePane",
-			"tjToggle": "exFxyG_tjToggle",
-			"tjToggleIcon": "exFxyG_tjToggleIcon",
-			"tjToolbar": "exFxyG_tjToolbar",
-			"tjTrack": "exFxyG_tjTrack",
-			"tjTurnBoundaries": "exFxyG_tjTurnBoundaries",
-			"tjTurnBoundary": "exFxyG_tjTurnBoundary",
-			"toBottom": "exFxyG_toBottom",
-			"toBottomSlot": "exFxyG_toBottomSlot",
-			"treeChevron": "exFxyG_treeChevron",
-			"treeFolder": "exFxyG_treeFolder",
-			"treeRow": "exFxyG_treeRow",
-			"treeRowDim": "exFxyG_treeRowDim",
-			"treeSession": "exFxyG_treeSession",
-			"treeSessionSelected": "exFxyG_treeSessionSelected",
-			"treeSlot": "exFxyG_treeSlot",
-			"userRow": "exFxyG_userRow",
-			"viewColumn": "exFxyG_viewColumn",
-			"viewHeader": "exFxyG_viewHeader",
-			"viewMachine": "exFxyG_viewMachine",
-			"viewPane": "exFxyG_viewPane",
-			"viewScroll": "exFxyG_viewScroll",
-			"viewSpacer": "exFxyG_viewSpacer",
-			"viewTab": "exFxyG_viewTab",
-			"viewTabActive": "exFxyG_viewTabActive",
-			"viewTabs": "exFxyG_viewTabs",
-			"viewTitle": "exFxyG_viewTitle",
-			"viewTitleRow": "exFxyG_viewTitleRow"
+			"action": "Emn1LG_action",
+			"actions": "Emn1LG_actions",
+			"arrowOpen": "Emn1LG_arrowOpen",
+			"assistantRow": "Emn1LG_assistantRow",
+			"bubble": "Emn1LG_bubble",
+			"card": "Emn1LG_card",
+			"chromeChip": "Emn1LG_chromeChip",
+			"chromeCluster": "Emn1LG_chromeCluster",
+			"composerBar": "Emn1LG_composerBar",
+			"composerCard": "Emn1LG_composerCard",
+			"composerDelivery": "Emn1LG_composerDelivery",
+			"composerOffline": "Emn1LG_composerOffline",
+			"composerRoot": "Emn1LG_composerRoot",
+			"composerSpacer": "Emn1LG_composerSpacer",
+			"composerTarget": "Emn1LG_composerTarget",
+			"composerText": "Emn1LG_composerText",
+			"dirty": "Emn1LG_dirty",
+			"dsh-sync-retry-shimmer": "Emn1LG_dsh-sync-retry-shimmer",
+			"empty": "Emn1LG_empty",
+			"error": "Emn1LG_error",
+			"failed": "Emn1LG_failed",
+			"field": "Emn1LG_field",
+			"fieldRow": "Emn1LG_fieldRow",
+			"fieldText": "Emn1LG_fieldText",
+			"group": "Emn1LG_group",
+			"groupTitle": "Emn1LG_groupTitle",
+			"heroBadge": "Emn1LG_heroBadge",
+			"heroFish": "Emn1LG_heroFish",
+			"heroHeadline": "Emn1LG_heroHeadline",
+			"heroHint": "Emn1LG_heroHint",
+			"heroRoot": "Emn1LG_heroRoot",
+			"heroStack": "Emn1LG_heroStack",
+			"heroTitleGroup": "Emn1LG_heroTitleGroup",
+			"hint": "Emn1LG_hint",
+			"kind_assistant": "Emn1LG_kind_assistant",
+			"kind_compaction": "Emn1LG_kind_compaction",
+			"kind_context": "Emn1LG_kind_context",
+			"kind_error": "Emn1LG_kind_error",
+			"kind_other": "Emn1LG_kind_other",
+			"kind_policy": "Emn1LG_kind_policy",
+			"kind_step": "Emn1LG_kind_step",
+			"kind_system": "Emn1LG_kind_system",
+			"kind_think": "Emn1LG_kind_think",
+			"kind_title": "Emn1LG_kind_title",
+			"kind_tool": "Emn1LG_kind_tool",
+			"kind_turn": "Emn1LG_kind_turn",
+			"kind_user": "Emn1LG_kind_user",
+			"label": "Emn1LG_label",
+			"lede": "Emn1LG_lede",
+			"ledger": "Emn1LG_ledger",
+			"ledgerContentCell": "Emn1LG_ledgerContentCell",
+			"ledgerDuration": "Emn1LG_ledgerDuration",
+			"ledgerErrorText": "Emn1LG_ledgerErrorText",
+			"ledgerEventCell": "Emn1LG_ledgerEventCell",
+			"ledgerEventHead": "Emn1LG_ledgerEventHead",
+			"ledgerKind": "Emn1LG_ledgerKind",
+			"ledgerKindSlot": "Emn1LG_ledgerKindSlot",
+			"ledgerMono": "Emn1LG_ledgerMono",
+			"ledgerRail": "Emn1LG_ledgerRail",
+			"ledgerResult": "Emn1LG_ledgerResult",
+			"ledgerTable": "Emn1LG_ledgerTable",
+			"ledgerText": "Emn1LG_ledgerText",
+			"ledgerTurnLabel": "Emn1LG_ledgerTurnLabel",
+			"list": "Emn1LG_list",
+			"listHead": "Emn1LG_listHead",
+			"listPane": "Emn1LG_listPane",
+			"listStatus": "Emn1LG_listStatus",
+			"listToggle": "Emn1LG_listToggle",
+			"mediaChip": "Emn1LG_mediaChip",
+			"messageActions": "Emn1LG_messageActions",
+			"narrowOnly": "Emn1LG_narrowOnly",
+			"notice": "Emn1LG_notice",
+			"noticeClose": "Emn1LG_noticeClose",
+			"noticeCode": "Emn1LG_noticeCode",
+			"noticeCopy": "Emn1LG_noticeCopy",
+			"noticeDot": "Emn1LG_noticeDot",
+			"noticeMessage": "Emn1LG_noticeMessage",
+			"noticeRow": "Emn1LG_noticeRow",
+			"noticeText": "Emn1LG_noticeText",
+			"noticeTitleError": "Emn1LG_noticeTitleError",
+			"noticeTitleWarn": "Emn1LG_noticeTitleWarn",
+			"officialPane": "Emn1LG_officialPane",
+			"pair": "Emn1LG_pair",
+			"panel": "Emn1LG_panel",
+			"retryDetailLabel": "Emn1LG_retryDetailLabel",
+			"retryDetails": "Emn1LG_retryDetails",
+			"retryRow": "Emn1LG_retryRow",
+			"retrySummary": "Emn1LG_retrySummary",
+			"retryText": "Emn1LG_retryText",
+			"ringFigures": "Emn1LG_ringFigures",
+			"ringFill": "Emn1LG_ringFill",
+			"ringHeadline": "Emn1LG_ringHeadline",
+			"ringPanel": "Emn1LG_ringPanel",
+			"ringRoot": "Emn1LG_ringRoot",
+			"ringTrack": "Emn1LG_ringTrack",
+			"ringTrigger": "Emn1LG_ringTrigger",
+			"rowTime": "Emn1LG_rowTime",
+			"rowTitle": "Emn1LG_rowTitle",
+			"saved": "Emn1LG_saved",
+			"section": "Emn1LG_section",
+			"sendButton": "Emn1LG_sendButton",
+			"sessionList": "Emn1LG_sessionList",
+			"sessionMeta": "Emn1LG_sessionMeta",
+			"sessionRow": "Emn1LG_sessionRow",
+			"sessionText": "Emn1LG_sessionText",
+			"sessionTitle": "Emn1LG_sessionTitle",
+			"status": "Emn1LG_status",
+			"statusBad": "Emn1LG_statusBad",
+			"statusGood": "Emn1LG_statusGood",
+			"statusItem": "Emn1LG_statusItem",
+			"statusRow": "Emn1LG_statusRow",
+			"statusValue": "Emn1LG_statusValue",
+			"stopped": "Emn1LG_stopped",
+			"timeEnd": "Emn1LG_timeEnd",
+			"timeStart": "Emn1LG_timeStart",
+			"tjAction": "Emn1LG_tjAction",
+			"tjActionIcon": "Emn1LG_tjActionIcon",
+			"tjClose": "Emn1LG_tjClose",
+			"tjDetailBody": "Emn1LG_tjDetailBody",
+			"tjDetailTab": "Emn1LG_tjDetailTab",
+			"tjDetailTabActive": "Emn1LG_tjDetailTabActive",
+			"tjDetailTabs": "Emn1LG_tjDetailTabs",
+			"tjDetails": "Emn1LG_tjDetails",
+			"tjDetailsDot": "Emn1LG_tjDetailsDot",
+			"tjDetailsHeader": "Emn1LG_tjDetailsHeader",
+			"tjDetailsLocation": "Emn1LG_tjDetailsLocation",
+			"tjDetailsName": "Emn1LG_tjDetailsName",
+			"tjDetailsTitle": "Emn1LG_tjDetailsTitle",
+			"tjFolded": "Emn1LG_tjFolded",
+			"tjFoldedEllipsis": "Emn1LG_tjFoldedEllipsis",
+			"tjFoldedText": "Emn1LG_tjFoldedText",
+			"tjLaneLabels": "Emn1LG_tjLaneLabels",
+			"tjLanes": "Emn1LG_tjLanes",
+			"tjMarkdown": "Emn1LG_tjMarkdown",
+			"tjOverview": "Emn1LG_tjOverview",
+			"tjPayload": "Emn1LG_tjPayload",
+			"tjPlot": "Emn1LG_tjPlot",
+			"tjRoot": "Emn1LG_tjRoot",
+			"tjSearch": "Emn1LG_tjSearch",
+			"tjSearchIcon": "Emn1LG_tjSearchIcon",
+			"tjSearchInput": "Emn1LG_tjSearchInput",
+			"tjSpan": "Emn1LG_tjSpan",
+			"tjSplit": "Emn1LG_tjSplit",
+			"tjStrip": "Emn1LG_tjStrip",
+			"tjTablePane": "Emn1LG_tjTablePane",
+			"tjToggle": "Emn1LG_tjToggle",
+			"tjToggleIcon": "Emn1LG_tjToggleIcon",
+			"tjToolbar": "Emn1LG_tjToolbar",
+			"tjTrack": "Emn1LG_tjTrack",
+			"tjTurnBoundaries": "Emn1LG_tjTurnBoundaries",
+			"tjTurnBoundary": "Emn1LG_tjTurnBoundary",
+			"toBottom": "Emn1LG_toBottom",
+			"toBottomSlot": "Emn1LG_toBottomSlot",
+			"treeChevron": "Emn1LG_treeChevron",
+			"treeFolder": "Emn1LG_treeFolder",
+			"treeRow": "Emn1LG_treeRow",
+			"treeRowDim": "Emn1LG_treeRowDim",
+			"treeSession": "Emn1LG_treeSession",
+			"treeSessionSelected": "Emn1LG_treeSessionSelected",
+			"treeSlot": "Emn1LG_treeSlot",
+			"userRow": "Emn1LG_userRow",
+			"viewColumn": "Emn1LG_viewColumn",
+			"viewHeader": "Emn1LG_viewHeader",
+			"viewMachine": "Emn1LG_viewMachine",
+			"viewPane": "Emn1LG_viewPane",
+			"viewScroll": "Emn1LG_viewScroll",
+			"viewSpacer": "Emn1LG_viewSpacer",
+			"viewTab": "Emn1LG_viewTab",
+			"viewTabActive": "Emn1LG_viewTabActive",
+			"viewTabs": "Emn1LG_viewTabs",
+			"viewTitle": "Emn1LG_viewTitle",
+			"viewTitleRow": "Emn1LG_viewTitleRow"
 		};
 		//#endregion
 		//#region src/client/ConfigSection.tsx
@@ -568,6 +569,930 @@ window.__ModuleLoader__.load({
 			});
 		}
 		//#endregion
+		//#region src/shared/protocol.ts
+		/**
+		* Wire and persisted shapes shared by the Host half, the sync server, and the
+		* browser half.
+		*
+		* Every shape here is plain JSON. The one rule that shapes this file: the Host
+		* half never hands a live DSH object (a Session, an Agent, a projection) across
+		* a boundary. It reads the leaf scalars it needs and builds one of these.
+		*/
+		/** The transport path prefix every browser-facing route lives under. */
+		const ROUTE_PREFIX = "/dsh-session-sync";
+		/** Default listen port of the sync server. */
+		const DEFAULT_LISTEN_PORT = 8791;
+		/** Build the config a fresh install starts from. */
+		function defaultConfig(machineName) {
+			return {
+				machineName,
+				serverUrl: "",
+				isServer: false,
+				password: "",
+				listenHost: "0.0.0.0",
+				listenPort: DEFAULT_LISTEN_PORT,
+				syncSessions: {}
+			};
+		}
+		//#endregion
+		//#region src/client/api.ts
+		/**
+		* Browser-side transport and view state for the sync plugin.
+		*
+		* Everything goes through the Host routes this package registers under
+		* {@link ROUTE_PREFIX}, so the panel is same-origin with the GUI it lives in.
+		* Live state arrives on one `EventSource`; the panel and the settings page both
+		* read the single snapshot this store publishes, which is why a change made on
+		* one surface is already visible on the other.
+		*/
+		/** How often the local Session list is re-read while the panel is mounted. */
+		const SESSION_POLL_MS = 15e3;
+		/**
+		* How many command states to remember for a command this browser has not been
+		* told about yet.
+		*
+		* A status frame and the POST response that mints the command's id travel by
+		* different roads, and the frame routinely wins: the server hands the command to
+		* the owning machine and narrates that immediately, while the response still has
+		* to come back. Dropping those frames left the composer on "submitted" for a
+		* command the machine had already accepted.
+		*/
+		const EARLY_COMMAND_LIMIT = 16;
+		/** The neutral state rendered before the Host has answered. */
+		function idleState() {
+			return {
+				role: "client",
+				machineName: "",
+				serverUrl: "",
+				listening: false,
+				linked: false,
+				machines: [],
+				published: 0
+			};
+		}
+		/** The step number that means "no step is streaming". */
+		const NO_STEP = -1;
+		/**
+		* The empty live row.
+		*
+		* A blank row rather than `undefined`: the panel asks whether either text is
+		* non-empty, and a step's first frame is what fills one.
+		*/
+		function noLive() {
+			return {
+				reasoning: "",
+				text: "",
+				turn: NO_STEP,
+				step: NO_STEP
+			};
+		}
+		/**
+		* Whether one mirrored event settles the attempt a live row belongs to.
+		*
+		* Both spellings matter: a step that produced a message commits
+		* `assistant/message`, while a stream that failed or was aborted with nothing
+		* to keep commits `assistant/attempt`. Clearing only on the first left a
+		* failed step's thinking on screen indefinitely.
+		* @param event - one mirrored durable event.
+		* @returns true when the live row for its step is over.
+		*/
+		function isSettlement(event) {
+			return event.type === "assistant/message" || event.type === "assistant/attempt";
+		}
+		/** The sync plugin's browser client. */
+		var SyncClient = class {
+			store;
+			source;
+			poll;
+			started = false;
+			/** Status frames that arrived before this browser knew their command's id. */
+			earlyCommands = /* @__PURE__ */ new Map();
+			/** Whether this page has ever held an open stream. */
+			sawOpen = false;
+			/** Whether this page has ever seen a machine in the mirror. */
+			sawMachines = false;
+			/**
+			* The one consumer told what the mirror reported as it arrives.
+			*
+			* Held rather than fanned out: it is the console's shipped-renderer mirror,
+			* which is a view of the same stream, not a second reader of it.
+			*/
+			observer;
+			/** The running flag already reported to that consumer. */
+			reportedRunning;
+			constructor() {
+				this.store = (0, _deepseek_ai_dsh_client_store.createSnapshotStore)({
+					ready: false,
+					config: defaultConfig(""),
+					state: idleState(),
+					sessions: [],
+					loadingTranscript: false,
+					live: noLive(),
+					stream: "connecting",
+					mirrorResets: 0
+				});
+			}
+			/** The observable the slot registrations bind as a renderer-provided hook. */
+			get snapshot() {
+				return this.store;
+			}
+			/**
+			* Register the one consumer told what the mirror reports as it arrives.
+			*
+			* Notifications are delivered before the store publishes the same fact: the
+			* shipped-renderer pane binds its Session reference from the opening, so its
+			* first render after the change already has a Session to draw and never has
+			* to render a reference that has just been released.
+			* @param observer - the consumer; at most one is held at a time.
+			* @returns an idempotent disposer that detaches it.
+			*/
+			observe(observer) {
+				this.observer = observer;
+				return () => {
+					if (this.observer === observer) this.observer = void 0;
+				};
+			}
+			/** Begin reading and hold the live stream open. Idempotent. */
+			start() {
+				if (this.started) return;
+				this.started = true;
+				this.refresh();
+				this.openStream();
+				this.poll = setInterval(() => {
+					this.refreshSessions();
+					this.refreshState();
+				}, SESSION_POLL_MS);
+			}
+			/** Stop polling and close the stream. Idempotent. */
+			stop() {
+				this.started = false;
+				if (this.poll !== void 0) clearInterval(this.poll);
+				this.poll = void 0;
+				this.source?.close();
+				this.source = void 0;
+			}
+			/** Re-read configuration, role state, and the local Session list. */
+			async refresh() {
+				try {
+					const [configResponse, sessionsResponse] = await Promise.all([getJson(`${ROUTE_PREFIX}/config`), getJson(`${ROUTE_PREFIX}/sessions`)]);
+					this.update({
+						ready: true,
+						config: configResponse.config,
+						state: configResponse.state,
+						sessions: sessionsResponse.sessions,
+						error: void 0
+					});
+				} catch (error) {
+					this.update({
+						ready: true,
+						error: describe(error)
+					});
+				}
+			}
+			/** Re-read only the local Session list. */
+			async refreshSessions() {
+				try {
+					const { sessions } = await getJson(`${ROUTE_PREFIX}/sessions`);
+					this.update({ sessions });
+				} catch {}
+			}
+			/** Re-read the authoritative mirror view, which is what retires a stale badge. */
+			async refreshState() {
+				try {
+					const { state } = await getJson(`${ROUTE_PREFIX}/state`);
+					if (!isCompleteState(state)) return;
+					this.update({ state });
+				} catch {}
+			}
+			/**
+			* Write one partial configuration change.
+			* @param patch - fields to change.
+			* @returns true when the Host accepted the write.
+			*/
+			async configure(patch) {
+				try {
+					const result = await postJson(`${ROUTE_PREFIX}/config`, patch);
+					this.update({
+						config: result.config,
+						state: result.state,
+						sessions: result.sessions,
+						error: void 0
+					});
+					return true;
+				} catch (error) {
+					this.update({ error: describe(error) });
+					return false;
+				}
+			}
+			/**
+			* Flip one Session's publish switch.
+			* @param sessionId - the Session to publish or stop publishing.
+			* @param synced - the requested state.
+			* @returns true when the Host accepted the write.
+			*/
+			async setSessionSync(sessionId, synced) {
+				return await this.configure({ sessionSync: {
+					sessionId,
+					synced
+				} });
+			}
+			/**
+			* Open one mirrored Session in the centre panel.
+			* @param machineName - owning machine.
+			* @param sessionId - published Session.
+			*/
+			async openSession(machineName, sessionId) {
+				const open = {
+					machineName,
+					sessionId
+				};
+				this.reportedRunning = void 0;
+				this.notify((observer) => {
+					observer.opened(open);
+				});
+				this.update({
+					open,
+					transcript: void 0,
+					loadingTranscript: true,
+					live: noLive(),
+					delivery: void 0
+				});
+				try {
+					const { transcript } = await getJson(`${ROUTE_PREFIX}/transcript?machine=${encodeURIComponent(machineName)}&session=${encodeURIComponent(sessionId)}`);
+					this.notify((observer) => {
+						observer.loaded(open, transcript);
+					});
+					this.update({
+						transcript,
+						loadingTranscript: false,
+						error: void 0
+					});
+				} catch (error) {
+					this.update({
+						loadingTranscript: false,
+						error: describe(error)
+					});
+				}
+			}
+			/** Leave the open remote Session. */
+			closeSession() {
+				this.notify((observer) => {
+					observer.closed();
+				});
+				this.update({
+					open: void 0,
+					transcript: void 0,
+					delivery: void 0,
+					live: noLive()
+				});
+			}
+			/**
+			* Send one takeover prompt to the machine that owns the open Session.
+			* @param text - the prompt text.
+			* @returns true when the server accepted and forwarded it.
+			*/
+			async sendPrompt(text) {
+				const open = this.store.getSnapshot().open;
+				if (open === void 0) return false;
+				try {
+					const result = await postJson(`${ROUTE_PREFIX}/command`, {
+						machineName: open.machineName,
+						sessionId: open.sessionId,
+						text
+					});
+					const known = this.earlyCommands.get(result.commandId);
+					this.earlyCommands.delete(result.commandId);
+					this.update({
+						error: void 0,
+						delivery: known ?? {
+							commandId: result.commandId,
+							state: "queued",
+							expiresAt: Date.now() + 12e4
+						}
+					});
+					return true;
+				} catch (error) {
+					this.update({ error: describe(error) });
+					return false;
+				}
+			}
+			openStream() {
+				if (typeof EventSource === "undefined") return;
+				const source = new EventSource(`${ROUTE_PREFIX}/events`);
+				source.onopen = () => {
+					const first = !this.sawOpen;
+					this.sawOpen = true;
+					const snapshot = this.store.getSnapshot();
+					const reset = !first && this.sawMachines && snapshot.state.machines.length === 0;
+					this.update({
+						stream: "open",
+						...reset ? { mirrorResets: snapshot.mirrorResets + 1 } : {}
+					});
+					if (!first) this.refresh();
+				};
+				source.onerror = () => {
+					this.update({ stream: "connecting" });
+				};
+				source.onmessage = (event) => {
+					let frame;
+					try {
+						frame = JSON.parse(event.data);
+					} catch {
+						return;
+					}
+					this.consume(frame);
+				};
+				this.source = source;
+			}
+			consume(frame) {
+				if (frame.type === "state") {
+					const previous = this.store.getSnapshot().state;
+					const state = isCompleteState(frame.state) ? frame.state : {
+						...previous,
+						machines: Array.isArray(frame.state.machines) ? frame.state.machines : previous.machines
+					};
+					this.update({
+						state,
+						ready: true
+					});
+					if (previous.published !== state.published) this.refreshSessions();
+					return;
+				}
+				if (frame.type === "events") {
+					const snapshot = this.store.getSnapshot();
+					const open = snapshot.open;
+					if (open === void 0) return;
+					if (open.machineName !== frame.machineName || open.sessionId !== frame.sessionId) return;
+					const transcript = snapshot.transcript;
+					if (transcript === void 0) return;
+					this.notify((observer) => {
+						observer.appended(open, frame);
+					});
+					this.update({
+						transcript: {
+							...transcript,
+							events: [...transcript.events, ...frame.events]
+						},
+						...frame.events.some(isSettlement) ? { live: noLive() } : {}
+					});
+					return;
+				}
+				if (frame.type === "stream") {
+					const snapshot = this.store.getSnapshot();
+					const open = snapshot.open;
+					if (open === void 0) return;
+					if (open.machineName !== frame.machineName || open.sessionId !== frame.sessionId) return;
+					const live = snapshot.live;
+					if (frame.turn < live.turn || frame.turn === live.turn && frame.step < live.step) return;
+					const advanced = frame.turn > live.turn || frame.turn === live.turn && frame.step > live.step;
+					const base = advanced ? {
+						...noLive(),
+						turn: frame.turn,
+						step: frame.step
+					} : live;
+					const shown = frame.kind === "reasoning" ? base.reasoning : base.text;
+					if (!advanced && frame.text !== "" && frame.text.length < shown.length && shown.startsWith(frame.text)) return;
+					this.notify((observer) => {
+						observer.streamed(open, frame);
+					});
+					this.update({ live: frame.kind === "reasoning" ? {
+						...base,
+						reasoning: frame.text
+					} : {
+						...base,
+						text: frame.text
+					} });
+					return;
+				}
+				if (frame.type === "command") {
+					const delivery = {
+						commandId: frame.command.commandId,
+						state: frame.command.state,
+						expiresAt: frame.command.expiresAt,
+						...frame.command.error === void 0 ? {} : { error: frame.command.error }
+					};
+					const current = this.store.getSnapshot().delivery;
+					if (current !== void 0 && current.commandId === frame.command.commandId) {
+						this.update({ delivery });
+						return;
+					}
+					this.earlyCommands.delete(frame.command.commandId);
+					this.earlyCommands.set(frame.command.commandId, delivery);
+					while (this.earlyCommands.size > EARLY_COMMAND_LIMIT) {
+						const oldest = this.earlyCommands.keys().next();
+						if (oldest.done === true) break;
+						this.earlyCommands.delete(oldest.value);
+					}
+					return;
+				}
+				this.update({ error: frame.message });
+			}
+			/**
+			* Publish one patch, remembering that this page once held machines.
+			*
+			* That memory is what makes an empty mirror a reset rather than a fleet that
+			* never connected: the empty window itself is only a couple of seconds wide,
+			* so the notice has to be raised by the reconnect rather than by what the
+			* next read happens to find.
+			*/
+			update(patch) {
+				const next = {
+					...this.store.getSnapshot(),
+					...patch
+				};
+				if (next.state.machines.length > 0) this.sawMachines = true;
+				this.store.set(next);
+				this.notifyRunning();
+			}
+			/**
+			* Tell the observer something, and never let it take the transport with it.
+			*
+			* Mirroring into the shipped renderer is an enhancement: a consumer that
+			* cannot be fed is detached (leaving the console on its own pane) and its
+			* failure is reported where every other failure is, rather than thrown into
+			* the action that happened to be running.
+			*/
+			notify(deliver) {
+				const observer = this.observer;
+				if (observer === void 0) return;
+				try {
+					deliver(observer);
+				} catch (error) {
+					this.observer = void 0;
+					this.update({ error: describe(error) });
+				}
+			}
+			/**
+			* Report the open Session's running flag when the mirror moves it.
+			*
+			* The flag is a mirror reading rather than an event, so it has no frame of
+			* its own: every snapshot write funnels through here and the reading is
+			* compared against the last one reported.
+			*/
+			notifyRunning() {
+				if (this.observer === void 0) return;
+				const snapshot = this.store.getSnapshot();
+				const open = snapshot.open;
+				if (open === void 0) {
+					this.reportedRunning = void 0;
+					return;
+				}
+				const running = snapshot.state.machines.find((machine) => machine.machineName === open.machineName)?.sessions.find((candidate) => candidate.sessionId === open.sessionId)?.running ?? snapshot.transcript?.running ?? false;
+				if (running === this.reportedRunning) return;
+				this.reportedRunning = running;
+				this.notify((observer) => {
+					observer.running(open, running);
+				});
+			}
+		};
+		/** Read one JSON response, turning a non-2xx into a thrown error carrying the server's reason. */
+		async function getJson(path) {
+			return await decode(await fetch(path, { cache: "no-store" }));
+		}
+		/** Post one JSON body and read the JSON response. */
+		async function postJson(path, body) {
+			return await decode(await fetch(path, {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify(body)
+			}));
+		}
+		/** Decode a response, preferring the server's own failure reason. */
+		async function decode(response) {
+			const text = await response.text();
+			if (!response.ok) {
+				let reason = `HTTP ${String(response.status)}`;
+				try {
+					const parsed = JSON.parse(text);
+					if (typeof parsed.reason === "string") reason = parsed.reason;
+					else if (typeof parsed.error === "string") reason = parsed.error;
+				} catch {}
+				throw new Error(reason);
+			}
+			return JSON.parse(text);
+		}
+		/** Human-readable one-line failure text. */
+		function describe(error) {
+			return error instanceof Error ? error.message : String(error);
+		}
+		/**
+		* Whether a state frame carries the whole view rather than just a mirror slice.
+		* @param state - the frame's state payload.
+		* @returns true when every field the surfaces render is present.
+		*/
+		function isCompleteState(state) {
+			return (state.role === "server" || state.role === "client") && Array.isArray(state.machines) && typeof state.machineName === "string" && typeof state.published === "number";
+		}
+		//#endregion
+		//#region src/client/official-session.tsx
+		/**
+		* The plugin's mirror, projected onto the shipped DSH conversation renderer.
+		*
+		* The console hand-draws a remote Session's conversation because a browser
+		* plugin cannot import another plugin's components. A DSH build that offers
+		* `ctx.sessions.adopt` removes that limit: the plugin adopts the remote Session
+		* under a synthetic local identity, feeds the mirror's own envelopes into it,
+		* and lets the shipped `conversation.content` factory draw it — so the pane is
+		* the product's real conversation rather than a copy of it.
+		*
+		* Everything in this module is feature-detected and structurally typed. The
+		* adoption API is newer than the builds this plugin has to keep working on, so
+		* nothing here may assume it exists: {@link OfficialSessions.supported} is false
+		* without it, and the console then keeps its own pane untouched.
+		*/
+		/**
+		* The child slot the console's `main` entry declares for the shipped
+		* Conversation.
+		*
+		* A non-root child is what hands the panel its `SessionProvider` and
+		* `renderSlot` seats, and `session` is the scope the shipped content needs: the
+		* occurrence is bound to the adopted Session the panel retains. This is the
+		* shape ui-subagent's `SidebarChatTab` uses for its own embedded chat.
+		*/
+		const OFFICIAL_SLOT = "session-sync.conversation";
+		/** Consumer label this plugin registers on every reference it retains. */
+		const OFFICIAL_SOURCE = "sessionSync";
+		/**
+		* Synthetic local identity of one adopted remote Session.
+		*
+		* Local identities are minted as `session-<uuid>`; this prefix cannot come out
+		* of that generator, so an adopted Session can never collide with a local one —
+		* the one rule the adoption API states about the id it is given.
+		* @param open - the remote Session's own address.
+		* @returns the stable synthetic id.
+		*/
+		function officialSessionId(open) {
+			return `dsh-session-sync:${open.machineName}/${open.sessionId}`;
+		}
+		/**
+		* One refused verb, as the client Session face returns refusals.
+		*
+		* The shape is structural on purpose: a `RemoteResult` error branch carrying a
+		* `RemoteError`-like failure, so a consumer that checks `result.ok` or rethrows
+		* `result.error` gets a real error with a stable code.
+		* @param code - the failure code.
+		* @param message - the human diagnostic.
+		* @returns the refused outcome.
+		*/
+		function refused(code, message) {
+			return {
+				ok: false,
+				error: {
+					name: "RemoteError",
+					code,
+					message,
+					details: {},
+					isDSHRemoteError: true
+				}
+			};
+		}
+		/**
+		* One live attempt's identity, from the plugin's own live key.
+		*
+		* The transport already keys a live row by turn and step, and both a live frame
+		* and the settlement that ends it carry that pair — so the same attempt id is
+		* derived on both sides with no hidden state to keep in step.
+		* @param turn - the turn the step belongs to.
+		* @param step - the step within the turn.
+		* @returns the attempt id.
+		*/
+		function attemptKey(turn, step) {
+			return `${String(turn)}:${String(step)}`;
+		}
+		/**
+		* The turn|step a settlement event closes, when it names one.
+		* @param event - one durable envelope.
+		* @returns the attempt id, or undefined for an envelope without coordinates.
+		*/
+		function settlementAttemptId(event) {
+			const data = asRecord$4(event.data);
+			const turn = data?.["turn"];
+			const step = data?.["step"];
+			return typeof turn === "number" && typeof step === "number" ? attemptKey(turn, step) : void 0;
+		}
+		/** The adapter key of one remote Session: machine and id, in one string. */
+		function remoteKey(machineName, sessionId) {
+			return `${machineName}\u0000${sessionId}`;
+		}
+		/** Narrow one unknown value to a plain record. */
+		function asRecord$4(value) {
+			if (typeof value !== "object" || value === null || Array.isArray(value)) return void 0;
+			return value;
+		}
+		/**
+		* One adopted remote Session, and the frames fed into it.
+		*
+		* One instance per opened remote Session. Every method is safe to call after
+		* {@link OfficialMirror.release}: a Session switch and the panel closing can
+		* both ask for the end, and a frame that was in flight may still arrive.
+		*/
+		var OfficialMirror = class {
+			/** The reference the shipped pane binds this Session with. */
+			reference;
+			handle;
+			/** The live attempt whose text is on screen, by the plugin's turn|step key. */
+			liveAttempt;
+			released = false;
+			/**
+			* Adopt one remote Session and retain the reference that binds it.
+			* @param service - the adopt-capable client Sessions service.
+			* @param open - the remote Session's own address.
+			* @param summary - row facts for the renderer's pre-event chrome.
+			* @param transport - the plugin's transport, for the composer's own verb.
+			*/
+			constructor(service, open, summary, transport) {
+				const sessionId = officialSessionId(open);
+				this.handle = service.adopt({
+					sessionId,
+					summary,
+					verbs: { prompt: async (content, _mode, signal) => {
+						if (signal?.aborted === true) return refused("gateway/cancelled", "the submission was cancelled");
+						if (content.some((part) => part.type !== "text")) return refused("gateway/bad-request", "the sync takeover path carries text prompts only");
+						const text = content.map((part) => part.text ?? "").join("\n");
+						if (text.trim() === "") return refused("gateway/bad-request", "the prompt was empty");
+						if (!await transport.sendPrompt(text)) return refused("gateway/internal", "the sync server refused the prompt");
+						return {
+							ok: true,
+							value: { accepted: true }
+						};
+					} },
+					running: summary.running
+				});
+				try {
+					this.reference = service.retain(sessionId, { source: OFFICIAL_SOURCE });
+				} catch (error) {
+					this.handle.release();
+					throw error;
+				}
+			}
+			/**
+			* Replace the whole mirrored window, which is what opening a Session does.
+			* @param transcript - the opening window, in log order.
+			*/
+			replace(transcript) {
+				if (this.released) return;
+				this.handle.replace(transcript.events, false);
+				this.handle.setRunning(transcript.running);
+			}
+			/**
+			* Feed one `events` frame's durable envelopes, in order.
+			*
+			* A settlement goes through `settle` rather than `append`: it is the durable
+			* end of a live attempt, and the plugin's own rule — a settlement clears the
+			* step's streaming text — is exactly that act.
+			* @param events - the frame's envelopes.
+			*/
+			appendEvents(events) {
+				if (this.released) return;
+				for (const event of events) {
+					if (isSettlement(event)) {
+						this.settle(event);
+						continue;
+					}
+					this.handle.append(event);
+				}
+			}
+			/**
+			* Feed one live delta frame: the whole step text so far, replaced as it grows.
+			* @param frame - the accepted frame, already ordered by the transport.
+			*/
+			stream(frame) {
+				if (this.released) return;
+				const attemptId = attemptKey(frame.turn, frame.step);
+				if (frame.text === "") {
+					if (this.liveAttempt !== attemptId) return;
+					this.closeLive({ attemptId });
+					return;
+				}
+				this.liveAttempt = attemptId;
+				this.handle.live({
+					attemptId,
+					turn: frame.turn,
+					step: frame.step,
+					kind: frame.kind,
+					text: frame.text
+				});
+			}
+			/**
+			* Report the origin's running flag, which the mirror tracks apart from events.
+			* @param running - whether the origin reports a turn in flight.
+			*/
+			setRunning(running) {
+				if (this.released) return;
+				this.handle.setRunning(running);
+			}
+			/**
+			* Release the adopted Session and its reference.
+			*
+			* Idempotent, and total: a Session switch and the panel closing can both ask,
+			* and the live attempt is abandoned first so the renderer is not left holding
+			* text for an attempt that will never settle.
+			*/
+			release() {
+				if (this.released) return;
+				this.released = true;
+				const live = this.liveAttempt;
+				this.liveAttempt = void 0;
+				if (live !== void 0) try {
+					this.handle.abandon({ attemptId: live });
+				} catch {}
+				try {
+					this.handle.release();
+				} catch {}
+				try {
+					this.reference.release();
+				} catch {}
+			}
+			/** Close one live attempt with its durable settlement, or with nothing. */
+			closeLive(o) {
+				if (o.event === void 0) this.handle.abandon({ attemptId: o.attemptId });
+				else this.handle.settle({
+					attemptId: o.attemptId,
+					event: o.event
+				});
+				if (this.liveAttempt === o.attemptId) this.liveAttempt = void 0;
+			}
+			/** Settle the attempt one durable event ends. */
+			settle(event) {
+				const attemptId = settlementAttemptId(event) ?? this.liveAttempt ?? `settled:${String(event.seq)}`;
+				this.closeLive({
+					attemptId,
+					event
+				});
+			}
+		};
+		/**
+		* The bridge between the console's transport and the shipped renderer.
+		*
+		* It implements the transport observer: the console tells it what the mirror
+		* reported, and it keeps one adopted Session for whichever remote Session is
+		* open. The panel binds `referenceFor(...)` around the shipped content, which is
+		* how the pane's Session identity reaches the renderer.
+		*/
+		var OfficialSessions = class {
+			ctx;
+			transport;
+			current;
+			/** The running flag already reported, so a poll does not restate it. */
+			lastRunning;
+			/**
+			* @param ctx - the client context, read only for the Sessions service.
+			* @param transport - the plugin's transport client.
+			*/
+			constructor(ctx, transport) {
+				this.ctx = ctx;
+				this.transport = transport;
+			}
+			/** Whether this build can render a Session through the shipped conversation. */
+			get supported() {
+				return this.service() !== void 0;
+			}
+			/**
+			* The reference to bind for one remote Session, for the panel's render.
+			* @param machineName - owning machine.
+			* @param sessionId - the remote Session's own id.
+			* @returns the retained reference while exactly that Session is adopted.
+			*/
+			referenceFor(machineName, sessionId) {
+				const current = this.current;
+				if (current === void 0) return void 0;
+				return current.key === remoteKey(machineName, sessionId) ? current.mirror.reference : void 0;
+			}
+			/**
+			* The panel opened a Session: adopt it, replacing whatever was adopted before.
+			* @param open - the remote Session.
+			*/
+			opened(open) {
+				const service = this.service();
+				if (service === void 0) return;
+				const key = remoteKey(open.machineName, open.sessionId);
+				if (this.current?.key === key) return;
+				this.release();
+				this.current = {
+					key,
+					mirror: new OfficialMirror(service, open, this.summaryOf(open), this.transport)
+				};
+			}
+			/**
+			* The opening window arrived.
+			* @param open - the remote Session it belongs to.
+			* @param transcript - the window.
+			*/
+			loaded(open, transcript) {
+				if (this.matches(open)) this.current?.mirror.replace(transcript);
+			}
+			/**
+			* One `events` frame arrived.
+			* @param open - the remote Session it belongs to.
+			* @param frame - the frame.
+			*/
+			appended(open, frame) {
+				if (this.matches(open)) this.current?.mirror.appendEvents(frame.events);
+			}
+			/**
+			* One accepted live delta frame arrived.
+			* @param open - the remote Session it belongs to.
+			* @param frame - the frame.
+			*/
+			streamed(open, frame) {
+				if (this.matches(open)) this.current?.mirror.stream(frame);
+			}
+			/**
+			* The mirror moved the open Session's running flag.
+			* @param open - the remote Session it belongs to.
+			* @param running - the new reading.
+			*/
+			running(open, running) {
+				if (!this.matches(open)) return;
+				if (running === this.lastRunning) return;
+				this.lastRunning = running;
+				this.current?.mirror.setRunning(running);
+			}
+			/** The panel left its Session. */
+			closed() {
+				this.release();
+			}
+			/** Release the adopted Session, if any. Idempotent. */
+			release() {
+				const current = this.current;
+				this.current = void 0;
+				this.lastRunning = void 0;
+				current?.mirror.release();
+			}
+			/** Whether the adopted Session is the one a frame names. */
+			matches(open) {
+				return this.current?.key === remoteKey(open.machineName, open.sessionId);
+			}
+			/**
+			* The summary the shipped renderer shows before it has read an event.
+			*
+			* The mirror's own row when the Session is still published, and the id as a
+			* placeholder title when it is not — the console's list shows the same
+			* placeholder for a Session that was un-published while it was open.
+			*/
+			summaryOf(open) {
+				const row = this.rowOf(open);
+				const title = row?.title ?? open.sessionId;
+				return {
+					id: officialSessionId(open),
+					sessionId: open.sessionId,
+					title,
+					displayTitle: title,
+					...row?.cwd === void 0 ? {} : { cwd: row.cwd },
+					updatedAt: row?.updatedAt ?? Date.now(),
+					running: row?.running ?? false,
+					blank: row !== void 0 && row.eventCount === 0,
+					retainedBy: {}
+				};
+			}
+			/** The mirror's row for one remote Session, while it is published. */
+			rowOf(open) {
+				return this.transport.snapshot.getSnapshot().state.machines.find((machine) => machine.machineName === open.machineName)?.sessions.find((session) => session.sessionId === open.sessionId);
+			}
+			/**
+			* The adoption API, feature-detected on the client context.
+			*
+			* `sessions` is deliberately absent from this plugin's `inject` list: the
+			* console has to load on builds that predate the adoption API, and a required
+			* service the half cannot use would stop the whole half from applying. The
+			* lookup is lazy because the service may be registered after this plugin
+			* applies, and cheap because it runs once per panel render.
+			*/
+			service() {
+				const service = this.ctx.get?.("sessions");
+				if (typeof service !== "object" || service === null) return void 0;
+				const candidate = service;
+				return typeof candidate.adopt === "function" && typeof candidate.retain === "function" ? candidate : void 0;
+			}
+		};
+		/**
+		* The shipped Conversation's chat View, selected at this occurrence.
+		*
+		* The Factory's own default local Component renders `conversation.session` with
+		* no View request; the sidebar chat pins `chat`, so a Session whose roster would
+		* open elsewhere still lands on its conversation.
+		*/
+		function ChatView(props) {
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(react_jsx_runtime.Fragment, { children: props.renderSlot("conversation.session", { view: "chat" }) });
+		}
+		/**
+		* The shipped Conversation content, drawn for the console's open Session.
+		*
+		* `embedded` is the variant the sidebar chat uses for a Session that sits
+		* beside the shell's own; the console's pane is exactly that. The phase is
+		* `active`: what the mirror holds is a conversation, while the hero belongs to
+		* a local new Session, which a remote one never is.
+		* @param props - the renderer's Factory dispatcher.
+		* @returns the shipped content occurrence.
+		*/
+		function OfficialConversation({ renderFactorySlot }) {
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(react_jsx_runtime.Fragment, { children: renderFactorySlot("conversation.content", {
+				variant: "embedded",
+				phase: "active",
+				hero: false
+			}, { slots: { views: ChatView } }) });
+		}
+		//#endregion
 		//#region src/client/PanelIcon.tsx
 		/**
 		* The icon the sidebar renders for this plugin's global panel row.
@@ -583,7 +1508,7 @@ window.__ModuleLoader__.load({
 		* @returns the icon; selection is the row's own styling, not the glyph's.
 		*/
 		function PanelIcon(props) {
-			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconGlobeOutline14, { size: props.size });
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconGlobeOutlineRegular, { size: props.size });
 		}
 		//#endregion
 		//#region src/client/session-chrome.ts
@@ -592,7 +1517,7 @@ window.__ModuleLoader__.load({
 		/** Longest subagent label kept. */
 		const LABEL_LIMIT = 60;
 		/** Event types the ledger does not show: bookkeeping the reader never asked for. */
-		const HIDDEN_EVENTS = new Set([
+		const HIDDEN_EVENTS = /* @__PURE__ */ new Set([
 			"session/end-seed",
 			"agent/inbox/spliced",
 			"session/title-llm-request"
@@ -1279,7 +2204,7 @@ window.__ModuleLoader__.load({
 							}),
 							/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
 								className: sync_module_css_default.tjSearch,
-								children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconSearchOutline16, {
+								children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconSearchOutlineRegular, {
 									size: 11,
 									className: sync_module_css_default.tjSearchIcon
 								}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("input", {
@@ -2357,6 +3282,7 @@ window.__ModuleLoader__.load({
 			return {
 				signal: (signal) => t("terminalSignal", { signal }),
 				exitCode: (code) => t("terminalExitCode", { code }),
+				noExitCode: t("terminalNoExitCode"),
 				running: t("terminalRunning"),
 				failed: t("terminalFailed"),
 				done: t("terminalDone"),
@@ -3267,8 +4193,8 @@ window.__ModuleLoader__.load({
 			};
 		}
 		//#endregion
-		//#region \0dsh-css:C:\Users\14339\Desktop\git\AI\dsh-session-sync\src\client\accessibility.module.css.mjs
-		const css$5 = ".HCCLXq_visuallyHidden{clip:rect(0 0 0 0);white-space:nowrap;width:1px;height:1px;position:absolute;overflow:hidden}";
+		//#region \0dsh-css:C:\Users\14339\Desktop\git\dsh-session-sync\src\client\accessibility.module.css.mjs
+		const css$5 = "._8eMdKa_visuallyHidden{clip:rect(0 0 0 0);white-space:nowrap;width:1px;height:1px;position:absolute;overflow:hidden}";
 		const tagId$5 = "dsh-session-sync/accessibility.module.css";
 		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagId$5) + "]") === null) {
 			const tag = document.createElement("style");
@@ -3277,10 +4203,10 @@ window.__ModuleLoader__.load({
 			tag.textContent = css$5;
 			document.head.appendChild(tag);
 		}
-		var accessibility_module_css_default = { "visuallyHidden": "HCCLXq_visuallyHidden" };
+		var accessibility_module_css_default = { "visuallyHidden": "_8eMdKa_visuallyHidden" };
 		//#endregion
-		//#region \0dsh-css:C:\Users\14339\Desktop\git\AI\dsh-session-sync\src\client\MessageIconActions.module.css.mjs
-		const css$4 = "._1UrUdW_actions{height:calc(28px + var(--dsh-content-font-delta,0px));align-items:center;gap:8px;display:flex}._1UrUdW_timeStart{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);white-space:nowrap;padding-right:12px}._1UrUdW_timeEnd{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);white-space:nowrap}@media (hover:hover){[data-actions-reveal=hover] ._1UrUdW_actions,:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering]):has(~:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering])) ._1UrUdW_actions{opacity:0;transition:opacity 80ms}[data-actions-reveal=hover]:hover ._1UrUdW_actions,[data-actions-reveal=hover]:focus-within ._1UrUdW_actions,:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering]):has(~:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering])):hover ._1UrUdW_actions,:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering]):has(~:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering])):focus-within ._1UrUdW_actions{opacity:1}}._1UrUdW_action{width:calc(28px + var(--dsh-content-font-delta,0px));height:calc(28px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;border-radius:28px;justify-content:center;align-items:center;padding:6px;display:inline-flex}._1UrUdW_action svg{width:calc(15px + var(--dsh-content-font-delta,0px));height:calc(15px + var(--dsh-content-font-delta,0px))}._1UrUdW_action:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary)}._1UrUdW_action[data-unavailable]{cursor:default;opacity:.4}._1UrUdW_action[data-unavailable]:hover{color:var(--dsw-alias-label-tertiary);background:0 0}._1UrUdW_visuallyHidden{clip:rect(0 0 0 0);white-space:nowrap;width:1px;height:1px;position:absolute;overflow:hidden}";
+		//#region \0dsh-css:C:\Users\14339\Desktop\git\dsh-session-sync\src\client\MessageIconActions.module.css.mjs
+		const css$4 = ".RWTQrG_actions{height:calc(28px + var(--dsh-content-font-delta,0px));align-items:center;gap:8px;display:flex}.RWTQrG_timeStart{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);white-space:nowrap;padding-right:12px}.RWTQrG_timeEnd{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);white-space:nowrap}@media (hover:hover){[data-actions-reveal=hover] .RWTQrG_actions,:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering]):has(~:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering])) .RWTQrG_actions{opacity:0;transition:opacity 80ms}[data-actions-reveal=hover]:hover .RWTQrG_actions,[data-actions-reveal=hover]:focus-within .RWTQrG_actions,:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering]):has(~:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering])):hover .RWTQrG_actions,:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering]):has(~:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering])):focus-within .RWTQrG_actions{opacity:1}}.RWTQrG_action{width:calc(28px + var(--dsh-content-font-delta,0px));height:calc(28px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;border-radius:28px;justify-content:center;align-items:center;padding:6px;display:inline-flex}.RWTQrG_action svg{width:calc(15px + var(--dsh-content-font-delta,0px));height:calc(15px + var(--dsh-content-font-delta,0px))}.RWTQrG_action:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary)}.RWTQrG_action[data-unavailable]{cursor:default;opacity:.4}.RWTQrG_action[data-unavailable]:hover{color:var(--dsw-alias-label-tertiary);background:0 0}.RWTQrG_visuallyHidden{clip:rect(0 0 0 0);white-space:nowrap;width:1px;height:1px;position:absolute;overflow:hidden}";
 		const tagId$4 = "dsh-session-sync/MessageIconActions.module.css";
 		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagId$4) + "]") === null) {
 			const tag = document.createElement("style");
@@ -3290,15 +4216,15 @@ window.__ModuleLoader__.load({
 			document.head.appendChild(tag);
 		}
 		var MessageIconActions_module_css_default = {
-			"action": "_1UrUdW_action",
-			"actions": "_1UrUdW_actions",
-			"timeEnd": "_1UrUdW_timeEnd",
-			"timeStart": "_1UrUdW_timeStart",
-			"visuallyHidden": "_1UrUdW_visuallyHidden"
+			"action": "RWTQrG_action",
+			"actions": "RWTQrG_actions",
+			"timeEnd": "RWTQrG_timeEnd",
+			"timeStart": "RWTQrG_timeStart",
+			"visuallyHidden": "RWTQrG_visuallyHidden"
 		};
 		//#endregion
-		//#region \0dsh-css:C:\Users\14339\Desktop\git\AI\dsh-session-sync\src\client\ReasoningRow.module.css.mjs
-		const css$3 = ".QsemTa_root{flex-direction:column;display:flex}.QsemTa_root:not([data-expanded]){contain:size layout;height:calc(24px + var(--dsh-content-font-delta,0px))}.QsemTa_row{position:relative;overflow:hidden}.QsemTa_root[data-state=running] .QsemTa_row:after{content:\"\";inset-block:0;background:linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--dsw-alias-bg-base) 60%, transparent) 55%, transparent 100%);pointer-events:none;width:300px;animation:2.6s ease-out infinite QsemTa_dsh-reasoning-row-sweep;position:absolute;left:0}@keyframes QsemTa_dsh-reasoning-row-sweep{0%{left:-300px}90%,to{left:100%}}.QsemTa_leading{flex-shrink:0}.QsemTa_chevron{color:var(--dsw-alias-label-secondary)}.QsemTa_title{font-weight:400}.QsemTa_separator{background:var(--dsw-alias-label-caption);border-radius:1px;flex:none;width:2px;height:2px;margin:0 8px}.QsemTa_summary{min-width:0;color:var(--dsw-alias-label-tertiary);font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px));white-space:nowrap;flex:auto;overflow:hidden}.QsemTa_summaryText{text-overflow:ellipsis;display:block;overflow:hidden}.QsemTa_summary[data-follow-end]{justify-content:flex-end;display:flex}.QsemTa_summary[data-follow-end] .QsemTa_summaryText{text-align:start;text-overflow:clip;flex:none;width:max-content;min-width:100%;overflow:visible}.QsemTa_thinkBody{padding:4px 0 4px calc(22px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px));white-space:pre-wrap;word-break:break-word}@media (prefers-reduced-motion:reduce){.QsemTa_root[data-state=running] .QsemTa_row:after{animation:none}}";
+		//#region \0dsh-css:C:\Users\14339\Desktop\git\dsh-session-sync\src\client\ReasoningRow.module.css.mjs
+		const css$3 = "._5Ynq8G_root{flex-direction:column;display:flex}._5Ynq8G_root:not([data-expanded]){contain:size layout;height:calc(24px + var(--dsh-content-font-delta,0px))}._5Ynq8G_row{position:relative;overflow:hidden}._5Ynq8G_root[data-state=running] ._5Ynq8G_row:after{content:\"\";inset-block:0;background:linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--dsw-alias-bg-base) 60%, transparent) 55%, transparent 100%);pointer-events:none;width:300px;animation:2.6s ease-out infinite _5Ynq8G_dsh-reasoning-row-sweep;position:absolute;left:0}@keyframes _5Ynq8G_dsh-reasoning-row-sweep{0%{left:-300px}90%,to{left:100%}}._5Ynq8G_leading{flex-shrink:0}._5Ynq8G_chevron{color:var(--dsw-alias-label-secondary)}._5Ynq8G_title{font-weight:400}._5Ynq8G_separator{background:var(--dsw-alias-label-caption);border-radius:1px;flex:none;width:2px;height:2px;margin:0 8px}._5Ynq8G_summary{min-width:0;color:var(--dsw-alias-label-tertiary);font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px));white-space:nowrap;flex:auto;overflow:hidden}._5Ynq8G_summaryText{text-overflow:ellipsis;display:block;overflow:hidden}._5Ynq8G_summary[data-follow-end]{justify-content:flex-end;display:flex}._5Ynq8G_summary[data-follow-end] ._5Ynq8G_summaryText{text-align:start;text-overflow:clip;flex:none;width:max-content;min-width:100%;overflow:visible}._5Ynq8G_thinkBody{padding:4px 0 4px calc(22px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px));white-space:pre-wrap;word-break:break-word}@media (prefers-reduced-motion:reduce){._5Ynq8G_root[data-state=running] ._5Ynq8G_row:after{animation:none}}";
 		const tagId$3 = "dsh-session-sync/ReasoningRow.module.css";
 		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagId$3) + "]") === null) {
 			const tag = document.createElement("style");
@@ -3308,20 +4234,20 @@ window.__ModuleLoader__.load({
 			document.head.appendChild(tag);
 		}
 		var ReasoningRow_module_css_default = {
-			"chevron": "QsemTa_chevron",
-			"dsh-reasoning-row-sweep": "QsemTa_dsh-reasoning-row-sweep",
-			"leading": "QsemTa_leading",
-			"root": "QsemTa_root",
-			"row": "QsemTa_row",
-			"separator": "QsemTa_separator",
-			"summary": "QsemTa_summary",
-			"summaryText": "QsemTa_summaryText",
-			"thinkBody": "QsemTa_thinkBody",
-			"title": "QsemTa_title"
+			"chevron": "_5Ynq8G_chevron",
+			"dsh-reasoning-row-sweep": "_5Ynq8G_dsh-reasoning-row-sweep",
+			"leading": "_5Ynq8G_leading",
+			"root": "_5Ynq8G_root",
+			"row": "_5Ynq8G_row",
+			"separator": "_5Ynq8G_separator",
+			"summary": "_5Ynq8G_summary",
+			"summaryText": "_5Ynq8G_summaryText",
+			"thinkBody": "_5Ynq8G_thinkBody",
+			"title": "_5Ynq8G_title"
 		};
 		//#endregion
-		//#region \0dsh-css:C:\Users\14339\Desktop\git\AI\dsh-session-sync\src\client\ToolRow.module.css.mjs
-		const css$2 = ".kgqxxW_root{flex-direction:column;display:flex}.kgqxxW_row{position:relative;overflow:hidden}.kgqxxW_root[data-state=running] .kgqxxW_row:after{content:\"\";background:linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--dsw-alias-bg-base) 60%, transparent) 55%, transparent 100%);pointer-events:none;width:300px;animation:2.6s ease-out infinite kgqxxW_dsh-tool-row-sweep;position:absolute;top:0;bottom:0;left:0}@keyframes kgqxxW_dsh-tool-row-sweep{0%{left:-300px}90%,to{left:100%}}.kgqxxW_leading{flex-shrink:0}.kgqxxW_root[data-tool^=cordis_] .kgqxxW_leading,.kgqxxW_root[data-tool^=cordis_] .kgqxxW_title{color:var(--dsw-alias-state-business-primary)}.kgqxxW_root[data-tool^=cordis_] .kgqxxW_title{font-weight:500}.kgqxxW_root[data-tool^=cordis_] .kgqxxW_sep{background:var(--dsw-alias-state-business-primary)}.kgqxxW_chevron{color:var(--dsw-alias-label-secondary)}.kgqxxW_title{font-weight:400}.kgqxxW_sep{background:var(--dsw-alias-label-caption);border-radius:1px;flex:none;width:2px;height:2px;margin:0 8px}.kgqxxW_summary{text-overflow:ellipsis;white-space:nowrap;min-width:0;font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);flex:auto;overflow:hidden}.kgqxxW_summarySuffix{white-space:nowrap;font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);flex:none;margin-left:4px}.kgqxxW_diffStat{font-family:var(--ds-font-family-code);font-size:calc(var(--dsh-content-font-size-secondary,13px) - 2px);color:var(--dsw-alias-label-caption);margin-left:10px;transform:translateY(.5px)}.kgqxxW_fileLink{text-overflow:ellipsis;white-space:nowrap;min-width:0;font:inherit;text-align:left;font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-secondary);text-decoration:underline dotted;text-decoration-color:var(--dsw-alias-label-tertiary);text-underline-offset:3px;cursor:pointer;background:0 0;border:none;flex:0 auto;margin:0;padding:0;text-decoration-thickness:1px;overflow:hidden}.kgqxxW_fileLink:hover{color:var(--dsw-alias-label-primary);text-decoration-color:currentColor}.kgqxxW_errorSummary{color:var(--dsw-alias-state-error-primary)}.kgqxxW_bodyWrap{flex-direction:column;display:flex}.kgqxxW_inspectButton{border:.5px solid var(--dsw-alias-border-l3);corner-shape:round;background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-secondary);cursor:pointer;opacity:0;border-radius:999px;align-self:flex-start;align-items:center;gap:4px;margin:4px 0 2px 4px;padding:2px 8px;font-size:11px;line-height:16px;transition:opacity .1s;display:inline-flex}.kgqxxW_root:hover .kgqxxW_inspectButton,.kgqxxW_inspectButton:focus-visible{opacity:1}.kgqxxW_inspectButton:hover{background:var(--dsw-alias-interactive-bg-hover-solid);color:var(--dsw-alias-label-primary)}.kgqxxW_bodyScroll{max-height:260px;overflow-y:auto}.kgqxxW_ioCard{border:.5px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-markdown-code-block);font:var(--dsw-font-markdown-code-block-small);border-radius:12px;flex-direction:column;margin:4px 0 4px 4px;display:flex}.kgqxxW_ioSection{grid-template-columns:max-content 1fr;align-items:baseline;column-gap:14px;max-height:150px;padding:12px 16px;display:grid;overflow-y:auto}.kgqxxW_ioSection::-webkit-scrollbar-thumb{background-clip:padding-box;border:2px solid #0000;border-radius:6px}.kgqxxW_ioSection::-webkit-scrollbar-track{margin:6px 0}.kgqxxW_ioLabel{color:var(--dsw-alias-label-caption);align-self:start;position:sticky;top:0}.kgqxxW_ioDivider{background:var(--dsw-alias-border-l2);flex:none;height:.5px}.kgqxxW_ioText{white-space:pre-wrap;word-break:break-word;min-width:0;color:var(--dsw-alias-label-secondary)}.kgqxxW_ioText[data-error]{color:var(--dsw-alias-state-error-primary)}.kgqxxW_codeBody,.kgqxxW_terminalBody,.kgqxxW_diffBody,.kgqxxW_readBody,.kgqxxW_imageBody,.kgqxxW_searchBody,.kgqxxW_webBody{margin:4px 0 4px 4px}.kgqxxW_searchRecovery{white-space:pre-wrap;overflow-wrap:anywhere;font:var(--dsw-font-xs-13);color:var(--dsw-alias-label-tertiary);margin:4px 0 4px 4px}.kgqxxW_imageLabel{overflow-wrap:anywhere;font:var(--dsw-font-sm-13);color:var(--dsw-alias-label-secondary);margin-bottom:4px}.kgqxxW_imageMeta{white-space:pre-wrap;overflow-wrap:anywhere;font:var(--dsw-font-xs-13);color:var(--dsw-alias-label-tertiary)}.kgqxxW_codeBody{--dsl-code-block-content-font:var(--dsw-font-markdown-code-block-small)}.kgqxxW_terminalBody{--dsl-terminal-font:var(--dsw-font-markdown-code-block-small);--dsl-terminal-line-height:18px;--dsl-terminal-output-max-height:224px;border:.5px solid var(--dsw-alias-border-l1)}.kgqxxW_visuallyHidden{clip:rect(0 0 0 0);white-space:nowrap;width:1px;height:1px;position:absolute;overflow:hidden}";
+		//#region \0dsh-css:C:\Users\14339\Desktop\git\dsh-session-sync\src\client\ToolRow.module.css.mjs
+		const css$2 = ".XHM18W_root{flex-direction:column;display:flex}.XHM18W_row{position:relative;overflow:hidden}.XHM18W_root[data-state=running] .XHM18W_row:after{content:\"\";background:linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--dsw-alias-bg-base) 60%, transparent) 55%, transparent 100%);pointer-events:none;width:300px;animation:2.6s ease-out infinite XHM18W_dsh-tool-row-sweep;position:absolute;top:0;bottom:0;left:0}@keyframes XHM18W_dsh-tool-row-sweep{0%{left:-300px}90%,to{left:100%}}.XHM18W_leading{flex-shrink:0}.XHM18W_root[data-tool^=cordis_] .XHM18W_leading,.XHM18W_root[data-tool^=cordis_] .XHM18W_title{color:var(--dsw-alias-state-business-primary)}.XHM18W_root[data-tool^=cordis_] .XHM18W_title{font-weight:500}.XHM18W_root[data-tool^=cordis_] .XHM18W_sep{background:var(--dsw-alias-state-business-primary)}.XHM18W_chevron{color:var(--dsw-alias-label-secondary)}.XHM18W_title{font-weight:400}.XHM18W_sep{background:var(--dsw-alias-label-caption);border-radius:1px;flex:none;width:2px;height:2px;margin:0 8px}.XHM18W_summary{text-overflow:ellipsis;white-space:nowrap;min-width:0;font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);flex:auto;overflow:hidden}.XHM18W_summarySuffix{white-space:nowrap;font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);flex:none;margin-left:4px}.XHM18W_diffStat{font-family:var(--ds-font-family-code);font-size:calc(var(--dsh-content-font-size-secondary,13px) - 2px);color:var(--dsw-alias-label-caption);margin-left:10px;transform:translateY(.5px)}.XHM18W_fileLink{text-overflow:ellipsis;white-space:nowrap;min-width:0;font:inherit;text-align:left;font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-secondary);text-decoration:underline dotted;text-decoration-color:var(--dsw-alias-label-tertiary);text-underline-offset:3px;cursor:pointer;background:0 0;border:none;flex:0 auto;margin:0;padding:0;text-decoration-thickness:1px;overflow:hidden}.XHM18W_fileLink:hover{color:var(--dsw-alias-label-primary);text-decoration-color:currentColor}.XHM18W_errorSummary{color:var(--dsw-alias-state-error-primary)}.XHM18W_bodyWrap{flex-direction:column;display:flex}.XHM18W_inspectButton{border:.5px solid var(--dsw-alias-border-l3);corner-shape:round;background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-secondary);cursor:pointer;opacity:0;border-radius:999px;align-self:flex-start;align-items:center;gap:4px;margin:4px 0 2px 4px;padding:2px 8px;font-size:11px;line-height:16px;transition:opacity .1s;display:inline-flex}.XHM18W_root:hover .XHM18W_inspectButton,.XHM18W_inspectButton:focus-visible{opacity:1}.XHM18W_inspectButton:hover{background:var(--dsw-alias-interactive-bg-hover-solid);color:var(--dsw-alias-label-primary)}.XHM18W_bodyScroll{max-height:260px;overflow-y:auto}.XHM18W_ioCard{border:.5px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-markdown-code-block);font:var(--dsw-font-markdown-code-block-small);border-radius:12px;flex-direction:column;margin:4px 0 4px 4px;display:flex}.XHM18W_ioSection{grid-template-columns:max-content 1fr;align-items:baseline;column-gap:14px;max-height:150px;padding:12px 16px;display:grid;overflow-y:auto}.XHM18W_ioSection::-webkit-scrollbar-thumb{background-clip:padding-box;border:2px solid #0000;border-radius:6px}.XHM18W_ioSection::-webkit-scrollbar-track{margin:6px 0}.XHM18W_ioLabel{color:var(--dsw-alias-label-caption);align-self:start;position:sticky;top:0}.XHM18W_ioDivider{background:var(--dsw-alias-border-l2);flex:none;height:.5px}.XHM18W_ioText{white-space:pre-wrap;word-break:break-word;min-width:0;color:var(--dsw-alias-label-secondary)}.XHM18W_ioText[data-error]{color:var(--dsw-alias-state-error-primary)}.XHM18W_codeBody,.XHM18W_terminalBody,.XHM18W_diffBody,.XHM18W_readBody,.XHM18W_imageBody,.XHM18W_searchBody,.XHM18W_webBody{margin:4px 0 4px 4px}.XHM18W_searchRecovery{white-space:pre-wrap;overflow-wrap:anywhere;font:var(--dsw-font-xs-13);color:var(--dsw-alias-label-tertiary);margin:4px 0 4px 4px}.XHM18W_imageLabel{overflow-wrap:anywhere;font:var(--dsw-font-sm-13);color:var(--dsw-alias-label-secondary);margin-bottom:4px}.XHM18W_imageMeta{white-space:pre-wrap;overflow-wrap:anywhere;font:var(--dsw-font-xs-13);color:var(--dsw-alias-label-tertiary)}.XHM18W_codeBody{--dsl-code-block-content-font:var(--dsw-font-markdown-code-block-small)}.XHM18W_terminalBody{--dsl-terminal-font:var(--dsw-font-markdown-code-block-small);--dsl-terminal-line-height:18px;--dsl-terminal-output-max-height:224px;border:.5px solid var(--dsw-alias-border-l1)}.XHM18W_visuallyHidden{clip:rect(0 0 0 0);white-space:nowrap;width:1px;height:1px;position:absolute;overflow:hidden}";
 		const tagId$2 = "dsh-session-sync/ToolRow.module.css";
 		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagId$2) + "]") === null) {
 			const tag = document.createElement("style");
@@ -3331,41 +4257,41 @@ window.__ModuleLoader__.load({
 			document.head.appendChild(tag);
 		}
 		var ToolRow_module_css_default = {
-			"bodyScroll": "kgqxxW_bodyScroll",
-			"bodyWrap": "kgqxxW_bodyWrap",
-			"chevron": "kgqxxW_chevron",
-			"codeBody": "kgqxxW_codeBody",
-			"diffBody": "kgqxxW_diffBody",
-			"diffStat": "kgqxxW_diffStat",
-			"dsh-tool-row-sweep": "kgqxxW_dsh-tool-row-sweep",
-			"errorSummary": "kgqxxW_errorSummary",
-			"fileLink": "kgqxxW_fileLink",
-			"imageBody": "kgqxxW_imageBody",
-			"imageLabel": "kgqxxW_imageLabel",
-			"imageMeta": "kgqxxW_imageMeta",
-			"inspectButton": "kgqxxW_inspectButton",
-			"ioCard": "kgqxxW_ioCard",
-			"ioDivider": "kgqxxW_ioDivider",
-			"ioLabel": "kgqxxW_ioLabel",
-			"ioSection": "kgqxxW_ioSection",
-			"ioText": "kgqxxW_ioText",
-			"leading": "kgqxxW_leading",
-			"readBody": "kgqxxW_readBody",
-			"root": "kgqxxW_root",
-			"row": "kgqxxW_row",
-			"searchBody": "kgqxxW_searchBody",
-			"searchRecovery": "kgqxxW_searchRecovery",
-			"sep": "kgqxxW_sep",
-			"summary": "kgqxxW_summary",
-			"summarySuffix": "kgqxxW_summarySuffix",
-			"terminalBody": "kgqxxW_terminalBody",
-			"title": "kgqxxW_title",
-			"visuallyHidden": "kgqxxW_visuallyHidden",
-			"webBody": "kgqxxW_webBody"
+			"bodyScroll": "XHM18W_bodyScroll",
+			"bodyWrap": "XHM18W_bodyWrap",
+			"chevron": "XHM18W_chevron",
+			"codeBody": "XHM18W_codeBody",
+			"diffBody": "XHM18W_diffBody",
+			"diffStat": "XHM18W_diffStat",
+			"dsh-tool-row-sweep": "XHM18W_dsh-tool-row-sweep",
+			"errorSummary": "XHM18W_errorSummary",
+			"fileLink": "XHM18W_fileLink",
+			"imageBody": "XHM18W_imageBody",
+			"imageLabel": "XHM18W_imageLabel",
+			"imageMeta": "XHM18W_imageMeta",
+			"inspectButton": "XHM18W_inspectButton",
+			"ioCard": "XHM18W_ioCard",
+			"ioDivider": "XHM18W_ioDivider",
+			"ioLabel": "XHM18W_ioLabel",
+			"ioSection": "XHM18W_ioSection",
+			"ioText": "XHM18W_ioText",
+			"leading": "XHM18W_leading",
+			"readBody": "XHM18W_readBody",
+			"root": "XHM18W_root",
+			"row": "XHM18W_row",
+			"searchBody": "XHM18W_searchBody",
+			"searchRecovery": "XHM18W_searchRecovery",
+			"sep": "XHM18W_sep",
+			"summary": "XHM18W_summary",
+			"summarySuffix": "XHM18W_summarySuffix",
+			"terminalBody": "XHM18W_terminalBody",
+			"title": "XHM18W_title",
+			"visuallyHidden": "XHM18W_visuallyHidden",
+			"webBody": "XHM18W_webBody"
 		};
 		//#endregion
-		//#region \0dsh-css:C:\Users\14339\Desktop\git\AI\dsh-session-sync\src\client\TurnUsagePanel.module.css.mjs
-		const css$1 = ".pM8jla_root{min-width:0;display:inline-flex}.pM8jla_root+.pM8jla_root{margin-left:-6px}.pM8jla_trigger{min-width:0;height:calc(28px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);font-size:var(--dsh-content-font-size-secondary,13px);font-variant-numeric:tabular-nums;line-height:calc(24px + var(--dsh-content-font-delta,0px));white-space:nowrap;cursor:pointer;background:0 0;border:none;border-radius:28px;align-items:center;gap:4px;padding:6px 8px;display:inline-flex}.pM8jla_label{text-overflow:ellipsis;min-width:0;overflow:hidden}.pM8jla_trigger svg{width:calc(15px + var(--dsh-content-font-delta,0px));height:calc(15px + var(--dsh-content-font-delta,0px));flex:none}.pM8jla_trigger:hover,.pM8jla_trigger[aria-expanded=true]{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary)}@media (width<=480px){.pM8jla_trigger{width:calc(28px + var(--dsh-content-font-delta,0px));justify-content:center;padding:6px}.pM8jla_trigger .pM8jla_label{display:none}.pM8jla_root+.pM8jla_root{margin-left:0}}";
+		//#region \0dsh-css:C:\Users\14339\Desktop\git\dsh-session-sync\src\client\TurnUsagePanel.module.css.mjs
+		const css$1 = ".Vf0xqa_root{min-width:0;display:inline-flex}.Vf0xqa_root+.Vf0xqa_root{margin-left:-6px}.Vf0xqa_trigger{min-width:0;height:calc(28px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);font-size:var(--dsh-content-font-size-secondary,13px);font-variant-numeric:tabular-nums;line-height:calc(24px + var(--dsh-content-font-delta,0px));white-space:nowrap;cursor:pointer;background:0 0;border:none;border-radius:28px;align-items:center;gap:4px;padding:6px 8px;display:inline-flex}.Vf0xqa_label{text-overflow:ellipsis;min-width:0;overflow:hidden}.Vf0xqa_trigger svg{width:calc(15px + var(--dsh-content-font-delta,0px));height:calc(15px + var(--dsh-content-font-delta,0px));flex:none}.Vf0xqa_trigger:hover,.Vf0xqa_trigger[aria-expanded=true]{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary)}@media (width<=480px){.Vf0xqa_trigger{width:calc(28px + var(--dsh-content-font-delta,0px));justify-content:center;padding:6px}.Vf0xqa_trigger .Vf0xqa_label{display:none}.Vf0xqa_root+.Vf0xqa_root{margin-left:0}}";
 		const tagId$1 = "dsh-session-sync/TurnUsagePanel.module.css";
 		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagId$1) + "]") === null) {
 			const tag = document.createElement("style");
@@ -3375,13 +4301,13 @@ window.__ModuleLoader__.load({
 			document.head.appendChild(tag);
 		}
 		var TurnUsagePanel_module_css_default = {
-			"label": "pM8jla_label",
-			"root": "pM8jla_root",
-			"trigger": "pM8jla_trigger"
+			"label": "Vf0xqa_label",
+			"root": "Vf0xqa_root",
+			"trigger": "Vf0xqa_trigger"
 		};
 		//#endregion
-		//#region \0dsh-css:C:\Users\14339\Desktop\git\AI\dsh-session-sync\src\client\stat-dialog.module.css.mjs
-		const css = ".n0z_Aq_panel{z-index:1100;box-sizing:border-box;background:var(--dsw-specific-menu);--dsw-elevation-stroke-color:var(--dsw-alias-border-l1);width:max-content;min-width:min(300px,100vw - 24px);max-width:min(440px,100vw - 24px);box-shadow:var(--dsw-elevation-prominent);color:var(--dsw-alias-label-secondary);cursor:default;border:0;border-radius:12px;padding:16px;font-size:12px;line-height:18px;position:fixed}.n0z_Aq_title{color:var(--dsw-alias-label-primary);justify-content:space-between;gap:16px;margin-bottom:8px;font-weight:500;display:flex}.n0z_Aq_titleRule{border-top:.5px solid var(--dsw-alias-border-l2);margin-bottom:10px}.n0z_Aq_titleValue{font-variant-numeric:tabular-nums}.n0z_Aq_titleLabel{align-items:center;gap:6px;min-width:0;display:inline-flex}.n0z_Aq_titleLabel svg{flex:none;width:14px;height:14px}.n0z_Aq_details{color:var(--dsw-alias-label-tertiary);grid-template-columns:minmax(76px,auto) minmax(0,1fr);gap:6px 16px;margin:0;display:grid}.n0z_Aq_details dt,.n0z_Aq_details dd{min-width:0;margin:0}.n0z_Aq_details dd{color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;text-align:right}.n0z_Aq_details .n0z_Aq_route{overflow-wrap:anywhere}.n0z_Aq_reasoning{color:var(--dsw-alias-label-tertiary);white-space:nowrap}";
+		//#region \0dsh-css:C:\Users\14339\Desktop\git\dsh-session-sync\src\client\stat-dialog.module.css.mjs
+		const css = ".Q8mwTG_panel{z-index:1100;box-sizing:border-box;background:var(--dsw-specific-menu);--dsw-elevation-stroke-color:var(--dsw-alias-border-l1);width:max-content;min-width:min(300px,100vw - 24px);max-width:min(440px,100vw - 24px);box-shadow:var(--dsw-elevation-prominent);color:var(--dsw-alias-label-secondary);cursor:default;border:0;border-radius:12px;padding:16px;font-size:12px;line-height:18px;position:fixed}.Q8mwTG_title{color:var(--dsw-alias-label-primary);justify-content:space-between;gap:16px;margin-bottom:8px;font-weight:500;display:flex}.Q8mwTG_titleRule{border-top:.5px solid var(--dsw-alias-border-l2);margin-bottom:10px}.Q8mwTG_titleValue{font-variant-numeric:tabular-nums}.Q8mwTG_titleLabel{align-items:center;gap:6px;min-width:0;display:inline-flex}.Q8mwTG_titleLabel svg{flex:none;width:14px;height:14px}.Q8mwTG_details{color:var(--dsw-alias-label-tertiary);grid-template-columns:minmax(76px,auto) minmax(0,1fr);gap:6px 16px;margin:0;display:grid}.Q8mwTG_details dt,.Q8mwTG_details dd{min-width:0;margin:0}.Q8mwTG_details dd{color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;text-align:right}.Q8mwTG_details .Q8mwTG_route{overflow-wrap:anywhere}.Q8mwTG_reasoning{color:var(--dsw-alias-label-tertiary);white-space:nowrap}";
 		const tagId = "dsh-session-sync/stat-dialog.module.css";
 		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagId) + "]") === null) {
 			const tag = document.createElement("style");
@@ -3391,14 +4317,14 @@ window.__ModuleLoader__.load({
 			document.head.appendChild(tag);
 		}
 		var stat_dialog_module_css_default = {
-			"details": "n0z_Aq_details",
-			"panel": "n0z_Aq_panel",
-			"reasoning": "n0z_Aq_reasoning",
-			"route": "n0z_Aq_route",
-			"title": "n0z_Aq_title",
-			"titleLabel": "n0z_Aq_titleLabel",
-			"titleRule": "n0z_Aq_titleRule",
-			"titleValue": "n0z_Aq_titleValue"
+			"details": "Q8mwTG_details",
+			"panel": "Q8mwTG_panel",
+			"reasoning": "Q8mwTG_reasoning",
+			"route": "Q8mwTG_route",
+			"title": "Q8mwTG_title",
+			"titleLabel": "Q8mwTG_titleLabel",
+			"titleRule": "Q8mwTG_titleRule",
+			"titleValue": "Q8mwTG_titleValue"
 		};
 		//#endregion
 		//#region src/client/stat-panels.tsx
@@ -3497,7 +4423,7 @@ window.__ModuleLoader__.load({
 					onClick: () => {
 						setOpen(!open);
 					},
-					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconDatabaseOutline16, {}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconDatabaseOutlineRegular, {}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 						className: TurnUsagePanel_module_css_default.label,
 						children: t("turnUsageConsumed", { total: formatTokens(total, t) })
 					})]
@@ -3512,7 +4438,7 @@ window.__ModuleLoader__.load({
 							className: stat_dialog_module_css_default.title,
 							children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
 								className: stat_dialog_module_css_default.titleLabel,
-								children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconDatabaseOutline16, {}), t("turnUsageTitle")]
+								children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconDatabaseOutlineRegular, {}), t("turnUsageTitle")]
 							}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 								className: stat_dialog_module_css_default.titleValue,
 								children: exactCount(total, t)
@@ -3585,7 +4511,7 @@ window.__ModuleLoader__.load({
 					onClick: () => {
 						setOpen(!open);
 					},
-					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconClockOutline16, {}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconClockOutlineRegular, {}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 						className: TurnUsagePanel_module_css_default.label,
 						children: t("messageRanFor", { duration: formatRunDuration(runMs, t) })
 					})]
@@ -3600,7 +4526,7 @@ window.__ModuleLoader__.load({
 							className: stat_dialog_module_css_default.title,
 							children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
 								className: stat_dialog_module_css_default.titleLabel,
-								children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconClockOutline16, {}), t("turnTimeTitle")]
+								children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconClockOutlineRegular, {}), t("turnTimeTitle")]
 							})
 						}),
 						/* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
@@ -3706,7 +4632,7 @@ window.__ModuleLoader__.load({
 					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 						className: sync_module_css_default.listHead,
 						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Input, {
-							icon: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconSearchOutline16, {}),
+							icon: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconSearchOutlineRegular, {}),
 							value: query,
 							placeholder: t("searchSessions"),
 							"aria-label": t("searchSessions"),
@@ -3828,6 +4754,9 @@ window.__ModuleLoader__.load({
 						online,
 						closeSession: props.closeSession,
 						sendPrompt: props.sendPrompt,
+						official: props.official,
+						renderSlot: props.renderSlot,
+						SessionProvider: props.SessionProvider,
 						listHidden,
 						toggleList: () => {
 							setListHidden((current) => !current);
@@ -3860,11 +4789,11 @@ window.__ModuleLoader__.load({
 				children: [
 					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 						className: `${sync_module_css_default.treeSlot} ${sync_module_css_default.treeFolder}`,
-						children: props.icon === "machine" ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconGlobeOutline14, { size: 16 }) : props.open ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconFolderOpen16, {}) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconFolderClose16, {})
+						children: props.icon === "machine" ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconGlobeOutlineRegular, { size: 16 }) : props.open ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconFolderOpenRegular, {}) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconFolderCloseRegular, {})
 					}),
 					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 						className: `${sync_module_css_default.treeSlot} ${sync_module_css_default.treeChevron}`,
-						children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconTriangleRightFill14, { className: props.open ? sync_module_css_default.arrowOpen : void 0 })
+						children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconTriangleRightFillRegular, { className: props.open ? sync_module_css_default.arrowOpen : void 0 })
 					}),
 					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 						className: sync_module_css_default.rowTitle,
@@ -3956,6 +4885,7 @@ window.__ModuleLoader__.load({
 				});
 			};
 			const delivery = state.delivery;
+			const shipped = props.official.supported && props.renderSlot !== void 0 && props.SessionProvider !== void 0 && state.transcript !== void 0 ? props.official.referenceFor(props.machineName, session.sessionId) : void 0;
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [
 				/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("header", {
 					className: sync_module_css_default.viewHeader,
@@ -3966,7 +4896,7 @@ window.__ModuleLoader__.load({
 								variant: "ghost",
 								size: "sm",
 								className: sync_module_css_default.listToggle,
-								icon: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconPanelLeftOutline16, {}),
+								icon: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconPanelLeftOutlineRegular, {}),
 								"aria-label": props.listHidden ? t("listShow") : t("listHide"),
 								onClick: props.toggleList
 							}),
@@ -3975,7 +4905,7 @@ window.__ModuleLoader__.load({
 								variant: "ghost",
 								size: "sm",
 								className: sync_module_css_default.narrowOnly,
-								icon: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconChevronLeftOutline14, {}),
+								icon: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconChevronLeftOutlineRegular, {}),
 								"aria-label": t("back"),
 								onClick: props.closeSession
 							}),
@@ -4027,6 +4957,12 @@ window.__ModuleLoader__.load({
 					cells,
 					stats: chrome.stats,
 					labels
+				}) : shipped !== void 0 ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+					className: sync_module_css_default.officialPane,
+					children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(props.SessionProvider, {
+						session: shipped,
+						children: props.renderSlot(OFFICIAL_SLOT, {})
+					})
 				}) : /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 					className: sync_module_css_default.viewScroll,
 					ref: body,
@@ -4074,11 +5010,11 @@ window.__ModuleLoader__.load({
 							onClick: () => {
 								scrollToBottom();
 							},
-							children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconChevronDownOutline14, {})
+							children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconChevronDownOutlineRegular, {})
 						})
 					})]
 				}),
-				/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+				(shipped === void 0 || tab === "trajectory") && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 					className: sync_module_css_default.composerRoot,
 					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("form", {
 						className: sync_module_css_default.composerCard,
@@ -4125,7 +5061,7 @@ window.__ModuleLoader__.load({
 									className: sync_module_css_default.sendButton,
 									disabled: sending || draft.trim() === "",
 									"aria-label": sending ? t("sending") : t("send"),
-									children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconRightUpOutline16, {})
+									children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconRightUpOutlineRegular, {})
 								})
 							]
 						})]
@@ -4436,7 +5372,7 @@ window.__ModuleLoader__.load({
 							className: MessageIconActions_module_css_default.action,
 							"aria-label": label,
 							onClick: onCopy,
-							children: copied ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutline16, {}) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconCopyOutline16, {})
+							children: copied ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutlineRegular, {}) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconCopyOutlineRegular, {})
 						})
 					}),
 					facts !== void 0 && total > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)(TurnUsagePill, {
@@ -4546,7 +5482,7 @@ window.__ModuleLoader__.load({
 					leadingClassName: ReasoningRow_module_css_default.leading,
 					titleClassName: ReasoningRow_module_css_default.title,
 					chevronClassName: ReasoningRow_module_css_default.chevron,
-					icon: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconThinkOutline14, { size: 14 }),
+					icon: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconThinkOutlineRegular, { size: 14 }),
 					title: t("reasoning"),
 					open,
 					expandable: true,
@@ -4744,15 +5680,15 @@ window.__ModuleLoader__.load({
 		*/
 		function ToolGlyphIcon({ glyph }) {
 			switch (glyph) {
-				case "browse": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconBrowseOutline16, { size: 14 });
-				case "edit": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconEditOutline16, { size: 14 });
-				case "search": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconSearchOutline16, { size: 14 });
-				case "terminal": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconApiOutline14, { size: 14 });
-				case "globe": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconGlobeOutline14, { size: 14 });
-				case "question": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconQuestionOutline14, { size: 14 });
-				case "plan": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconChecklistOutline14, { size: 14 });
-				case "share": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconShareOutline16, { size: 14 });
-				default: return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconSparkle16, { size: 14 });
+				case "browse": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconBrowseOutlineRegular, { size: 14 });
+				case "edit": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconEditOutlineRegular, { size: 14 });
+				case "search": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconSearchOutlineRegular, { size: 14 });
+				case "terminal": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconApiOutlineRegular, { size: 14 });
+				case "globe": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconGlobeOutlineRegular, { size: 14 });
+				case "question": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconQuestionOutlineRegular, { size: 14 });
+				case "plan": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconChecklistOutlineRegular, { size: 14 });
+				case "share": return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconShareOutlineRegular, { size: 14 });
+				default: return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconSparkleRegular, { size: 14 });
 			}
 		}
 		/** The role and link line under the list's search box. */
@@ -4831,438 +5767,6 @@ window.__ModuleLoader__.load({
 			if (unit === "days") return `${String(n)} ${t("timeDays")}`;
 			if (unit === "months") return `${String(n)} ${t("timeMonths")}`;
 			return `${String(n)} ${t("timeYears")}`;
-		}
-		//#endregion
-		//#region src/shared/protocol.ts
-		/**
-		* Wire and persisted shapes shared by the Host half, the sync server, and the
-		* browser half.
-		*
-		* Every shape here is plain JSON. The one rule that shapes this file: the Host
-		* half never hands a live DSH object (a Session, an Agent, a projection) across
-		* a boundary. It reads the leaf scalars it needs and builds one of these.
-		*/
-		/** The transport path prefix every browser-facing route lives under. */
-		const ROUTE_PREFIX = "/dsh-session-sync";
-		/** Default listen port of the sync server. */
-		const DEFAULT_LISTEN_PORT = 8791;
-		/** Build the config a fresh install starts from. */
-		function defaultConfig(machineName) {
-			return {
-				machineName,
-				serverUrl: "",
-				isServer: false,
-				password: "",
-				listenHost: "0.0.0.0",
-				listenPort: DEFAULT_LISTEN_PORT,
-				syncSessions: {}
-			};
-		}
-		//#endregion
-		//#region src/client/api.ts
-		/**
-		* Browser-side transport and view state for the sync plugin.
-		*
-		* Everything goes through the Host routes this package registers under
-		* {@link ROUTE_PREFIX}, so the panel is same-origin with the GUI it lives in.
-		* Live state arrives on one `EventSource`; the panel and the settings page both
-		* read the single snapshot this store publishes, which is why a change made on
-		* one surface is already visible on the other.
-		*/
-		/** How often the local Session list is re-read while the panel is mounted. */
-		const SESSION_POLL_MS = 15e3;
-		/**
-		* How many command states to remember for a command this browser has not been
-		* told about yet.
-		*
-		* A status frame and the POST response that mints the command's id travel by
-		* different roads, and the frame routinely wins: the server hands the command to
-		* the owning machine and narrates that immediately, while the response still has
-		* to come back. Dropping those frames left the composer on "submitted" for a
-		* command the machine had already accepted.
-		*/
-		const EARLY_COMMAND_LIMIT = 16;
-		/** The neutral state rendered before the Host has answered. */
-		function idleState() {
-			return {
-				role: "client",
-				machineName: "",
-				serverUrl: "",
-				listening: false,
-				linked: false,
-				machines: [],
-				published: 0
-			};
-		}
-		/** The step number that means "no step is streaming". */
-		const NO_STEP = -1;
-		/**
-		* The empty live row.
-		*
-		* A blank row rather than `undefined`: the panel asks whether either text is
-		* non-empty, and a step's first frame is what fills one.
-		*/
-		function noLive() {
-			return {
-				reasoning: "",
-				text: "",
-				turn: NO_STEP,
-				step: NO_STEP
-			};
-		}
-		/**
-		* Whether one mirrored event settles the attempt a live row belongs to.
-		*
-		* Both spellings matter: a step that produced a message commits
-		* `assistant/message`, while a stream that failed or was aborted with nothing
-		* to keep commits `assistant/attempt`. Clearing only on the first left a
-		* failed step's thinking on screen indefinitely.
-		* @param event - one mirrored durable event.
-		* @returns true when the live row for its step is over.
-		*/
-		function isSettlement(event) {
-			return event.type === "assistant/message" || event.type === "assistant/attempt";
-		}
-		/** The sync plugin's browser client. */
-		var SyncClient = class {
-			store;
-			source;
-			poll;
-			started = false;
-			/** Status frames that arrived before this browser knew their command's id. */
-			earlyCommands = /* @__PURE__ */ new Map();
-			/** Whether this page has ever held an open stream. */
-			sawOpen = false;
-			/** Whether this page has ever seen a machine in the mirror. */
-			sawMachines = false;
-			constructor() {
-				this.store = (0, _deepseek_ai_dsh_client_store.createSnapshotStore)({
-					ready: false,
-					config: defaultConfig(""),
-					state: idleState(),
-					sessions: [],
-					loadingTranscript: false,
-					live: noLive(),
-					stream: "connecting",
-					mirrorResets: 0
-				});
-			}
-			/** The observable the slot registrations bind as a renderer-provided hook. */
-			get snapshot() {
-				return this.store;
-			}
-			/** Begin reading and hold the live stream open. Idempotent. */
-			start() {
-				if (this.started) return;
-				this.started = true;
-				this.refresh();
-				this.openStream();
-				this.poll = setInterval(() => {
-					this.refreshSessions();
-					this.refreshState();
-				}, SESSION_POLL_MS);
-			}
-			/** Stop polling and close the stream. Idempotent. */
-			stop() {
-				this.started = false;
-				if (this.poll !== void 0) clearInterval(this.poll);
-				this.poll = void 0;
-				this.source?.close();
-				this.source = void 0;
-			}
-			/** Re-read configuration, role state, and the local Session list. */
-			async refresh() {
-				try {
-					const [configResponse, sessionsResponse] = await Promise.all([getJson(`${ROUTE_PREFIX}/config`), getJson(`${ROUTE_PREFIX}/sessions`)]);
-					this.update({
-						ready: true,
-						config: configResponse.config,
-						state: configResponse.state,
-						sessions: sessionsResponse.sessions,
-						error: void 0
-					});
-				} catch (error) {
-					this.update({
-						ready: true,
-						error: describe(error)
-					});
-				}
-			}
-			/** Re-read only the local Session list. */
-			async refreshSessions() {
-				try {
-					const { sessions } = await getJson(`${ROUTE_PREFIX}/sessions`);
-					this.update({ sessions });
-				} catch {}
-			}
-			/** Re-read the authoritative mirror view, which is what retires a stale badge. */
-			async refreshState() {
-				try {
-					const { state } = await getJson(`${ROUTE_PREFIX}/state`);
-					if (!isCompleteState(state)) return;
-					this.update({ state });
-				} catch {}
-			}
-			/**
-			* Write one partial configuration change.
-			* @param patch - fields to change.
-			* @returns true when the Host accepted the write.
-			*/
-			async configure(patch) {
-				try {
-					const result = await postJson(`${ROUTE_PREFIX}/config`, patch);
-					this.update({
-						config: result.config,
-						state: result.state,
-						sessions: result.sessions,
-						error: void 0
-					});
-					return true;
-				} catch (error) {
-					this.update({ error: describe(error) });
-					return false;
-				}
-			}
-			/**
-			* Flip one Session's publish switch.
-			* @param sessionId - the Session to publish or stop publishing.
-			* @param synced - the requested state.
-			* @returns true when the Host accepted the write.
-			*/
-			async setSessionSync(sessionId, synced) {
-				return await this.configure({ sessionSync: {
-					sessionId,
-					synced
-				} });
-			}
-			/**
-			* Open one mirrored Session in the centre panel.
-			* @param machineName - owning machine.
-			* @param sessionId - published Session.
-			*/
-			async openSession(machineName, sessionId) {
-				this.update({
-					open: {
-						machineName,
-						sessionId
-					},
-					transcript: void 0,
-					loadingTranscript: true,
-					live: noLive(),
-					delivery: void 0
-				});
-				try {
-					const { transcript } = await getJson(`${ROUTE_PREFIX}/transcript?machine=${encodeURIComponent(machineName)}&session=${encodeURIComponent(sessionId)}`);
-					this.update({
-						transcript,
-						loadingTranscript: false,
-						error: void 0
-					});
-				} catch (error) {
-					this.update({
-						loadingTranscript: false,
-						error: describe(error)
-					});
-				}
-			}
-			/** Leave the open remote Session. */
-			closeSession() {
-				this.update({
-					open: void 0,
-					transcript: void 0,
-					delivery: void 0,
-					live: noLive()
-				});
-			}
-			/**
-			* Send one takeover prompt to the machine that owns the open Session.
-			* @param text - the prompt text.
-			* @returns true when the server accepted and forwarded it.
-			*/
-			async sendPrompt(text) {
-				const open = this.store.getSnapshot().open;
-				if (open === void 0) return false;
-				try {
-					const result = await postJson(`${ROUTE_PREFIX}/command`, {
-						machineName: open.machineName,
-						sessionId: open.sessionId,
-						text
-					});
-					const known = this.earlyCommands.get(result.commandId);
-					this.earlyCommands.delete(result.commandId);
-					this.update({
-						error: void 0,
-						delivery: known ?? {
-							commandId: result.commandId,
-							state: "queued",
-							expiresAt: Date.now() + 12e4
-						}
-					});
-					return true;
-				} catch (error) {
-					this.update({ error: describe(error) });
-					return false;
-				}
-			}
-			openStream() {
-				if (typeof EventSource === "undefined") return;
-				const source = new EventSource(`${ROUTE_PREFIX}/events`);
-				source.onopen = () => {
-					const first = !this.sawOpen;
-					this.sawOpen = true;
-					const snapshot = this.store.getSnapshot();
-					const reset = !first && this.sawMachines && snapshot.state.machines.length === 0;
-					this.update({
-						stream: "open",
-						...reset ? { mirrorResets: snapshot.mirrorResets + 1 } : {}
-					});
-					if (!first) this.refresh();
-				};
-				source.onerror = () => {
-					this.update({ stream: "connecting" });
-				};
-				source.onmessage = (event) => {
-					let frame;
-					try {
-						frame = JSON.parse(event.data);
-					} catch {
-						return;
-					}
-					this.consume(frame);
-				};
-				this.source = source;
-			}
-			consume(frame) {
-				if (frame.type === "state") {
-					const previous = this.store.getSnapshot().state;
-					const state = isCompleteState(frame.state) ? frame.state : {
-						...previous,
-						machines: Array.isArray(frame.state.machines) ? frame.state.machines : previous.machines
-					};
-					this.update({
-						state,
-						ready: true
-					});
-					if (previous.published !== state.published) this.refreshSessions();
-					return;
-				}
-				if (frame.type === "events") {
-					const snapshot = this.store.getSnapshot();
-					const open = snapshot.open;
-					if (open === void 0) return;
-					if (open.machineName !== frame.machineName || open.sessionId !== frame.sessionId) return;
-					const transcript = snapshot.transcript;
-					if (transcript === void 0) return;
-					this.update({
-						transcript: {
-							...transcript,
-							events: [...transcript.events, ...frame.events]
-						},
-						...frame.events.some(isSettlement) ? { live: noLive() } : {}
-					});
-					return;
-				}
-				if (frame.type === "stream") {
-					const snapshot = this.store.getSnapshot();
-					const open = snapshot.open;
-					if (open === void 0) return;
-					if (open.machineName !== frame.machineName || open.sessionId !== frame.sessionId) return;
-					const live = snapshot.live;
-					if (frame.turn < live.turn || frame.turn === live.turn && frame.step < live.step) return;
-					const advanced = frame.turn > live.turn || frame.turn === live.turn && frame.step > live.step;
-					const base = advanced ? {
-						...noLive(),
-						turn: frame.turn,
-						step: frame.step
-					} : live;
-					const shown = frame.kind === "reasoning" ? base.reasoning : base.text;
-					if (!advanced && frame.text !== "" && frame.text.length < shown.length && shown.startsWith(frame.text)) return;
-					this.update({ live: frame.kind === "reasoning" ? {
-						...base,
-						reasoning: frame.text
-					} : {
-						...base,
-						text: frame.text
-					} });
-					return;
-				}
-				if (frame.type === "command") {
-					const delivery = {
-						commandId: frame.command.commandId,
-						state: frame.command.state,
-						expiresAt: frame.command.expiresAt,
-						...frame.command.error === void 0 ? {} : { error: frame.command.error }
-					};
-					const current = this.store.getSnapshot().delivery;
-					if (current !== void 0 && current.commandId === frame.command.commandId) {
-						this.update({ delivery });
-						return;
-					}
-					this.earlyCommands.delete(frame.command.commandId);
-					this.earlyCommands.set(frame.command.commandId, delivery);
-					while (this.earlyCommands.size > EARLY_COMMAND_LIMIT) {
-						const oldest = this.earlyCommands.keys().next();
-						if (oldest.done === true) break;
-						this.earlyCommands.delete(oldest.value);
-					}
-					return;
-				}
-				this.update({ error: frame.message });
-			}
-			/**
-			* Publish one patch, remembering that this page once held machines.
-			*
-			* That memory is what makes an empty mirror a reset rather than a fleet that
-			* never connected: the empty window itself is only a couple of seconds wide,
-			* so the notice has to be raised by the reconnect rather than by what the
-			* next read happens to find.
-			*/
-			update(patch) {
-				const next = {
-					...this.store.getSnapshot(),
-					...patch
-				};
-				if (next.state.machines.length > 0) this.sawMachines = true;
-				this.store.set(next);
-			}
-		};
-		/** Read one JSON response, turning a non-2xx into a thrown error carrying the server's reason. */
-		async function getJson(path) {
-			return await decode(await fetch(path, { cache: "no-store" }));
-		}
-		/** Post one JSON body and read the JSON response. */
-		async function postJson(path, body) {
-			return await decode(await fetch(path, {
-				method: "POST",
-				headers: { "content-type": "application/json" },
-				body: JSON.stringify(body)
-			}));
-		}
-		/** Decode a response, preferring the server's own failure reason. */
-		async function decode(response) {
-			const text = await response.text();
-			if (!response.ok) {
-				let reason = `HTTP ${String(response.status)}`;
-				try {
-					const parsed = JSON.parse(text);
-					if (typeof parsed.reason === "string") reason = parsed.reason;
-					else if (typeof parsed.error === "string") reason = parsed.error;
-				} catch {}
-				throw new Error(reason);
-			}
-			return JSON.parse(text);
-		}
-		/** Human-readable one-line failure text. */
-		function describe(error) {
-			return error instanceof Error ? error.message : String(error);
-		}
-		/**
-		* Whether a state frame carries the whole view rather than just a mirror slice.
-		* @param state - the frame's state payload.
-		* @returns true when every field the surfaces render is present.
-		*/
-		function isCompleteState(state) {
-			return (state.role === "server" || state.role === "client") && Array.isArray(state.machines) && typeof state.machineName === "string" && typeof state.published === "number";
 		}
 		//#endregion
 		//#region src/client/locales.ts
@@ -5483,6 +5987,7 @@ window.__ModuleLoader__.load({
 			webContentTruncated: "内容已截断",
 			terminalSignal: "信号 {signal}",
 			terminalExitCode: "退出码 {code}",
+			terminalNoExitCode: "未正常退出",
 			terminalRunning: "执行中",
 			terminalFailed: "失败",
 			terminalDone: "完成",
@@ -5728,6 +6233,7 @@ window.__ModuleLoader__.load({
 			webContentTruncated: "Content truncated",
 			terminalSignal: "signal {signal}",
 			terminalExitCode: "exit code {code}",
+			terminalNoExitCode: "no exit code",
 			terminalRunning: "Running",
 			terminalFailed: "Failed",
 			terminalDone: "Done",
@@ -5782,6 +6288,14 @@ window.__ModuleLoader__.load({
 		*/
 		function apply(ctx) {
 			const client = new SyncClient();
+			const official = new OfficialSessions(ctx, client);
+			ctx.effect(() => {
+				const detach = client.observe(official);
+				return () => {
+					detach();
+					official.release();
+				};
+			}, "dsh-session-sync: shipped-renderer mirror");
 			ctx.effect(() => {
 				client.start();
 				return () => {
@@ -5815,15 +6329,21 @@ window.__ModuleLoader__.load({
 				name: "main",
 				key: PANEL_ID,
 				locale: NS,
+				children: { [OFFICIAL_SLOT]: {
+					kind: "single",
+					scope: "session"
+				} },
 				inject: () => ({
 					hooks: { sync: client.snapshot },
 					openSession: (machineName, sessionId) => client.openSession(machineName, sessionId),
 					closeSession: () => {
 						client.closeSession();
 					},
-					sendPrompt: (text) => client.sendPrompt(text)
+					sendPrompt: (text) => client.sendPrompt(text),
+					official
 				})
 			}, SyncPanel));
+			ctx.slots.inject(OFFICIAL_SLOT, () => ctx.slots.register({ name: OFFICIAL_SLOT }, OfficialConversation));
 		}
 		//#endregion
 		exports.apply = apply;

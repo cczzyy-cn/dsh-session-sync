@@ -12,13 +12,21 @@
  *  - `main` — the console: a machine → directory → Session tree beside the
  *    opened Session's conversation and the takeover composer.
  *
- * Cross-plugin collaboration is through Cordis services only: `slots`,
- * `locale`, and `layout` are the three this half needs, and `ui-primitives`
- * supplies every control it renders.
+ * The conversation itself is the shipped renderer where the build supports it:
+ * when the client context offers `ctx.sessions.adopt`, the open remote Session
+ * is adopted and drawn by the product's own `conversation.content` factory
+ * (`official-session.tsx`). Every other build — including every build that
+ * exists today — keeps the console's own hand-drawn pane.
+ *
+ * Cross-plugin collaboration is through Cordis services only: `slots` and
+ * `locale` are the two this half requires, `sessions` is read optionally when
+ * the build offers the adoption API, and `ui-primitives` supplies every control
+ * it renders.
  */
 import type { Context as ClientContext } from '@deepseek-ai/cordis'
 import type { ConfigPatch } from '../shared/protocol.ts'
 import { ConfigSection } from './ConfigSection.tsx'
+import { OFFICIAL_SLOT, OfficialConversation, OfficialSessions } from './official-session.tsx'
 import { PanelIcon } from './PanelIcon.tsx'
 import { SyncPanel } from './SyncPanel.tsx'
 import { SyncClient } from './api.ts'
@@ -43,6 +51,20 @@ const PANEL_ID = 'session-sync'
  */
 export function apply(ctx: ClientContext): void {
   const client = new SyncClient()
+
+  // The shipped-renderer mirror, feature-detected: on a DSH build without the
+  // `ctx.sessions.adopt` API this object reports `supported === false` and the
+  // console keeps its own hand-drawn conversation untouched. The observer rides
+  // this plugin's own effect lifetime, so unloading the half releases whatever
+  // Session it had adopted.
+  const official = new OfficialSessions(ctx, client)
+  ctx.effect(() => {
+    const detach = client.observe(official)
+    return () => {
+      detach()
+      official.release()
+    }
+  }, 'dsh-session-sync: shipped-renderer mirror')
 
   // One stream and one poll for both surfaces: the settings page and the
   // console read the same snapshot, so a switch flipped on one is already
@@ -83,11 +105,23 @@ export function apply(ctx: ClientContext): void {
     name: 'main',
     key: PANEL_ID,
     locale: NS,
+    // The session-scoped child is where the shipped Conversation lives. It
+    // declares nothing on a build without the adoption API to render into it,
+    // and declaring it is what hands the panel its `SessionProvider` and
+    // `renderSlot` seats — the exact shape ui-subagent's chat tab uses.
+    children: { [OFFICIAL_SLOT]: { kind: 'single', scope: 'session' } },
     inject: () => ({
       hooks: { sync: client.snapshot },
       openSession: (machineName: string, sessionId: string) => client.openSession(machineName, sessionId),
       closeSession: () => { client.closeSession() },
       sendPrompt: (text: string) => client.sendPrompt(text),
+      official,
     }),
   }, SyncPanel))
+
+  // The pane body itself: the shipped conversation.content Factory occurrence,
+  // registered against the child slot the panel declares.
+  ctx.slots.inject(OFFICIAL_SLOT, () => ctx.slots.register({
+    name: OFFICIAL_SLOT,
+  }, OfficialConversation))
 }

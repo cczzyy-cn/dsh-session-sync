@@ -136,8 +136,38 @@ function noLive(): SyncClientSnapshot['live'] {
  * @param event - one mirrored durable event.
  * @returns true when the live row for its step is over.
  */
-function isSettlement(event: MirrorEvent): boolean {
+export function isSettlement(event: MirrorEvent): boolean {
   return event.type === 'assistant/message' || event.type === 'assistant/attempt'
+}
+
+/** One `events` frame: durable envelopes appended to one published Session. */
+export type SyncEventsFrame = Extract<SyncStreamFrame, { type: 'events' }>
+
+/** One `stream` frame: the whole text so far for one live step. */
+export type SyncLiveDelta = Extract<SyncStreamFrame, { type: 'stream' }>
+
+/**
+ * One consumer told what the mirror reported as it arrives.
+ *
+ * The shipped-renderer pane needs frames rather than the snapshot: a settlement
+ * has to close the live attempt it belongs to, so the pane must see the same
+ * ordered, de-duplicated sequence the snapshot is built from — including the
+ * frames the snapshot itself drops as stale — and it must be able to bind its
+ * Session reference before the store publishes the opening.
+ */
+export interface SyncTransportObserver {
+  /** The console opened a remote Session. */
+  opened(open: OpenSession): void
+  /** The opening window arrived. */
+  loaded(open: OpenSession, transcript: MirrorTranscript): void
+  /** One `events` frame's durable envelopes, in order. */
+  appended(open: OpenSession, frame: SyncEventsFrame): void
+  /** One accepted live delta frame. */
+  streamed(open: OpenSession, frame: SyncLiveDelta): void
+  /** The mirror moved the open Session's running flag. */
+  running(open: OpenSession, running: boolean): void
+  /** The console left its remote Session. */
+  closed(): void
 }
 
 /** The sync plugin's browser client. */
@@ -152,6 +182,15 @@ export class SyncClient {
   private sawOpen = false
   /** Whether this page has ever seen a machine in the mirror. */
   private sawMachines = false
+  /**
+   * The one consumer told what the mirror reported as it arrives.
+   *
+   * Held rather than fanned out: it is the console's shipped-renderer mirror,
+   * which is a view of the same stream, not a second reader of it.
+   */
+  private observer: SyncTransportObserver | undefined
+  /** The running flag already reported to that consumer. */
+  private reportedRunning: boolean | undefined
 
   constructor() {
     this.store = createSnapshotStore<SyncClientSnapshot>({
@@ -169,6 +208,23 @@ export class SyncClient {
   /** The observable the slot registrations bind as a renderer-provided hook. */
   get snapshot(): SnapshotStore<SyncClientSnapshot> {
     return this.store
+  }
+
+  /**
+   * Register the one consumer told what the mirror reports as it arrives.
+   *
+   * Notifications are delivered before the store publishes the same fact: the
+   * shipped-renderer pane binds its Session reference from the opening, so its
+   * first render after the change already has a Session to draw and never has
+   * to render a reference that has just been released.
+   * @param observer - the consumer; at most one is held at a time.
+   * @returns an idempotent disposer that detaches it.
+   */
+  observe(observer: SyncTransportObserver): () => void {
+    this.observer = observer
+    return () => {
+      if (this.observer === observer) this.observer = undefined
+    }
   }
 
   /** Begin reading and hold the live stream open. Idempotent. */
@@ -276,8 +332,14 @@ export class SyncClient {
    * @param sessionId - published Session.
    */
   async openSession(machineName: string, sessionId: string): Promise<void> {
+    const open: OpenSession = { machineName, sessionId }
+    // Told before the store publishes the opening, for the reason `observe`
+    // gives: a Session switch releases the old adoption, and no render may see
+    // a reference that has already been released.
+    this.reportedRunning = undefined
+    this.notify(observer => { observer.opened(open) })
     this.update({
-      open: { machineName, sessionId },
+      open,
       transcript: undefined,
       loadingTranscript: true,
       // Live text belongs to the Session that streamed it. Whatever the last
@@ -291,6 +353,7 @@ export class SyncClient {
       const { transcript } = await getJson<{ transcript: MirrorTranscript }>(
         `${ROUTE_PREFIX}/transcript?machine=${encodeURIComponent(machineName)}&session=${encodeURIComponent(sessionId)}`,
       )
+      this.notify(observer => { observer.loaded(open, transcript) })
       this.update({ transcript, loadingTranscript: false, error: undefined })
     } catch (error: unknown) {
       this.update({ loadingTranscript: false, error: describe(error) })
@@ -299,6 +362,7 @@ export class SyncClient {
 
   /** Leave the open remote Session. */
   closeSession(): void {
+    this.notify(observer => { observer.closed() })
     this.update({ open: undefined, transcript: undefined, delivery: undefined, live: noLive() })
   }
 
@@ -395,6 +459,10 @@ export class SyncClient {
       if (open.machineName !== frame.machineName || open.sessionId !== frame.sessionId) return
       const transcript = snapshot.transcript
       if (transcript === undefined) return
+      // The observer is told the frame as well as the store: a settlement has
+      // to reach the shipped renderer as the close of a live attempt, which the
+      // merged event list alone no longer says.
+      this.notify(observer => { observer.appended(open, frame) })
       this.update({
         transcript: { ...transcript, events: [...transcript.events, ...frame.events] },
         // A durable settlement ends the streaming step it belongs to.
@@ -423,6 +491,7 @@ export class SyncClient {
       // abandoned attempt is dropped, and it is the only frame that may regress.
       const shown = frame.kind === 'reasoning' ? base.reasoning : base.text
       if (!advanced && frame.text !== '' && frame.text.length < shown.length && shown.startsWith(frame.text)) return
+      this.notify(observer => { observer.streamed(open, frame) })
       this.update({ live: frame.kind === 'reasoning' ? { ...base, reasoning: frame.text } : { ...base, text: frame.text } })
       return
     }
@@ -467,6 +536,50 @@ export class SyncClient {
     const next = { ...this.store.getSnapshot(), ...patch }
     if (next.state.machines.length > 0) this.sawMachines = true
     this.store.set(next)
+    this.notifyRunning()
+  }
+
+  /**
+   * Tell the observer something, and never let it take the transport with it.
+   *
+   * Mirroring into the shipped renderer is an enhancement: a consumer that
+   * cannot be fed is detached (leaving the console on its own pane) and its
+   * failure is reported where every other failure is, rather than thrown into
+   * the action that happened to be running.
+   */
+  private notify(deliver: (observer: SyncTransportObserver) => void): void {
+    const observer = this.observer
+    if (observer === undefined) return
+    try {
+      deliver(observer)
+    } catch (error: unknown) {
+      this.observer = undefined
+      this.update({ error: describe(error) })
+    }
+  }
+
+  /**
+   * Report the open Session's running flag when the mirror moves it.
+   *
+   * The flag is a mirror reading rather than an event, so it has no frame of
+   * its own: every snapshot write funnels through here and the reading is
+   * compared against the last one reported.
+   */
+  private notifyRunning(): void {
+    if (this.observer === undefined) return
+    const snapshot = this.store.getSnapshot()
+    const open = snapshot.open
+    if (open === undefined) {
+      this.reportedRunning = undefined
+      return
+    }
+    const running = snapshot.state.machines
+      .find(machine => machine.machineName === open.machineName)
+      ?.sessions.find(candidate => candidate.sessionId === open.sessionId)
+      ?.running ?? snapshot.transcript?.running ?? false
+    if (running === this.reportedRunning) return
+    this.reportedRunning = running
+    this.notify(observer => { observer.running(open, running) })
   }
 }
 
