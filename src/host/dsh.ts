@@ -62,6 +62,8 @@ export interface WireEvent {
   readonly seq: number
   readonly time: number
   readonly data: unknown
+  /** Earlier sources this event supersedes on the surface; opaque to this half. */
+  readonly sourceEventSeqs?: unknown
   /** Surface placement, read so a replacement window survives the mirror. */
   readonly surfaceOp?: WireSurfaceOp
 }

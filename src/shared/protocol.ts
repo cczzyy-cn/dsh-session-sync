@@ -134,6 +134,15 @@ export interface MirrorEvent {
   time: number
   data: unknown
   /**
+   * The earlier events this one supersedes on the surface, verbatim.
+   *
+   * `surfaceOp` says *that* a window was replaced; this says *which* earlier
+   * events it replaced, so a reader can tell a superseded frame apart from one
+   * that merely shares its type. Opaque here: whatever the origin wrote is what
+   * the mirror carries.
+   */
+  sourceEventSeqs?: unknown
+  /**
    * The event's surface placement.
    *
    * Carried because a durable event can *replace* a range of earlier ones — a

@@ -832,6 +832,10 @@ function buffer(handle: FollowHandle, event: MirrorEvent): void {
     seq: event.seq,
     time: event.time,
     data: event.data,
+    // What this event replaced travels with it for the same reason its
+    // placement does: a reader that drops the citation cannot tell a
+    // superseded frame from a live one.
+    ...(event.sourceEventSeqs === undefined ? {} : { sourceEventSeqs: event.sourceEventSeqs }),
     // Surface placement travels with the event: without it a replacement window
     // reads as an append, and the console shows the history it superseded.
     ...(event.surfaceOp === undefined ? {} : { surfaceOp: event.surfaceOp }),
