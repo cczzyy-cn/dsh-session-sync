@@ -653,6 +653,7 @@ export function terminalBlockLabels(t: SessionSyncTranslate): Record<string, unk
   return {
     signal: (signal: string) => t('terminalSignal', { signal }),
     exitCode: (code: number) => t('terminalExitCode', { code }),
+    noExitCode: t('terminalNoExitCode'),
     running: t('terminalRunning'),
     failed: t('terminalFailed'),
     done: t('terminalDone'),
