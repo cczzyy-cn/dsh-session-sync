@@ -130,6 +130,22 @@ export interface SyncState {
    * instead -- this is what says whether a follow yields anything at all.
    */
   follow?: { error?: string; sessionId?: string; frames: string[]; events: number; historyMisses?: number; localItems?: number; localRows?: number; shapes?: string[]; posts?: string[] }
+  /**
+   * What the last backwards history read did.
+   *
+   * Reported for the same reason the follow is: a page that comes back empty or
+   * refuses is invisible in the mirror — it looks exactly like a machine with
+   * nothing older to give — and the logger that would have said otherwise writes
+   * nowhere this deployment can read.
+   */
+  page?: {
+    sessionId?: string
+    beforeSeq?: number
+    throughSeq?: number
+    records?: number
+    hasMore?: boolean
+    error?: string
+  }
 }
 
 /** Where one event sits on the Session surface — `SessionWireSurfaceOp`. */

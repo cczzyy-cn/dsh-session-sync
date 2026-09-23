@@ -187,7 +187,15 @@ export class SessionSyncService {
   /** When each Session was last replayed at the server's request. */
   private readonly lastResync = new Map<string, number>()
   /** When each Session was last asked for an older page of history. */
-  private readonly lastPage = new Map<string, number>()
+  private readonly pageAsked = new Map<string, number>()
+  /**
+   * What the last history read did, for the settings page.
+   *
+   * The host half writes its log where this deployment cannot read it, and a
+   * page that comes back empty is indistinguishable from a machine that has
+   * nothing older — so the one fact that separates them is published here.
+   */
+  private lastPageRead: SyncState['page']
 
   /** The last publish attempt, as the settings page reports it. */
   private lastPublish: { at: number; ok: boolean; error?: string } | undefined
@@ -281,6 +289,7 @@ export class SessionSyncService {
           ...(this.followError === undefined ? {} : { error: this.followError }),
           ...(this.followErrorSession === undefined ? {} : { sessionId: this.followErrorSession }),
         },
+        ...(this.lastPageRead === undefined ? {} : { page: this.lastPageRead }),
       }),
     }
   }
@@ -510,12 +519,20 @@ export class SessionSyncService {
   private async pullOlder(sessionId: string, beforeSeq: number, maxMessages: number): Promise<void> {
     const handle = this.follows.get(sessionId)
     const controller = this.controller()
+    this.lastPageRead = {
+      sessionId,
+      beforeSeq,
+      ...(handle === undefined ? {} : { throughSeq: handle.cursor }),
+      ...(handle === undefined || controller === undefined || handle.cursor < 0 || typeof controller.page !== 'function'
+        ? { error: 'no follow or no page API' }
+        : {}),
+    }
     if (handle === undefined || controller === undefined || handle.cursor < 0) return
     if (typeof controller.page !== 'function') return
     const now = Date.now()
-    const previous = this.lastPage.get(sessionId)
+    const previous = this.pageAsked.get(sessionId)
     if (previous !== undefined && now - previous < PAGE_FLOOR_MS) return
-    this.lastPage.set(sessionId, now)
+    this.pageAsked.set(sessionId, now)
     try {
       const page = await controller.page(
         {
@@ -539,11 +556,24 @@ export class SessionSyncService {
       // about whether anything is still below — which is how the reader's
       // "older" control finally goes away.
       handle.hasOlder = page.hasMore
+      this.lastPageRead = {
+        sessionId,
+        beforeSeq,
+        throughSeq: handle.cursor,
+        records: page.records.length,
+        hasMore: page.hasMore,
+      }
       if (added > 0) {
         this.flush()
         this.ctx.logger.info(`dsh-session-sync: sent ${String(added)} earlier event(s) of "${sessionId}"`)
       }
     } catch (error: unknown) {
+      this.lastPageRead = {
+        sessionId,
+        beforeSeq,
+        throughSeq: handle.cursor,
+        error: describe(error),
+      }
       this.ctx.logger.warn(`dsh-session-sync: reading history for "${sessionId}" failed: ${describe(error)}`)
     }
   }
