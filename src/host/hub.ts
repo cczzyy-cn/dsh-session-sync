@@ -164,7 +164,11 @@ export class SyncHub {
       else existing.cwd = session.cwd
     }
     for (const sessionId of [...record.sessions.keys()]) {
-      if (!seen.has(sessionId)) record.sessions.delete(sessionId)
+      if (seen.has(sessionId)) continue
+      record.sessions.delete(sessionId)
+      // The Session is gone, so its episode is over: a later publish of the same
+      // id starts one from scratch rather than inheriting a spent retry window.
+      this.gapAsked.delete(`${record.machineName}|${sessionId}`)
     }
     this.broadcastState()
   }
@@ -245,6 +249,22 @@ export class SyncHub {
       events: fresh,
     })
     this.reportGap(record, session)
+  }
+
+  /**
+   * Ask again about every mirror that is still incomplete.
+   *
+   * Detection otherwise rides on arriving batches, and a lost batch is exactly
+   * the case where nothing else arrives to trigger it: the first ask would be
+   * the only one, and a replay that failed to close the hole would never be
+   * repeated. The periodic pass over the mirror is where the retry belongs, so
+   * it costs one walk and one frame per half minute while something is broken,
+   * and nothing at all while the mirror is whole.
+   */
+  sweepGaps(): void {
+    for (const record of this.records.values()) {
+      for (const session of record.sessions.values()) this.reportGap(record, session)
+    }
   }
 
   /**

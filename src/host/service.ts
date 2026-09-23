@@ -181,8 +181,11 @@ export class SessionSyncService {
     this.reconcileTimer = setInterval(() => {
       // Swept here rather than on its own timer: a command's TTL is two
       // minutes, so a ten-second granularity costs the operator nothing, and
-      // one periodic pass over the mirror is one place to reason about.
+      // one periodic pass over the mirror is one place to reason about. The
+      // gap sweep needs the same pass for the same reason: a mirror that lost a
+      // batch hears nothing else, so nothing else would ever ask it again.
       this.hub.expireCommands()
+      this.hub.sweepGaps()
       void this.reconcile()
     }, RECONCILE_MS)
     this.flushTimer = setInterval(() => { this.flushStream(); this.flush() }, FLUSH_MS)
