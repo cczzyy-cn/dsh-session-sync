@@ -201,11 +201,14 @@ export const zh = {
   messageCopy: '复制',
 
   // The shipped tool cards' own copy, read off ui-conversation's dictionary.
+  // Four of these have a Chinese title that is not the wire name — `运行命令`,
+  // `搜索文件内容`, `查找文件` — and carrying the English string here made a
+  // synchronized Session title its rows differently from the Session beside it.
   toolTitleWrite: '写入',
-  toolTitlePwsh: 'Pwsh',
-  toolTitleBash: 'Bash',
-  toolTitleGrep: 'Grep',
-  toolTitleGlob: 'Glob',
+  toolTitlePwsh: '运行命令',
+  toolTitleBash: '运行命令',
+  toolTitleGrep: '搜索文件内容',
+  toolTitleGlob: '查找文件',
   toolTitleWebSearch: '网页搜索',
   toolTitleWebFetch: '网页获取',
   toolTitleReadImage: '读取图片',
