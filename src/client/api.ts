@@ -26,6 +26,17 @@ import {
 const SESSION_POLL_MS = 15_000
 
 /**
+ * How long one "load older" click waits for a page the mirror had to fetch.
+ *
+ * The page may not exist in the mirror yet, in which case the server asks the
+ * machine that owns the Session and the events arrive over the ordinary stream.
+ * Six tries a second apart covers a cross-border read plus a POST without
+ * leaving the button spinning on a machine that is simply offline.
+ */
+const OLDER_ATTEMPTS = 6
+const OLDER_WAIT_MS = 1_200
+
+/**
  * How many command states to remember for a command this browser has not been
  * told about yet.
  *
@@ -382,34 +393,52 @@ export class SyncClient {
     const first = transcript.events[0]?.seq
     if (first === undefined) return
     this.update({ loadingOlder: true })
-    try {
-      const { transcript: older } = await getJson<{ transcript: MirrorTranscript }>(
-        `${ROUTE_PREFIX}/transcript?machine=${encodeURIComponent(open.machineName)}`
-        + `&session=${encodeURIComponent(open.sessionId)}`
-        // The page already held sets the size of the next one: a Session short
-        // enough to arrive whole has nothing older to ask for, and a paged one
-        // holds exactly the window the server chose — so the client never has to
-        // know that number, and pages stay the same size as the reader walks up.
-        + `&limit=${String(transcript.events.length)}`
-        + `&before=${String(first)}`,
-      )
+    // The mirror may hold nothing below the window and have to ask the machine
+    // that owns the Session, so an empty answer is not the end of the story: the
+    // page is read over there and arrives as ordinary events. Waiting for it is
+    // what makes one click feel like one click.
+    for (let attempt = 0; attempt < OLDER_ATTEMPTS; attempt += 1) {
       const current = this.store.getSnapshot()
       // Another Session may have been opened while this one was in flight, and
       // that Session's own transcript must not receive this page.
       if (current.open?.sessionId !== open.sessionId) return
       const held = current.transcript
       if (held === undefined) return
-      this.update({
-        transcript: {
-          ...held,
-          events: [...older.events, ...held.events],
-          hasMore: older.hasMore,
-        },
-        loadingOlder: false,
-      })
-    } catch (error: unknown) {
-      this.update({ loadingOlder: false, error: describe(error) })
+      let older: MirrorTranscript
+      try {
+        ({ transcript: older } = await getJson<{ transcript: MirrorTranscript }>(
+          `${ROUTE_PREFIX}/transcript?machine=${encodeURIComponent(open.machineName)}`
+          + `&session=${encodeURIComponent(open.sessionId)}`
+          // The page already held sets the size of the next one: a Session short
+          // enough to arrive whole has nothing older to ask for, and a paged one
+          // holds exactly the window the server chose — so the client never has
+          // to know that number, and pages stay the same size as the reader
+          // walks up.
+          + `&limit=${String(Math.max(1, held.events.length))}`
+          + `&before=${String(first)}`,
+        ))
+      } catch (error: unknown) {
+        this.update({ loadingOlder: false, error: describe(error) })
+        return
+      }
+      if (older.events.length > 0) {
+        this.update({
+          transcript: {
+            ...held,
+            events: mergeEvents(held.events, older.events),
+            hasMore: older.hasMore,
+          },
+          loadingOlder: false,
+        })
+        return
+      }
+      if (!older.hasMore) {
+        this.update({ transcript: { ...held, hasMore: false }, loadingOlder: false })
+        return
+      }
+      await new Promise(resolve => { setTimeout(resolve, OLDER_WAIT_MS) })
     }
+    this.update({ loadingOlder: false })
   }
 
   /** Leave the open remote Session. */
@@ -516,7 +545,7 @@ export class SyncClient {
       // merged event list alone no longer says.
       this.notify(observer => { observer.appended(open, frame) })
       this.update({
-        transcript: { ...transcript, events: [...transcript.events, ...frame.events] },
+        transcript: { ...transcript, events: mergeEvents(transcript.events, frame.events) },
         // A durable settlement ends the streaming step it belongs to.
         ...(frame.events.some(isSettlement) ? { live: noLive() } : {}),
       })
@@ -671,6 +700,29 @@ async function decode<T>(response: Response): Promise<T> {
 /** Human-readable one-line failure text. */
 function describe(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
+}
+
+/**
+ * Merge durable events into the open window, in sequence order.
+ *
+ * The same stream carries two arrivals: a live frame, which belongs at the end,
+ * and a page the mirror fetched from behind its window, which belongs in front.
+ * The sequence is the only thing that says which, and membership is what keeps a
+ * replay from doubling a row.
+ * @param held - the events already in the window.
+ * @param incoming - the events just received.
+ * @returns the merged window, in sequence order.
+ */
+function mergeEvents(held: readonly MirrorEvent[], incoming: readonly MirrorEvent[]): MirrorEvent[] {
+  if (incoming.length === 0) return [...held]
+  const seen = new Set(held.map(event => event.seq))
+  const fresh = incoming.filter(event => !seen.has(event.seq))
+  if (fresh.length === 0) return [...held]
+  const last = held[held.length - 1]?.seq
+  // The live case, and by far the common one: everything new sits above what is
+  // held, so the order is already right and no sort is needed.
+  if (last !== undefined && fresh.every(event => event.seq > last)) return [...held, ...fresh]
+  return [...held, ...fresh].sort((left, right) => left.seq - right.seq)
 }
 
 /**

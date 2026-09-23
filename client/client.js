@@ -619,6 +619,16 @@ window.__ModuleLoader__.load({
 		/** How often the local Session list is re-read while the panel is mounted. */
 		const SESSION_POLL_MS = 15e3;
 		/**
+		* How long one "load older" click waits for a page the mirror had to fetch.
+		*
+		* The page may not exist in the mirror yet, in which case the server asks the
+		* machine that owns the Session and the events arrive over the ordinary stream.
+		* Six tries a second apart covers a cross-border read plus a POST without
+		* leaving the button spinning on a machine that is simply offline.
+		*/
+		const OLDER_ATTEMPTS = 6;
+		const OLDER_WAIT_MS = 1200;
+		/**
 		* How many command states to remember for a command this browser has not been
 		* told about yet.
 		*
@@ -865,26 +875,47 @@ window.__ModuleLoader__.load({
 				const first = transcript.events[0]?.seq;
 				if (first === void 0) return;
 				this.update({ loadingOlder: true });
-				try {
-					const { transcript: older } = await getJson(`${ROUTE_PREFIX}/transcript?machine=${encodeURIComponent(open.machineName)}&session=${encodeURIComponent(open.sessionId)}&limit=${String(transcript.events.length)}&before=${String(first)}`);
+				for (let attempt = 0; attempt < OLDER_ATTEMPTS; attempt += 1) {
 					const current = this.store.getSnapshot();
 					if (current.open?.sessionId !== open.sessionId) return;
 					const held = current.transcript;
 					if (held === void 0) return;
-					this.update({
-						transcript: {
-							...held,
-							events: [...older.events, ...held.events],
-							hasMore: older.hasMore
-						},
-						loadingOlder: false
-					});
-				} catch (error) {
-					this.update({
-						loadingOlder: false,
-						error: describe(error)
+					let older;
+					try {
+						({transcript: older} = await getJson(`${ROUTE_PREFIX}/transcript?machine=${encodeURIComponent(open.machineName)}&session=${encodeURIComponent(open.sessionId)}&limit=${String(Math.max(1, held.events.length))}&before=${String(first)}`));
+					} catch (error) {
+						this.update({
+							loadingOlder: false,
+							error: describe(error)
+						});
+						return;
+					}
+					if (older.events.length > 0) {
+						this.update({
+							transcript: {
+								...held,
+								events: mergeEvents(held.events, older.events),
+								hasMore: older.hasMore
+							},
+							loadingOlder: false
+						});
+						return;
+					}
+					if (!older.hasMore) {
+						this.update({
+							transcript: {
+								...held,
+								hasMore: false
+							},
+							loadingOlder: false
+						});
+						return;
+					}
+					await new Promise((resolve) => {
+						setTimeout(resolve, OLDER_WAIT_MS);
 					});
 				}
+				this.update({ loadingOlder: false });
 			}
 			/** Leave the open remote Session. */
 			closeSession() {
@@ -984,7 +1015,7 @@ window.__ModuleLoader__.load({
 					this.update({
 						transcript: {
 							...transcript,
-							events: [...transcript.events, ...frame.events]
+							events: mergeEvents(transcript.events, frame.events)
 						},
 						...frame.events.some(isSettlement) ? { live: noLive() } : {}
 					});
@@ -1127,6 +1158,26 @@ window.__ModuleLoader__.load({
 		/** Human-readable one-line failure text. */
 		function describe(error) {
 			return error instanceof Error ? error.message : String(error);
+		}
+		/**
+		* Merge durable events into the open window, in sequence order.
+		*
+		* The same stream carries two arrivals: a live frame, which belongs at the end,
+		* and a page the mirror fetched from behind its window, which belongs in front.
+		* The sequence is the only thing that says which, and membership is what keeps a
+		* replay from doubling a row.
+		* @param held - the events already in the window.
+		* @param incoming - the events just received.
+		* @returns the merged window, in sequence order.
+		*/
+		function mergeEvents(held, incoming) {
+			if (incoming.length === 0) return [...held];
+			const seen = new Set(held.map((event) => event.seq));
+			const fresh = incoming.filter((event) => !seen.has(event.seq));
+			if (fresh.length === 0) return [...held];
+			const last = held[held.length - 1]?.seq;
+			if (last !== void 0 && fresh.every((event) => event.seq > last)) return [...held, ...fresh];
+			return [...held, ...fresh].sort((left, right) => left.seq - right.seq);
 		}
 		/**
 		* Whether a state frame carries the whole view rather than just a mirror slice.

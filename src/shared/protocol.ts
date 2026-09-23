@@ -210,8 +210,25 @@ export interface DownstreamResync {
   sessionId: string
 }
 
+/**
+ * Server → origin: read a page of history from behind the mirror's window.
+ *
+ * A follow opens on a tail window, so the mirror begins mid-conversation and no
+ * amount of paging inside it reaches the start. Only the machine that holds the
+ * log can answer for what came before, and only a reader asking for it is worth
+ * the transfer — which is why this is a request rather than a backfill.
+ */
+export interface DownstreamOlder {
+  kind: 'older'
+  sessionId: string
+  /** Read the history strictly below this sequence. */
+  beforeSeq: number
+  /** How many messages the page should span, at most. */
+  maxMessages: number
+}
+
 /** Anything the server writes down one machine's stream. */
-export type DownstreamFrame = DownstreamCommand | DownstreamResync
+export type DownstreamFrame = DownstreamCommand | DownstreamResync | DownstreamOlder
 
 /** Where one takeover command stands, as the server knows it. */
 export type CommandState =
@@ -283,6 +300,15 @@ export interface PublishIndexPayload {
      * cannot be mistaken for one that lost everything.
      */
     lastSeq?: number
+    /**
+     * Lowest durable sequence this machine still holds for the Session.
+     *
+     * The mirror's window is a tail, so what it lacks is not only above its
+     * highest sequence but below its lowest: without this the server cannot tell
+     * "the Session began here" from "the beginning never arrived", and a reader
+     * asking for older history would be told there is none.
+     */
+    firstSeq?: number
   }[]
 }
 

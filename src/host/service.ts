@@ -65,6 +65,15 @@ const LIVE_LIMIT = 64
  */
 const RESYNC_FLOOR_MS = 5_000
 
+/**
+ * Shortest gap between two history reads for the same Session.
+ *
+ * A reader walking up the transcript asks repeatedly, and every answer is a page
+ * of the log plus a POST. The server already collapses asks it cannot serve, and
+ * this keeps a burst of clicks from becoming a burst of disk reads.
+ */
+const PAGE_FLOOR_MS = 1_000
+
 /** The two kinds of text one step streams. */
 const STREAM_KINDS = ['reasoning', 'text'] as const
 
@@ -98,6 +107,21 @@ interface FollowHandle {
    * "nothing has happened yet" from "everything was lost".
    */
   lastSeq: number
+  /**
+   * Lowest durable sequence this follow has delivered, or -1 before any.
+   *
+   * The pair is what tells the mirror where the Session actually begins: a
+   * follow opens on a tail window, so a mirror whose lowest sequence is above
+   * this one is missing history below it rather than holding the whole Session.
+   */
+  firstSeq: number
+  /**
+   * The opening snapshot's log cut, which a backwards page is read against.
+   *
+   * Required by the controller so a page read later cannot disagree with the
+   * window the reader is looking at. -1 until a snapshot has been taken.
+   */
+  cursor: number
 }
 
 /** The accumulator key of one step's text. */
@@ -155,6 +179,8 @@ export class SessionSyncService {
   private readonly settled = new Set<string>()
   /** When each Session was last replayed at the server's request. */
   private readonly lastResync = new Map<string, number>()
+  /** When each Session was last asked for an older page of history. */
+  private readonly lastPage = new Map<string, number>()
 
   /** The last publish attempt, as the settings page reports it. */
   private lastPublish: { at: number; ok: boolean; error?: string } | undefined
@@ -388,6 +414,9 @@ export class SessionSyncService {
           onCommand: (command) => { void this.runCommand(command) },
           onStatus: (status) => { this.onLinkStatus(status) },
           onResync: (sessionId) => { this.resyncSession(sessionId) },
+          onOlder: (sessionId, beforeSeq, maxMessages) => {
+            void this.pullOlder(sessionId, beforeSeq, maxMessages)
+          },
           onPost: (path, ok, error) => { this.notePublish(path, ok, error) },
         })
         this.link.start()
@@ -455,6 +484,60 @@ export class SessionSyncService {
   }
 
   /**
+   * Read a page of this Session's history for the mirror.
+   *
+   * A follow opens on a tail window, so the mirror's copy begins
+   * mid-conversation and paging inside it can never reach the start. This is the
+   * only path to what came before, and it is driven by a reader asking: sending
+   * the whole log for every published Session would undo the reason the mirror
+   * serves a page at all.
+   *
+   * The page is cut against the follow's own opening cursor, so it cannot
+   * disagree with the window being read, and its events go out through the same
+   * buffer and outbox as live ones — which is what makes them arrive in order
+   * and survive a failed post.
+   * @param sessionId - the Session the server wants older history for.
+   * @param beforeSeq - read strictly below this sequence.
+   * @param maxMessages - how many messages the page should span, at most.
+   */
+  private async pullOlder(sessionId: string, beforeSeq: number, maxMessages: number): Promise<void> {
+    const handle = this.follows.get(sessionId)
+    const controller = this.controller()
+    if (handle === undefined || controller === undefined || handle.cursor < 0) return
+    if (typeof controller.page !== 'function') return
+    const now = Date.now()
+    const previous = this.lastPage.get(sessionId)
+    if (previous !== undefined && now - previous < PAGE_FLOOR_MS) return
+    this.lastPage.set(sessionId, now)
+    try {
+      const page = await controller.page(
+        {
+          address: { kind: 'session', sessionId },
+          throughSeq: handle.cursor,
+          beforeSeq,
+          maxMessages,
+        },
+        handle.abort.signal,
+      )
+      let added = 0
+      for (const record of page.records) {
+        const event = record.event as WireEvent | undefined
+        if (event === undefined || typeof event.seq !== 'number') continue
+        // Membership is the mirror's business, not this one's: sending an event
+        // it already holds costs a round trip and changes nothing.
+        buffer(handle, event)
+        added += 1
+      }
+      if (added > 0) {
+        this.flush()
+        this.ctx.logger.info(`dsh-session-sync: sent ${String(added)} earlier event(s) of "${sessionId}"`)
+      }
+    } catch (error: unknown) {
+      this.ctx.logger.warn(`dsh-session-sync: reading history for "${sessionId}" failed: ${describe(error)}`)
+    }
+  }
+
+  /**
    * Re-open one Session's follow because its mirror reported a hole.
    *
    * The opening snapshot is the whole retained history, so replaying it hands
@@ -505,7 +588,9 @@ export class SessionSyncService {
     this.link?.publishIndex({
       machineName: this.config.machineName,
       sessions: rows.filter(row => row.synced).map(row => {
-        const lastSeq = this.follows.get(row.sessionId)?.lastSeq
+        const handle = this.follows.get(row.sessionId)
+        const lastSeq = handle?.lastSeq
+        const firstSeq = handle?.firstSeq
         return {
           sessionId: row.sessionId,
           title: row.title,
@@ -516,6 +601,9 @@ export class SessionSyncService {
           // machine has not read a sequence yet", which is not the same claim as
           // "this Session has no events".
           ...(lastSeq === undefined || lastSeq < 0 ? {} : { lastSeq }),
+          // The lower end, so a mirror that starts mid-conversation can be told
+          // apart from one that starts at the beginning.
+          ...(firstSeq === undefined || firstSeq < 0 ? {} : { firstSeq }),
         }
       }),
     } satisfies PublishIndexPayload)
@@ -558,6 +646,8 @@ export class SessionSyncService {
       turn: 0,
       step: 0,
       lastSeq: -1,
+      firstSeq: -1,
+      cursor: -1,
     }
     this.follows.set(sessionId, handle)
     void (async () => {
@@ -798,6 +888,12 @@ export class SessionSyncService {
     // { type: 'snapshot', records }, so both are read: whichever arrives is not
     // ours to choose, and a history nobody reads is a Session that looks empty.
     if (frameType === 'snapshot' || frameType === 'opened') this.seedStream(handle, carrier)
+    // The opening's cut, kept because a backwards page must be read against the
+    // same point the window was taken at.
+    if ((frameType === 'snapshot' || frameType === 'opened')
+      && typeof carrier['cursor'] === 'number') {
+      handle.cursor = carrier['cursor']
+    }
     const page = carrier['page'] as Record<string, unknown> | undefined
     const records = Array.isArray(carrier['records'])
       ? carrier['records'] as readonly { event?: unknown }[]
@@ -918,6 +1014,11 @@ function buffer(handle: FollowHandle, event: MirrorEvent): void {
   // *read* rather than what is still queued: a flush empties the buffer, and an
   // extent that forgot itself on every flush would tell the mirror nothing.
   if (typeof event.seq === 'number' && event.seq > handle.lastSeq) handle.lastSeq = event.seq
+  // The lower end matters as much as the upper one now: it is how the mirror
+  // learns that the tail window it received is not the whole conversation.
+  if (typeof event.seq === 'number' && (handle.firstSeq < 0 || event.seq < handle.firstSeq)) {
+    handle.firstSeq = event.seq
+  }
   handle.pending.push({
     type: event.type,
     seq: event.seq,

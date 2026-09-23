@@ -197,6 +197,26 @@ export interface FollowRequest {
 }
 
 /**
+ * One backwards-history request — `SessionPageRequest`.
+ *
+ * `throughSeq` is required and comes from the follow opening that was already
+ * taken: the controller cuts the log at that point, so a page read later cannot
+ * disagree with the window the reader is looking at.
+ */
+export interface PageRequest {
+  readonly address: SessionAddress
+  readonly throughSeq: number
+  readonly beforeSeq?: number
+  readonly maxMessages?: number
+}
+
+/** One contiguous backwards page of a Session log — `SessionPage`. */
+export interface PageResult {
+  readonly records: readonly { readonly type: string; readonly event?: unknown }[]
+  readonly hasMore: boolean
+}
+
+/**
  * The Session control service — `SessionController` in
  * `packages/api/session-controller/src/index.ts`, mounted as `ctx.sessionController`.
  */
@@ -205,6 +225,8 @@ export interface SessionControllerLike {
   list(request: Record<string, never>, signal: AbortSignal): Promise<{ items: readonly SessionSummaryRow[] }>
   /** A complete opening snapshot followed by gap-free durable event frames. */
   follow(request: FollowRequest, signal: AbortSignal): AsyncIterable<FollowFrame>
+  /** One cold-safe, message-aligned page of history behind a sequence. */
+  page(request: PageRequest, signal: AbortSignal): Promise<PageResult>
   /** Admit one user prompt, resuming the Session first when it is cold. */
   prompt(request: PromptRequest, signal: AbortSignal): Promise<{ accepted: true }>
 }

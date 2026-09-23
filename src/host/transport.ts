@@ -18,6 +18,7 @@ import {
   KEEPALIVE_MS,
   type DownstreamCommand,
   type DownstreamFrame,
+  type DownstreamOlder,
   type DownstreamResync,
   type HandshakeResponse,
   type MirrorEvent,
@@ -200,6 +201,11 @@ export async function startSyncServer(options: SyncServerOptions): Promise<SyncS
           const frame: DownstreamResync = { kind: 'resync', sessionId }
           response.write(`data: ${JSON.stringify(frame)}\n\n`)
         },
+        older: (sessionId: string, beforeSeq: number, maxMessages: number) => {
+          if (response.writableEnded) return
+          const frame: DownstreamOlder = { kind: 'older', sessionId, beforeSeq, maxMessages }
+          response.write(`data: ${JSON.stringify(frame)}\n\n`)
+        },
       })
       const keepalive = setInterval(() => {
         if (response.writableEnded) return
@@ -301,6 +307,17 @@ export interface OriginLinkHandlers {
    * Session can hand it back.
    */
   onResync(sessionId: string): void
+  /**
+   * Read a page of one Session's history from behind the mirror's window.
+   *
+   * A follow opens on a tail, so the older end only ever arrives because someone
+   * asked for it. This is that ask, and the answer travels back as ordinary
+   * durable events.
+   * @param sessionId - the Session the server wants history for.
+   * @param beforeSeq - read strictly below this sequence.
+   * @param maxMessages - how many messages the page should span, at most.
+   */
+  onOlder(sessionId: string, beforeSeq: number, maxMessages: number): void
 }
 
 /** Origin-role link options. */
@@ -633,6 +650,13 @@ export class OriginLink {
         if (typeof frame.sessionId !== 'string') continue
         if (frame.kind === 'prompt') this.options.onCommand(frame)
         else if (frame.kind === 'resync') this.options.onResync(frame.sessionId)
+        else if (frame.kind === 'older' && typeof frame.beforeSeq === 'number') {
+          this.options.onOlder(
+            frame.sessionId,
+            frame.beforeSeq,
+            typeof frame.maxMessages === 'number' ? frame.maxMessages : 0,
+          )
+        }
       } catch {
         // A malformed frame is dropped; the server re-sends nothing it cannot
         // confirm, and one bad line must not kill the stream.

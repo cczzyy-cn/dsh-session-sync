@@ -55,6 +55,17 @@ const STATUS_LIMIT = 64
  */
 const RESYNC_RETRY_MS = 30_000
 
+/**
+ * Messages one history page spans when a reader asks for older events.
+ *
+ * The shipped client's own ordinary window is fifty messages, and matching it
+ * means a page here lands on the same turn boundaries a local reader sees.
+ */
+const OLDER_PAGE_MESSAGES = 50
+
+/** Shortest gap between two history asks for the same Session. */
+const OLDER_ASK_FLOOR_MS = 2_000
+
 /** States a command never leaves; the expiry sweep and acks ignore these. */
 const TERMINAL_STATES: readonly CommandState[] = ['accepted', 'failed', 'expired']
 
@@ -86,6 +97,14 @@ interface SessionRecord {
    * claim is what turns "I hold nothing" into "I am missing everything it has".
    */
   originSeq: number
+  /**
+   * Lowest sequence the owning machine holds, or -1 when it has not said.
+   *
+   * The mirror is a tail on purpose, so what it lacks below its own lowest
+   * sequence is expected rather than broken — but a reader asking to see further
+   * back has to be told whether the origin even has further back to give.
+   */
+  originFirstSeq: number
 }
 
 /** The one logger method the mirror needs, so it does not own a logging seam. */
@@ -104,6 +123,16 @@ export interface OriginSink {
    * comes back — the reconnect replays every snapshot on its own.
    */
   resync(sessionId: string): void
+  /**
+   * Ask the origin for a page of history from behind the mirror's window.
+   *
+   * Also not queued, and for a stronger reason than the resync: a page read for
+   * a reader who has since looked away is work nobody wants.
+   * @param sessionId - the Session to read history for.
+   * @param beforeSeq - read strictly below this sequence.
+   * @param maxMessages - how many messages the page should span, at most.
+   */
+  older(sessionId: string, beforeSeq: number, maxMessages: number): void
 }
 
 /** One browser watching the mirror. */
@@ -128,6 +157,8 @@ export class SyncHub {
   private readonly records = new Map<string, MachineRecord>()
   /** Sessions whose mirror is incomplete, and when the origin was last asked. */
   private readonly gapAsked = new Map<string, number>()
+  /** Sessions whose history was last asked for, and when. */
+  private readonly olderAsked = new Map<string, number>()
 
   /**
    * @param notify - receives every frame the mirror produces. The owner decides
@@ -174,6 +205,7 @@ export class SyncHub {
           seqs: new Set<number>(),
           maxSeq: -1,
           originSeq: reported(session.lastSeq),
+          originFirstSeq: reported(session.firstSeq),
         })
         continue
       }
@@ -181,6 +213,7 @@ export class SyncHub {
       existing.updatedAt = session.updatedAt
       existing.running = session.running
       existing.originSeq = reported(session.lastSeq)
+      existing.originFirstSeq = reported(session.firstSeq)
       if (session.cwd === undefined) delete existing.cwd
       else existing.cwd = session.cwd
     }
@@ -481,8 +514,9 @@ export class SyncHub {
     sessionId: string,
     page: { limit: number; before?: number } = { limit: TRANSCRIPT_WINDOW },
   ): MirrorTranscript | undefined {
-    const session = this.records.get(machineName)?.sessions.get(sessionId)
-    if (session === undefined) return undefined
+    const record = this.records.get(machineName)
+    const session = record?.sessions.get(sessionId)
+    if (record === undefined || session === undefined) return undefined
     // Held in sequence order, so the window's start is a slice index rather than
     // a search — and a `before` that lands inside the window is where paging
     // overlaps and cannot silently skip a row.
@@ -493,12 +527,30 @@ export class SyncHub {
     const stop = end < 0 ? session.events.length : end
     const size = Math.min(Math.max(1, page.limit), EVENT_LIMIT)
     const start = Math.max(0, stop - size)
+    // Two different reasons older history exists, and a reader deserves both:
+    // the mirror holds more below this page, or the Session began before the
+    // mirror's window did.
+    const held = session.events[0]?.seq
+    const originHasOlder = held !== undefined
+      && session.originFirstSeq >= 0
+      && held > session.originFirstSeq
+    // Asking is what a reader does by scrolling up, so it happens only when the
+    // request actually reached past the mirror's edge. The origin reads its own
+    // log for it, which is work worth doing once and not per click.
+    if (start === 0 && before !== undefined && originHasOlder) {
+      const now = Date.now()
+      const asked = this.olderAsked.get(`${machineName}|${sessionId}`)
+      if (asked === undefined || now - asked >= OLDER_ASK_FLOOR_MS) {
+        this.olderAsked.set(`${machineName}|${sessionId}`, now)
+        record.origin?.older(sessionId, before, OLDER_PAGE_MESSAGES)
+      }
+    }
     return {
       machineName,
       sessionId,
       events: session.events.slice(start, stop),
       running: session.running,
-      hasMore: start > 0,
+      hasMore: start > 0 || originHasOlder,
     }
   }
 
@@ -547,6 +599,7 @@ export class SyncHub {
       seqs: new Set<number>(),
       maxSeq: -1,
       originSeq: -1,
+      originFirstSeq: -1,
     }
     record.sessions.set(sessionId, created)
     return created
