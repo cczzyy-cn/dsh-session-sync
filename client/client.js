@@ -1517,7 +1517,7 @@ window.__ModuleLoader__.load({
 		/** Longest subagent label kept. */
 		const LABEL_LIMIT = 60;
 		/** Event types the ledger does not show: bookkeeping the reader never asked for. */
-		const HIDDEN_EVENTS = /* @__PURE__ */ new Set([
+		const HIDDEN_EVENTS = new Set([
 			"session/end-seed",
 			"agent/inbox/spliced",
 			"session/title-llm-request"

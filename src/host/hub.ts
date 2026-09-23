@@ -45,8 +45,22 @@ interface SessionRecord {
   running: boolean
   cwd?: string
   events: MirrorEvent[]
-  /** Highest accepted sequence, so a re-published window cannot duplicate history. */
+  /**
+   * Every sequence this Session's events currently hold, one entry per event.
+   *
+   * Membership is what decides whether an arriving event is new. A high-water
+   * mark cannot decide that: "nothing at or below the newest sequence I hold is
+   * new" is true of a replay, and equally true of a run that never arrived, so
+   * the two are indistinguishable to it.
+   */
+  readonly seqs: Set<number>
+  /** Highest sequence ever accepted; with `events[0]` it is the whole extent. */
   maxSeq: number
+}
+
+/** The one logger method the mirror needs, so it does not own a logging seam. */
+export interface MirrorLogger {
+  warn(message: string): void
 }
 
 /** Where one origin's downstream commands are delivered. */
@@ -74,6 +88,8 @@ interface MachineRecord {
 /** The server-role mirror and its subscribers. */
 export class SyncHub {
   private readonly records = new Map<string, MachineRecord>()
+  /** Sessions whose mirror has already been reported as incomplete. */
+  private readonly gapReported = new Set<string>()
 
   /**
    * @param notify - receives every frame the mirror produces. The owner decides
@@ -84,10 +100,13 @@ export class SyncHub {
    *   engine. The engine's owner is the one place that can see both, so a state
    *   frame is always assembled there — publishing a partial object here would
    *   silently blank every field this class does not own.
+   * @param logger - where an incomplete mirror is reported. Optional so a test
+   *   or a headless composition can build a hub that says nothing.
    */
   constructor(
     private readonly notify: (frame: SyncStreamFrame) => void,
     private readonly stateOf: () => SyncState,
+    private readonly logger?: MirrorLogger,
   ) {}
 
   /**
@@ -114,6 +133,7 @@ export class SyncHub {
           running: session.running,
           ...(session.cwd === undefined ? {} : { cwd: session.cwd }),
           events: [],
+          seqs: new Set<number>(),
           maxSeq: -1,
         })
         continue
@@ -130,12 +150,6 @@ export class SyncHub {
     this.broadcastState()
   }
 
-  /**
-   * Append durable events to one mirrored Session, dropping any the mirror
-   * already holds so a reconnect that replays a window stays idempotent.
-   * @param machineName - publishing machine.
-   * @param payload - the Session id and its new events.
-   */
   /**
    * Relay one streaming update. Nothing is stored: streaming is presentation,
    * and the durable events that follow are what the mirror keeps.
@@ -158,8 +172,8 @@ export class SyncHub {
   }
 
   /**
-   * Append durable events to one mirrored Session, dropping any the mirror
-   * already holds so a reconnect that replays a window stays idempotent.
+   * Append durable events to one mirrored Session, dropping only what the
+   * mirror already holds so a reconnect that replays a window stays idempotent.
    *
    * The Session is created when the index has not listed it yet. A reconnect
    * restarts the origin's follows immediately while its index waits for the
@@ -168,6 +182,14 @@ export class SyncHub {
    * happened to re-open its follow. The index publish that follows corrects the
    * placeholder's title, and a Session the origin really did stop publishing is
    * removed by that same publish.
+   *
+   * Dedupe is by membership, never by a high-water mark. The origin flushes
+   * batches on a 150 ms timer and the posts were unordered, so a later batch
+   * could land first; against a high-water mark that discarded the earlier batch
+   * in full — nine contiguous events in one real Session, and the mirror could
+   * never be repaired afterwards, because filling a hole means accepting a
+   * sequence below the mark. Order of arrival is now irrelevant, and a replay
+   * fills whatever a lost batch left behind.
    * @param machineName - publishing machine.
    * @param payload - the Session id and its new events.
    */
@@ -175,11 +197,25 @@ export class SyncHub {
     const record = this.machine(machineName)
     record.lastSeen = Date.now()
     const session = this.session(record, payload.sessionId)
-    const fresh = payload.events.filter(event => event.seq > session.maxSeq)
-    if (fresh.length === 0) return
+    const fresh: MirrorEvent[] = []
+    for (const event of payload.events) {
+      if (session.seqs.has(event.seq)) continue
+      session.seqs.add(event.seq)
+      fresh.push(event)
+    }
+    if (fresh.length === 0) {
+      this.reportGap(machineName, session)
+      return
+    }
+    fresh.sort((left, right) => left.seq - right.seq)
     session.events.push(...fresh)
+    // A late batch belongs where its sequence says, not at the end: the
+    // transcript is rendered in this order.
+    session.events.sort((left, right) => left.seq - right.seq)
     if (session.events.length > EVENT_LIMIT) {
-      session.events.splice(0, session.events.length - EVENT_LIMIT)
+      for (const dropped of session.events.splice(0, session.events.length - EVENT_LIMIT)) {
+        session.seqs.delete(dropped.seq)
+      }
     }
     session.maxSeq = fresh.reduce((highest, event) => Math.max(highest, event.seq), session.maxSeq)
     session.updatedAt = Date.now()
@@ -189,6 +225,37 @@ export class SyncHub {
       sessionId: payload.sessionId,
       events: fresh,
     })
+    this.reportGap(machineName, session)
+  }
+
+  /**
+   * Say so when the mirror is not holding a contiguous run.
+   *
+   * A hole used to be invisible from both ends: the origin believed it had
+   * published, the mirror believed it had received, and the only symptom was a
+   * conversation that stopped mid-sentence — which read as a display problem
+   * for as long as it took to decode the origin's own session file and compare.
+   * The extent is O(1) to compute from the record, so it is checked per batch,
+   * and one line is emitted per episode rather than per batch.
+   * @param machineName - owning machine, for the message.
+   * @param session - the record just updated.
+   */
+  private reportGap(machineName: string, session: SessionRecord): void {
+    const lowest = session.events[0]?.seq
+    if (lowest === undefined) return
+    const missing = session.maxSeq - lowest + 1 - session.seqs.size
+    const key = `${machineName}|${session.sessionId}`
+    if (missing <= 0) {
+      this.gapReported.delete(key)
+      return
+    }
+    if (this.gapReported.has(key)) return
+    this.gapReported.add(key)
+    this.logger?.warn(
+      `dsh-session-sync: mirror for "${session.sessionId}" on "${machineName}" is missing `
+      + `${String(missing)} event(s) between seq ${String(lowest)} and ${String(session.maxSeq)}; `
+      + 'only re-publishing the Session clears it',
+    )
   }
 
   /**
@@ -384,6 +451,7 @@ export class SyncHub {
       updatedAt: Date.now(),
       running: false,
       events: [],
+      seqs: new Set<number>(),
       maxSeq: -1,
     }
     record.sessions.set(sessionId, created)

@@ -148,8 +148,10 @@ export class SessionSyncService {
   ) {
     this.config = config
     // The mirror emits data frames; every state frame is assembled here, where
-    // the role, listener, and link facts live alongside the machine list.
-    this.hub = new SyncHub(frame => { this.broadcast(frame) }, () => this.view())
+    // the role, listener, and link facts live alongside the machine list. The
+    // hub reports an incomplete mirror through the host logger rather than
+    // keeping a counter nobody reads.
+    this.hub = new SyncHub(frame => { this.broadcast(frame) }, () => this.view(), this.ctx.logger)
   }
 
   /**

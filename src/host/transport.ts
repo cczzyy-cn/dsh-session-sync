@@ -28,6 +28,9 @@ import type { HostLogger } from './dsh.ts'
 /** Largest accepted request body, in bytes. */
 const MAX_BODY_BYTES = 4 * 1024 * 1024
 
+/** Queue depth at which a lagging link says so, once per episode. */
+const FRAME_QUEUE_WARN = 64
+
 /** Server-role listener options. */
 export interface SyncServerOptions {
   host: string
@@ -291,6 +294,11 @@ export class OriginLink {
   private connection: AbortController | undefined
   private token: string | undefined
   private isLinked = false
+  /** Tail of the serialized `/frames` chain, so batches arrive in order. */
+  private frameQueue: Promise<void> = Promise.resolve()
+  /** Batches waiting on that chain, and whether the depth has been reported. */
+  private framesQueued = 0
+  private frameQueueWarned = false
 
   /** @param options - address, credentials, and the command callback. */
   constructor(private readonly options: OriginLinkOptions) {}
@@ -326,12 +334,39 @@ export class OriginLink {
 
   /**
    * Publish durable events appended to one Session.
+   *
+   * Batches leave on a 150 ms timer and each post used to be fire-and-forget, so
+   * two of them routinely overlapped and could reach the server out of order.
+   * Sequencing them here is the cheap half of the fix: the mirror now tolerates
+   * reordering, but arrival order is the one order it never has to repair.
    * @param sessionId - the published Session.
    * @param events - the newly observed durable events.
    */
   publishFrames(sessionId: string, events: readonly MirrorEvent[]): void {
     if (events.length === 0) return
-    void this.post('/frames', { sessionId, events })
+    const body = { sessionId, events }
+    this.framesQueued += 1
+    if (this.framesQueued >= FRAME_QUEUE_WARN && !this.frameQueueWarned) {
+      this.frameQueueWarned = true
+      this.options.logger.warn(
+        `dsh-session-sync: ${String(this.framesQueued)} frame batches queued; the link is behind`,
+      )
+    }
+    // `post` reports its outcome rather than rejecting, so the chain only has to
+    // hand the next batch on, keep the depth honest, and name what a failure
+    // cost: a batch that was already spliced out of the origin's buffer is gone,
+    // and the mirror's own repair path is re-publishing the Session.
+    this.frameQueue = this.frameQueue.then(async () => {
+      const accepted = await this.post('/frames', body)
+      if (!accepted) {
+        this.options.logger.warn(
+          `dsh-session-sync: ${String(events.length)} durable event(s) for "${sessionId}" `
+          + 'were not accepted by the server; re-publish the Session to rebuild its mirror',
+        )
+      }
+      this.framesQueued -= 1
+      this.frameQueueWarned = false
+    })
   }
 
   /**
@@ -362,7 +397,17 @@ export class OriginLink {
     void this.post('/stream-delta', { ...payload, machineName: this.options.machineName() })
   }
 
-  private async post(path: string, body: unknown): Promise<void> {
+  /**
+   * Send one post and report whether the server took it.
+   *
+   * The result is the caller's, not an exception: a failed durable batch has to
+   * be named by the caller that knows how many events it held, and a throw here
+   * would only turn a reported loss into an unhandled rejection.
+   * @param path - sync-server route.
+   * @param body - JSON body.
+   * @returns true only when the server answered 2xx.
+   */
+  private async post(path: string, body: unknown): Promise<boolean> {
     const token = this.token
     if (token === undefined) {
       // Silently dropping this was invisible: a link that still looked
@@ -371,7 +416,7 @@ export class OriginLink {
       const reason = 'no session token (the downstream stream is not established)'
       this.options.logger.warn(`dsh-session-sync: dropped ${path}: ${reason}`)
       this.options.onPost?.(path, false, reason)
-      return
+      return false
     }
     try {
       const response = await fetch(`${this.options.serverUrl}${path}`, {
@@ -387,13 +432,19 @@ export class OriginLink {
         this.options.logger.warn(`dsh-session-sync: ${path} answered ${String(response.status)}`)
         this.options.onPost?.(path, false, reason)
         this.reconnect(reason)
-        return
+        return false
       }
       this.options.onPost?.(path, true)
+      return true
     } catch (error: unknown) {
       const reason = describe(error)
+      // A transport failure used to reach the settings page and nothing else.
+      // It is the difference between "the server refused this" and "the network
+      // ate it", so it belongs in the log too, in the same words.
+      this.options.logger.warn(`dsh-session-sync: ${path} failed: ${reason}`)
       this.options.onPost?.(path, false, reason)
       this.reconnect(reason)
+      return false
     }
   }
 
