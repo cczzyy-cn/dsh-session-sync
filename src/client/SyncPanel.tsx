@@ -284,6 +284,12 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
                       />
                       {projectOpen && project.sessions.map(candidate => {
                         const selected = open?.sessionId === candidate.sessionId
+                        // What a re-publish is owed for, said where the Session
+                        // is listed: the transcript's own symptom is that it
+                        // stops, which reads as a rendering problem otherwise.
+                        const gap = candidate.missingEvents > 0
+                          ? t('mirrorGapBadge', { n: candidate.missingEvents })
+                          : undefined
                         return (
                           <button
                             key={candidate.sessionId}
@@ -294,7 +300,9 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
                             className={selected
                               ? `${css.treeSession} ${css.treeSessionSelected}`
                               : css.treeSession}
-                            aria-label={`${t('openSession')}: ${candidate.title}`}
+                            aria-label={gap === undefined
+                              ? `${t('openSession')}: ${candidate.title}`
+                              : `${t('openSession')}: ${candidate.title} — ${gap}`}
                             title={candidate.title}
                             onClick={() => {
                               void props.openSession(group.machine.machineName, candidate.sessionId)
@@ -304,6 +312,9 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
                               {candidate.running && <StateDot state="ongoing" />}
                             </span>
                             <span className={css.rowTitle}>{candidate.title}</span>
+                            {gap !== undefined && (
+                              <span className={css.gapBadge} title={gap}>{gap}</span>
+                            )}
                             <span className={css.rowTime}>
                               {candidate.running
                                 ? t('sessionRunning')
@@ -542,6 +553,11 @@ function Conversation(props: {
               <StateDot state="ongoing" />
               <span className={css.viewMachine}>{t('sessionRunning')}</span>
             </>
+          )}
+          {session.missingEvents > 0 && (
+            <span className={css.gapBadge} title={t('mirrorGaps')}>
+              {t('mirrorGapBadge', { n: session.missingEvents })}
+            </span>
           )}
           <span className={css.viewSpacer} />
 

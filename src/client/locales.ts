@@ -65,6 +65,7 @@ export const zh = {
   machineOffline: '离线',
   machineSessions: '个会话',
   mirrorGaps: '镜像缺失事件',
+  mirrorGapBadge: '缺 {n} 条',
   openSession: '打开',
 
   sessionsTitle: '会话',
@@ -341,6 +342,7 @@ export const en: Record<SessionSyncKey, string> = {
   machineOffline: 'Offline',
   machineSessions: 'Sessions',
   mirrorGaps: 'missing mirrored events',
+  mirrorGapBadge: '{n} missing',
   openSession: 'Open',
 
   sessionsTitle: 'Sessions',
