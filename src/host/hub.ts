@@ -98,13 +98,15 @@ interface SessionRecord {
    */
   originSeq: number
   /**
-   * Lowest sequence the owning machine holds, or -1 when it has not said.
+   * Whether the owning machine says its own log holds history below what it
+   * published.
    *
    * The mirror is a tail on purpose, so what it lacks below its own lowest
    * sequence is expected rather than broken — but a reader asking to see further
-   * back has to be told whether the origin even has further back to give.
+   * back has to be told whether there is further back to give, and only the
+   * origin's own opening window knows that.
    */
-  originFirstSeq: number
+  originHasOlder: boolean
 }
 
 /** The one logger method the mirror needs, so it does not own a logging seam. */
@@ -205,7 +207,7 @@ export class SyncHub {
           seqs: new Set<number>(),
           maxSeq: -1,
           originSeq: reported(session.lastSeq),
-          originFirstSeq: reported(session.firstSeq),
+          originHasOlder: session.hasOlder === true,
         })
         continue
       }
@@ -213,7 +215,7 @@ export class SyncHub {
       existing.updatedAt = session.updatedAt
       existing.running = session.running
       existing.originSeq = reported(session.lastSeq)
-      existing.originFirstSeq = reported(session.firstSeq)
+      existing.originHasOlder = session.hasOlder === true
       if (session.cwd === undefined) delete existing.cwd
       else existing.cwd = session.cwd
     }
@@ -530,10 +532,7 @@ export class SyncHub {
     // Two different reasons older history exists, and a reader deserves both:
     // the mirror holds more below this page, or the Session began before the
     // mirror's window did.
-    const held = session.events[0]?.seq
-    const originHasOlder = held !== undefined
-      && session.originFirstSeq >= 0
-      && held > session.originFirstSeq
+    const originHasOlder = session.originHasOlder
     // Asking is what a reader does by scrolling up, so it happens only when the
     // request actually reached past the mirror's edge. The origin reads its own
     // log for it, which is work worth doing once and not per click.
@@ -599,7 +598,7 @@ export class SyncHub {
       seqs: new Set<number>(),
       maxSeq: -1,
       originSeq: -1,
-      originFirstSeq: -1,
+      originHasOlder: false,
     }
     record.sessions.set(sessionId, created)
     return created

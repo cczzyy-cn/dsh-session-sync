@@ -301,14 +301,15 @@ export interface PublishIndexPayload {
      */
     lastSeq?: number
     /**
-     * Lowest durable sequence this machine still holds for the Session.
+     * Whether this machine's own log holds history below what it published.
      *
-     * The mirror's window is a tail, so what it lacks is not only above its
-     * highest sequence but below its lowest: without this the server cannot tell
-     * "the Session began here" from "the beginning never arrived", and a reader
-     * asking for older history would be told there is none.
+     * A follow opens on a tail window, so the lowest sequence it delivered says
+     * nothing about where the Session begins — the window's own `hasMore` does.
+     * Without this the mirror cannot tell "the Session started here" from "the
+     * beginning never arrived", and a reader asking for older history would be
+     * told there is none.
      */
-    firstSeq?: number
+    hasOlder?: boolean
   }[]
 }
 

@@ -110,11 +110,18 @@ interface FollowHandle {
   /**
    * Lowest durable sequence this follow has delivered, or -1 before any.
    *
-   * The pair is what tells the mirror where the Session actually begins: a
-   * follow opens on a tail window, so a mirror whose lowest sequence is above
-   * this one is missing history below it rather than holding the whole Session.
+   * Kept for this half's own diagnostics: a follow opens on a tail, so this is
+   * where the window starts, not where the Session does.
    */
   firstSeq: number
+  /**
+   * Whether this machine's log holds history below what the follow delivered.
+   *
+   * Taken from the opening snapshot's own `hasMore`, which is the only thing
+   * that knows — the window's lowest sequence is the window's, not the log's.
+   * Cleared when a page read reaches the beginning.
+   */
+  hasOlder: boolean
   /**
    * The opening snapshot's log cut, which a backwards page is read against.
    *
@@ -528,6 +535,10 @@ export class SessionSyncService {
         buffer(handle, event)
         added += 1
       }
+      // The page knows where the log begins, so the next index tells the truth
+      // about whether anything is still below — which is how the reader's
+      // "older" control finally goes away.
+      handle.hasOlder = page.hasMore
       if (added > 0) {
         this.flush()
         this.ctx.logger.info(`dsh-session-sync: sent ${String(added)} earlier event(s) of "${sessionId}"`)
@@ -590,7 +601,6 @@ export class SessionSyncService {
       sessions: rows.filter(row => row.synced).map(row => {
         const handle = this.follows.get(row.sessionId)
         const lastSeq = handle?.lastSeq
-        const firstSeq = handle?.firstSeq
         return {
           sessionId: row.sessionId,
           title: row.title,
@@ -601,9 +611,9 @@ export class SessionSyncService {
           // machine has not read a sequence yet", which is not the same claim as
           // "this Session has no events".
           ...(lastSeq === undefined || lastSeq < 0 ? {} : { lastSeq }),
-          // The lower end, so a mirror that starts mid-conversation can be told
-          // apart from one that starts at the beginning.
-          ...(firstSeq === undefined || firstSeq < 0 ? {} : { firstSeq }),
+          // Only said when true: the mirror reads absence as "no history below
+          // the window", which is the answer for a Session that arrived whole.
+          ...(handle?.hasOlder === true ? { hasOlder: true } : {}),
         }
       }),
     } satisfies PublishIndexPayload)
@@ -647,6 +657,7 @@ export class SessionSyncService {
       step: 0,
       lastSeq: -1,
       firstSeq: -1,
+      hasOlder: false,
       cursor: -1,
     }
     this.follows.set(sessionId, handle)
@@ -889,10 +900,11 @@ export class SessionSyncService {
     // ours to choose, and a history nobody reads is a Session that looks empty.
     if (frameType === 'snapshot' || frameType === 'opened') this.seedStream(handle, carrier)
     // The opening's cut, kept because a backwards page must be read against the
-    // same point the window was taken at.
-    if ((frameType === 'snapshot' || frameType === 'opened')
-      && typeof carrier['cursor'] === 'number') {
-      handle.cursor = carrier['cursor']
+    // same point the window was taken at — and the opening's own `hasMore`,
+    // which is the only statement about history below the window.
+    if (frameType === 'snapshot' || frameType === 'opened') {
+      if (typeof carrier['cursor'] === 'number') handle.cursor = carrier['cursor']
+      if (typeof carrier['hasMore'] === 'boolean') handle.hasOlder = carrier['hasMore']
     }
     const page = carrier['page'] as Record<string, unknown> | undefined
     const records = Array.isArray(carrier['records'])
