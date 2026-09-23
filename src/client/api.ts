@@ -385,7 +385,13 @@ export class SyncClient {
     try {
       const { transcript: older } = await getJson<{ transcript: MirrorTranscript }>(
         `${ROUTE_PREFIX}/transcript?machine=${encodeURIComponent(open.machineName)}`
-        + `&session=${encodeURIComponent(open.sessionId)}&before=${String(first)}`,
+        + `&session=${encodeURIComponent(open.sessionId)}`
+        // The page already held sets the size of the next one: a Session short
+        // enough to arrive whole has nothing older to ask for, and a paged one
+        // holds exactly the window the server chose — so the client never has to
+        // know that number, and pages stay the same size as the reader walks up.
+        + `&limit=${String(transcript.events.length)}`
+        + `&before=${String(first)}`,
       )
       const current = this.store.getSnapshot()
       // Another Session may have been opened while this one was in flight, and

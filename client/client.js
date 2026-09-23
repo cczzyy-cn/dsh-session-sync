@@ -866,7 +866,7 @@ window.__ModuleLoader__.load({
 				if (first === void 0) return;
 				this.update({ loadingOlder: true });
 				try {
-					const { transcript: older } = await getJson(`${ROUTE_PREFIX}/transcript?machine=${encodeURIComponent(open.machineName)}&session=${encodeURIComponent(open.sessionId)}&before=${String(first)}`);
+					const { transcript: older } = await getJson(`${ROUTE_PREFIX}/transcript?machine=${encodeURIComponent(open.machineName)}&session=${encodeURIComponent(open.sessionId)}&limit=${String(transcript.events.length)}&before=${String(first)}`);
 					const current = this.store.getSnapshot();
 					if (current.open?.sessionId !== open.sessionId) return;
 					const held = current.transcript;
