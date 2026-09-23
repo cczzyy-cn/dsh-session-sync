@@ -30,8 +30,27 @@ import type { HostLogger } from './dsh.ts'
 /** Largest accepted request body, in bytes. */
 const MAX_BODY_BYTES = 4 * 1024 * 1024
 
-/** Queue depth at which a lagging link says so, once per episode. */
-const FRAME_QUEUE_WARN = 64
+/**
+ * Durable events the outbox may hold before it drops the oldest.
+ *
+ * Well above one flush interval's worth and well below what a Session buffer
+ * already tolerates (4,000 events per handle), so a server that is merely slow
+ * is absorbed and one that is gone is not.
+ */
+const FRAME_OUTBOX_LIMIT = 8_000
+
+/** Outbox depth at which a lagging link says so, once per episode. */
+const FRAME_OUTBOX_WARN = 2_000
+
+/**
+ * How long one post may take before it counts as failed.
+ *
+ * Without this, a connection black-holed by a network blip leaves `fetch`
+ * pending forever: the outbox stops draining, no reconnect is ever attempted,
+ * and the link looks alive while publishing nothing — the exact state this
+ * plugin's settings page was built to make visible.
+ */
+const POST_TIMEOUT_MS = 20_000
 
 /** Server-role listener options. */
 export interface SyncServerOptions {
@@ -308,11 +327,23 @@ export class OriginLink {
   private connection: AbortController | undefined
   private token: string | undefined
   private isLinked = false
-  /** Tail of the serialized `/frames` chain, so batches arrive in order. */
-  private frameQueue: Promise<void> = Promise.resolve()
-  /** Batches waiting on that chain, and whether the depth has been reported. */
-  private framesQueued = 0
-  private frameQueueWarned = false
+  /**
+   * Batches the server has not accepted yet, oldest first.
+   *
+   * An event handed to a socket is not published, and this is where that
+   * distinction lives. The link used to splice a batch out of the Session
+   * buffer and post it once: if that post failed — a blip, a restart, a rejected
+   * request — the events were gone, and because they sat above everything the
+   * mirror held the loss left no hole to notice. They wait here instead, in
+   * order, until the server answers 2xx.
+   */
+  private readonly outbox: { sessionId: string; events: readonly MirrorEvent[] }[] = []
+  /** Events held in the outbox, so the cap is measured in events, not batches. */
+  private outboxEvents = 0
+  /** Whether the drain loop is running, so only one posts at a time. */
+  private pumping = false
+  /** Whether the depth has been reported for the current episode. */
+  private outboxWarned = false
 
   /** @param options - address, credentials, and the command callback. */
   constructor(private readonly options: OriginLinkOptions) {}
@@ -335,6 +366,11 @@ export class OriginLink {
     this.controller?.abort()
     this.controller = undefined
     this.token = undefined
+    // The link is over rather than interrupted, and a re-follow replays the
+    // window these events belong to — holding them past this point would only
+    // post history the Session may no longer even publish.
+    this.outbox.length = 0
+    this.outboxEvents = 0
     this.setLinked(false)
   }
 
@@ -349,38 +385,68 @@ export class OriginLink {
   /**
    * Publish durable events appended to one Session.
    *
-   * Batches leave on a 150 ms timer and each post used to be fire-and-forget, so
-   * two of them routinely overlapped and could reach the server out of order.
-   * Sequencing them here is the cheap half of the fix: the mirror now tolerates
-   * reordering, but arrival order is the one order it never has to repair.
+   * A batch waits in the outbox until the server has it. Sequences were the
+   * cheap half of the fix — the mirror tolerates reordering now — but tolerance
+   * is not delivery: a post that failed took its events with it, and nothing
+   * else in the system knows they existed. So they are held, in order, and
+   * retried until accepted.
    * @param sessionId - the published Session.
    * @param events - the newly observed durable events.
    */
   publishFrames(sessionId: string, events: readonly MirrorEvent[]): void {
     if (events.length === 0) return
-    const body = { sessionId, events }
-    this.framesQueued += 1
-    if (this.framesQueued >= FRAME_QUEUE_WARN && !this.frameQueueWarned) {
-      this.frameQueueWarned = true
+    this.outbox.push({ sessionId, events })
+    this.outboxEvents += events.length
+    // Bounded, because a server that never answers must not grow this process
+    // without limit. What overflows is dropped oldest-first and said out loud:
+    // the mirror's own replay is what repairs that, and it can only do so if the
+    // operator knows it happened.
+    while (this.outboxEvents > FRAME_OUTBOX_LIMIT && this.outbox.length > 1) {
+      const dropped = this.outbox.shift()
+      if (dropped === undefined) break
+      this.outboxEvents -= dropped.events.length
       this.options.logger.warn(
-        `dsh-session-sync: ${String(this.framesQueued)} frame batches queued; the link is behind`,
+        `dsh-session-sync: outbox full, dropped ${String(dropped.events.length)} durable event(s) `
+        + `for "${dropped.sessionId}"; its mirror is behind until it replays`,
       )
     }
-    // `post` reports its outcome rather than rejecting, so the chain only has to
-    // hand the next batch on, keep the depth honest, and name what a failure
-    // cost: a batch that was already spliced out of the origin's buffer is gone,
-    // and the mirror's own repair path is re-publishing the Session.
-    this.frameQueue = this.frameQueue.then(async () => {
-      const accepted = await this.post('/frames', body)
-      if (!accepted) {
-        this.options.logger.warn(
-          `dsh-session-sync: ${String(events.length)} durable event(s) for "${sessionId}" `
-          + 'were not accepted by the server; re-publish the Session to rebuild its mirror',
-        )
+    if (this.outboxEvents >= FRAME_OUTBOX_WARN && !this.outboxWarned) {
+      this.outboxWarned = true
+      this.options.logger.warn(
+        `dsh-session-sync: ${String(this.outboxEvents)} durable event(s) waiting to be accepted`,
+      )
+    }
+    this.pumpFrames()
+  }
+
+  /**
+   * Send queued batches, oldest first, until one is refused.
+   *
+   * A refusal leaves its batch at the head, so the order the mirror sees is the
+   * order the events were written — and the next link-up calls this again. One
+   * loop runs at a time: two would race for the same head and post it twice.
+   */
+  private pumpFrames(): void {
+    if (this.pumping) return
+    this.pumping = true
+    void (async () => {
+      try {
+        for (;;) {
+          const batch = this.outbox[0]
+          if (batch === undefined) break
+          const accepted = await this.post('/frames', {
+            sessionId: batch.sessionId,
+            events: batch.events,
+          })
+          if (!accepted) break
+          this.outbox.shift()
+          this.outboxEvents -= batch.events.length
+          this.outboxWarned = false
+        }
+      } finally {
+        this.pumping = false
       }
-      this.framesQueued -= 1
-      this.frameQueueWarned = false
-    })
+    })()
   }
 
   /**
@@ -440,6 +506,7 @@ export class OriginLink {
           authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(body),
+        signal: AbortSignal.timeout(POST_TIMEOUT_MS),
       })
       if (!response.ok) {
         const reason = `server answered ${String(response.status)}`
@@ -584,8 +651,12 @@ export class OriginLink {
    */
   private setLinked(linked: boolean, error?: string): void {
     if (this.isLinked === linked && error === undefined) return
+    const wasLinked = this.isLinked
     this.isLinked = linked
     this.options.onStatus(error === undefined ? { linked } : { linked, error })
+    // A fresh token is what a refused batch needed, so the queue is retried the
+    // moment the link is back rather than at the next flush.
+    if (linked && !wasLinked) this.pumpFrames()
   }
 }
 
