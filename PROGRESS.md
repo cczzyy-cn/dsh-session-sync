@@ -51,9 +51,30 @@
 
 **本机端到端验证（2026-09-24 02:00）**：用两个一次性实例（临时 `DSH_HOME`，`profiles`/`sessions` 用 junction 复用，端口 3098/3099）在本机跑通：一个 server 角色、一个 client 角色发布会话。控制台打开那条镜像会话后，渲染出来的是**DSH 原件**——shipped 头部（`deepseek-flash · low` / `完全权限` / `子代理`）、**回合级折叠**（`用时 3 秒 ⌄`，手绘面板明确不抄这个）、以及 shipped 输入框（`发消息或创建任务，/ 调用指令，@ 文件或对话`）。两侧实例已清理。
 
-**服务器一份文件能否搞定（实测）**：服务器跑的就是 `dsh-v0.1.7-alpha.2` 标签（`git describe` 确认本机 checkout 的 HEAD 就是该标签，工作树相对它的差异**只有**这次 8 个文件），而改动**全在 client 半边** → 理论上只需替换 `@deepseek-ai/dsh-api-session-controller/lib/client.js` 一个文件。
-实测两次：替换后应用**始终健康**（`/` 401、`/dsh-session-sync/state` 200；两个 bundle 的 `node --check` 都通过、模块加载头与 external 依赖一致、**导出名集合完全相同**），但**没能完成线上目视确认**——因为那段时间浏览器窗口本身渲染空白，而**回滚到原 bundle 后依旧空白**、公网 `curl` 却正常（`?token=` 303 → 带 cookie 200 / 33 KB HTML）。即空白是浏览器标签页/会话的问题，不是这次替换造成的，但它挡住了验证。
-→ 已回滚到原 bundle（哈希 `f71e7142…`、服务 active），备份留在服务器 `client.js.bak-2026-09-23-180548`，新版留在 `/tmp/dsh-sc-client.js`；下一次只要浏览器能正常渲染，替换与回滚各是一条命令。
+**服务器一份文件搞定（2026-09-24 02:2x，线上已生效）**：服务器跑的就是 `dsh-v0.1.7-alpha.2` 标签（`git describe` 确认本机 checkout 的 HEAD 就是该标签，工作树相对它的差异**只有**这次 8 个文件），而改动**全在 client 半边** → 只需替换 `@deepseek-ai/dsh-api-session-controller/lib/client.js` 一个文件。
+
+```text
+原版 f71e7142…  →  新版 bee02fb4…（152 KB，含 mirror 实现与 AdoptedSessionHandle）
+服务器 curl 自证：plugins/??…client.js&rev=4b0755a7e02d → 200 / 155309 字节 / 含新实现
+即浏览器拿到的 rev 已经变了 —— 任何客户端刷新后都会走原件
+```
+
+**线上已确认成功**（用户硬刷新后看到 shipped 头部、`用时 N 秒 ⌄` 折叠、shipped 输入框）。
+
+**复现与恢复**（把"手工拷一个文件"变成可复现）：
+
+```text
+patches/dsh-v0.1.7-alpha.2-sessions-adopt.patch    源码补丁（相对该标签，git apply 即可）
+patches/dsh-api-session-controller-client.js       要放进服务器的那份产物
+patches/install-dsh-adopt.sh                       定位安装位置 → 备份 → 替换（--check 可预演）
+```
+
+**这一点必须记住**：补丁住在 **npx 缓存目录**里（`/root/.npm/_npx/<hash>/…`，按版本分目录）。服务器上任何一次 `pnpm update dsh` / DSH 版本变化都会**换一个新目录**，补丁随之静默消失——控制台会悄悄退回手绘面板，而且不会报错。恢复方式就是再跑一次那个脚本（它按**版本号**匹配，不会把 0.1.7 的 bundle 灌进 0.1.5 的缓存里）：
+
+```sh
+/root/dsh-adopt/install-dsh-adopt.sh          # 或 --check 先看它打算动哪个文件
+systemctl restart dsh-web
+```
 
 ### `16b46e0` fix(console)：工具行标题对齐原页面
 用户把**同一个会话**的两个窗口并排看：左边是本机 DSH 的真实会话页，右边是同步控制台。差异里有一条是纯粹的 bug —— 中文词典里 `toolTitlePwsh`/`Bash`/`Grep`/`Glob` **填的是英文串**（`Pwsh`/`Bash`/`Grep`/`Glob`），而 DSH 的中文是 `运行命令`/`运行命令`/`搜索文件内容`/`查找文件`（权威表：`ui-conversation/src/client/locales.ts` 的 `tool.title.*`；英文侧恰好就是这几个英文串，所以对照英文词典看不出问题）。

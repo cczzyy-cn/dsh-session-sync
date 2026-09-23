@@ -91,11 +91,19 @@ registered `main` keys.
   the Session under a synthetic local id, replaces it with the mirror's window,
   and feeds every later frame into it, so the transcript, the composer, and the
   tool cards are the product's own components rather than copies of them. Every
-  other build — including every build that exists today — keeps the hand-drawn
-  pane described above, unchanged. The adoption route is feature-detected
-  (`src/client/official-session.tsx`); `sessions` is deliberately not in this
-  plugin's required `inject` list, because the console has to load on builds that
-  predate the API.
+  other build keeps the hand-drawn pane described above, unchanged. The adoption
+  route is feature-detected (`src/client/official-session.tsx`); `sessions` is
+  deliberately not in this plugin's required `inject` list, because the console
+  has to load on builds that predate the API.
+
+  No released DSH offers it yet — the capability is a client-only addition to
+  `@deepseek-ai/dsh-api-session-controller` (one `adopt` method on the Sessions
+  service, plus the local-only Session generation behind it). `patches/` carries
+  that change as a source patch against `dsh-v0.1.7-alpha.2`, the built client
+  bundle to drop into an installed DSH, and a script that finds the installation,
+  backs the file up, and replaces it. Until it is upstream, a `dsh` upgrade on a
+  patched host mints a fresh install directory and silently reverts the console
+  to its own pane; re-running that script restores it.
 
 ## Configuration
 

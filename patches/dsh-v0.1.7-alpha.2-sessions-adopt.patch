@@ -1,0 +1,1254 @@
+diff --git a/packages/api/session-controller/src/client/contract/sessions.ts b/packages/api/session-controller/src/client/contract/sessions.ts
+index 8f016ab711..b5214f1f21 100644
+--- a/packages/api/session-controller/src/client/contract/sessions.ts
++++ b/packages/api/session-controller/src/client/contract/sessions.ts
+@@ -13,6 +13,8 @@ import type { AgentContext } from '../scope.ts'
+ import type { SessionSearchResultItem } from '../sessions/manager.ts'
+ import type { SessionBinding, SessionListState } from '../sessions/service.ts'
+ import type { SessionFace } from './session.ts'
++import type { SessionMirrorVerbs } from '../sessions/session.ts'
++import type { SessionEvent } from '@deepseek-ai/dsh-session/types'
+ import type { ObservableSnapshot } from '@deepseek-ai/dsh-client-store'
+ import type { SessionReferenceSource } from '../index.ts'
+ 
+@@ -38,6 +40,89 @@ export interface SessionRetainOptions {
+   readonly signal?: AbortSignal | undefined
+ }
+ 
++/**
++ * The row facts an adopted Session publishes into the catalog.
++ *
++ * Every field is optional, and one spelled `displayTitle` is accepted as the
++ * title's fallback: an adopter is a feature with its own vocabulary for a row,
++ * and a row it can half-describe is still better than no row at all.
++ */
++export interface SessionAdoptSummary {
++  /** Latest durable title, when the adopter has one. */
++  readonly title?: string
++  /** Human-facing label; used as the title when no durable one is given. */
++  readonly displayTitle?: string
++  /** Workspace directory the Session belongs to, when the adopter knows it. */
++  readonly cwd?: string
++  /** Last activity, when the adopter tracks one. */
++  readonly updatedAt?: number
++  readonly running?: boolean
++}
++
++/** What one adopted Session is opened from. */
++export interface SessionAdoptSource {
++  /** Synthetic identity; must not collide with a Host-born Session. */
++  readonly sessionId: SessionId
++  /** Row facts for the catalog and the renderer's pre-event chrome. */
++  readonly summary?: SessionAdoptSummary
++  /** Whether the origin reports a turn in progress; wins over the row's own. */
++  readonly running?: boolean
++  /** The composer's verbs; an absent verb makes that act a refusal, not a crash. */
++  readonly verbs?: SessionMirrorVerbs
++}
++
++/**
++ * One adopted Session's window verbs.
++ *
++ * The adopter owns the history, so it drives the window directly: what the Host
++ * would have sent as a follow opening, durable events, and Assistant stream
++ * frames arrives here instead, and the Session the renderer draws is the same
++ * Session object it draws for a Host-born one.
++ */
++export interface AdoptedSession {
++  readonly sessionId: SessionId
++  /**
++   * Replace the complete window.
++   * @param events - durable wire envelopes, in log order.
++   * @param hasMore - whether older history is reachable; false for a mirror.
++   */
++  replace(events: readonly SessionEvent[], hasMore: boolean): void
++  /**
++   * Append one durable wire envelope.
++   * @param event - the envelope.
++   */
++  append(event: SessionEvent): void
++  /**
++   * Show the whole text of one running Assistant attempt.
++   * @param attempt - the attempt, its position, and the text so far.
++   */
++  live(attempt: {
++    readonly attemptId: string
++    readonly turn: number
++    readonly step: number
++    readonly kind: 'text' | 'reasoning'
++    readonly text: string
++    readonly time?: number
++  }): void
++  /**
++   * Settle one attempt with the durable event that ended it.
++   * @param settlement - the attempt and its durable end.
++   */
++  settle(settlement: { readonly attemptId: string; readonly event: SessionEvent }): void
++  /**
++   * Close one attempt that will not settle.
++   * @param attempt - the attempt to close.
++   */
++  abandon(attempt: { readonly attemptId: string }): void
++  /**
++   * Report the origin's running flag.
++   * @param running - whether the Session is mid-turn.
++   */
++  setRunning(running: boolean): void
++  /** Drop the adopted Session. Idempotent. */
++  release(): void
++}
++
+ /** Local ownership counts, independent of catalog membership and never persisted. */
+ export interface SessionRetainInfo {
+   readonly referenceCount: number
+@@ -155,4 +240,17 @@ export interface ISessions {
+    * @returns the live binding, or undefined without a retained generation.
+    */
+   binding(id: SessionId): SessionBinding | undefined
++  /**
++   * Adopt a Session whose history this client owns rather than the Host's.
++   *
++   * The returned Session is an ordinary one in every respect the rest of the
++   * client can observe — it is catalogued, it can be retained, and the shipped
++   * conversation renders it — except that its window is driven through the
++   * returned handle instead of read from Host history. Nothing about a
++   * Host-born Session changes.
++   * @param source - the synthetic identity, its row facts, and the owner's verbs.
++   * @returns the handle that drives the adopted window.
++   * @throws when the identity is already active in this Controller.
++   */
++  adopt(source: SessionAdoptSource): AdoptedSession
+ }
+diff --git a/packages/api/session-controller/src/client/index.ts b/packages/api/session-controller/src/client/index.ts
+index b9600f36a6..067006a7af 100644
+--- a/packages/api/session-controller/src/client/index.ts
++++ b/packages/api/session-controller/src/client/index.ts
+@@ -34,7 +34,7 @@ export type {
+   SessionSearchResultItem,
+   SessionProjectionSnapshot,
+ } from './sessions/manager.ts'
+-export type { Session } from './sessions/session.ts'
++export type { Session, SessionMirrorVerbs } from './sessions/session.ts'
+ export type {
+   ProjectionsBaseline,
+   ProjectionValueStore,
+@@ -50,7 +50,14 @@ export type {
+   SubmissionHandle,
+ } from './contract/session.ts'
+ export type {
+-  ISessions, SessionReference, SessionRetainInfo, SessionRetainOptions, SessionTarget,
++  AdoptedSession,
++  ISessions,
++  SessionAdoptSource,
++  SessionAdoptSummary,
++  SessionReference,
++  SessionRetainInfo,
++  SessionRetainOptions,
++  SessionTarget,
+ } from './contract/sessions.ts'
+ export { MutableSessionEventSource } from './contract/events.ts'
+ export type {
+diff --git a/packages/api/session-controller/src/client/sessions/adopted.ts b/packages/api/session-controller/src/client/sessions/adopted.ts
+new file mode 100644
+index 0000000000..fc3d634bb8
+--- /dev/null
++++ b/packages/api/session-controller/src/client/sessions/adopted.ts
+@@ -0,0 +1,236 @@
++/**
++ * The window verbs one adopted Session's owner drives.
++ *
++ * An adopted Session is one whose history this client owns: a feature adopted it
++ * under a synthetic identity and feeds it the events it has, instead of the Host
++ * answering for a log it has never seen. Everything downstream 閳?the catalog,
++ * the reference allocator, the conversation renderer 閳?then treats it as an
++ * ordinary Session, which is the entire point: the renderer is the product's own
++ * rather than a copy of it.
++ *
++ * @module @deepseek-ai/dsh-api-session-controller/client/sessions/adopted
++ */
++
++import type { SessionId, SessionEvent } from '@deepseek-ai/dsh-session/types'
++import { SessionSeq } from '@deepseek-ai/dsh-session/types'
++import type { LlmAttemptId } from '@deepseek-ai/dsh-llm/brand'
++import type { AssistantStreamRecord } from '@deepseek-ai/dsh-llm/assistant-stream'
++import type { SessionAssistantStreamFrame } from '../../types.ts'
++import type { SessionLiveEventEntry } from '../contract/events.ts'
++import type { AdoptedSession } from '../contract/sessions.ts'
++import type { Session } from './session.ts'
++
++/** One live attempt's frame bookkeeping, as the fold's dense protocol requires. */
++interface LiveAttempt {
++  revision: number
++  /** Next dense chunk index; the fold rebaselines on any gap. */
++  nextIndex: number
++  /** Text already sent, so a whole-text update can be reduced to its delta. */
++  text: string
++  turn: number
++  step: number
++  /** Last durable sequence seen when the attempt opened. */
++  startedAfterSeq: number
++}
++
++/**
++ * One adopted Session, and the frames its owner feeds it.
++ *
++ * Every method is safe after {@link release}: an owner that is tearing down may
++ * still have a frame in flight, and a released Session must swallow it rather
++ * than write into a generation nobody holds.
++ */
++export class AdoptedSessionHandle implements AdoptedSession {
++  private readonly attempts = new Map<string, LiveAttempt>()
++  private revision = 0
++  private lastSeq = -1
++  private released = false
++
++  /**
++   * @param session - the resident Session this handle drives.
++   * @param drop - retire the generation; supplied by the Sessions service.
++   */
++  constructor(
++    readonly sessionId: SessionId,
++    private readonly session: Session,
++    private readonly drop: () => void,
++  ) {}
++
++  /**
++   * Replace the whole window.
++   * @param events - wire envelopes, in log order.
++   * @param hasMore - whether older history is reachable; false for a mirror.
++   */
++  replace(events: readonly SessionEvent[], hasMore: boolean): void {
++    if (this.released) return
++    // A replaced window is a different conversation: any attempt folded against
++    // the old one can no longer be settled by anything that follows.
++    this.attempts.clear()
++    this.lastSeq = -1
++    const entries = events.map(entryOf)
++    for (const entry of entries) this.observe(entry.event.seq)
++    this.session.adoptWindow(entries, hasMore)
++  }
++
++  /**
++   * Append one durable event.
++   * @param event - the wire envelope.
++   */
++  append(event: SessionEvent): void {
++    if (this.released) return
++    const entry = entryOf(event)
++    this.observe(entry.event.seq)
++    this.session.adoptDurable(entry)
++  }
++
++  /**
++   * Show the whole text of one running attempt, replacing what was shown.
++   *
++   * The wire form of live Assistant text is a dense run of chunks; this client
++   * is handed the text so far instead, because that is what a relay can carry
++   * without buffering. The delta is computed here, and a text that is not an
++   * extension of the last one restarts the attempt rather than inventing a
++   * chunk the fold would rebaseline on.
++   * @param attempt - the attempt, its position, and the text so far.
++   */
++  live(attempt: {
++    attemptId: string
++    turn: number
++    step: number
++    kind: 'text' | 'reasoning'
++    text: string
++    time?: number
++  }): void {
++    if (this.released) return
++    let live = this.attempts.get(attempt.attemptId)
++    if (live !== undefined && (!attempt.text.startsWith(live.text) || live.turn !== attempt.turn)) {
++      this.end(attempt.attemptId, { kind: 'abandoned' })
++      live = undefined
++    }
++    if (live === undefined) {
++      this.revision += 1
++      live = {
++        revision: this.revision,
++        nextIndex: 0,
++        text: '',
++        turn: attempt.turn,
++        step: attempt.step,
++        startedAfterSeq: this.lastSeq,
++      }
++      this.attempts.set(attempt.attemptId, live)
++      this.frame({
++        type: 'start',
++        attemptId: attempt.attemptId as LlmAttemptId,
++        revision: live.revision,
++        // -1 means "nothing durable yet", the same value the fold's own callers
++        // use for an attempt that opened on an empty window.
++        startedAfterSeq: live.startedAfterSeq === -1 ? -1 : SessionSeq(live.startedAfterSeq),
++        turn: attempt.turn,
++        step: attempt.step,
++      })
++    }
++    const delta = attempt.text.slice(live.text.length)
++    if (delta === '') return
++    live.text = attempt.text
++    // One record per chunk, carrying one text delta: the same shape the Host
++    // mints, so the renderer's own fold expands it without a special case.
++    const record: AssistantStreamRecord = {
++      type: attempt.kind === 'reasoning' ? 'reasoning-chunks' : 'text-chunks',
++      time0: attempt.time ?? Date.now(),
++      index: 0,
++      dt: [0],
++      texts: [delta],
++    }
++    this.frame({
++      type: 'chunk',
++      attemptId: attempt.attemptId as LlmAttemptId,
++      revision: live.revision,
++      index: live.nextIndex,
++      time: attempt.time ?? Date.now(),
++      chunk: record as never,
++    })
++    live.nextIndex += 1
++  }
++
++  /**
++   * Settle one attempt with its durable end.
++   * @param settlement - the attempt and the durable event that ended it.
++   */
++  settle(settlement: { attemptId: string; event: SessionEvent }): void {
++    if (this.released) return
++    const entry = entryOf(settlement.event)
++    this.observe(entry.event.seq)
++    // The durable entry is staged first: the fold releases it when the terminal
++    // frame names the very sequence it was staged under.
++    this.session.adoptDurable(entry)
++    const type = entry.event.type
++    // Only an Assistant end settles an attempt; anything else is a durable event
++    // that happens to arrive here, and the fold has already published it.
++    if (type !== 'assistant/message' && type !== 'assistant/attempt') return
++    this.end(settlement.attemptId, { kind: 'committed', eventType: type, seq: entry.event.seq })
++  }
++
++  /**
++   * Abandon one attempt that will not settle.
++   * @param attempt - the attempt to close.
++   */
++  abandon(attempt: { attemptId: string }): void {
++    if (this.released) return
++    this.end(attempt.attemptId, { kind: 'abandoned' })
++  }
++
++  /**
++   * Report the origin's running flag.
++   * @param running - whether the Session is mid-turn.
++   */
++  setRunning(running: boolean): void {
++    if (this.released) return
++    this.session.handleRunning(running)
++  }
++
++  /** Drop the Session this handle drives. Idempotent. */
++  release(): void {
++    if (this.released) return
++    this.released = true
++    this.attempts.clear()
++    this.drop()
++  }
++
++  /** Close one attempt's frame run, when it is the one this client opened. */
++  private end(
++    attemptId: string,
++    outcome:
++      | { kind: 'abandoned' }
++      | { kind: 'committed'; eventType: 'assistant/message' | 'assistant/attempt'; seq: number },
++  ): void {
++    const live = this.attempts.get(attemptId)
++    if (live === undefined) return
++    this.attempts.delete(attemptId)
++    this.frame({
++      type: 'end',
++      attemptId: attemptId as LlmAttemptId,
++      revision: live.revision,
++      index: live.nextIndex,
++      outcome: outcome.kind === 'abandoned'
++        ? { kind: 'abandoned' }
++        : {
++          kind: 'committed',
++          eventType: outcome.eventType,
++          seq: outcome.seq,
++        },
++    })
++  }
++
++  private frame(frame: SessionAssistantStreamFrame): void {
++    this.session.adoptFrame(frame)
++  }
++
++  private observe(seq: number): void {
++    if (seq > this.lastSeq) this.lastSeq = seq
++  }
++}
++
++/** Wrap wire envelopes as the entries the event window carries. */
++function entryOf(event: SessionEvent): SessionLiveEventEntry {
++  return { type: 'event', event }
++}
+diff --git a/packages/api/session-controller/src/client/sessions/manager.ts b/packages/api/session-controller/src/client/sessions/manager.ts
+index 50af09df13..0e16090a7a 100644
+--- a/packages/api/session-controller/src/client/sessions/manager.ts
++++ b/packages/api/session-controller/src/client/sessions/manager.ts
+@@ -22,6 +22,7 @@ import { flattenLineage } from './lineage.ts'
+ // useProjection('title') consumer reads). Zero value imports by construction.
+ import type {} from '@deepseek-ai/dsh-session-title/client'
+ import { Notifier } from './notifier.ts'
++import type { SessionMirrorVerbs } from './session.ts'
+ import { ProjectionValueStore } from './projection-store.ts'
+ import { Session } from './session.ts'
+ import type { SessionRemotes } from './remotes.ts'
+@@ -108,6 +109,16 @@ export class SessionManager {
+   /** Active list request's mutation log; its identity also fences completion after reconnect. */
+   private listMutations: SessionListMutation[] | null = null
+   private readonly addresses = new Map<SessionId, SubagentAddress>()
++  /**
++   * Sessions this client owns rather than the Host, with the row that describes
++   * them.
++   *
++   * A Host list read cannot know about them — the identity does not exist over
++   * there — so an empty (or merely different) listing must not take their rows
++   * away: they are re-asserted after every pull, exactly as a removal frame
++   * would otherwise supersede them.
++   */
++  private readonly adopted = new Map<SessionId, SessionSummary>()
+   private readonly projectionLoads = new Map<SessionId, ProjectionLoad>()
+   private readonly projectionInflight = new Map<SessionId, ProjectionInflight>()
+ 
+@@ -186,6 +197,7 @@ export class SessionManager {
+     if (session !== expected) return Promise.resolve()
+     this.sessions.delete(sessionId)
+     this.addresses.delete(sessionId)
++    this.forgetAdopted(sessionId)
+     this.pruneEngagement(sessionId, this.retainedIds(this.summaries))
+     return this.startSessionDisposal(session)
+   }
+@@ -262,6 +274,42 @@ export class SessionManager {
+     return session
+   }
+ 
++  /**
++   * Register a Session whose history this client owns rather than the Host's.
++   *
++   * The resident instance is built the ordinary way, with the owner's verbs in
++   * place of Remote calls and with the caller's row put into the catalog, so
++   * every reader downstream — the list, the reference allocator, the renderer —
++   * sees a Session and not a special case.
++   * @param sessionId - the identity the owner will address it by.
++   * @param options - the owner's verbs and the row that describes the Session.
++   * @returns the resident instance.
++   */
++  adopt(sessionId: SessionId, options: {
++    readonly mirror: SessionMirrorVerbs
++    readonly summary: SessionSummary
++  }): Session {
++    const existing = this.sessions.get(sessionId)
++    if (existing !== undefined) return existing
++    const session = new Session(sessionId, this.remote, {
++      mirror: options.mirror,
++      projections: this.projectionStore(sessionId),
++    })
++    this.sessions.set(sessionId, session)
++    this.adopted.set(sessionId, options.summary)
++    session.handleBlank(options.summary.blank)
++    session.handleRunning(options.summary.running)
++    this.handleSessionAdded(options.summary)
++    return session
++  }
++
++  /** Forget one adopted row, because its Session is gone. */
++  private forgetAdopted(sessionId: SessionId): void {
++    if (!this.adopted.delete(sessionId)) return
++    this.summaries = this.summaries.filter(summary => summary.sessionId !== sessionId)
++    this.notifier.markDirty()
++  }
++
+   private createSession(sessionId: SessionId): Session {
+     const address = this.addresses.get(sessionId)
+     const parentAvailable = address === undefined
+@@ -415,7 +463,13 @@ export class SessionManager {
+             if (s.running && !removedSincePull.has(s.sessionId)) this.engagedSessions.add(s.sessionId)
+           }
+           const summaries = mutations.reduce(applyMutation, baseline)
+-          this.summaries = summaries
++          // A Session this client owns is not in the Host's answer, and a pull
++          // that omits an identity is how the wire says it was removed — so the
++          // adopted rows are put back, last, after every read.
++          this.summaries = [...this.adopted.values()].reduce(
++            (current, summary) => applyMutation(current, { kind: 'upsert', summary }),
++            summaries,
++          )
+           // A full list can remove identities without a removal frame.
+           const retained = this.retainedIds(summaries)
+           for (const sessionId of this.engagedSessions) this.pruneEngagement(sessionId, retained)
+diff --git a/packages/api/session-controller/src/client/sessions/service.ts b/packages/api/session-controller/src/client/sessions/service.ts
+index 48d8f6a533..7f0c1a492f 100644
+--- a/packages/api/session-controller/src/client/sessions/service.ts
++++ b/packages/api/session-controller/src/client/sessions/service.ts
+@@ -13,8 +13,10 @@ import type { RemoteFailure, RemoteResult } from '@deepseek-ai/dsh-typert-protoc
+ import type { SessionEventSource } from '../contract/events.ts'
+ import type { SessionFace } from '../contract/session.ts'
+ import type {
+-  AgentContext, ISessions, SessionReference, SessionRetainInfo, SessionRetainOptions, SessionTarget,
++  AdoptedSession, AgentContext, ISessions, SessionAdoptSource, SessionReference, SessionRetainInfo,
++  SessionRetainOptions, SessionTarget,
+ } from '../contract/sessions.ts'
++import { AdoptedSessionHandle } from './adopted.ts'
+ import type { SessionReferenceSource } from '../index.ts'
+ import { createScope, scopeIdentityOf, scopeOf as scopeTagOf } from '../scope.ts'
+ import { SessionManager } from './manager.ts'
+@@ -528,6 +530,64 @@ export class ClientSessions implements ISessions {
+     return this.scopes.get(id)?.binding
+   }
+ 
++  /**
++   * Adopt a Session whose history this client owns rather than the Host's.
++   *
++   * The identity is synthetic and local: it is registered with the manager so a
++   * resident Session exists, its row is put into the catalog so the list and any
++   * navigation see it, and a scope is materialized so `binding(id)` and
++   * `retain(id)` resolve exactly as they do for a Host-born Session. The window
++   * itself is the adopter's to drive, through the returned handle.
++   * @param source - the synthetic identity, its row facts, and the owner's verbs.
++   * @returns the handle that drives the adopted window.
++   * @throws when this Controller already holds the identity.
++   */
++  adopt(source: SessionAdoptSource): AdoptedSession {
++    if (this.closed) throw new Error('Session Controller is disposed')
++    const id = source.sessionId
++    if (this.scopes.has(id) || this.list.getSnapshot().byId[id] !== undefined) {
++      throw new Error(`Session "${id}" is already active in this Controller`)
++    }
++    const title = source.summary?.title ?? source.summary?.displayTitle
++    const session = this.manager.adopt(id, {
++      mirror: source.verbs ?? {},
++      summary: {
++        // The wire row, not the projected list row: the manager merges this the
++        // same way it merges a Host summary, so an adopted Session appears in
++        // the catalog by the ordinary path. What the adopter did not describe is
++        // left to the row's own fallbacks.
++        agentAvailable: true,
++        sessionId: id,
++        updatedAt: source.summary?.updatedAt ?? Date.now(),
++        running: source.running ?? source.summary?.running ?? false,
++        blank: false,
++        ...(source.summary?.cwd === undefined ? {} : { cwd: source.summary.cwd }),
++        ...(title === undefined
++          ? {}
++          : {
++            projections: {
++              // A cached block: the adopter's title is not a Host watermark, so
++              // it fills the row without claiming a place in this connection's
++              // sequence space — and a Host frame for the same key still wins.
++              kind: 'cached' as const,
++              asOfSeq: -1,
++              values: { title },
++            },
++          }),
++      },
++    })
++    const record = this.materializeScope(id)
++    // Adopting a Session is the appearance of a row: the catalog is projected
++    // here rather than at the next Host list read, which knows nothing of it.
++    this.projectList()
++    return new AdoptedSessionHandle(id, session, () => {
++      // Adopting is one lifecycle: the reference the renderer binds and this
++      // handle's own end both funnel into the same scope retirement, so a
++      // release with a live reference leaves the reference in charge.
++      if (record.retention.referenceCount === 0) this.retireScope(id, record)
++    })
++  }
++
+   private retainScope(id: SessionId, source: SessionReferenceSource): ClientSessionReference {
+     const record = this.scopes.get(id) ?? this.materializeScope(id)
+     const previous = record.retention
+diff --git a/packages/api/session-controller/src/client/sessions/session.ts b/packages/api/session-controller/src/client/sessions/session.ts
+index 7ad5c637be..06a5ab8788 100644
+--- a/packages/api/session-controller/src/client/sessions/session.ts
++++ b/packages/api/session-controller/src/client/sessions/session.ts
+@@ -1,4 +1,4 @@
+-// Sessions remain resident after creation so their open Remote sources keep running off-screen.
++﻿// Sessions remain resident after creation so their open Remote sources keep running off-screen.
+ 
+ import type { Context } from '@deepseek-ai/cordis'
+ import type { InboxState, InboxTarget } from '@deepseek-ai/dsh-agent/types'
+@@ -15,6 +15,7 @@ import type {
+   QueueAction,
+   SessionAddress,
+   SessionAssistantStreamBaseline,
++  SessionAssistantStreamFrame,
+   SessionProjectionBaseline,
+   SessionRequestId,
+ } from '../../types.ts'
+@@ -67,6 +68,33 @@ interface PendingHistory {
+   readonly pages: (readonly SessionEventLikeEntry[])[]
+ }
+ 
++/**
++ * What an adopted Session forwards to the feature that owns its history.
++ *
++ * A Session whose history came from the Host reaches its Agent through the
++ * generated Remotes; one whose history a feature owns has no Agent to reach, so
++ * the two verbs that would be Remote calls are answered here instead.
++ */
++export interface SessionMirrorVerbs {
++  /**
++   * Admit one prompt on behalf of the owning feature.
++   * @param content - the submitted content parts.
++   * @param mode - queue appends after the current turn; steer interrupts it.
++   * @param signal - cancellation of the admission round trip.
++   * @returns the admission outcome.
++   */
++  prompt?(
++    content: PromptContentPart[],
++    mode: 'queue' | 'steer',
++    signal?: AbortSignal,
++  ): Promise<RemoteResult<{ accepted: true }>>
++  /**
++   * Stop the current turn on behalf of the owning feature.
++   * @returns the interruption outcome.
++   */
++  cancel?(): Promise<RemoteResult<{ accepted: true }>>
++}
++
+ /** Manager-owned observers of a Session object's local state edges. */
+ export interface SessionOptions {
+   /** Catalog-discovered address selecting non-activating subagent transport. */
+@@ -85,6 +113,15 @@ export interface SessionOptions {
+    * private store (bare object-layer construction).
+    */
+   projections?: ProjectionValueStore
++  /**
++   * Verbs for a Session whose history this client owns rather than the Host's.
++   *
++   * Present means the Session is *adopted*: it is born open, its window is
++   * installed by whoever adopted it instead of read from Host history, and the
++   * verbs below replace the Remote calls it would otherwise make. Absent means
++   * an ordinary Host-born Session, and every path stays exactly as it was.
++   */
++  mirror?: SessionMirrorVerbs
+ }
+ 
+ /**
+@@ -116,8 +153,7 @@ export class Session implements SessionFace {
+   private parentAvailable: boolean | undefined
+   /**
+    * Sticky send marker, private input of the composerPhase derivation: set
+-   * synchronously before prompt()'s first await, never reset — the blank →
+-   * engaging edge of the phase machine (see ComposerPhase).
++   * synchronously before prompt()'s first await, never reset 鈥?the blank 鈫?   * engaging edge of the phase machine (see ComposerPhase).
+    */
+   private promptAttempted = false
+   /** A first accepted prompt stays in the engaging phase until its turn is observable. */
+@@ -147,6 +183,14 @@ export class Session implements SessionFace {
+   }>()
+   /** Owns the addressed page/follow lifecycle while this Session is open. */
+   private events: SessionEventStream | undefined
++  /**
++   * The adopting feature's verbs, when this Session's history is not the Host's.
++   *
++   * Read in exactly three places 鈥?the two verbs that would be Remote calls and
++   * the two loaders that would page Host history 鈥?so an ordinary Session is
++   * byte-for-byte the Session it was before this field existed.
++   */
++  private readonly mirror: SessionMirrorVerbs | undefined
+ 
+   /**
+    * Per-session projection value store (push model; see the session-projection
+@@ -171,7 +215,7 @@ export class Session implements SessionFace {
+    * Agent-scoped cordis context, bound once by ClientSessions when it
+    * mints the scope (the client mirror of the host Agent's loopCtx). The
+    * Session dispatches its own scoped events through it; undefined means
+-   * unbound (bare object-layer construction) or already pruned — both skip
++   * unbound (bare object-layer construction) or already pruned 鈥?both skip
+    * dispatch-dependent behavior rather than fail.
+    */
+   private actx: Context | undefined
+@@ -187,6 +231,10 @@ export class Session implements SessionFace {
+     private readonly options: SessionOptions = {},
+   ) {
+     this.projections = options.projections ?? new ProjectionValueStore()
++    this.mirror = options.mirror
++    // An adopted Session is born open: there is no Host history to read, so the
++    // open every reference waits on must already be settled when it is minted.
++    if (this.mirror !== undefined) this.openState = 'open'
+     this.address = options.address
+     this.parentAvailable = options.parentAvailable
+     this.notifier = new Notifier(() => {
+@@ -236,7 +284,7 @@ export class Session implements SessionFace {
+       attachments: input.attachments,
+     }]
+     this.submissionSettlements.set(requestId, { placement, onRetire: input.onRetire, retiring: false })
+-    // The blank → engaging edge flips here, ahead of prompt(): the composer
++    // The blank 鈫?engaging edge flips here, ahead of prompt(): the composer
+     // docks and the echo renders on the click's own frame.
+     this.promptAttempted = true
+     this.notifier.markDirty()
+@@ -259,14 +307,24 @@ export class Session implements SessionFace {
+   ): Promise<RemoteResult<{ accepted: true }>> {
+     this.promptError = null
+     this.lastAgentError = null
+-    // Synchronous, before the first await: the blank → engaging edge must be
++    // Synchronous, before the first await: the blank 鈫?engaging edge must be
+     // visible on the session area's very first frame when a caller sends
+     // ahead of navigation (first-send flow).
+     this.promptAttempted = true
+     if (this.blankBit) this.firstPromptPendingTurn = true
+     this.notifier.markDirty()
+     let result: RemoteResult<{ accepted: true }>
+-    if (this.address === undefined) {
++    if (this.mirror !== undefined) {
++      // The owning feature carries the prompt to wherever the Session really
++      // runs; without the verb, the Session is a read-only mirror and says so
++      // rather than reporting a Host failure that never happened.
++      result = this.mirror.prompt === undefined
++        ? {
++          ok: false,
++          error: new RemoteError('gateway/bad-request', 'this Session is a mirror and accepts no prompt', {}),
++        }
++        : await this.mirror.prompt(content, mode, signal)
++    } else if (this.address === undefined) {
+       const clientTimeZone = resolvedClientTimeZone()
+       result = await this.remote.session.prompt({
+         requestId: requestId ?? randomUUID() as SessionRequestId,
+@@ -346,13 +404,21 @@ export class Session implements SessionFace {
+    */
+   async cancel(): Promise<RemoteResult<{ accepted: true }>> {
+     const address = this.address
+-    const result = address !== undefined
+-      ? await this.remote.subagents.interruptByParent(
+-        address.childSessionId,
+-        address.parentSessionId,
+-        'continuable',
+-      )
+-      : await this.remote.session.cancel({ sessionId: this.sessionId })
++    const mirror = this.mirror
++    const result = mirror !== undefined
++      ? mirror.cancel === undefined
++        ? {
++          ok: false as const,
++          error: new RemoteError('gateway/bad-request', 'this Session is a mirror and cannot be stopped here', {}),
++        }
++        : await mirror.cancel()
++      : address !== undefined
++        ? await this.remote.subagents.interruptByParent(
++          address.childSessionId,
++          address.parentSessionId,
++          'continuable',
++        )
++        : await this.remote.session.cancel({ sessionId: this.sessionId })
+     if (!result.ok) {
+       this.promptError = { op: 'stop', error: result.error }
+       this.notifier.markDirty()
+@@ -378,19 +444,25 @@ export class Session implements SessionFace {
+   }
+ 
+   /**
+-   * Execute one slash-command line against this session's agent — pure
++   * Execute one slash-command line against this session's agent 鈥?pure
+    * admission semantics (the host executor durably logs the lifecycle;
+    * outcomes render as flow nodes, never as a response echo).
+    * @param line - the full command line, leading slash included.
+    * @returns the admission result.
+    */
+   async command(line: string): Promise<RemoteResult<{ matched: boolean }>> {
++    if (this.mirror !== undefined) {
++      return {
++        ok: false,
++        error: new RemoteError('gateway/bad-request', 'this Session is a mirror and runs no commands', {}),
++      }
++    }
+     const result = await this.remote.commands.execute(this.sessionId, line, [])
+     if (!result.ok) return result
+     return { ok: true, value: { matched: result.value !== undefined } }
+   }
+ 
+-  /** First open: pull the tail page (idempotent — in-flight/already-open returns the existing promise). */
++  /** First open: pull the tail page (idempotent 鈥?in-flight/already-open returns the existing promise). */
+   open(): Promise<void> {
+     if (this.openState === 'open') return Promise.resolve()
+     if (this.openPromise !== null) return this.openPromise
+@@ -404,6 +476,10 @@ export class Session implements SessionFace {
+ 
+   /** Prepend one Turn-aligned page: at least 50 messages and two Turn starts, capped at 500 messages. */
+   async loadOlder(): Promise<void> {
++    // Older history lives with the Session's owner, and the mirror reports
++    // whether it can be reached; paging Host history here would ask a machine
++    // that has never heard of this identity.
++    if (this.mirror !== undefined) return
+     if (this.openState !== 'open' || !this.hasMore || this.loadingOlder) return
+     const events = this.events
+     if (events === undefined) return
+@@ -434,7 +510,7 @@ export class Session implements SessionFace {
+     }
+     // A plain single-page pull owns the busy flag; the jump does not queue
+     // behind it (the caller retries once it settles) and must leave no
+-    // target behind — only the loop's finally clears that field, and no
++    // target behind 鈥?only the loop's finally clears that field, and no
+     // loop starts here.
+     if (this.loadingOlder) return Promise.resolve()
+     const events = this.events
+@@ -484,6 +560,9 @@ export class Session implements SessionFace {
+    *  Invalidates any in-flight open first; projection state belongs to the independently
+    *  reconnecting control stream and remains untouched. */
+   async resync(): Promise<void> {
++    // An adopted window is rebuilt by its owner, not by re-reading a Host that
++    // has never heard of this Session.
++    if (this.mirror !== undefined) return
+     if (this.openState === 'cold') return // never opened: no window to rebuild (doOpen flips to 'loading' synchronously, so cold implies no in-flight open)
+     this.openGeneration++
+     const events = this.events
+@@ -497,6 +576,42 @@ export class Session implements SessionFace {
+     await this.open()
+   }
+ 
++  // ---- The adopted window's own verbs (used only when `mirror` is set) ----
++
++  /**
++   * Install a window this client owns.
++   *
++   * The same installation a Host opening snapshot performs, minus the page
++   * metadata a Host read carries: an adopted window has no projections baseline
++   * and no assistant baseline, because its owner re-sends the whole window
++   * rather than resuming a Host stream.
++   * @param entries - the complete contiguous window, in log order.
++   * @param hasMore - whether older history is reachable; false for a mirror.
++   */
++  adoptWindow(entries: readonly SessionEventLikeEntry[], hasMore: boolean): void {
++    this.installWindow(entries, hasMore)
++  }
++
++  /**
++   * Apply one durable entry this client owns.
++   *
++   * Goes through the assistant-stream fold rather than straight to the event
++   * source: a settlement that ends a live attempt has to replace that attempt's
++   * transient text, which is the fold's whole purpose.
++   * @param entry - the appended durable entry.
++   */
++  adoptDurable(entry: SessionLiveEventEntry): void {
++    this.publishAssistantEntry(this.assistantStream.acceptDurable(entry))
++  }
++
++  /**
++   * Fold one transient assistant frame this client owns.
++   * @param frame - the frame to apply.
++   */
++  adoptFrame(frame: SessionAssistantStreamFrame): void {
++    this.publishAssistantEntry(this.assistantStream.acceptFrame(frame))
++  }
++
+   // ---- Subscription API (useSyncExternalStore direct wiring) ----
+ 
+   /**
+diff --git a/packages/api/session-controller/tests/adopt.client.spec.ts b/packages/api/session-controller/tests/adopt.client.spec.ts
+new file mode 100644
+index 0000000000..487a577dbd
+--- /dev/null
++++ b/packages/api/session-controller/tests/adopt.client.spec.ts
+@@ -0,0 +1,152 @@
++/** Adopted Sessions: a window this client owns, wearing the ordinary Session the renderer binds. */
++
++import { Context } from '@deepseek-ai/cordis'
++import { describe, expect } from 'vitest'
++import type { SessionId } from '@deepseek-ai/dsh-api-remotes/client'
++import { SessionSeq, type SessionEvent } from '@deepseek-ai/dsh-session/types'
++import { ok, type RemoteMock } from '@deepseek-ai/dsh-remote-mock'
++import { createClientTest, webApp } from '@deepseek-ai/dsh-client-test-runtime/src/assembly/index.ts'
++import { ClientSessions } from '../src/client/sessions/service.ts'
++import { sessionWorld } from './remote/session.client.ts'
++
++const sid = (s: string): SessionId => s as SessionId
++const API_ROSTER = webApp.closure(['@deepseek-ai/dsh-api-gateway'])
++const COLD_BOOT_TIMEOUT_MS = 60_000
++
++interface Bench {
++  ctx: Context
++  mock: RemoteMock
++  svc: ClientSessions
++}
++
++const it = createClientTest({ roster: API_ROSTER }).extend<{ bench: () => Bench }>({
++  bench: async ({ mock, start }, use) => {
++    mock.load(sessionWorld)
++    const client = await start()
++    const benches: Bench[] = []
++    try {
++      await use(() => {
++        const ctx = new Context()
++        const svc = new ClientSessions(ctx, client.ctx.remote)
++        const b: Bench = { ctx, mock, svc }
++        benches.push(b)
++        return b
++      })
++    } finally {
++      await Promise.all(benches.map(b => b.ctx.fiber.dispose()))
++    }
++  },
++})
++
++/** One durable event, in the wire shape an adopter relays. */
++function event(seq: number, type = 'turn/start'): SessionEvent {
++  return { type, seq: SessionSeq(seq), time: seq, data: { turn: seq } } as SessionEvent
++}
++
++/** Adopt a Session with one row and no verbs. */
++function adopt(b: Bench, id = 'mirror-1', title = 'Mirrored Session'): ReturnType<ClientSessions['adopt']> {
++  return b.svc.adopt({
++    sessionId: sid(id),
++    summary: { displayTitle: title, title, running: false, updatedAt: 7, cwd: '/w' },
++  })
++}
++
++describe('adopted Sessions', () => {
++  it('answers the capability a feature detects before it adopts', async ({ bench }) => {
++    const b = bench()
++    // This pair is the whole feature detection: a build that offers both can be
++    // asked to render a Session it does not own, and one that does not keeps its
++    // own pane.
++    expect(typeof b.svc.adopt).toBe('function')
++    expect(typeof b.svc.retain).toBe('function')
++  })
++
++  it('is an ordinary Session to every reader: bound, catalogued, and retainable', async ({ bench }) => {
++    const b = bench()
++    const adopted = adopt(b)
++
++    // The renderer validates a reference by comparing the service's own binding
++    // for the id, so adoption has to own the binding rather than hand one out.
++    const binding = b.svc.binding(sid('mirror-1'))
++    expect(binding?.sessionId).toBe(sid('mirror-1'))
++
++    const reference = b.svc.retain(sid('mirror-1'), { source: 'sessionSync' as never })
++    expect(reference.binding).toBe(binding)
++    await reference.ready
++
++    const state = b.svc.list.getSnapshot()
++    expect(state.ids).toContain(sid('mirror-1'))
++    expect(state.byId[sid('mirror-1')]).toMatchObject({
++      title: 'Mirrored Session', displayTitle: 'Mirrored Session', cwd: '/w', blank: false,
++    })
++
++    reference.release()
++    adopted.release()
++  }, COLD_BOOT_TIMEOUT_MS)
++
++  it('shows the window its adopter installs, and the events appended after it', async ({ bench }) => {
++    const b = bench()
++    const adopted = adopt(b)
++    adopted.replace([event(1), event(2)], false)
++
++    const window = b.svc.binding(sid('mirror-1'))?.eventSource.getSnapshot()
++    expect(window?.entries.map(entry => entry.event.seq)).toEqual([1, 2])
++    expect(window?.hasMore).toBe(false)
++
++    adopted.append(event(3))
++    expect(b.svc.binding(sid('mirror-1'))?.eventSource.getSnapshot().entries.map(e => e.event.seq))
++      .toEqual([1, 2, 3])
++
++    // Running state reaches the Session snapshot the renderer reads, not the list.
++    expect(b.svc.binding(sid('mirror-1'))?.session.getSnapshot().running).toBe(false)
++    adopted.setRunning(true)
++    expect(b.svc.binding(sid('mirror-1'))?.session.getSnapshot().running).toBe(true)
++
++    adopted.release()
++  })
++
++  it('carries a prompt to the adopter rather than to a Host that has never heard of it', async ({ bench }) => {
++    const b = bench()
++    const prompts: string[] = []
++    b.svc.adopt({
++      sessionId: sid('mirror-2'),
++      summary: { displayTitle: 'Remote', running: false, updatedAt: 1 },
++      verbs: {
++        prompt: async (content) => {
++          prompts.push(content.map(part => part.type === 'text' ? part.text : '').join(''))
++          return { ok: true, value: { accepted: true } }
++        },
++      },
++    })
++    const session = b.svc.binding(sid('mirror-2'))?.session
++    const result = await session?.prompt([{ type: 'text', text: 'hello' }], 'queue')
++    expect(result?.ok).toBe(true)
++    expect(prompts).toEqual(['hello'])
++    // Nothing was asked of the Host: the Session is local-only by construction.
++    expect(b.mock.remote.session.prompt).not.toHaveBeenCalled()
++  })
++
++  it('survives a Host list pull that does not know the Session, and goes away when released', async ({ bench }) => {
++    const b = bench()
++    const adopted = adopt(b, 'mirror-3')
++    expect(b.svc.list.getSnapshot().ids).toContain(sid('mirror-3'))
++
++    // A pull answers with the Host's own Sessions only; an omitted identity is
++    // how the wire says "removed", and an adopted row must not be read that way.
++    b.mock.remote.session.list.mockResolvedValue(ok({ items: [] }))
++    await b.svc.refresh()
++    await Promise.resolve()
++    expect(b.svc.list.getSnapshot().ids).toContain(sid('mirror-3'))
++
++    adopted.release()
++    await Promise.resolve()
++    expect(b.svc.binding(sid('mirror-3'))).toBeUndefined()
++    expect(b.svc.list.getSnapshot().ids).not.toContain(sid('mirror-3'))
++  })
++
++  it('refuses to adopt an identity the Controller already holds', async ({ bench }) => {
++    const b = bench()
++    adopt(b, 'mirror-4')
++    expect(() => adopt(b, 'mirror-4')).toThrow(/already active/)
++  })
++})
+diff --git a/packages/client/ui-conversation/tests/conversation-registry.client.spec.ts b/packages/client/ui-conversation/tests/conversation-registry.client.spec.ts
+index 2f57b05f27..28ca7f26d5 100644
+--- a/packages/client/ui-conversation/tests/conversation-registry.client.spec.ts
++++ b/packages/client/ui-conversation/tests/conversation-registry.client.spec.ts
+@@ -84,6 +84,7 @@ function fakeSessions(ctx: Context): { sessions: ISessions; binding: SessionBind
+     list,
+     searchResultLimit: 50,
+     create: () => Promise.reject(new Error('unused fake Sessions operation')),
++    adopt: () => { throw new Error('unused fake Sessions operation') },
+     retain: () => reference,
+     using: async (_target, _options, operation) => await operation(reference),
+     retainInfo: () => createSnapshotStore({ referenceCount: 1, retainedBy: {} }),
+diff --git a/packages/client/ui-workspace/tests/workspaces-service.client.spec.ts b/packages/client/ui-workspace/tests/workspaces-service.client.spec.ts
+index b74a51b3ca..e1d4ce53ff 100644
+--- a/packages/client/ui-workspace/tests/workspaces-service.client.spec.ts
++++ b/packages/client/ui-workspace/tests/workspaces-service.client.spec.ts
+@@ -136,6 +136,7 @@ class FakeSessions implements ISessions {
+   readonly list: MutableSource<SessionListState>
+   readonly create: ReturnType<typeof vi.fn<ISessions['create']>>
+   readonly fork = vi.fn<ISessions['fork']>(async () => sid('forked'))
++  readonly adopt = vi.fn<ISessions['adopt']>(() => { throw new Error('unused fake Sessions operation') })
+   readonly retained: RetainedSession[] = []
+   readonly refreshProjections = vi.fn<ISessions['refreshProjections']>(() => Promise.resolve())
+   readonly retain = vi.fn<ISessions['retain']>((target) => {
+diff --git a/packages/test-support/client-runtime/src/sessions.ts b/packages/test-support/client-runtime/src/sessions.ts
+index 5ad261b5b0..f7239b0c5b 100644
+--- a/packages/test-support/client-runtime/src/sessions.ts
++++ b/packages/test-support/client-runtime/src/sessions.ts
+@@ -5,8 +5,9 @@ import {
+   createScope, MutableSessionEventSource, scopeOf, SESSION_SEARCH_RESULT_LIMIT,
+ } from '@deepseek-ai/dsh-api-session-controller/client'
+ import type {
+-  AgentContext, ISessions, ProjectionsFace, SessionBinding, SessionFace, SessionListState,
+-  SessionEventLikeEntry, SessionLiveEventEntry, SessionSearchResultItem,
++  AdoptedSession, AgentContext, ISessions, ProjectionsFace, SessionAdoptSource, SessionBinding,
++  SessionFace, SessionListState, SessionEventLikeEntry, SessionLiveEventEntry, SessionMirrorVerbs,
++  SessionSearchResultItem,
+   SessionReference, SessionReferenceSource, SessionRetainInfo, SessionRetainOptions,
+   SessionSnapshot, SessionSummary, SessionTarget, SubmissionHandle,
+ } from '@deepseek-ai/dsh-api-session-controller/client'
+@@ -15,7 +16,7 @@ import type { SessionRequestId } from '@deepseek-ai/dsh-api-session-controller/t
+ import type { SubagentAddress } from '@deepseek-ai/dsh-subagent/client'
+ import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
+ import type { ObservableSnapshot, SnapshotStore } from '@deepseek-ai/dsh-client-store'
+-import type { SessionId } from '@deepseek-ai/dsh-session/types'
++import type { SessionId, SessionEvent } from '@deepseek-ai/dsh-session/types'
+ import { sessionSnapshot } from './fixtures.ts'
+ import type {
+   SessionFixture, SessionFixtureSnapshot, Stabilizer,
+@@ -235,8 +236,136 @@ async function waitForOpen(opening: Promise<void>, signal?: AbortSignal): Promis
+   }
+ }
+ 
+-class TestSessionReference implements SessionReference {
+-  private readonly released = new AbortController()
++/**
++ * One adopted Session in the fixture.
++ *
++ * The window verbs write straight to the generation's mutable event source, the
++ * same object the production handle drives through the resident Session, so a
++ * test that adopts sees exactly what a real adopter's renderer would.
++ */
++class FixtureAdoptedSession implements AdoptedSession {
++  private released = false
++  /** Dense-transient bookkeeping: how many live chunks sit above the window. */
++  private transient = 0
++  private readonly attempts = new Map<string, { turn: number; step: number; text: string }>()
++
++  /**
++   * @param sessionId - the synthetic identity.
++   * @param generation - the materialized local generation.
++   * @param drop - retire the generation.
++   */
++  constructor(
++    readonly sessionId: SessionId,
++    private readonly generation: SessionGeneration,
++    private readonly drop: () => void,
++  ) {}
++
++  /**
++   * Replace the complete window.
++   * @param events - durable wire envelopes, in log order.
++   * @param hasMore - whether older history is reachable.
++   */
++  replace(events: readonly SessionEvent[], hasMore: boolean): void {
++    if (this.released) return
++    this.attempts.clear()
++    this.transient = 0
++    this.generation.session.eventSource.replace(events.map(entryOf), hasMore)
++  }
++
++  /**
++   * Append one durable wire envelope.
++   * @param event - the envelope.
++   */
++  append(event: SessionEvent): void {
++    if (this.released) return
++    this.generation.session.eventSource.append(entryOf(event))
++  }
++
++  /**
++   * Show the whole text of one running Assistant attempt.
++   * @param attempt - the attempt, its position, and the text so far.
++   */
++  live(attempt: {
++    attemptId: string
++    turn: number
++    step: number
++    kind: 'text' | 'reasoning'
++    text: string
++    time?: number
++  }): void {
++    if (this.released) return
++    let live = this.attempts.get(attempt.attemptId)
++    if (live === undefined || live.turn !== attempt.turn || !attempt.text.startsWith(live.text)) {
++      live = { turn: attempt.turn, step: attempt.step, text: '' }
++      this.attempts.set(attempt.attemptId, live)
++    }
++    const delta = attempt.text.slice(live.text.length)
++    if (delta === '') return
++    live.text = attempt.text
++    const window = this.generation.session.eventSource.getSnapshot()
++    const last = window.entries.reduce((seq, entry) => Math.max(seq, entry.event.seq), 0)
++    this.transient += 1
++    this.generation.session.eventSource.append({
++      type: 'transient',
++      event: {
++        type: 'assistant/live-chunk',
++        seq: last + 1 - 1 / (this.transient + 1),
++        time: attempt.time ?? Date.now(),
++        data: {
++          // The live-chunk attempt id is branded on the wire; a fixture adopter
++          // supplies the same string an attempt id carries in production.
++          attemptId: attempt.attemptId as never,
++          turn: attempt.turn,
++          step: attempt.step,
++          chunk: { type: 'text-delta', index: 0, text: delta },
++        },
++      },
++    })
++  }
++
++  /**
++   * Settle one attempt with its durable end.
++   * @param settlement - the attempt and the durable event that ended it.
++   */
++  settle(settlement: { attemptId: string; event: SessionEvent }): void {
++    if (this.released) return
++    this.attempts.delete(settlement.attemptId)
++    this.generation.session.eventSource.append(entryOf(settlement.event))
++  }
++
++  /**
++   * Close one attempt that will not settle.
++   * @param attempt - the attempt to close.
++   */
++  abandon(attempt: { attemptId: string }): void {
++    if (this.released) return
++    this.attempts.delete(attempt.attemptId)
++  }
++
++  /**
++   * Report the origin's running flag.
++   * @param running - whether the Session is mid-turn.
++   */
++  setRunning(running: boolean): void {
++    if (this.released) return
++    this.generation.snapshot.update((draft) => { draft.running = running })
++  }
++
++  /** Drop the Session this handle drives. Idempotent. */
++  release(): void {
++    if (this.released) return
++    this.released = true
++    this.attempts.clear()
++    this.drop()
++  }
++}
++
++/** Wrap one wire envelope as the entry the event window carries. */
++function entryOf(event: SessionEvent): SessionLiveEventEntry {
++  return { type: 'event', event }
++}
++
++class TestSessionReference implements SessionReference {  private readonly released = new AbortController()
+   private readonly readiness = Promise.withResolvers<SessionBinding>()
+   readonly ready = this.readiness.promise
+ 
+@@ -343,6 +472,60 @@ export class TestSessions implements ISessions {
+     }, 'test sessions: Client generations')
+   }
+ 
++  /**
++   * Adopt a Session whose history this fixture owns.
++   *
++   * The production service registers a local-only Session generation; the
++   * fixture mirrors that by adding a record and materializing its generation, so
++   * a test drives the same window verbs a real adopter does.
++   * @param source - synthetic identity, row facts, and the adopter's verbs.
++   * @returns the handle that drives the adopted window.
++   */
++  adopt(source: SessionAdoptSource): AdoptedSession {
++    const id = source.sessionId
++    if (this.records.has(id)) throw new Error(`test session "${id}" is already adopted`)
++    const title = source.summary?.title ?? source.summary?.displayTitle
++    const summary: SessionSummary = {
++      id,
++      displayTitle: title ?? id,
++      running: source.running ?? source.summary?.running ?? false,
++      blank: false,
++      updatedAt: source.summary?.updatedAt ?? 1,
++      ...(title === undefined ? {} : { title }),
++      ...(source.summary?.cwd === undefined ? {} : { cwd: source.summary.cwd }),
++      retainedBy: freezeRetainedBy({}),
++    }
++    const snapshot = createSnapshotStore<SessionFixtureSnapshot>(sessionSnapshot(id))
++    // Wrapped rather than referenced: a verb is called as a bare function, so
++    // handing the method itself over would drop its receiver. `hasOwn` rather
++    // than a property read, because reading a method off its object is exactly
++    // the unbound reference this avoids.
++    const verbs = source.verbs
++    const overrides: Record<string, unknown> = {}
++    if (Object.hasOwn(verbs ?? {}, 'prompt')) {
++      overrides['prompt'] = (...args: Parameters<NonNullable<SessionMirrorVerbs['prompt']>>) =>
++        verbs?.prompt?.(...args)
++    }
++    if (Object.hasOwn(verbs ?? {}, 'cancel')) {
++      overrides['cancel'] = () => verbs?.cancel?.()
++    }
++    const session = new FixtureSession(id, snapshot, overrides)
++    this.records.set(id, {
++      summary,
++      snapshot,
++      session,
++      overrides: {},
++      projections: new Map(),
++      initialOpen: undefined,
++    })
++    this.list.update((draft) => {
++      draft.ids.push(id)
++      draft.byId[id] = summary
++    })
++    const generation = this.materialize(id, this.require(id))
++    return new FixtureAdoptedSession(id, generation, () => { this.drop(id, generation) })
++  }
++
+   /**
+    * Add a Session fixture to the catalog without retaining a generation.
+    * @param fixture - identity + snapshot/summary overrides + behavior face.
