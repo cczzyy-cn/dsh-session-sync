@@ -29,12 +29,14 @@ const SESSION_POLL_MS = 15_000
  * How long one "load older" click waits for a page the mirror had to fetch.
  *
  * The page may not exist in the mirror yet, in which case the server asks the
- * machine that owns the Session and the events arrive over the ordinary stream.
- * Six tries a second apart covers a cross-border read plus a POST without
- * leaving the button spinning on a machine that is simply offline.
+ * machine that owns the Session and the events arrive over the ordinary stream:
+ * a read of its log, a POST back, and a trip through a proxy, which measured at
+ * ten to twenty seconds on a cross-border link. Ten tries three seconds apart
+ * covers that without leaving the button spinning on a machine that is simply
+ * offline.
  */
-const OLDER_ATTEMPTS = 6
-const OLDER_WAIT_MS = 1_200
+const OLDER_ATTEMPTS = 10
+const OLDER_WAIT_MS = 3_000
 
 /**
  * How many command states to remember for a command this browser has not been
