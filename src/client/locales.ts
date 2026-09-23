@@ -66,6 +66,8 @@ export const zh = {
   machineSessions: '个会话',
   mirrorGaps: '镜像缺失事件',
   mirrorGapBadge: '缺 {n} 条',
+  loadOlder: '加载更早的消息',
+  loadingOlder: '正在加载…',
   openSession: '打开',
 
   sessionsTitle: '会话',
@@ -343,6 +345,8 @@ export const en: Record<SessionSyncKey, string> = {
   machineSessions: 'Sessions',
   mirrorGaps: 'missing mirrored events',
   mirrorGapBadge: '{n} missing',
+  loadOlder: 'Load older messages',
+  loadingOlder: 'Loading…',
   openSession: 'Open',
 
   sessionsTitle: 'Sessions',

@@ -444,6 +444,39 @@
   white-space: nowrap;
 }
 
+/*
+ * The top of a transcript page.
+ *
+ * The mirror serves its newest window, so this is where the older end is asked
+ * for — quiet on purpose, because it marks the boundary of what was fetched
+ * rather than being part of the conversation.
+ */
+.olderRow {
+  display: flex;
+  justify-content: center;
+  padding: 2px 0 12px;
+}
+
+.olderButton {
+  padding: 4px 12px;
+  border: 0.5px solid var(--dsw-alias-border-l2);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font: var(--dsw-font-xxs-12);
+  cursor: pointer;
+}
+
+.olderButton:hover:not(:disabled) {
+  border-color: var(--dsw-alias-border-l4);
+  color: var(--dsw-alias-label-primary);
+}
+
+.olderButton:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
 /* An offline machine stays listed and stays readable, one step quieter. */
 .treeRowDim .rowTitle,
 .treeRowDim .rowTime {

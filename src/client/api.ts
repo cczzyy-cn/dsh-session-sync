@@ -68,6 +68,8 @@ export interface SyncClientSnapshot {
   open?: OpenSession
   transcript?: MirrorTranscript
   loadingTranscript: boolean
+  /** True while an older page of the open Session is being fetched. */
+  loadingOlder: boolean
   /** The last takeover prompt's progress, cleared when another Session is opened. */
   delivery?: CommandDelivery
   /**
@@ -199,6 +201,7 @@ export class SyncClient {
       state: idleState(),
       sessions: [],
       loadingTranscript: false,
+      loadingOlder: false,
       live: noLive(),
       stream: 'connecting',
       mirrorResets: 0,
@@ -342,6 +345,7 @@ export class SyncClient {
       open,
       transcript: undefined,
       loadingTranscript: true,
+      loadingOlder: false,
       // Live text belongs to the Session that streamed it. Whatever the last
       // one left behind must not read as the new one's current step.
       live: noLive(),
@@ -360,10 +364,52 @@ export class SyncClient {
     }
   }
 
+  /**
+   * Fetch the page of the open Session that sits before the one held.
+   *
+   * A transcript arrives as its newest page, so the older end is one request
+   * away rather than part of every switch. The page is placed before what is
+   * held, never merged into it: the two ranges are adjacent by construction, and
+   * the held page already carries everything above them.
+   * @returns nothing; the store is the result.
+   */
+  async loadOlder(): Promise<void> {
+    const snapshot = this.store.getSnapshot()
+    const open = snapshot.open
+    const transcript = snapshot.transcript
+    if (open === undefined || transcript === undefined) return
+    if (!transcript.hasMore || snapshot.loadingOlder) return
+    const first = transcript.events[0]?.seq
+    if (first === undefined) return
+    this.update({ loadingOlder: true })
+    try {
+      const { transcript: older } = await getJson<{ transcript: MirrorTranscript }>(
+        `${ROUTE_PREFIX}/transcript?machine=${encodeURIComponent(open.machineName)}`
+        + `&session=${encodeURIComponent(open.sessionId)}&before=${String(first)}`,
+      )
+      const current = this.store.getSnapshot()
+      // Another Session may have been opened while this one was in flight, and
+      // that Session's own transcript must not receive this page.
+      if (current.open?.sessionId !== open.sessionId) return
+      const held = current.transcript
+      if (held === undefined) return
+      this.update({
+        transcript: {
+          ...held,
+          events: [...older.events, ...held.events],
+          hasMore: older.hasMore,
+        },
+        loadingOlder: false,
+      })
+    } catch (error: unknown) {
+      this.update({ loadingOlder: false, error: describe(error) })
+    }
+  }
+
   /** Leave the open remote Session. */
   closeSession(): void {
     this.notify(observer => { observer.closed() })
-    this.update({ open: undefined, transcript: undefined, delivery: undefined, live: noLive() })
+    this.update({ open: undefined, transcript: undefined, delivery: undefined, live: noLive(), loadingOlder: false })
   }
 
   /**

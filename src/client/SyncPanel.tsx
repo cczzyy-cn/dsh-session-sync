@@ -123,6 +123,8 @@ export interface SyncPanelProps {
   useSync: <Value>(selector: (snapshot: SyncClientSnapshot) => Value) => Value
   /** Open one mirrored Session. */
   openSession: (machineName: string, sessionId: string) => Promise<void>
+  /** Fetch the page of the open Session that sits before the one held. */
+  loadOlder: () => Promise<void>
   /** Leave the open Session. */
   closeSession: () => void
   /** Send one takeover prompt to the open Session's machine. */
@@ -344,6 +346,7 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
               online={online}
               closeSession={props.closeSession}
               sendPrompt={props.sendPrompt}
+              loadOlder={props.loadOlder}
               official={props.official}
               renderSlot={props.renderSlot}
               SessionProvider={props.SessionProvider}
@@ -415,6 +418,8 @@ function Conversation(props: {
   online: boolean
   closeSession: () => void
   sendPrompt: (text: string) => Promise<boolean>
+  /** Fetch the page of this Session that sits before the one held. */
+  loadOlder: () => Promise<void>
   official: OfficialBridgeFace
   renderSlot: RenderSlotLike
   SessionProvider: SessionProviderComponent
@@ -604,6 +609,21 @@ function Conversation(props: {
             <div className={css.viewScroll} ref={body}>
               <div className={css.viewColumn} ref={column}>
                 {state.error !== undefined && <div className={css.error}>{state.error}</div>}
+                {/* The mirror serves the newest window, so the older end is a
+                    control rather than a gap: without it a long Session would
+                    simply look like it began mid-conversation. */}
+                {state.transcript?.hasMore === true && (
+                  <div className={css.olderRow}>
+                    <button
+                      type="button"
+                      className={css.olderButton}
+                      disabled={state.loadingOlder}
+                      onClick={() => { void props.loadOlder() }}
+                    >
+                      {state.loadingOlder ? t('loadingOlder') : t('loadOlder')}
+                    </button>
+                  </div>
+                )}
                 {state.transcript === undefined && !state.loadingTranscript
                   ? <p className={css.empty}>{t('transcriptGone')}</p>
                   : state.loadingTranscript

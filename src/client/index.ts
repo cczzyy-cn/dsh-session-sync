@@ -114,6 +114,7 @@ export function apply(ctx: ClientContext): void {
       hooks: { sync: client.snapshot },
       openSession: (machineName: string, sessionId: string) => client.openSession(machineName, sessionId),
       closeSession: () => { client.closeSession() },
+      loadOlder: () => client.loadOlder(),
       sendPrompt: (text: string) => client.sendPrompt(text),
       official,
     }),

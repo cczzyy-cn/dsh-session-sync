@@ -162,13 +162,21 @@ export interface MirrorEvent {
   surfaceOp?: MirrorSurfaceOp
 }
 
-/** The opening window plus everything appended so far, for one mirrored Session. */
+/**
+ * One page of a mirrored Session, newest end first.
+ *
+ * A transcript is read from its newest end, and a full mirror is megabytes of
+ * JSON — so the route serves a tail window and says whether asking for more is
+ * worthwhile, which is the same bargain the origin's own follow snapshot makes.
+ */
 export interface MirrorTranscript {
   machineName: string
   sessionId: string
   events: MirrorEvent[]
   /** True while the origin reports the Session as mid-turn. */
   running: boolean
+  /** Whether the mirror holds events older than this page's first one. */
+  hasMore: boolean
 }
 
 /** Server → origin: one instruction to act on a published Session. */

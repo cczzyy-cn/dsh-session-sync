@@ -28,6 +28,16 @@ import {
 /** Upper bound on the events retained per mirrored Session. */
 const EVENT_LIMIT = 4_000
 
+/**
+ * Events one transcript page carries by default.
+ *
+ * A conversation reads from its newest end, so a page comfortably longer than a
+ * screenful of turns is all a switch needs; anything older is one request away.
+ * Long enough that a normal Session arrives whole, short enough that the worst
+ * case stops being the mirror's whole 4,000-event window.
+ */
+const TRANSCRIPT_WINDOW = 400
+
 /** Upper bound on commands held for a machine whose origin stream is down. */
 const PENDING_LIMIT = 32
 
@@ -455,19 +465,40 @@ export class SyncHub {
   }
 
   /**
-   * Read one mirrored Session's retained transcript.
+   * Read one page of a mirrored Session's retained transcript.
+   *
+   * The newest end, because that is the end a reader is at: the whole window is
+   * megabytes for a long Session, and a console that must transfer all of it to
+   * show the last exchange is a console that feels slow for no reason. `before`
+   * walks older, one page at a time, and `hasMore` says whether it is worth it.
    * @param machineName - owning machine.
    * @param sessionId - published Session.
-   * @returns the transcript, or undefined when the mirror holds no such Session.
+   * @param page - page size, and the exclusive upper sequence to read below.
+   * @returns the page, or undefined when the mirror holds no such Session.
    */
-  transcript(machineName: string, sessionId: string): MirrorTranscript | undefined {
+  transcript(
+    machineName: string,
+    sessionId: string,
+    page: { limit: number; before?: number } = { limit: TRANSCRIPT_WINDOW },
+  ): MirrorTranscript | undefined {
     const session = this.records.get(machineName)?.sessions.get(sessionId)
     if (session === undefined) return undefined
+    // Held in sequence order, so the window's start is a slice index rather than
+    // a search — and a `before` that lands inside the window is where paging
+    // overlaps and cannot silently skip a row.
+    const before = page.before
+    const end = before === undefined
+      ? session.events.length
+      : session.events.findIndex(event => event.seq >= before)
+    const stop = end < 0 ? session.events.length : end
+    const size = Math.min(Math.max(1, page.limit), EVENT_LIMIT)
+    const start = Math.max(0, stop - size)
     return {
       machineName,
       sessionId,
-      events: [...session.events],
+      events: session.events.slice(start, stop),
       running: session.running,
+      hasMore: start > 0,
     }
   }
 

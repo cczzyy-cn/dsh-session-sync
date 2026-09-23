@@ -129,7 +129,19 @@ async function dispatch(
   if (method === 'GET' && route === '/transcript') {
     const machineName = url.searchParams.get('machine') ?? ''
     const sessionId = url.searchParams.get('session') ?? ''
-    const transcript = service.transcript(machineName, sessionId)
+    // Absent means the mirror's own default window; a caller that has scrolled
+    // asks for a specific size, and one that is paging older names the sequence
+    // it already holds. Both are read as whole numbers or not at all, because a
+    // malformed page is the client's bug and a silent fallback would hide it.
+    const limit = wholeNumber(url.searchParams.get('limit'))
+    const before = wholeNumber(url.searchParams.get('before'))
+    const transcript = service.transcript(
+      machineName,
+      sessionId,
+      limit === undefined && before === undefined
+        ? undefined
+        : { limit: limit ?? Number.MAX_SAFE_INTEGER, ...(before === undefined ? {} : { before }) },
+    )
     if (transcript === undefined) {
       sendJson(response, 404, { error: 'no such mirrored Session' })
       return
@@ -272,4 +284,15 @@ function sendJson(response: NodeResponseLike, status: number, body: unknown): vo
 /** Human-readable one-line failure text. */
 function describe(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
+}
+
+/**
+ * Read one query parameter as a non-negative whole number.
+ * @param raw - the parameter, or null when it was not sent.
+ * @returns the number, or undefined when it is absent or not a whole count.
+ */
+function wholeNumber(raw: string | null): number | undefined {
+  if (raw === null || raw.trim() === '') return undefined
+  const value = Number(raw)
+  return Number.isSafeInteger(value) && value >= 0 ? value : undefined
 }

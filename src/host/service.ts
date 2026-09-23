@@ -309,13 +309,18 @@ export class SessionSyncService {
   }
 
   /**
-   * Read one mirrored Session's transcript.
+   * Read one page of a mirrored Session's transcript.
    * @param machineName - owning machine.
    * @param sessionId - published Session.
-   * @returns the transcript, or undefined when nothing is mirrored under that address.
+   * @param page - page size and the exclusive upper sequence to read below.
+   * @returns the page, or undefined when nothing is mirrored under that address.
    */
-  transcript(machineName: string, sessionId: string): MirrorTranscript | undefined {
-    return this.hub.transcript(machineName, sessionId)
+  transcript(
+    machineName: string,
+    sessionId: string,
+    page?: { limit: number; before?: number },
+  ): MirrorTranscript | undefined {
+    return this.hub.transcript(machineName, sessionId, page)
   }
 
   /**
