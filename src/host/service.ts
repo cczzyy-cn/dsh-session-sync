@@ -421,12 +421,32 @@ export class SessionSyncService {
     this.broadcast({ type: 'state', state: this.view() })
   }
 
-  /** Re-open every tracked follow so each one replays its opening snapshot. */
+  /**
+   * Re-open every tracked follow so each one replays its opening snapshot.
+   *
+   * The buffer is emptied into the link *before* the follow is torn down. A
+   * follow that is aborted takes its `pending` with it, and the link flaps on
+   * every failed post — so a burst sitting in that buffer when the stream
+   * dropped was discarded, and because it sat above everything the mirror held,
+   * the loss left no hole to notice: just a Session that was quietly a little
+   * behind, forever.
+   */
   private restartFollows(): void {
     const sessionIds = [...this.follows.keys()]
+    for (const [sessionId, handle] of this.follows) this.drain(handle, sessionId)
     for (const handle of this.follows.values()) handle.abort.abort()
     this.follows.clear()
     for (const sessionId of sessionIds) this.startFollow(sessionId)
+  }
+
+  /**
+   * Hand one follow's buffered events to the link, so aborting it loses nothing.
+   * @param handle - the follow about to be replaced.
+   * @param sessionId - the Session it tracks.
+   */
+  private drain(handle: FollowHandle, sessionId: string): void {
+    if (handle.pending.length === 0) return
+    this.link?.publishFrames(sessionId, handle.pending.splice(0, handle.pending.length))
   }
 
   /**
@@ -449,6 +469,9 @@ export class SessionSyncService {
     const previous = this.lastResync.get(sessionId)
     if (previous !== undefined && now - previous < RESYNC_FLOOR_MS) return
     this.lastResync.set(sessionId, now)
+    // Same reason as a link-up restart: the buffer goes out before the follow
+    // that holds it is replaced.
+    this.drain(handle, sessionId)
     handle.abort.abort()
     this.follows.delete(sessionId)
     this.startFollow(sessionId)
