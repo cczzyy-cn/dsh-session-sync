@@ -17,6 +17,8 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import {
   KEEPALIVE_MS,
   type DownstreamCommand,
+  type DownstreamFrame,
+  type DownstreamResync,
   type HandshakeResponse,
   type MirrorEvent,
   type PublishIndexPayload,
@@ -174,6 +176,11 @@ export async function startSyncServer(options: SyncServerOptions): Promise<SyncS
           if (response.writableEnded) return
           response.write(`data: ${JSON.stringify(command)}\n\n`)
         },
+        resync: (sessionId: string) => {
+          if (response.writableEnded) return
+          const frame: DownstreamResync = { kind: 'resync', sessionId }
+          response.write(`data: ${JSON.stringify(frame)}\n\n`)
+        },
       })
       const keepalive = setInterval(() => {
         if (response.writableEnded) return
@@ -268,6 +275,13 @@ function sendJson(response: ServerResponse, status: number, body: unknown): void
 export interface OriginLinkHandlers {
   onCommand(command: DownstreamCommand): void
   onStatus(status: { linked: boolean; error?: string }): void
+  /**
+   * Re-open one Session's follow, because the mirror says it is missing events.
+   *
+   * The mirror can see that a run is absent; only the machine that holds the
+   * Session can hand it back.
+   */
+  onResync(sessionId: string): void
 }
 
 /** Origin-role link options. */
@@ -535,16 +549,23 @@ export class OriginLink {
     throw new Error('stream closed')
   }
 
+  /**
+   * Dispatch one downstream frame.
+   *
+   * Discrimination is by `kind`, and an unrecognised one is ignored: a server
+   * that learns a new frame must not be able to break an origin that does not,
+   * which is also why the resync carries no ack to wait for.
+   */
   private consume(block: string): void {
     for (const line of block.split('\n')) {
       if (!line.startsWith('data:')) continue
       const text = line.slice('data:'.length).trim()
       if (text === '') continue
       try {
-        const command = JSON.parse(text) as DownstreamCommand
-        if (command.kind === 'prompt' && typeof command.sessionId === 'string') {
-          this.options.onCommand(command)
-        }
+        const frame = JSON.parse(text) as DownstreamFrame
+        if (typeof frame.sessionId !== 'string') continue
+        if (frame.kind === 'prompt') this.options.onCommand(frame)
+        else if (frame.kind === 'resync') this.options.onResync(frame.sessionId)
       } catch {
         // A malformed frame is dropped; the server re-sends nothing it cannot
         // confirm, and one bad line must not kill the stream.

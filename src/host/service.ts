@@ -56,6 +56,15 @@ const BUFFER_LIMIT = 4_000
 /** Bound on steps whose streamed text is still tracked, per kind. */
 const LIVE_LIMIT = 64
 
+/**
+ * Shortest gap between two replays of the same Session.
+ *
+ * The server asks on a 30 s timer while a hole survives, and a follow that is
+ * still delivering its snapshot must not be torn down and restarted underneath
+ * itself — that would turn a repair into the reason it never finishes.
+ */
+const RESYNC_FLOOR_MS = 5_000
+
 /** The two kinds of text one step streams. */
 const STREAM_KINDS = ['reasoning', 'text'] as const
 
@@ -136,6 +145,8 @@ export class SessionSyncService {
   private readonly liveDirty = new Set<string>()
   /** Steps whose settlement already arrived, so a late delta cannot revive them. */
   private readonly settled = new Set<string>()
+  /** When each Session was last replayed at the server's request. */
+  private readonly lastResync = new Map<string, number>()
 
   /** The last publish attempt, as the settings page reports it. */
   private lastPublish: { at: number; ok: boolean; error?: string } | undefined
@@ -360,6 +371,7 @@ export class SessionSyncService {
           logger: this.ctx.logger,
           onCommand: (command) => { void this.runCommand(command) },
           onStatus: (status) => { this.onLinkStatus(status) },
+          onResync: (sessionId) => { this.resyncSession(sessionId) },
           onPost: (path, ok, error) => { this.notePublish(path, ok, error) },
         })
         this.link.start()
@@ -404,6 +416,32 @@ export class SessionSyncService {
     for (const handle of this.follows.values()) handle.abort.abort()
     this.follows.clear()
     for (const sessionId of sessionIds) this.startFollow(sessionId)
+  }
+
+  /**
+   * Re-open one Session's follow because its mirror reported a hole.
+   *
+   * The opening snapshot is the whole retained history, so replaying it hands
+   * back whatever a lost batch never delivered — and the mirror now decides
+   * what is new by membership rather than by a high-water mark, which is what
+   * makes that replay able to fill a hole instead of being rejected as old.
+   *
+   * A Session this machine does not publish is ignored: the request outlived a
+   * switch that was turned off here. The rest is rate-limited, because a broken
+   * mirror keeps asking and a follow is not free to open.
+   * @param sessionId - the Session the server says is incomplete.
+   */
+  private resyncSession(sessionId: string): void {
+    const handle = this.follows.get(sessionId)
+    if (handle === undefined) return
+    const now = Date.now()
+    const previous = this.lastResync.get(sessionId)
+    if (previous !== undefined && now - previous < RESYNC_FLOOR_MS) return
+    this.lastResync.set(sessionId, now)
+    handle.abort.abort()
+    this.follows.delete(sessionId)
+    this.startFollow(sessionId)
+    this.ctx.logger.info(`dsh-session-sync: replaying "${sessionId}" at the server's request`)
   }
 
   /** Re-list local Sessions, reconcile the follow set, and publish the index. */

@@ -182,6 +182,27 @@ export interface DownstreamCommand {
   expiresAt: number
 }
 
+/**
+ * Server → origin: re-open one Session's follow so its snapshot replays.
+ *
+ * The mirror repairs itself no other way. A batch can be lost before it is
+ * written — a failed post, a follow that ended mid-turn — and the only copy of
+ * those events is the origin's own store, so the machine that owns them has to
+ * be asked. The replay is idempotent because the mirror decides what is new by
+ * membership, which is exactly why this can be repeated safely.
+ *
+ * It carries no identity and expects no ack: unlike a prompt it changes nothing
+ * on the origin, and a request that goes missing costs one more round of the
+ * mirror noticing.
+ */
+export interface DownstreamResync {
+  kind: 'resync'
+  sessionId: string
+}
+
+/** Anything the server writes down one machine's stream. */
+export type DownstreamFrame = DownstreamCommand | DownstreamResync
+
 /** Where one takeover command stands, as the server knows it. */
 export type CommandState =
   /** Accepted by the server, not yet handed to the owning machine. */

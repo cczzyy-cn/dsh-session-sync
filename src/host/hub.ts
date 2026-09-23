@@ -34,6 +34,17 @@ const PENDING_LIMIT = 32
 /** Upper bound on retained command states per machine, newest kept. */
 const STATUS_LIMIT = 64
 
+/**
+ * How long the mirror waits before asking an origin to replay again.
+ *
+ * One ask per episode is the goal, but a snapshot can legitimately fail to close
+ * a hole — the Session may have been un-published here, or the follow may have
+ * ended inside the replay — and a repair that is never retried would leave the
+ * mirror broken for the rest of the process's life. A bounded retry costs one
+ * frame per half minute and always converges once the hole closes.
+ */
+const RESYNC_RETRY_MS = 30_000
+
 /** States a command never leaves; the expiry sweep and acks ignore these. */
 const TERMINAL_STATES: readonly CommandState[] = ['accepted', 'failed', 'expired']
 
@@ -66,6 +77,14 @@ export interface MirrorLogger {
 /** Where one origin's downstream commands are delivered. */
 export interface OriginSink {
   send(command: DownstreamCommand): void
+  /**
+   * Ask the origin to re-open one Session's follow.
+   *
+   * Separate from {@link send} on purpose: a command waits in the pending queue
+   * for a machine that is away, while a resync is worthless by the time one
+   * comes back — the reconnect replays every snapshot on its own.
+   */
+  resync(sessionId: string): void
 }
 
 /** One browser watching the mirror. */
@@ -88,8 +107,8 @@ interface MachineRecord {
 /** The server-role mirror and its subscribers. */
 export class SyncHub {
   private readonly records = new Map<string, MachineRecord>()
-  /** Sessions whose mirror has already been reported as incomplete. */
-  private readonly gapReported = new Set<string>()
+  /** Sessions whose mirror is incomplete, and when the origin was last asked. */
+  private readonly gapAsked = new Map<string, number>()
 
   /**
    * @param notify - receives every frame the mirror produces. The owner decides
@@ -204,7 +223,7 @@ export class SyncHub {
       fresh.push(event)
     }
     if (fresh.length === 0) {
-      this.reportGap(machineName, session)
+      this.reportGap(record, session)
       return
     }
     fresh.sort((left, right) => left.seq - right.seq)
@@ -225,37 +244,47 @@ export class SyncHub {
       sessionId: payload.sessionId,
       events: fresh,
     })
-    this.reportGap(machineName, session)
+    this.reportGap(record, session)
   }
 
   /**
-   * Say so when the mirror is not holding a contiguous run.
+   * Name an incomplete mirror, and ask its origin to replay.
    *
    * A hole used to be invisible from both ends: the origin believed it had
    * published, the mirror believed it had received, and the only symptom was a
    * conversation that stopped mid-sentence — which read as a display problem
    * for as long as it took to decode the origin's own session file and compare.
-   * The extent is O(1) to compute from the record, so it is checked per batch,
-   * and one line is emitted per episode rather than per batch.
-   * @param machineName - owning machine, for the message.
+   * Now the extent is O(1) from the record, the origin is asked to re-open its
+   * follow, and a replayed snapshot closes the hole because membership decides
+   * what is new.
+   *
+   * The ask is repeated on a slow timer for as long as the hole survives, and
+   * said out loud once per episode. A machine that is away needs neither: its
+   * reconnect replays every follow by itself.
+   * @param record - the owning machine, which is where the ask goes.
    * @param session - the record just updated.
    */
-  private reportGap(machineName: string, session: SessionRecord): void {
+  private reportGap(record: MachineRecord, session: SessionRecord): void {
     const lowest = session.events[0]?.seq
     if (lowest === undefined) return
     const missing = session.maxSeq - lowest + 1 - session.seqs.size
-    const key = `${machineName}|${session.sessionId}`
+    const key = `${record.machineName}|${session.sessionId}`
+    const now = Date.now()
     if (missing <= 0) {
-      this.gapReported.delete(key)
+      this.gapAsked.delete(key)
       return
     }
-    if (this.gapReported.has(key)) return
-    this.gapReported.add(key)
-    this.logger?.warn(
-      `dsh-session-sync: mirror for "${session.sessionId}" on "${machineName}" is missing `
-      + `${String(missing)} event(s) between seq ${String(lowest)} and ${String(session.maxSeq)}; `
-      + 'only re-publishing the Session clears it',
-    )
+    const asked = this.gapAsked.get(key)
+    if (asked !== undefined && now - asked < RESYNC_RETRY_MS) return
+    this.gapAsked.set(key, now)
+    if (asked === undefined) {
+      this.logger?.warn(
+        `dsh-session-sync: mirror for "${session.sessionId}" on "${record.machineName}" is missing `
+        + `${String(missing)} event(s) between seq ${String(lowest)} and ${String(session.maxSeq)}; `
+        + 'asked that machine to replay the Session',
+      )
+    }
+    record.origin?.resync(session.sessionId)
   }
 
   /**
