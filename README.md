@@ -344,6 +344,7 @@ All of them sit under `/dsh-session-sync` and behind the GUI's own gate.
 ## Layout
 
 ```
+PROGRESS.md              the running log: current state, measurements, open problems
 src/shared/protocol.ts   wire and persisted shapes, shared by both halves
 src/host/dsh.ts          structural declarations of the Host capabilities used
 src/host/config.ts       atomic JSON configuration document
