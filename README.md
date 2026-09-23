@@ -74,6 +74,13 @@ registered `main` keys.
 - **There is no machine pane.** The machine is a level of the tree, so choosing
   one and opening a Session are the same gesture; a separate column would only
   restate what the row already says.
+- **A Session that is short of events says so, where the reader already is.** The
+  count is per Session — on its tree row before the relative time, and beside the
+  title in the panel header — because the total in settings says how much is
+  missing without saying which Session to re-publish. The top of an opened
+  transcript carries a quiet `加载更早的消息` row for the same reason: it appears
+  only when the mirror is not the whole conversation, and it reads the page
+  behind its window from the machine that owns the Session.
 - **Nothing user-visible is invented.** Both panes reuse `ui-primitives`
   (`DisclosureRow`, `MarkdownText`, `Input`, `StateDot`, `Button`) and the shipped
   tokens, so the console follows a theme change, a font-size preference, and a
@@ -124,22 +131,47 @@ normal way to edit it.
    ctx.sessionController.list()   ──POST /publish──▶  SyncHub index
    follow(sessionId) ──durable events──POST /frames──▶  SyncHub events
    follow(sessionId) ──whole step text──POST /stream-delta──▶  transient frame
+   page(beforeSeq)   ──older history──POST /frames──▶  SyncHub events
    prompt(sessionId, text)  ◀──SSE /stream──  DownstreamCommand
+   re-open follow / read a page  ◀──SSE /stream──  {kind:'resync'} / {kind:'older'}
         │                                            │
         └────────POST /ack (ok | reason)─────────────▶│ command status
                                                      │
    browser: /dsh-session-sync/events ◀──SSE───────────┘
+            /dsh-session-sync/transcript ──page──▶  the mirror's window
 ```
 
 - The origin keeps one `ctx.sessionController.follow` stream open per published
   Session and forwards its durable events — each with the surface placement that
   says whether it appends or replaces — plus the streamed step text its
   assistant frames carry while a step is still running.
-- The server keeps an in-memory mirror. Sequence numbers make a replayed window
-  idempotent, so a reconnect re-opens every follow and re-sends its opening
-  snapshot without duplicating or losing anything.
+- **A batch is not published until the server has it.** A follow hands its events
+  to the link, which holds them in an outbox and retries until a post is
+  accepted; membership does the rest, so a replay or a retry that arrives twice
+  changes nothing. A post that hangs is failed after 20 s, because a connection
+  black-holed by a network blip used to leave the fetch pending forever — the
+  outbox stopped draining, nothing reconnected, and the link looked healthy while
+  publishing nothing.
+- **The mirror counts what it is missing.** Every Session carries
+  `missingEvents`, the events below the origin's own highest sequence that the
+  mirror does not hold — holes in the middle plus however far it is behind. The
+  origin states its extent in the index (`lastSeq`), so a mirror holding nothing
+  is not mistaken for a Session with nothing to hold.
+- **What is missing is asked for.** The server asks the origin to re-open one
+  Session's follow (`{kind:'resync'}`, retried every 30 s while the gap lasts);
+  the opening snapshot is replayed into the mirror, and because membership rather
+  than a high-water mark decides what is new, that replay fills a hole instead of
+  being discarded as history.
+- **History below the window is asked for too.** A follow opens on a tail window,
+  so a long Session's mirror begins mid-conversation. The origin says whether its
+  own log continues below what it published (`hasOlder`, from the opening
+  snapshot's `hasMore`), the console serves a 400-event page of what the mirror
+  holds, and a reader who wants older asks for the page behind it
+  (`{kind:'older'}`, 50 messages). The origin reads that page out of its own log
+  — against the same cut the window was taken at — and it comes back as ordinary
+  durable events.
 - Un-publishing a Session removes it from the index, which drops the mirror and
-  its events — that is the only reset, so a re-publish starts clean.
+  its events.
 - Takeover prompts go down the origin's own SSE stream; the origin calls
   `ctx.sessionController.prompt`, which resumes a cold Session before admitting
   the message.
@@ -167,8 +199,21 @@ became of that command down the browser's own event stream:
   fit is retired with that reason rather than growing the server's memory.
 - The browser narrates only the commands it sent, matched by `commandId`.
 
-### Two listeners, two purposes
+### The browser surface's routes
 
+All of them sit under `/dsh-session-sync` and behind the GUI's own gate.
+
+| Route | Method | What it is |
+| --- | --- | --- |
+| `/config` | GET | The plugin's configuration plus the current state |
+| `/config` | POST | Patch the configuration; answers with the fresh config, state, and local Session list |
+| `/state` | GET | The state every surface reads: role, link, mirror, and the per-Session counts |
+| `/sessions` | GET | This machine's own Session list, for the publish picker |
+| `/transcript` | GET | A page of one mirrored Session (`machine`, `session`, optional `limit`, `before`); asks the owning machine for history below its window when a reader reaches the mirror's edge |
+| `/command` | POST | One takeover prompt; answers with the `commandId` its status is narrated under |
+| `/events` | GET | The SSE stream: state frames, per-Session event frames, and transient live text |
+
+### Two listeners, two purposes
 - **The sync transport** is a `node:http` listener this plugin owns
   (`0.0.0.0:<listenPort>` on the server), guarded by a password handshake and a
   bearer token. It is deliberately *not* a route on the GUI's web server, so
@@ -234,8 +279,19 @@ became of that command down the browser's own event stream:
   aborted request leaves behind — is what retires it. None of it is stored, so
   the mirror and a console opened mid-step fill from the next relay rather than
   from a replay.
-- **A mirror shows the last 4,000 events** of a Session; older history is
-  trimmed. Remote history paging is not implemented.
+- **A mirror shows the last 4,000 events** of a Session; older history is trimmed
+  from the mirror itself. The console reads what the mirror holds a page at a
+  time — 400 events, newest first — and a page the mirror is missing is read from
+  the machine that owns the Session when a reader asks for it. That read is not
+  instant: it is a read of that machine's log, a POST back, and a trip through
+  whatever proxy sits in front, which measured at ten to twenty seconds on a
+  cross-border link, so the control waits rather than answering at once.
+- **A gap in the middle of a mirror is not yet repaired by the paging path.** The
+  repair ask replays a follow's opening snapshot, which is a tail window: it
+  fills a gap near the top and cannot reach one far below it. Such a Session is
+  reported honestly (the console shows `缺 N 条` on its row and in the header)
+  but stays short until the origin's window grows past the hole or the Session is
+  re-published.
 - **One origin per machine name.** Two origins configured with the same
   `本机名称` will overwrite each other's mirror.
 - **A takeover prompt expires after two minutes**, and at most 32 may wait for
@@ -295,14 +351,20 @@ src/host/hub.ts          server-side mirror, fan-out, and the command lifecycle
 src/host/transport.ts    the sync listener and the origin link
 src/host/service.ts      the engine: config, follow set, publish, takeover
 src/index.ts             Host plugin entry and the browser routes
+src/client/index.ts      browser plugin entry: the slots and their injections
 src/client/api.ts        transport plus the one snapshot every surface reads
 src/client/official-session.tsx  the adopted Session: the shipped renderer's pane
 src/client/transcript.ts mirrored events projected onto readable rows
 src/client/tool-cards.ts  tool-row models: card choice, labels, caps
+src/client/tool-presentation.ts  a wire tool name's glyph and localized title
+src/client/session-chrome.ts  runtime chrome read off the log, and the ledger rows
+src/client/TrajectoryView.tsx  the 轨迹 tab: toolbar, timeline strip, ledger
 src/client/message-stats.ts  clock, run time and token figures for a row
 src/client/turn-metrics.ts   per-turn TTFT, throughput and route, folded
 src/client/stat-panels.tsx   the turn-usage and turn-time pills and dialogs
+src/client/locales.ts        every string both surfaces render, zh and en
 src/client/*.module.css      the shipped chat stylesheets, copied verbatim
+src/client/css-modules.d.ts  the CSS-module import shape for this build
 src/client/ConfigSection.tsx  the settings page
 src/client/PanelIcon.tsx      the sidebar panel row's glyph
 src/client/SyncPanel.tsx      the console: the tree, the conversation, takeover
