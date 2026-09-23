@@ -224,6 +224,15 @@ function StatusBlock({ t, state }: {
       : (linked ? t('statusLinked') : t('statusUnlinked')))
   const healthy = role === 'server' ? listening : linked
   const detail = state.state.listenError ?? state.state.linkError
+  // A mirror that is missing events cannot repair itself, so the one number an
+  // operator has to act on is shown only when it is not zero.
+  const missing = machines.reduce(
+    (total, machine) => total + machine.sessions.reduce(
+      (sum, session) => sum + (session.missingEvents ?? 0),
+      0,
+    ),
+    0,
+  )
   return (
     <div className={css.group}>
       <h3 className={css.groupTitle}>{t('statusTitle')}</h3>
@@ -245,6 +254,12 @@ function StatusBlock({ t, state }: {
             <span className={css.statusItem}>
               {t('machineSessions')}
               <span className={css.statusValue}>{String(machines.length)}</span>
+            </span>
+          )}
+          {role === 'server' && missing > 0 && (
+            <span className={css.statusItem}>
+              {t('mirrorGaps')}
+              <span className={css.statusBad}>{String(missing)}</span>
             </span>
           )}
         </div>

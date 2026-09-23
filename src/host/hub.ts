@@ -502,6 +502,12 @@ export class SyncHub {
 
 /** Project one record onto its presentation row. */
 function summary(session: SessionRecord): MirroredSession {
+  const lowest = session.events[0]?.seq
+  // Zero whenever the held events are contiguous, which is the normal case; a
+  // positive number is the one fact that says this mirror needs re-publishing.
+  const missing = lowest === undefined
+    ? 0
+    : Math.max(0, session.maxSeq - lowest + 1 - session.seqs.size)
   return {
     sessionId: session.sessionId,
     title: session.title,
@@ -509,6 +515,7 @@ function summary(session: SessionRecord): MirroredSession {
     running: session.running,
     ...(session.cwd === undefined ? {} : { cwd: session.cwd }),
     eventCount: session.events.length,
+    missingEvents: missing,
   }
 }
 

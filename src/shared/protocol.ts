@@ -73,6 +73,14 @@ export interface MirroredSession {
   cwd?: string
   /** How many durable events the mirror currently holds. */
   eventCount: number
+  /**
+   * How many sequences inside the held range the mirror does not have.
+   *
+   * The count is only meaningful against the extent the mirror holds: a hole
+   * below the highest sequence can no longer arrive on its own, so this is what
+   * an operator has to see to know a re-publish is owed.
+   */
+  missingEvents: number
 }
 
 /** One machine the server knows about, online or not. */

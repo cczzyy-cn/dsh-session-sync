@@ -64,6 +64,7 @@ export const zh = {
   panelEmptyClient: '本机不是同步服务器。在设置中开启「作为服务器」，或把本机会话同步到已配置的服务器。',
   machineOffline: '离线',
   machineSessions: '个会话',
+  mirrorGaps: '镜像缺失事件',
   openSession: '打开',
 
   sessionsTitle: '会话',
@@ -339,6 +340,7 @@ export const en: Record<SessionSyncKey, string> = {
   panelEmptyClient: 'This machine is not the sync server. Turn on "Act as the server" in settings, or point Session sync at a configured server.',
   machineOffline: 'Offline',
   machineSessions: 'Sessions',
+  mirrorGaps: 'missing mirrored events',
   openSession: 'Open',
 
   sessionsTitle: 'Sessions',

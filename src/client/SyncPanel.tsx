@@ -199,6 +199,7 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
     updatedAt: Date.now(),
     running: false,
     eventCount: 0,
+    missingEvents: 0,
   })
   const online = open === undefined
     ? false

@@ -481,6 +481,7 @@ window.__ModuleLoader__.load({
 			const connected = role === "server" ? listening ? t("statusListening") : t("statusNotListening") : state.config.serverUrl.trim() === "" ? t("statusNotConfigured") : linked ? t("statusLinked") : t("statusUnlinked");
 			const healthy = role === "server" ? listening : linked;
 			const detail = state.state.listenError ?? state.state.linkError;
+			const missing = machines.reduce((total, machine) => total + machine.sessions.reduce((sum, session) => sum + (session.missingEvents ?? 0), 0), 0);
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 				className: sync_module_css_default.group,
 				children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("h3", {
@@ -519,6 +520,13 @@ window.__ModuleLoader__.load({
 									children: [t("machineSessions"), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 										className: sync_module_css_default.statusValue,
 										children: String(machines.length)
+									})]
+								}),
+								role === "server" && missing > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
+									className: sync_module_css_default.statusItem,
+									children: [t("mirrorGaps"), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+										className: sync_module_css_default.statusBad,
+										children: String(missing)
 									})]
 								})
 							]
@@ -4618,7 +4626,8 @@ window.__ModuleLoader__.load({
 				title: open.sessionId,
 				updatedAt: Date.now(),
 				running: false,
-				eventCount: 0
+				eventCount: 0,
+				missingEvents: 0
 			});
 			const online = open === void 0 ? false : machines.find((candidate) => candidate.machineName === open.machineName)?.online ?? false;
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
@@ -5829,6 +5838,7 @@ window.__ModuleLoader__.load({
 			panelEmptyClient: "本机不是同步服务器。在设置中开启「作为服务器」，或把本机会话同步到已配置的服务器。",
 			machineOffline: "离线",
 			machineSessions: "个会话",
+			mirrorGaps: "镜像缺失事件",
 			openSession: "打开",
 			sessionsTitle: "会话",
 			sessionsRunning: "个会话进行中",
@@ -6075,6 +6085,7 @@ window.__ModuleLoader__.load({
 			panelEmptyClient: "This machine is not the sync server. Turn on \"Act as the server\" in settings, or point Session sync at a configured server.",
 			machineOffline: "Offline",
 			machineSessions: "Sessions",
+			mirrorGaps: "missing mirrored events",
 			openSession: "Open",
 			sessionsTitle: "Sessions",
 			sessionsRunning: "running",
