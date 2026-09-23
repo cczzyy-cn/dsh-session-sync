@@ -33,6 +33,22 @@
 
 ## 2. 推进日志（晚 → 早）
 
+### DSH 侧：`sessions.adopt` —— 让控制台能画"原件"（未提交，在 DSH 工作树里）
+用户要求"使用 dsh 原件"。查清了为什么做不到，以及缺的到底是什么：
+
+- 插件里那条路早就写好了（`eccffad`，`renderFactorySlot('conversation.content', {variant:'embedded'})`），只等 `ctx.sessions.adopt`。
+- 而 `ISessions` 契约里**没有** `adopt`（只有 `retain/create/fork/…`）。
+- **插件自己伪造引用也过不去**：渲染器走 `ui-session` 的 `bindingSource(reference)`，它要求 `sessions.binding(id) === reference.binding`——绑定必须由 sessions 服务自己持有，伪造的引用会抛 `not active in this Controller`。所以"用原件"必须由 DSH 提供这个能力。
+- 缺的材料其实都已发布：`MutableSessionEventSource` 是公开导出，`SessionBinding` 是公开契约，DSH 自己的测试替身 `TestSessions.materialize()` 已经演过一遍"造一个本地代"。
+
+**做法**（三个包，插件一行不用改）：给真 `ClientSessions` 加一个"本地代"——把 `Session` 以 `mirror` 选项造出来（天生 `openState='open'`，不读 Host 历史），注册进 manager 与目录，物化 scope，于是 `binding(id)`/`retain(id)` 与 Host 生的会话**完全同路**；窗口由 adoptee 通过句柄驱动（`replace/append/live/settle/abandon/setRunning/release`）。协议里 `summary` 每个字段都可选、`displayTitle` 兼作标题回退、`running` 可放顶层——因为插件传的就是那个拼法。
+
+**验证**：`tsc -b tsconfig.client.json` 通过；oxlint 0 错；`verify-no-unknown-casts`/`verify-export-jsdoc`/`gen-client-catalog --check` 通过；session-controller 全套 863 通过（唯一失败是 Windows 建符号链接 `EPERM`，与本次无关）；ui-session + ui-conversation 515 通过；新增 `tests/adopt.client.spec.ts` 6 项全过（含"能力可被检测"与"引用身份与 `binding(id)` 相同"这两条渲染器真正校验的条件）。
+
+**副作用**：放宽 `ISessions` 会波及所有测试替身——`TestSessions`、ui-conversation 的字面量、ui-workspace 的 `FakeSessions` 都补了 `adopt`。
+
+**还没做**：线上控制台由**服务器**的 DSH 渲染（npm 上的 `0.1.7-alpha.2`），所以要用上原件，那份构建里也得有这个改动（等发版后更新，或把本机构建装上去）——这是当时选项 B，用户先选了 A。
+
 ### `16b46e0` fix(console)：工具行标题对齐原页面
 用户把**同一个会话**的两个窗口并排看：左边是本机 DSH 的真实会话页，右边是同步控制台。差异里有一条是纯粹的 bug —— 中文词典里 `toolTitlePwsh`/`Bash`/`Grep`/`Glob` **填的是英文串**（`Pwsh`/`Bash`/`Grep`/`Glob`），而 DSH 的中文是 `运行命令`/`运行命令`/`搜索文件内容`/`查找文件`（权威表：`ui-conversation/src/client/locales.ts` 的 `tool.title.*`；英文侧恰好就是这几个英文串，所以对照英文词典看不出问题）。
 输出/字形/摘要都对，只有**标题**不同——而标题正是读者第一眼比较的那一格。
