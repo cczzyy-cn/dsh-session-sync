@@ -90,6 +90,14 @@ interface FollowHandle {
   /** The open attempt's turn and step, which its `chunk` frames do not repeat. */
   turn: number
   step: number
+  /**
+   * Highest durable sequence this follow has delivered, or -1 before any.
+   *
+   * Published in the Session index so the mirror can compare its own extent
+   * with the origin's: without it, a mirror holding no events cannot tell
+   * "nothing has happened yet" from "everything was lost".
+   */
+  lastSeq: number
 }
 
 /** The accumulator key of one step's text. */
@@ -468,13 +476,20 @@ export class SessionSyncService {
     }
     this.link?.publishIndex({
       machineName: this.config.machineName,
-      sessions: rows.filter(row => row.synced).map(row => ({
-        sessionId: row.sessionId,
-        title: row.title,
-        updatedAt: row.updatedAt,
-        running: row.running,
-        ...(row.cwd === undefined ? {} : { cwd: row.cwd }),
-      })),
+      sessions: rows.filter(row => row.synced).map(row => {
+        const lastSeq = this.follows.get(row.sessionId)?.lastSeq
+        return {
+          sessionId: row.sessionId,
+          title: row.title,
+          updatedAt: row.updatedAt,
+          running: row.running,
+          ...(row.cwd === undefined ? {} : { cwd: row.cwd }),
+          // Omitted rather than sent as -1: the mirror reads absence as "this
+          // machine has not read a sequence yet", which is not the same claim as
+          // "this Session has no events".
+          ...(lastSeq === undefined || lastSeq < 0 ? {} : { lastSeq }),
+        }
+      }),
     } satisfies PublishIndexPayload)
   }
 
@@ -514,6 +529,7 @@ export class SessionSyncService {
       attemptId: '',
       turn: 0,
       step: 0,
+      lastSeq: -1,
     }
     this.follows.set(sessionId, handle)
     void (async () => {
@@ -870,6 +886,10 @@ export class SessionSyncService {
 
 /** Append one durable event to the buffer, bounded so memory cannot run away. */
 function buffer(handle: FollowHandle, event: MirrorEvent): void {
+  // The watermark is what the index publishes, so it tracks what this follow has
+  // *read* rather than what is still queued: a flush empties the buffer, and an
+  // extent that forgot itself on every flush would tell the mirror nothing.
+  if (typeof event.seq === 'number' && event.seq > handle.lastSeq) handle.lastSeq = event.seq
   handle.pending.push({
     type: event.type,
     seq: event.seq,

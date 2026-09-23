@@ -74,11 +74,13 @@ export interface MirroredSession {
   /** How many durable events the mirror currently holds. */
   eventCount: number
   /**
-   * How many sequences inside the held range the mirror does not have.
+   * How many events this mirror is short of what the origin holds.
    *
-   * The count is only meaningful against the extent the mirror holds: a hole
-   * below the highest sequence can no longer arrive on its own, so this is what
-   * an operator has to see to know a re-publish is owed.
+   * Both kinds of shortfall count: sequences missing *inside* the run the mirror
+   * holds, and everything above it up to the watermark the origin states in its
+   * index. A positive number is the one fact that says a replay is owed, and it
+   * is the only thing an operator has to act on, so it is rendered rather than
+   * folded into a log this deployment cannot read.
    */
   missingEvents: number
 }
@@ -261,6 +263,18 @@ export interface PublishIndexPayload {
     updatedAt: number
     running: boolean
     cwd?: string
+    /**
+     * Highest durable sequence this machine holds for the Session, when it has
+     * read one.
+     *
+     * The index is the only place an origin states its own extent, and the
+     * mirror needs it: from events alone, a Session holding none is
+     * indistinguishable from one whose entire history never arrived — and the
+     * second is exactly what a replay repairs. Absent means "not read yet",
+     * never "empty", so a machine that has not finished its opening snapshot
+     * cannot be mistaken for one that lost everything.
+     */
+    lastSeq?: number
   }[]
 }
 

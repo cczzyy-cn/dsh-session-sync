@@ -67,6 +67,15 @@ interface SessionRecord {
   readonly seqs: Set<number>
   /** Highest sequence ever accepted; with `events[0]` it is the whole extent. */
   maxSeq: number
+  /**
+   * Highest sequence the owning machine says it holds, or -1 when it has not
+   * said.
+   *
+   * The mirror's own extent cannot see a batch that never arrived *and* left no
+   * trace above it — an empty mirror is the extreme case — so the origin's own
+   * claim is what turns "I hold nothing" into "I am missing everything it has".
+   */
+  originSeq: number
 }
 
 /** The one logger method the mirror needs, so it does not own a logging seam. */
@@ -154,12 +163,14 @@ export class SyncHub {
           events: [],
           seqs: new Set<number>(),
           maxSeq: -1,
+          originSeq: reported(session.lastSeq),
         })
         continue
       }
       existing.title = session.title
       existing.updatedAt = session.updatedAt
       existing.running = session.running
+      existing.originSeq = reported(session.lastSeq)
       if (session.cwd === undefined) delete existing.cwd
       else existing.cwd = session.cwd
     }
@@ -170,6 +181,10 @@ export class SyncHub {
       // id starts one from scratch rather than inheriting a spent retry window.
       this.gapAsked.delete(`${record.machineName}|${sessionId}`)
     }
+    // The index is where an origin states its extent, so it can be the only
+    // thing that reveals an empty mirror. Detect here, and let the periodic
+    // sweep keep asking while the shortfall lasts.
+    for (const session of record.sessions.values()) this.reportGap(record, session)
     this.broadcastState()
   }
 
@@ -270,24 +285,22 @@ export class SyncHub {
   /**
    * Name an incomplete mirror, and ask its origin to replay.
    *
-   * A hole used to be invisible from both ends: the origin believed it had
-   * published, the mirror believed it had received, and the only symptom was a
-   * conversation that stopped mid-sentence — which read as a display problem
-   * for as long as it took to decode the origin's own session file and compare.
-   * Now the extent is O(1) from the record, the origin is asked to re-open its
-   * follow, and a replayed snapshot closes the hole because membership decides
-   * what is new.
+   * An incomplete mirror used to be invisible from both ends: the origin
+   * believed it had published, the mirror believed it had received, and the only
+   * symptom was a conversation that stopped mid-sentence — which read as a
+   * display problem for as long as it took to decode the origin's own session
+   * file and compare. Now the shortfall is O(1) from the record, the origin is
+   * asked to re-open its follow, and a replayed snapshot closes it because
+   * membership decides what is new.
    *
-   * The ask is repeated on a slow timer for as long as the hole survives, and
+   * The ask is repeated on a slow timer for as long as the shortfall survives, and
    * said out loud once per episode. A machine that is away needs neither: its
    * reconnect replays every follow by itself.
    * @param record - the owning machine, which is where the ask goes.
    * @param session - the record just updated.
    */
   private reportGap(record: MachineRecord, session: SessionRecord): void {
-    const lowest = session.events[0]?.seq
-    if (lowest === undefined) return
-    const missing = session.maxSeq - lowest + 1 - session.seqs.size
+    const missing = missingOf(session)
     const key = `${record.machineName}|${session.sessionId}`
     const now = Date.now()
     if (missing <= 0) {
@@ -300,8 +313,8 @@ export class SyncHub {
     if (asked === undefined) {
       this.logger?.warn(
         `dsh-session-sync: mirror for "${session.sessionId}" on "${record.machineName}" is missing `
-        + `${String(missing)} event(s) between seq ${String(lowest)} and ${String(session.maxSeq)}; `
-        + 'asked that machine to replay the Session',
+        + `${String(missing)} event(s): it holds up to seq ${String(session.maxSeq)}, the origin `
+        + `reports ${String(session.originSeq)}; asked that machine to replay the Session`,
       )
     }
     record.origin?.resync(session.sessionId)
@@ -502,6 +515,7 @@ export class SyncHub {
       events: [],
       seqs: new Set<number>(),
       maxSeq: -1,
+      originSeq: -1,
     }
     record.sessions.set(sessionId, created)
     return created
@@ -551,12 +565,6 @@ export class SyncHub {
 
 /** Project one record onto its presentation row. */
 function summary(session: SessionRecord): MirroredSession {
-  const lowest = session.events[0]?.seq
-  // Zero whenever the held events are contiguous, which is the normal case; a
-  // positive number is the one fact that says this mirror needs re-publishing.
-  const missing = lowest === undefined
-    ? 0
-    : Math.max(0, session.maxSeq - lowest + 1 - session.seqs.size)
   return {
     sessionId: session.sessionId,
     title: session.title,
@@ -564,8 +572,40 @@ function summary(session: SessionRecord): MirroredSession {
     running: session.running,
     ...(session.cwd === undefined ? {} : { cwd: session.cwd }),
     eventCount: session.events.length,
-    missingEvents: missing,
+    missingEvents: missingOf(session),
   }
+}
+
+/**
+ * How many events one mirror is short of what its origin holds.
+ *
+ * Two things can be missing, and they are counted separately because only the
+ * first is visible from the events themselves:
+ *
+ *  - holes *inside* the held range, which a replacement window or an out-of-order
+ *    arrival can leave, and which the retained run's extent reveals; and
+ *  - everything above the highest sequence held, up to the watermark the origin
+ *    states in its index. Nothing below the top says that a run never arrived —
+ *    an empty mirror is the extreme case of that — so without the stated
+ *    watermark a mirror that lost everything is indistinguishable from one whose
+ *    Session has simply done nothing yet.
+ *
+ * Zero is the healthy answer, and the only one that clears an episode.
+ * @param session - the record to measure.
+ * @returns the count of events the origin has and this mirror does not.
+ */
+function missingOf(session: SessionRecord): number {
+  const lowest = session.events[0]?.seq
+  const holes = lowest === undefined
+    ? 0
+    : Math.max(0, session.maxSeq - lowest + 1 - session.seqs.size)
+  const behind = Math.max(0, session.originSeq - session.maxSeq)
+  return holes + behind
+}
+
+/** Read an origin's stated watermark, which is never a negative claim. */
+function reported(value: number | undefined): number {
+  return typeof value === 'number' && Number.isSafeInteger(value) ? value : -1
 }
 
 /** Mint one opaque identity. */
