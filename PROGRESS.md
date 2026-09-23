@@ -33,6 +33,10 @@
 
 ## 2. 推进日志（晚 → 早）
 
+### `16b46e0` fix(console)：工具行标题对齐原页面
+用户把**同一个会话**的两个窗口并排看：左边是本机 DSH 的真实会话页，右边是同步控制台。差异里有一条是纯粹的 bug —— 中文词典里 `toolTitlePwsh`/`Bash`/`Grep`/`Glob` **填的是英文串**（`Pwsh`/`Bash`/`Grep`/`Glob`），而 DSH 的中文是 `运行命令`/`运行命令`/`搜索文件内容`/`查找文件`（权威表：`ui-conversation/src/client/locales.ts` 的 `tool.title.*`；英文侧恰好就是这几个英文串，所以对照英文词典看不出问题）。
+输出/字形/摘要都对，只有**标题**不同——而标题正是读者第一眼比较的那一格。
+
 ### `5d5a6e9` docs：README 校准
 README 里四处已过时：`Remote history paging is not implemented`（已实现）、"重放既不重复也不丢失"（正是被证伪的那句）、缺了缺口计数/自愈/发件箱/历史拉取、Layout 漏 6 个文件。补上浏览器路由表，并**如实记下"中段空洞还修不了"**。
 
@@ -118,6 +122,9 @@ README 里四处已过时：`Remote history paging is not implemented`（已实�
 4. **源站日志读不到**（`dsh-web.log` 只有 `dsh web: …token…` 一行）。运维可见的事实必须写进 state/UI —— 本项目既有模式，`state.follow` / `state.page` 都是这么来的。
 5. **每次源站侧改动都要重启本机**，而重启会杀掉正在跑的会话（所以要先问用户）。
 6. **版本仍 `0.3.0`**，但行为已差很远；是否发 `0.4.0` 待定（`github:` 依赖按 commit 解析，版本号只是标识）。
+7. **控制台是"抄本"，不是原件。** 插件里有 `eccffad feat(client): render a mirrored Session through the shipped conversation page`，那条路要求客户端上下文提供 `ctx.sessions.adopt` **和** `retain`；**当前没有任何 DSH 构建提供 `adopt`**（`session-controller/src/client/sessions/service.ts` 只有 `retain`）。所以 `official.supported === false`，控制台一律走自己那套手绘面板——抄了 `ui-chat` 的样式表与行词汇，但**行标记是自己的**。后果：**原页面一变，抄本就会漂移**，而漂移只能靠人对着两个窗口比对发现（`16b46e0` 就是这么发现的）。
+   - 同类风险面：`tool-presentation.ts` / `tool-cards.ts` 的家族表、`locales.ts` 里所有"抄自 ui-conversation 的串"。DSH 还有一个 `tool.title.inspect: '查看'` 本插件没映射（遇到 `inspect` 这类工具名会落到别的标题）。
+   - 一旦某个 DSH 构建提供 `adopt`，这条抄本路径会被自动绕过、无需改代码。
 
 ---
 
