@@ -1,21 +1,25 @@
 # dsh-session-sync 推进记录
 
 > 只写被证据支撑的事实：跑过的命令、测到的数字、看到的现象。每条结论都要能指出它是怎么被验证的。
-> 本文件不参与构建。最近更新：2026-09-24 01:10（本轮：历史分页 → 从源站拉取旧会话 → README 校准）
+> 本文件不参与构建。最近更新：2026-09-24（服务器升到最新 DSH + 插件；控制台用原件渲染）
 
 ## 0. 现状一眼看
 
 | 项 | 值 |
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
-| 版本 | 本地 = 远端 = `5d5a6e9`（功能最新 `d535743`，其后只有 README） |
-| 服务器 | `210.16.120.228` · Ubuntu 24.04 · DSH `0.1.7-alpha.2` · unit `dsh-web.service` · 已装 `d535743` · active |
-| 本机 | DSH 源码运行（`C:\Users\14339\Desktop\git\deepseek-harness` 里 `pnpm dsh web`），运行中的 host 是 `fa95d11` |
+| 版本 | 本地 = 远端 = `db28d2e`（降级阶梯那次提交） |
+| 服务器 | `210.16.120.228` · Ubuntu 24.04 · **DSH `0.1.7-rc.2`（npm `next` 通道，未打补丁）** · 插件 `db28d2e` · unit `dsh-web.service` · active |
+| 本机 | DSH 源码运行（checkout = `dsh-v0.1.7-rc.1` 标签），运行时用 rc.1 源码 |
 | 控制台 | `https://dsh.c-zy.cc/?token=<43 位>` |
 | 镜像 | **内存态**：服务器一重启就没了，靠源站 10 秒 reconcile + follow 快照重建 |
 | 同步口 | `210.16.120.228:8791`（源站连它；**不经** Cloudflare） |
 
-`d535743` 只改了 `src/client/api.ts` 与产物 → **不需要重启本机源站**。任何改到 `src/host/**`、`src/shared/**`、`src/index.ts` 的提交都**需要用户重启本机**（会杀掉当时正在跑的那个会话）。
+**2026-09-24 服务器更新**：DSH → 最新发布版 `0.1.7-rc.2`，插件 → `db28d2e`。**顺序很重要：先插件、后 DSH**——补丁那份产物只对 alpha.2 有效，升版后控制台靠插件里的 `scope` 路线画原件，而旧插件只会 `adopt`，顺序颠倒会掉回手绘面板。
+
+线上实测：控制台画的是 **DSH 原件**（shipped 头部 `deepseek-flash · low`/`完全权限`、`用时 3 秒 ⌄` 回合折叠、shipped 操作行与 `3 轮 · 28 步 · 18 tok/s` 状态行），输入框由插件接管（`在服务器侧接管续聊…`），会话树无「缺 N 条」。新缓存目录 `4f4f47d9854f3c73` 里 `is a mirror and accepts no prompt` = **0**，即**补丁已随版本失效且不再需要**；`patches/` 保留给"想让 shipped 输入框也能发言"的宿主与 alpha.2 回滚路径。回滚 unit：`/etc/systemd/system/dsh-web.service.bak-2026-09-24-173039`。
+
+只改 `src/client/**` 的提交（如 `d535743`、阶梯那次的主体）→ **不需要重启本机源站**；任何改到 `src/host/**`、`src/shared/**`、`src/index.ts` 的提交都**需要用户重启本机**（会杀掉当时正在跑的那个会话）。
 
 ---
 
