@@ -61,6 +61,14 @@ export function officialSessionId(open: OpenSession): string {
 /** A Session reference as the Client Controller hands it out. */
 export interface SessionReferenceLike {
   readonly sessionId: string
+  /**
+   * The shared initial history read, when the hand-out carries one.
+   *
+   * The `address` route is the only one whose read can fail — the Host is asked
+   * about a Session it has never heard of — so the console observes it and keeps
+   * drawing rather than letting it surface as an unhandled rejection.
+   */
+  readonly ready?: Promise<unknown>
   release(): void
 }
 
@@ -182,17 +190,82 @@ export interface AdoptedSessionHandle {
   release(): void
 }
 
+/** One durable-parent address, as `SubagentAddress` carries it. */
+export interface SubagentAddressLike {
+  readonly parentSessionId: string
+  readonly childSessionId: string
+}
+
+/**
+ * One Session's event window, as its binding exposes it.
+ *
+ * Narrower than the shipped type on purpose — this module declares the shape it
+ * calls, so a build whose window differs in some other member still matches.
+ */
+export interface SessionEventSourceLike {
+  replace(entries: readonly unknown[], hasMore: boolean): void
+  append(entry: unknown): void
+  /** Retire one attempt's transient rows, inserting its durable settlement. */
+  settleAssistant(attemptId: string, entry?: unknown): void
+  getSnapshot(): { entries: readonly { event: { seq: number } }[]; hasMore: boolean }
+}
+
+/** One retained Session, as `ctx.sessions.binding()` hands it out. */
+export interface SessionBindingLike {
+  /** The Session face; only the running flag is of interest here. */
+  readonly session?: { handleRunning?(running: boolean): void }
+  readonly eventSource?: SessionEventSourceLike
+}
+
+/**
+ * How this build lets the console draw a Session it does not own.
+ *
+ * Three routes, in the order they are preferred. `adopt` is the one a patched
+ * DSH offers, and the only one that can hand a prompt to the plugin. `scope` and
+ * `address` are built from pieces released builds already have, and drive the
+ * window directly instead — read-only, with the console's own composer taking
+ * the Session's prompts.
+ */
+export type OfficialRoute = 'adopt' | 'scope' | 'address'
+
 /** The subset of the client Sessions service this half needs. */
 export interface AdoptCapableSessions {
-  /** Adopt one Session under a synthetic identity. */
-  adopt(source: AdoptSource): AdoptedSessionHandle
+  /** Adopt one Session under a synthetic identity (patched builds only). */
+  adopt?(source: AdoptSource): AdoptedSessionHandle
+  /**
+   * Retain without catalog or history I/O: the seam that makes a Session the
+   * Host has never heard of renderable, and the reason `scope` comes first.
+   * @param id - the synthetic identity.
+   * @returns the reference the renderer binds.
+   */
+  retainAgentScope?(id: string): SessionReferenceLike
   /**
    * Retain an exact client generation.
-   * @param target - the adopted identity.
+   *
+   * An address object is accepted as well as an id: the client resolves an
+   * address without asking whether the Session is catalogued, which is what
+   * makes the `address` route possible at all.
+   * @param target - the adopted identity, or a durable parent address.
    * @param options - consumer source and optional cancellation.
    * @returns the reference the renderer binds.
    */
-  retain(target: string, options: { source: string; signal?: AbortSignal }): SessionReferenceLike
+  retain(
+    target: string | SubagentAddressLike,
+    options: { source: string; signal?: AbortSignal },
+  ): SessionReferenceLike
+  /**
+   * The live binding for one identity, when the service holds one.
+   * @param id - the synthetic identity.
+   * @returns the binding, whose event source the console can drive.
+   */
+  binding?(id: string): SessionBindingLike | undefined
+  /** The client's Session list, read only for a parent identity to address. */
+  readonly list?: { getSnapshot(): { ids?: readonly string[] } }
+}
+
+/** The composer-block registry: `ctx.conversation.blocks` in the shipped client. */
+export interface ComposerBlocksLike {
+  set(sessionId: string, block: { reason: string } | undefined): void
 }
 
 /** The one context capability this module uses: the client service lookup. */
@@ -237,13 +310,21 @@ export type RenderFactorySlotLike = (
 
 /** What the console's panel asks of the shipped-renderer bridge. */
 export interface OfficialBridgeFace {
-  /** False on any build without the adoption API, where the console keeps its own pane. */
+  /** False on any build where no route to the shipped renderer exists. */
   readonly supported: boolean
+  /**
+   * Whether the console must draw the composer itself.
+   *
+   * True on the routes that drive the window directly: the shipped composer
+   * would send its prompt through the Host, which has never heard of this
+   * Session, so it is blocked and the console's takeover composer stands in.
+   */
+  readonly composerOwned: boolean
   /**
    * The reference to bind for one remote Session.
    * @param machineName - owning machine.
    * @param sessionId - the remote Session's own id.
-   * @returns the reference while exactly that Session is adopted, else undefined.
+   * @returns the reference while exactly that Session is drawn, else undefined.
    */
   referenceFor(machineName: string, sessionId: string): SessionReferenceLike | undefined
 }
@@ -295,59 +376,96 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
 export class OfficialMirror {
   /** The reference the shipped pane binds this Session with. */
   readonly reference: SessionReferenceLike
-  private readonly handle: AdoptedSessionHandle
+  /** The adopt handle, on the one route that has verbs to hand it. */
+  private readonly handle: AdoptedSessionHandle | undefined
+  /** The window this console drives directly, on the routes without a handle. */
+  private readonly source: SessionEventSourceLike | undefined
+  /** The Session face, when the binding exposes one that reports running. */
+  private readonly face: { handleRunning?(running: boolean): void } | undefined
   /** The live attempt whose text is on screen, by the plugin's turn|step key. */
   private liveAttempt: string | undefined
+  /** Whole text already shown per attempt, for the delta the window expects. */
+  private readonly liveText = new Map<string, string>()
+  /** Dense transient position, so a live row sorts above the durable window. */
+  private transient = 0
+  /** Highest durable sequence seen, the base of a transient row's position. */
+  private lastSeq = -1
   private released = false
 
   /**
-   * Adopt one remote Session and retain the reference that binds it.
-   * @param service - the adopt-capable client Sessions service.
+   * Take one remote Session up through whichever route this build offers.
+   * @param service - the client Sessions service.
+   * @param route - how this build lets a foreign Session be drawn.
+   * @param parentId - a catalogued identity to address, for the `address` route.
    * @param open - the remote Session's own address.
    * @param summary - row facts for the renderer's pre-event chrome.
    * @param transport - the plugin's transport, for the composer's own verb.
    */
   constructor(
     service: AdoptCapableSessions,
+    route: OfficialRoute,
+    parentId: string | undefined,
     open: OpenSession,
     summary: SessionSummaryLike,
     transport: OfficialTransport,
   ) {
     const sessionId = officialSessionId(open)
-    this.handle = service.adopt({
-      sessionId,
-      summary,
-      // The shipped composer submits through the same takeover route the
-      // console's own composer uses, so a prompt typed in either place reaches
-      // the origin machine by one road. `mode` and the request id are not part
-      // of that route: the origin admits the text, and the sync protocol has no
-      // cancel verb for a submission that was withdrawn.
-      verbs: {
-        prompt: async (content, _mode, signal): Promise<RemoteResultLike<{ accepted: true }>> => {
-          if (signal?.aborted === true) return refused('gateway/cancelled', 'the submission was cancelled')
-          // The takeover path carries text. A prompt with anything else in it
-          // fails loudly rather than dropping the parts it cannot send.
-          if (content.some(part => part.type !== 'text')) {
-            return refused('gateway/bad-request', 'the sync takeover path carries text prompts only')
-          }
-          const text = content.map(part => part.text ?? '').join('\n')
-          if (text.trim() === '') return refused('gateway/bad-request', 'the prompt was empty')
-          if (!await transport.sendPrompt(text)) {
-            return refused('gateway/internal', 'the sync server refused the prompt')
-          }
-          return { ok: true, value: { accepted: true } }
+    if (route === 'adopt') {
+      const handle = service.adopt!({
+        sessionId,
+        summary,
+        // The shipped composer submits through the same takeover route the
+        // console's own composer uses, so a prompt typed in either place reaches
+        // the origin machine by one road. `mode` and the request id are not part
+        // of that route: the origin admits the text, and the sync protocol has no
+        // cancel verb for a submission that was withdrawn.
+        verbs: {
+          prompt: async (content, _mode, signal): Promise<RemoteResultLike<{ accepted: true }>> => {
+            if (signal?.aborted === true) return refused('gateway/cancelled', 'the submission was cancelled')
+            // The takeover path carries text. A prompt with anything else in it
+            // fails loudly rather than dropping the parts it cannot send.
+            if (content.some(part => part.type !== 'text')) {
+              return refused('gateway/bad-request', 'the sync takeover path carries text prompts only')
+            }
+            const text = content.map(part => part.text ?? '').join('\n')
+            if (text.trim() === '') return refused('gateway/bad-request', 'the prompt was empty')
+            if (!await transport.sendPrompt(text)) {
+              return refused('gateway/internal', 'the sync server refused the prompt')
+            }
+            return { ok: true, value: { accepted: true } }
+          },
         },
-      },
-      running: summary.running,
-    })
-    try {
-      this.reference = service.retain(sessionId, { source: OFFICIAL_SOURCE })
-    } catch (error) {
-      // An adopted Session with no reference to bind renders nowhere, so the
-      // adoption is undone rather than leaked.
-      this.handle.release()
-      throw error
+        running: summary.running,
+      })
+      this.handle = handle
+      try {
+        this.reference = service.retain(sessionId, { source: OFFICIAL_SOURCE })
+      } catch (error) {
+        // An adopted Session with no reference to bind renders nowhere, so the
+        // adoption is undone rather than leaked.
+        handle.release()
+        throw error
+      }
+      return
     }
+
+    this.handle = undefined
+    // `scope` retains without asking anyone anything. `address` is the fallback
+    // for a build without it: an address is resolved without the "unknown
+    // Session" refusal an id meets, at the cost of one Host history read that
+    // cannot succeed — the Host has never heard of this Session.
+    this.reference = route === 'scope'
+      ? service.retainAgentScope!(sessionId)
+      : service.retain(
+        { parentSessionId: parentId ?? '', childSessionId: sessionId },
+        { source: OFFICIAL_SOURCE },
+      )
+    // Observed rather than awaited: the pane draws from the window this console
+    // fills, and a refused read must not surface as an unhandled rejection.
+    void this.reference.ready?.catch(() => {})
+    const binding = service.binding?.(sessionId)
+    this.source = binding?.eventSource
+    this.face = binding?.session
   }
 
   /**
@@ -356,12 +474,21 @@ export class OfficialMirror {
    */
   replace(transcript: MirrorTranscript): void {
     if (this.released) return
-    // A mirrored window is everything the server holds: it never reports older
-    // history as reachable, so `hasMore` is false. Remote history paging is not
-    // implemented (the README's limitations), and claiming otherwise would make
-    // the shipped renderer offer a page that cannot arrive.
-    this.handle.replace(transcript.events, false)
-    this.handle.setRunning(transcript.running)
+    this.liveAttempt = undefined
+    this.liveText.clear()
+    if (this.handle !== undefined) {
+      // A mirrored window is everything the server holds: it never reports older
+      // history as reachable, so `hasMore` is false. Claiming otherwise would
+      // make the shipped renderer offer a page that cannot arrive.
+      this.handle.replace(transcript.events, false)
+      this.handle.setRunning(transcript.running)
+      return
+    }
+    this.transient = 0
+    this.lastSeq = -1
+    for (const event of transcript.events) this.observe(event.seq)
+    this.source?.replace(transcript.events.map(entryOf), false)
+    this.face?.handleRunning?.(transcript.running)
   }
 
   /**
@@ -379,7 +506,12 @@ export class OfficialMirror {
         this.settle(event)
         continue
       }
-      this.handle.append(event)
+      if (this.handle !== undefined) {
+        this.handle.append(event)
+        continue
+      }
+      this.observe(event.seq)
+      this.source?.append(entryOf(event))
     }
   }
 
@@ -401,13 +533,17 @@ export class OfficialMirror {
     this.liveAttempt = attemptId
     // No `time`: the origin wrote the durable events, and a browser clock only
     // misplaces the live row against them.
-    this.handle.live({
-      attemptId,
-      turn: frame.turn,
-      step: frame.step,
-      kind: frame.kind,
-      text: frame.text,
-    })
+    if (this.handle !== undefined) {
+      this.handle.live({
+        attemptId,
+        turn: frame.turn,
+        step: frame.step,
+        kind: frame.kind,
+        text: frame.text,
+      })
+      return
+    }
+    this.feedLive(attemptId, frame)
   }
 
   /**
@@ -416,11 +552,12 @@ export class OfficialMirror {
    */
   setRunning(running: boolean): void {
     if (this.released) return
-    this.handle.setRunning(running)
+    if (this.handle !== undefined) this.handle.setRunning(running)
+    else this.face?.handleRunning?.(running)
   }
 
   /**
-   * Release the adopted Session and its reference.
+   * Release the Session and its reference.
    *
    * Idempotent, and total: a Session switch and the panel closing can both ask,
    * and the live attempt is abandoned first so the renderer is not left holding
@@ -431,9 +568,10 @@ export class OfficialMirror {
     this.released = true
     const live = this.liveAttempt
     this.liveAttempt = undefined
+    this.liveText.clear()
     if (live !== undefined) {
       try {
-        this.handle.abandon({ attemptId: live })
+        this.closeLive({ attemptId: live })
       } catch {
         // The handle is being dropped anyway: a refused abandon is not a reason
         // to hold the reference open.
@@ -442,7 +580,7 @@ export class OfficialMirror {
     // Both ends go regardless: a refusal from one is not a reason to leak the
     // other, and cleanup that throws would detach the whole mirror.
     try {
-      this.handle.release()
+      this.handle?.release()
     } catch {
       // Dropped with the rest.
     }
@@ -453,10 +591,63 @@ export class OfficialMirror {
     }
   }
 
+  /**
+   * Append the delta between what is shown and what the origin just sent.
+   *
+   * The wire form of live Assistant text is a dense run of chunks, and the
+   * relay carries the whole text so far instead — so the delta is computed here,
+   * and a text that is not an extension of the last one restarts the attempt
+   * rather than inventing a chunk the fold would rebaseline on.
+   */
+  private feedLive(attemptId: string, frame: SyncLiveDelta): void {
+    let shown = this.liveText.get(attemptId) ?? ''
+    if (!frame.text.startsWith(shown)) {
+      this.closeLive({ attemptId })
+      shown = ''
+    }
+    const delta = frame.text.slice(shown.length)
+    this.liveText.set(attemptId, frame.text)
+    if (delta === '') return
+    const time = Date.now()
+    this.transient += 1
+    this.source?.append({
+      type: 'transient',
+      event: {
+        type: 'assistant/live-chunk',
+        // A position above the durable window, dense within its own run: the
+        // same shape the client's own fold gives a transient row.
+        seq: this.lastSeq + 1 - 1 / (this.transient + 1),
+        time,
+        data: {
+          attemptId,
+          turn: frame.turn,
+          step: frame.step,
+          chunk: {
+            type: frame.kind === 'reasoning' ? 'reasoning-chunks' : 'text-chunks',
+            time0: time,
+            index: 0,
+            dt: [0],
+            texts: [delta],
+          },
+        },
+      },
+    })
+  }
+
   /** Close one live attempt with its durable settlement, or with nothing. */
   private closeLive(o: { attemptId: string; event?: MirrorEvent }): void {
-    if (o.event === undefined) this.handle.abandon({ attemptId: o.attemptId })
-    else this.handle.settle({ attemptId: o.attemptId, event: o.event })
+    this.liveText.delete(o.attemptId)
+    if (this.handle !== undefined) {
+      if (o.event === undefined) this.handle.abandon({ attemptId: o.attemptId })
+      else this.handle.settle({ attemptId: o.attemptId, event: o.event })
+    } else if (o.event === undefined) {
+      this.source?.settleAssistant(o.attemptId)
+    } else {
+      // `settleAssistant` retires the attempt's transient rows and inserts the
+      // durable settlement in one publication, so the entry is not appended too.
+      this.observe(o.event.seq)
+      this.source?.settleAssistant(o.attemptId, entryOf(o.event))
+    }
     if (this.liveAttempt === o.attemptId) this.liveAttempt = undefined
   }
 
@@ -468,6 +659,15 @@ export class OfficialMirror {
     const attemptId = settlementAttemptId(event) ?? this.liveAttempt ?? `settled:${String(event.seq)}`
     this.closeLive({ attemptId, event })
   }
+
+  private observe(seq: number): void {
+    if (seq > this.lastSeq) this.lastSeq = seq
+  }
+}
+
+/** Wrap one wire envelope as the entry an event window carries. */
+function entryOf(event: MirrorEvent): unknown {
+  return { type: 'event', event }
 }
 
 /**
@@ -479,29 +679,46 @@ export class OfficialMirror {
  * how the pane's Session identity reaches the renderer.
  */
 export class OfficialSessions implements OfficialBridgeFace, SyncTransportObserver {
-  private current: { key: string; mirror: OfficialMirror } | undefined
+  private current: { key: string; mirror: OfficialMirror; id: string } | undefined
   /** The running flag already reported, so a poll does not restate it. */
   private lastRunning: boolean | undefined
+  /** The Session whose composer this console blocked, if it blocked one. */
+  private blockedComposer: string | undefined
 
   /**
-   * @param ctx - the client context, read only for the Sessions service.
+   * @param ctx - the client context, read for the Sessions service and the
+   *   composer-block registry.
    * @param transport - the plugin's transport client.
+   * @param composerBlockReason - the localized reason shown in a blocked
+   *   composer; read at the moment of blocking so it follows the locale.
    */
   constructor(
     private readonly ctx: OfficialContext,
     private readonly transport: OfficialTransport,
+    private readonly composerBlockReason: () => string,
   ) {}
 
   /** Whether this build can render a Session through the shipped conversation. */
   get supported(): boolean {
-    return this.service() !== undefined
+    return this.route() !== undefined
+  }
+
+  /**
+   * Whether the console must draw the composer itself.
+   *
+   * Every route but `adopt` drives the window directly, so the shipped composer
+   * would carry its prompt to a Host that has never heard of this Session.
+   */
+  get composerOwned(): boolean {
+    const route = this.route()
+    return route !== undefined && route !== 'adopt'
   }
 
   /**
    * The reference to bind for one remote Session, for the panel's render.
    * @param machineName - owning machine.
    * @param sessionId - the remote Session's own id.
-   * @returns the retained reference while exactly that Session is adopted.
+   * @returns the retained reference while exactly that Session is drawn.
    */
   referenceFor(machineName: string, sessionId: string): SessionReferenceLike | undefined {
     const current = this.current
@@ -510,21 +727,31 @@ export class OfficialSessions implements OfficialBridgeFace, SyncTransportObserv
   }
 
   /**
-   * The panel opened a Session: adopt it, replacing whatever was adopted before.
+   * The panel opened a Session: take it up, replacing whatever was before.
    * @param open - the remote Session.
    */
   opened(open: OpenSession): void {
     const service = this.service()
-    if (service === undefined) return
+    const route = this.route()
+    if (service === undefined || route === undefined) return
     const key = remoteKey(open.machineName, open.sessionId)
     // Re-opening the same Session is not a switch: the handle survives and the
     // opening transcript replaces its window.
     if (this.current?.key === key) return
     this.release()
-    // Adoption is the enhancement, so a failure here is left to the transport:
-    // it detaches the observer and says why, and the console keeps its own
-    // pane rather than rendering under a Session it could not adopt.
-    this.current = { key, mirror: new OfficialMirror(service, open, this.summaryOf(open), this.transport) }
+    const id = officialSessionId(open)
+    // A route that drives the window itself cannot take a prompt, so the shipped
+    // composer is blocked with the console's own reason and the console's
+    // takeover composer stands in its place.
+    if (route !== 'adopt') this.blockComposer(id)
+    // Rendering is the enhancement, so a failure here is left to the transport:
+    // it detaches the observer and says why, and the console keeps its own pane
+    // rather than rendering under a Session it could not take up.
+    this.current = {
+      key,
+      id,
+      mirror: new OfficialMirror(service, route, this.parentId(service), open, this.summaryOf(open), this.transport),
+    }
   }
 
   /**
@@ -571,15 +798,110 @@ export class OfficialSessions implements OfficialBridgeFace, SyncTransportObserv
     this.release()
   }
 
-  /** Release the adopted Session, if any. Idempotent. */
+  /** Release the Session the console was drawing, if any. Idempotent. */
   release(): void {
     const current = this.current
     this.current = undefined
     this.lastRunning = undefined
     current?.mirror.release()
+    // The block belongs to the Session being drawn: leaving it behind would make
+    // a Session the console no longer holds refuse its own composer.
+    if (current !== undefined) this.unblockComposer(current.id)
   }
 
-  /** Whether the adopted Session is the one a frame names. */
+  /** Block one Session's shipped composer, remembering which one. */
+  private blockComposer(id: string): void {
+    this.unblockComposer(this.blockedComposer)
+    const blocks = this.composerBlocks()
+    if (blocks === undefined) return
+    try {
+      blocks.set(id, { reason: this.composerBlockReason() })
+      this.blockedComposer = id
+    } catch {
+      // A registry that refuses the block is not a reason to lose the pane: the
+      // console's own composer is drawn beside it, and the pane hides the
+      // shipped one regardless.
+    }
+  }
+
+  /** Clear one Session's block, when this console raised it. */
+  private unblockComposer(id: string | undefined): void {
+    if (id === undefined) return
+    if (this.blockedComposer === id) this.blockedComposer = undefined
+    const blocks = this.composerBlocks()
+    if (blocks === undefined) return
+    try {
+      blocks.set(id, undefined)
+    } catch {
+      // Dropped with the Session.
+    }
+  }
+
+  /**
+   * The composer-block registry, feature-detected on the client context.
+   *
+   * `ctx.conversation.blocks` is the shipped plugin-facing registry for making
+   * one Session's composer inert. It is raised here so the shipped composer
+   * carries the console's own reason while the pane is held — but it is only an
+   * affordance, and another plugin that publishes its own state for the same
+   * Session can clear it, so the pane hides the shipped composer outright on
+   * these routes rather than trusting this write to survive.
+   */
+  private composerBlocks(): ComposerBlocksLike | undefined {
+    const conversation = this.ctx.get?.('conversation')
+    if (typeof conversation !== 'object' || conversation === null) return undefined
+    const blocks = (conversation as { blocks?: unknown }).blocks
+    if (typeof blocks !== 'object' || blocks === null) return undefined
+    const candidate = blocks as Partial<ComposerBlocksLike>
+    return typeof candidate.set === 'function' ? candidate as ComposerBlocksLike : undefined
+  }
+
+  /**
+   * Which route this build offers, in preference order.
+   *
+   * `adopt` is the patched capability and the only route that can hand the pane
+   * a prompt. `scope` retains without any catalog or history I/O, so the Session
+   * is born cold rather than erroring. `address` is the last resort: it needs
+   * only released surfaces, but the reference's own Host read cannot succeed,
+   * and the pane shows that hint while the window this console fills still
+   * draws.
+   * @returns the route, or undefined when the build offers none.
+   */
+  private route(): OfficialRoute | undefined {
+    const service = this.service()
+    if (service === undefined) return undefined
+    if (typeof service.adopt === 'function') return 'adopt'
+    if (typeof service.binding !== 'function') return undefined
+    if (typeof service.retainAgentScope === 'function') return 'scope'
+    return this.parentId(service) === undefined ? undefined : 'address'
+  }
+
+  /** One catalogued identity to address, for the `address` route. */
+  private parentId(service: AdoptCapableSessions): string | undefined {
+    const ids = service.list?.getSnapshot().ids
+    const first = Array.isArray(ids) ? ids[0] : undefined
+    return typeof first === 'string' && first !== '' ? first : undefined
+  }
+
+  /**
+   * The Sessions service, feature-detected on the client context.
+   *
+   * `sessions` is deliberately absent from this plugin's `inject` list: the
+   * console has to load on builds that predate any of these routes, and a
+   * required service the half cannot use would stop the whole half from
+   * applying. The lookup is lazy because the service may be registered after
+   * this plugin applies, and cheap because it runs once per panel render.
+   */
+  private service(): AdoptCapableSessions | undefined {
+    const service = this.ctx.get?.('sessions')
+    if (typeof service !== 'object' || service === null) return undefined
+    const candidate = service as Partial<AdoptCapableSessions>
+    return typeof candidate.retain === 'function'
+      ? candidate as AdoptCapableSessions
+      : undefined
+  }
+
+  /** Whether the Session being drawn is the one a frame names. */
   private matches(open: OpenSession): boolean {
     return this.current?.key === remoteKey(open.machineName, open.sessionId)
   }
@@ -615,24 +937,6 @@ export class OfficialSessions implements OfficialBridgeFace, SyncTransportObserv
     return this.transport.snapshot.getSnapshot().state.machines
       .find(machine => machine.machineName === open.machineName)
       ?.sessions.find(session => session.sessionId === open.sessionId)
-  }
-
-  /**
-   * The adoption API, feature-detected on the client context.
-   *
-   * `sessions` is deliberately absent from this plugin's `inject` list: the
-   * console has to load on builds that predate the adoption API, and a required
-   * service the half cannot use would stop the whole half from applying. The
-   * lookup is lazy because the service may be registered after this plugin
-   * applies, and cheap because it runs once per panel render.
-   */
-  private service(): AdoptCapableSessions | undefined {
-    const service = this.ctx.get?.('sessions')
-    if (typeof service !== 'object' || service === null) return undefined
-    const candidate = service as Partial<AdoptCapableSessions>
-    return typeof candidate.adopt === 'function' && typeof candidate.retain === 'function'
-      ? candidate as AdoptCapableSessions
-      : undefined
   }
 }
 

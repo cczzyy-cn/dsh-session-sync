@@ -85,25 +85,40 @@ registered `main` keys.
   (`DisclosureRow`, `MarkdownText`, `Input`, `StateDot`, `Button`) and the shipped
   tokens, so the console follows a theme change, a font-size preference, and a
   hairline change with the rest of the product.
-- **The conversation is the shipped one where the build allows it.** A DSH whose
-  client context offers `ctx.sessions.adopt` gets the real
-  `conversation.content` factory for the open remote Session: the plugin adopts
-  the Session under a synthetic local id, replaces it with the mirror's window,
-  and feeds every later frame into it, so the transcript, the composer, and the
-  tool cards are the product's own components rather than copies of them. Every
-  other build keeps the hand-drawn pane described above, unchanged. The adoption
-  route is feature-detected (`src/client/official-session.tsx`); `sessions` is
-  deliberately not in this plugin's required `inject` list, because the console
-  has to load on builds that predate the API.
+- **The conversation is the shipped one wherever the build allows it.** The
+  console draws the open remote Session with the product's real
+  `conversation.content` factory — its transcript, its tool cards, its turn
+  folds — by taking the Session up through whichever of three routes the build
+  offers:
 
-  No released DSH offers it yet — the capability is a client-only addition to
+  | Route | Needs | What it gives |
+  | --- | --- | --- |
+  | `adopt` | `ctx.sessions.adopt` (the patch below) | A Session born open, holding the console's own prompt verb — the shipped composer works |
+  | `scope` | `ctx.sessions.retainAgentScope` + `binding` | The same pane with no Host I/O at all; the console's takeover composer stands in for the shipped one |
+  | `address` | `ctx.sessions.retain` alone, plus one catalogued Session to address | The same, except the reference's own Host read cannot succeed and the pane shows that hint |
+
+  Only when none is available does the console keep the hand-drawn pane
+  described above, unchanged — so a stock build loses likeness, never function.
+  The routes are feature-detected in `src/client/official-session.tsx`;
+  `sessions` is deliberately not in this plugin's required `inject` list,
+  because the console has to load on builds that predate all three.
+
+  On the two routes that drive the window itself the shipped composer is hidden,
+  because its prompt would go to a Host that has never heard of the Session: its
+  seat is replaced by the console's own takeover composer, which reaches the
+  machine that owns the Session. The composer-block registry
+  (`ctx.conversation.blocks`) is raised alongside so the reason shows wherever
+  that block survives — another plugin publishing its own state for the same
+  Session can clear it, which is why the seat is hidden rather than trusted.
+
+  `adopt` exists in no released DSH: it is a client-only addition to
   `@deepseek-ai/dsh-api-session-controller` (one `adopt` method on the Sessions
   service, plus the local-only Session generation behind it). `patches/` carries
   that change as a source patch against `dsh-v0.1.7-alpha.2`, the built client
   bundle to drop into an installed DSH, and a script that finds the installation,
-  backs the file up, and replaces it. Until it is upstream, a `dsh` upgrade on a
-  patched host mints a fresh install directory and silently reverts the console
-  to its own pane; re-running that script restores it.
+  backs the file up, and replaces it. A `dsh` upgrade on a patched host mints a
+  fresh install directory and quietly drops that host to the `scope` route;
+  re-running the script restores the full one.
 
 ## Configuration
 

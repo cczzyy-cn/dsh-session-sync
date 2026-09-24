@@ -52,12 +52,13 @@ const PANEL_ID = 'session-sync'
 export function apply(ctx: ClientContext): void {
   const client = new SyncClient()
 
-  // The shipped-renderer mirror, feature-detected: on a DSH build without the
-  // `ctx.sessions.adopt` API this object reports `supported === false` and the
-  // console keeps its own hand-drawn conversation untouched. The observer rides
-  // this plugin's own effect lifetime, so unloading the half releases whatever
-  // Session it had adopted.
-  const official = new OfficialSessions(ctx, client)
+  // The shipped-renderer mirror, feature-detected: the bridge picks whichever
+  // route this build offers — a patched `ctx.sessions.adopt`, or a Session
+  // retained and driven through released seams — and reports
+  // `supported === false` only when it has none, where the console keeps its own
+  // hand-drawn conversation untouched. The observer rides this plugin's own
+  // effect lifetime, so unloading the half releases whatever Session it held.
+  const official = new OfficialSessions(ctx, client, () => t('composerBlocked'))
   ctx.effect(() => {
     const detach = client.observe(official)
     return () => {

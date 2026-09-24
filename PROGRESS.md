@@ -33,6 +33,23 @@
 
 ## 2. 推进日志（晚 → 早）
 
+### 降级阶梯：不用补丁也能画原件（已在本机 rc.1 端到端验证）
+用户问"能否伪装本地会话，寻找其他方案"。查了官方插件（唯一渲染"别人会话"的先例是 `ui-subagent`：`sessions.retain(address)` + `SessionProvider`）后，挖出三条缝并按优先级实现：
+
+| 路线 | 依据 | 代价 |
+| --- | --- | --- |
+| `adopt` | 我们的 DSH 补丁 | 无（born-open + 插件给 verbs，shipped 输入框能用） |
+| `scope` | `retainAgentScope(id)`——注释写着 **"without history or catalog I/O"**，直接 `retainScope` | 依赖一个不在契约里、但发布版里就有的方法；`openState` 停在 `cold` |
+| `address` | `retain(SubagentAddress)`——`resolveTarget` 对**地址对象**跳过"未知会话"守卫（传字符串会被拦） | 必然触发一次失败的 Host 历史读取（真实 Host 报 `session/not-found`） |
+
+**实测（本机 checkout = rc.1，未打补丁；两个一次性实例）**：控制台打开镜像会话后画的是**原件**——shipped 头部（`deepseek-flash · low` / `完全权限` / `子代理 N`）、**`用时 3 秒 ⌄` 回合折叠**（手绘面板明确不抄的东西）、shipped 操作行与底部状态行。走 `scope` 路线：无 Host I/O、无错误条。
+
+**两个关键发现（代码 + 实测，不靠猜）**：
+1. 渲染器**不要求** `openState === 'open'`——它只驱动 `useChatScroll({ready})`、loading 提示、error 条（`ui-chat/src/client/chat/ChatView.tsx:213`），行照常渲染，所以 `cold` 的会话也能画；`binding().session.handleRunning` 在实例上存在时顺手调用，running 也就准了。
+2. **`ctx.conversation.blocks` 的屏蔽会被别人覆盖**：`ui-model-selection` 为该会话建模型目录时会 `publish(undefined)` 清掉它（实测：块设成功、日志可证，但输入框仍可输入；它自己的注释也写着这是 "*an affordance, not enforcement*"）。改成**确定性做法**：feed 路线下插件的 pane 直接隐藏 shipped 输入框的 seat（`data-composer-seat`），由插件自己的接管输入框顶上——实测 shipped 输入框消失、`在服务器侧接管续聊…` 就位。
+
+**边界（诚实记录）**：`scope`/`address` 只能"读"，发言只能走插件自己的 composer（只有 `adopt` 能把 verbs 交给 shipped composer）；`address` 路线未做端到端实测（rc.1 有 `retainAgentScope`，走不到它），只做了源码级推演；`cold` 下 shipped 的自动跟随不初始化（滚动本身可用）。
+
 ### DSH 侧：`sessions.adopt` —— 让控制台能画"原件"（未提交，在 DSH 工作树里）
 用户要求"使用 dsh 原件"。查清了为什么做不到，以及缺的到底是什么：
 

@@ -68,6 +68,7 @@ export const zh = {
   mirrorGapBadge: '缺 {n} 条',
   loadOlder: '加载更早的消息',
   loadingOlder: '正在加载…',
+  composerBlocked: '这个会话运行在另一台机器上，请用下方的接管输入框发言',
   openSession: '打开',
 
   sessionsTitle: '会话',
@@ -350,6 +351,7 @@ export const en: Record<SessionSyncKey, string> = {
   mirrorGapBadge: '{n} missing',
   loadOlder: 'Load older messages',
   loadingOlder: 'Loading…',
+  composerBlocked: 'This Session runs on another machine; use the takeover composer below to speak in it',
   openSession: 'Open',
 
   sessionsTitle: 'Sessions',

@@ -596,10 +596,12 @@ function Conversation(props: {
         : shipped !== undefined
           ? (
             // The shipped conversation draws the Session, its own scroll body,
-            // and its own composer: this pane hands it the adopted reference
-            // and nothing else. Everything the console draws for itself below
-            // is the fallback on a build without the adoption API.
-            <div className={css.officialPane}>
+            // and its own composer: this pane hands it the reference and nothing
+            // else. The one exception is a route that drives the window itself —
+            // there the shipped composer would carry its prompt to a Host that
+            // has never heard of this Session, so its seat is hidden and the
+            // console's own takeover composer stands in.
+            <div className={props.official.composerOwned ? `${css.officialPane} ${css.composerReplaced}` : css.officialPane}>
               <props.SessionProvider session={shipped}>
                 {props.renderSlot(OFFICIAL_SLOT, {})}
               </props.SessionProvider>
@@ -661,9 +663,11 @@ function Conversation(props: {
             </div>
           )}
       {/* One composer per Session: the shipped one rides inside the shipped
-          conversation, so the console's own card stands down on the chat tab
-          while still carrying the takeover prompt on its trajectory tab. */}
-      {(shipped === undefined || tab === 'trajectory') && (
+          conversation, so the console's own card stands down on the chat tab —
+          except on a route that blocked the shipped composer, where this card is
+          the only way to speak in the Session, and on the trajectory tab, which
+          the shipped content does not draw at all. */}
+      {(shipped === undefined || props.official.composerOwned || tab === 'trajectory') && (
         <div className={css.composerRoot}>
           <form
             className={css.composerCard}

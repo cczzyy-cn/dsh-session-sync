@@ -1495,6 +1495,16 @@
   min-height: 0;
 }
 
+/* A route that drives the window itself cannot use the shipped composer: its
+   prompt would go to a Host that has never heard of this Session, and the
+   composer-block registry is an affordance another plugin may clear. Hiding the
+   seat is therefore the pane's own decision, and the console's takeover composer
+   below is what speaks in the Session. `data-composer-seat` is the shipped
+   content's own marker for the element this replaces. */
+.composerReplaced [data-composer-seat] {
+  display: none;
+}
+
 /* The reading column, capped for line length and centered on the same axis as
    the composer card. */
 .viewColumn {
