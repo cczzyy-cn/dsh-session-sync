@@ -315,6 +315,17 @@ All of them sit under `/dsh-session-sync` and behind the GUI's own gate.
   reported honestly (the console shows `缺 N 条` on its row and in the header)
   but stays short until the origin's window grows past the hole or the Session is
   re-published.
+- **Host-computed panels are unavailable for a mirrored Session, by nature.** The
+  shipped conversation still offers its change-review cards, and the official
+  `ui-deliverables` plugin fills them by asking *its own Host* for
+  `/api/changes.summary?sessionId=…&seq=…`. A mirrored Session lives on the sync
+  server, so that Host answers 404 — which that plugin treats as its ordinary
+  "the Host no longer serves this" state, caches once, and never retries, leaving
+  the card marked unavailable. The data cannot be recovered from the mirror
+  either: a `workspace/changes` event carries only `{ turn }`, and the files and
+  totals are computed by the Host from its own workspace. Making those cards work
+  would mean carrying the summary over the sync link *and* writing it into that
+  plugin's own state table — a deeper coupling than this plugin takes on today.
 - **One origin per machine name.** Two origins configured with the same
   `本机名称` will overwrite each other's mirror.
 - **A takeover prompt expires after two minutes**, and at most 32 may wait for
