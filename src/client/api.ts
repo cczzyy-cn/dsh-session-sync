@@ -31,11 +31,18 @@ const SESSION_POLL_MS = 15_000
  * The page may not exist in the mirror yet, in which case the server asks the
  * machine that owns the Session and the events arrive over the ordinary stream:
  * a read of its log, a POST back, and a trip through a proxy, which measured at
- * ten to twenty seconds on a cross-border link. Ten tries three seconds apart
- * covers that without leaving the button spinning on a machine that is simply
- * offline.
+ * ten to twenty seconds on a cross-border link. Those events also queue behind
+ * everything else that machine is publishing, so the wait has to cover a
+ * backlog and not just one round trip — measured live, a page that had been read
+ * and was sitting 1,766 events deep in the origin's outbox.
+ *
+ * Waiting is also what makes the click reliable: the page arrives as an ordinary
+ * event frame, and the browser's stream to the server is the least dependable leg
+ * of the whole path (`net::ERR_HTTP2_PROTOCOL_ERROR` on a proxied idle SSE).
+ * So the wait re-asks the endpoint and accepts either arrival: the page itself, or
+ * the window having moved below where it started.
  */
-const OLDER_ATTEMPTS = 10
+const OLDER_ATTEMPTS = 30
 const OLDER_WAIT_MS = 3_000
 
 /**
@@ -444,6 +451,15 @@ export class SyncClient {
         // The consumer is told the page itself, not the merged list: it holds its
         // own window, and a page is the part of it that goes before.
         this.notify(observer => { observer.older(open, older) })
+        return
+      }
+      // An empty answer is not the end of the story: the page was read on the
+      // machine that owns the Session and is on its way as ordinary event frames,
+      // which may have arrived between this request and the last. A window that
+      // now begins below where it did is the page, already merged.
+      const moved = current.transcript?.events[0]?.seq
+      if (moved !== undefined && moved < first) {
+        this.update({ loadingOlder: false })
         return
       }
       if (!older.hasMore) {

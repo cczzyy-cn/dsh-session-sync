@@ -69,10 +69,16 @@ const RESYNC_RETRY_MS = 30_000
 /**
  * Messages one history page spans when a reader asks for older events.
  *
- * The shipped client's own ordinary window is fifty messages, and matching it
- * means a page here lands on the same turn boundaries a local reader sees.
+ * Asking is a round trip through the origin's own log and back over the wire —
+ * `{kind:'older'}` down, a page read, a POST back — and an event is not a message:
+ * measured here, one real Session carried roughly six events per message, so a
+ * fifty-message page delivered under three hundred events. A long Session then
+ * needs ten times the requests it should, each one queued behind everything else
+ * that machine is publishing. The origin's own page ceiling is five hundred
+ * messages, which is what materializing already asks for, so a reader asks the
+ * same way and gets ten times as much per click.
  */
-const OLDER_PAGE_MESSAGES = 50
+const OLDER_PAGE_MESSAGES = 500
 
 /** Shortest gap between two history asks for the same Session. */
 const OLDER_ASK_FLOOR_MS = 2_000
