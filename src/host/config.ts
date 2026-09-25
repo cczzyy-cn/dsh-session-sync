@@ -46,13 +46,27 @@ export async function loadConfig(home: string, fallbackMachineName: string): Pro
   }
   let parsed: unknown
   try {
-    parsed = JSON.parse(text)
+    parsed = JSON.parse(stripByteOrderMark(text))
   } catch {
     parsed = undefined
   }
   return normalizeConfig(parsed, fallbackMachineName)
 }
 
+/**
+ * Drop a leading UTF-8 byte order mark.
+ *
+ * A document written by a Windows editor — Notepad, or PowerShell's own
+ * `Set-Content -Encoding UTF8` — routinely starts with one, and `JSON.parse`
+ * rejects it. Treating that as a corrupt document silently reset every setting
+ * to its default, which reads as "the plugin forgot my server" rather than as a
+ * parse error, so the mark is removed instead of trusted not to be there.
+ * @param text - the file's contents.
+ * @returns the same text without a leading mark.
+ */
+function stripByteOrderMark(text: string): string {
+  return text.charCodeAt(0) === 0xFE_FF ? text.slice(1) : text
+}
 /**
  * Write the configuration document atomically.
  * A rename over the target means a crash mid-write cannot leave a truncated
@@ -67,3 +81,4 @@ export async function saveConfig(home: string, config: SyncConfig): Promise<void
   await writeFile(temporary, `${JSON.stringify(config, null, 2)}\n`, 'utf8')
   await rename(temporary, path)
 }
+
