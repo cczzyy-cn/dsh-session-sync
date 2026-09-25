@@ -168,6 +168,20 @@ interface FollowHandle {
    * window the reader is looking at. -1 until a snapshot has been taken.
    */
   cursor: number
+  /**
+   * Whether the opening snapshot ever arrived, and why the last attempt ended.
+   *
+   * `cursor < 0` alone cannot say whether this follow is brand new or has been
+   * failing its opening for an hour, and that difference is the whole diagnosis
+   * for a mirror that will not page: the opening is delivered as one frame, so
+   * anything that interrupts the read — a link that flaps, a batch the server
+   * refuses — leaves the cut unset and every page read refused with it.
+   */
+  opened: boolean
+  /** Durable events this follow has delivered, for the same diagnosis. */
+  seen: number
+  /** How the last attempt ended, when it ended without an abort. */
+  ended?: string
 }
 
 /** The accumulator key of one step's text. */
@@ -305,6 +319,9 @@ export class SessionSyncService {
   view(): SyncState {
     const listening = this.server !== undefined
     const linked = this.linked
+    // Read once: each call rebuilds the object, and this view is assembled on
+    // every state broadcast.
+    const batch = this.link?.batchReport()
     return {
       role: this.config.isServer ? 'server' : 'client',
       machineName: this.config.machineName,
@@ -328,6 +345,18 @@ export class SessionSyncService {
           ...(this.followError === undefined ? {} : { error: this.followError }),
           ...(this.followErrorSession === undefined ? {} : { sessionId: this.followErrorSession }),
         },
+        ...(batch === undefined ? {} : { batch }),
+        follows: [...this.follows.values()].map(handle => ({
+          sessionId: handle.sessionId,
+          cursor: handle.cursor,
+          firstSeq: handle.firstSeq,
+          lastSeq: handle.lastSeq,
+          hasOlder: handle.hasOlder,
+          opened: handle.opened,
+          pending: handle.pending.length,
+          events: handle.seen,
+          ...(handle.ended === undefined ? {} : { ended: handle.ended }),
+        })),
         ...(this.lastPageRead === undefined ? {} : { page: this.lastPageRead }),
       }),
     }
@@ -650,19 +679,29 @@ export class SessionSyncService {
   private async pullOlder(sessionId: string, beforeSeq: number, maxMessages: number): Promise<void> {
     const handle = this.follows.get(sessionId)
     const controller = this.controller()
+    // Named rather than merged: every one of these has a different repair, and
+    // the merged text they used to share ("no follow or no page API") could not
+    // tell an unopened follow from a missing service. That ambiguity is what
+    // kept this feature's real fault invisible for a round.
+    const skip: NonNullable<SyncState['page']>['reason'] =
+      controller === undefined ? 'no-controller'
+        : typeof controller.page !== 'function' ? 'no-page-api'
+          : handle === undefined ? 'no-follow'
+            : handle.cursor < 0 ? 'no-cursor'
+              : undefined
     this.lastPageRead = {
       sessionId,
       beforeSeq,
       ...(handle === undefined ? {} : { throughSeq: handle.cursor }),
-      ...(handle === undefined || controller === undefined || handle.cursor < 0 || typeof controller.page !== 'function'
-        ? { error: 'no follow or no page API' }
-        : {}),
+      ...(skip === undefined ? {} : { reason: skip }),
     }
-    if (handle === undefined || controller === undefined || handle.cursor < 0) return
-    if (typeof controller.page !== 'function') return
+    if (skip !== undefined || handle === undefined) return
     const now = Date.now()
     const previous = this.pageAsked.get(sessionId)
-    if (previous !== undefined && now - previous < PAGE_FLOOR_MS) return
+    if (previous !== undefined && now - previous < PAGE_FLOOR_MS) {
+      this.lastPageRead = { ...this.lastPageRead, reason: 'rate-limited' }
+      return
+    }
     this.pageAsked.set(sessionId, now)
     try {
       const page = await controller.page(
@@ -826,6 +865,8 @@ export class SessionSyncService {
       firstSeq: -1,
       hasOlder: false,
       cursor: -1,
+      opened: false,
+      seen: 0,
     }
     this.follows.set(sessionId, handle)
     void (async () => {
@@ -835,11 +876,17 @@ export class SessionSyncService {
           handle.abort.signal,
         )
         for await (const frame of stream) this.absorb(handle, frame)
+        // A stream that ends without an abort is not a Session that stopped
+        // being interesting: it is an attempt that failed. It is named here so
+        // the index can say so, and the next reconcile re-opens it.
+        if (!handle.abort.signal.aborted) handle.ended = 'the follow stream ended'
       } catch (error: unknown) {
         if (!handle.abort.signal.aborted) {
-          this.followError = describe(error)
+          const reason = describe(error)
+          handle.ended = reason
+          this.followError = reason
           this.followErrorSession = sessionId
-          this.ctx.logger.warn(`dsh-session-sync: follow for "${sessionId}" ended: ${describe(error)}`)
+          this.ctx.logger.warn(`dsh-session-sync: follow for "${sessionId}" ended: ${reason}`)
         }
       } finally {
         if (this.follows.get(sessionId) === handle) this.follows.delete(sessionId)
@@ -1072,6 +1119,11 @@ export class SessionSyncService {
     if (frameType === 'snapshot' || frameType === 'opened') {
       if (typeof carrier['cursor'] === 'number') handle.cursor = carrier['cursor']
       if (typeof carrier['hasMore'] === 'boolean') handle.hasOlder = carrier['hasMore']
+      // The opening is the frame a page read depends on, so whether it ever
+      // arrived is recorded rather than inferred from the cursor: an empty
+      // Session legitimately cuts at -1, and a follow that never opened must not
+      // look like one that did.
+      if (typeof carrier['cursor'] === 'number') handle.opened = true
     }
     const page = carrier['page'] as Record<string, unknown> | undefined
     const records = Array.isArray(carrier['records'])
@@ -1189,6 +1241,7 @@ export class SessionSyncService {
 
 /** Append one durable event to the buffer, bounded so memory cannot run away. */
 function buffer(handle: FollowHandle, event: MirrorEvent): void {
+  handle.seen += 1
   // The watermark is what the index publishes, so it tracks what this follow has
   // *read* rather than what is still queued: a flush empties the buffer, and an
   // extent that forgot itself on every flush would tell the mirror nothing.
