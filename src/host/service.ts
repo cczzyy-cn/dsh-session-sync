@@ -646,20 +646,47 @@ export class SessionSyncService {
         if (!this.ledger.owns(session.sessionId)) continue
         const entry = this.ledger.get(session.sessionId)
         if (entry?.stopped !== undefined) continue
-        if (session.eventCount <= (entry?.events ?? 0)) continue
-        const transcript = this.hub.transcript(machine.machineName, session.sessionId, { limit: 100_000 })
-        if (transcript === undefined) continue
-        const result = await catchUpSession(persistence, session.sessionId, transcript.events as MirrorEnvelope[])
-        if (result.ok && result.written > 0) {
-          await this.ledger.mark(session.sessionId, machine.machineName, result.stored)
-          report.advanced += 1
-        } else if (!result.ok && result.wait !== true) {
-          // Only a log this Host cannot use is final: a hole below its end stays a
-          // hole, and no later pass will fill it. A mirror that has not delivered
-          // the events yet is a *wait* — after a restart every mirror rebuilds
-          // from a tail window, so "nothing appendable" is the normal state for a
-          // while, and stopping on it recorded a merely-behind copy as broken.
-          await this.ledger.stop(session.sessionId, result.reason ?? 'the copy stopped tracking the mirror')
+        const needs = entry?.events ?? 0
+        // The *newest* sequence the mirror holds is the signal, not how many events
+        // it holds. A mirror serves a tail window, so its count says nothing about
+        // where it sits: a 310-event window sitting at seq 1100..1409 has a count
+        // below a 1016-event log's end while carrying plenty to append. Reading the
+        // count as a high-water mark is what kept this copy frozen.
+        const newest = this.hub.transcript(machine.machineName, session.sessionId, { limit: 1 })?.events[0]?.seq
+        if (newest === undefined || newest < needs) continue
+        // The ceiling is raised for the read *and* the walk: the mirror trims from
+        // the front at its own cap, so a page walking past it would be trimmed away
+        // by the arrivals above it and the low edge would park at the cap.
+        const transcript = this.hub.transcript(machine.machineName, session.sessionId, {
+          limit: 100_000,
+          retain: Number.MAX_SAFE_INTEGER,
+        })
+        try {
+          if (transcript === undefined) continue
+          const lowest = transcript.events[0]?.seq
+          if (lowest !== undefined && lowest > needs) {
+            // The log's end and the mirror's start are apart — after a restart the
+            // mirror rebuilds from a tail window, so this is the normal shape. Walk
+            // the mirror down to meet the log with the same read a manual
+            // materialize uses; the next pass appends what that fetched.
+            await this.backfill(machine.machineName, session.sessionId, transcript)
+            continue
+          }
+          const result = await catchUpSession(persistence, session.sessionId, transcript.events as MirrorEnvelope[])
+          if (result.ok && result.written > 0) {
+            await this.ledger.mark(session.sessionId, machine.machineName, result.stored)
+            report.advanced += 1
+          } else if (!result.ok && result.wait !== true) {
+            // Only a log this Host cannot use is final: a hole below its end stays a
+            // hole, and no later pass will fill it. A mirror that has not delivered
+            // the events yet is a *wait* — after a restart every mirror rebuilds
+            // from a tail window, so "nothing appendable" is the normal state for a
+            // while, and stopping on it recorded a merely-behind copy as broken.
+            await this.ledger.stop(session.sessionId, result.reason ?? 'the copy stopped tracking the mirror')
+          }
+        } finally {
+          // The hold is for the walk, not for the Session's life.
+          this.hub.transcript(machine.machineName, session.sessionId, { limit: 1, release: true })
         }
       }
     }
