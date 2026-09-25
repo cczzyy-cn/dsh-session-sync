@@ -123,9 +123,31 @@ seq 9499..9898，前面还有九千多条）。所以物化前必须**回填源�
 5. 之后的新帧继续 append（同一个 handle）
 ```
 
-**顺序上的另一个结论**：客户端那条伪装（合成 id + `retainAgentScope`）**暂时不动**——
-物化一旦成立，这条会话在服务器上就是真会话，DSH 自己能画，伪装那条路可以整条撤掉；
-但现在还没有物化，先动它会立刻破坏正在工作的控制台。
+## 11. 物化写入器的端到端结果（2026-09-25，已跑）
+
+两个一次性实例（server 用**自己的** sessions 目录、origin 发布一条短会话 `session-4cf56909`，222 事件）。
+触发：`POST /dsh-session-sync/materialize {"machineName":"mat-origin","sessionId":"session-4cf56909-…"}`。
+
+```json
+{"result":{"ok":true,"written":222,"skipped":0,"archived":true}}
+```
+
+| 检查 | 结果 | 证据 |
+| --- | --- | --- |
+| 写入 | ✅ | `written 222 / skipped 0 / archived true`（归档成功 ⇒ 日志已存在且被 registry 认作"已知会话"，与 ③ 的推理一致） |
+| 落盘位置 | ✅ | server home 自己的 `sessions\--C-…-git-c-vision--\session-4cf56909-…\session.v4.jsonl.zstd`（90 KB；项目目录来自 header 的 cwd） |
+| **seq 与源站一致** | ✅ | 逐帧解压对比：**源站 223 记录 / seq 0..221 / 首 `session, permission/preset, sandbox/mode` / 尾 `turn/end, session/end-seed`；物化 223 / seq 0..221 / 头尾类型完全相同** |
+| Host 认它 | ✅ | 插件 `/sessions`（读 Host summaries）返回该会话：`cwd` 正确、`blank:false`、`updatedAt` 来自日志 ⇒ Host 解析了这份日志 |
+| 原版分页 | ✅（组合） | 第 8 节的 ② 已在**同类的"外来日志"**上实测过原版「加载更早」；这里换的只是日志来源 |
+| prompt 被拒 | ✅（组合） | 本次 `archived:true` 是真实 registry 的结果；归档即拒答由上游测试证明（第 8 节 ③） |
+
+写入器第一版**一次通过**，零跳过。已知的下一步（都不阻塞）：
+
+1. **长会话回填**：写入器已经会拒（`backfill is required`），回填实现是下一步。
+2. **增量追加**：现在写完就 `close()`；之后要持有 handle 让新帧继续 append。
+3. **客户端那条伪装可以撤**：物化成立后这条会话就是真会话，DSH 自己能画。
+4. 标题未物化（`title` 显示为 id）——标题投影不在日志里，属外观项。
+
 
 ## 10. 已定的两项（2026-09-25）
 
