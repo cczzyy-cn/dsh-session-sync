@@ -67,7 +67,7 @@ const LIVE_LIMIT = 64
  *
  * The server asks on a 30 s timer while a hole survives, and a follow that is
  * still delivering its snapshot must not be torn down and restarted underneath
- * itself 鈥?that would turn a repair into the reason it never finishes.
+ * itself — that would turn a repair into the reason it never finishes.
  */
 const RESYNC_FLOOR_MS = 5_000
 
@@ -157,7 +157,7 @@ interface FollowHandle {
    * Whether this machine's log holds history below what the follow delivered.
    *
    * Taken from the opening snapshot's own `hasMore`, which is the only thing
-   * that knows 鈥?the window's lowest sequence is the window's, not the log's.
+   * that knows — the window's lowest sequence is the window's, not the log's.
    * Cleared when a page read reaches the beginning.
    */
   hasOlder: boolean
@@ -174,8 +174,8 @@ interface FollowHandle {
    * `cursor < 0` alone cannot say whether this follow is brand new or has been
    * failing its opening for an hour, and that difference is the whole diagnosis
    * for a mirror that will not page: the opening is delivered as one frame, so
-   * anything that interrupts the read 鈥?a link that flaps, a batch the server
-   * refuses 鈥?leaves the cut unset and every page read refused with it.
+   * anything that interrupts the read — a link that flaps, a batch the server
+   * refuses — leaves the cut unset and every page read refused with it.
    */
   opened: boolean
   /** Durable events this follow has delivered, for the same diagnosis. */
@@ -246,7 +246,7 @@ export class SessionSyncService {
    *
    * The host half writes its log where this deployment cannot read it, and a
    * page that comes back empty is indistinguishable from a machine that has
-   * nothing older 鈥?so the one fact that separates them is published here.
+   * nothing older — so the one fact that separates them is published here.
    */
   private lastPageRead: SyncState['page']
 
@@ -496,8 +496,8 @@ export class SessionSyncService {
     transcript: MirrorTranscript,
   ): Promise<number> {
     // The edge is the *lowest* sequence the mirror holds. It is passed through
-    // as-is because the ask's bound is inclusive 鈥?the page the origin reads ends
-    // at that event 鈥?and the translation to the page API's exclusive bound
+    // as-is because the ask's bound is inclusive — the page the origin reads ends
+    // at that event — and the translation to the page API's exclusive bound
     // happens in {@link pullOlder}, which is the one place that knows both.
     const edge = (): number | undefined =>
       this.hub.transcript(machineName, sessionId, { limit: 100_000 })?.events[0]?.seq
@@ -518,8 +518,8 @@ export class SessionSyncService {
         }
       }
       rounds += 1
-      // A round that moved nothing is not proof of the end 鈥?the origin may still
-      // be reading 鈥?so a few of them have to pass before this gives up.
+      // A round that moved nothing is not proof of the end — the origin may still
+      // be reading — so a few of them have to pass before this gives up.
       idle = arrived < lowest ? 0 : idle + 1
       lowest = arrived
       if (idle >= BACKFILL_IDLE_ROUNDS) break
@@ -638,7 +638,7 @@ export class SessionSyncService {
    *
    * The buffer is emptied into the link *before* the follow is torn down. A
    * follow that is aborted takes its `pending` with it, and the link flaps on
-   * every failed post 鈥?so a burst sitting in that buffer when the stream
+   * every failed post — so a burst sitting in that buffer when the stream
    * dropped was discarded, and because it sat above everything the mirror held,
    * the loss left no hole to notice: just a Session that was quietly a little
    * behind, forever.
@@ -672,10 +672,10 @@ export class SessionSyncService {
    *
    * The page is cut against the follow's own opening cursor, so it cannot
    * disagree with the window being read, and its events go out through the same
-   * buffer and outbox as live ones 鈥?which is what makes them arrive in order
+   * buffer and outbox as live ones — which is what makes them arrive in order
    * and survive a failed post.
    *
-   * `throughSeq` arrives as the *inclusive* upper bound the reader asked for 鈥?   * the lowest sequence its window holds 鈥?while the controller's `beforeSeq` is
+   * `throughSeq` arrives as the *inclusive* upper bound the reader asked for —    * the lowest sequence its window holds — while the controller's `beforeSeq` is
    * exclusive, so the page is asked for one past it. Reading the reader's value
    * as if it were already exclusive left exactly that one event missing from
    * every page, which put a hole at every page boundary of a backfill.
@@ -732,7 +732,7 @@ export class SessionSyncService {
         added += 1
       }
       // The page knows where the log begins, so the next index tells the truth
-      // about whether anything is still below 鈥?which is how the reader's
+      // about whether anything is still below — which is how the reader's
       // "older" control finally goes away.
       const hadOlder = handle.hasOlder
       handle.hasOlder = page.hasMore
@@ -767,7 +767,7 @@ export class SessionSyncService {
    * Re-open one Session's follow because its mirror reported a hole.
    *
    * The opening snapshot is the whole retained history, so replaying it hands
-   * back whatever a lost batch never delivered 鈥?and the mirror now decides
+   * back whatever a lost batch never delivered — and the mirror now decides
    * what is new by membership rather than by a high-water mark, which is what
    * makes that replay able to fill a hole instead of being rejected as old.
    *
@@ -1123,7 +1123,7 @@ export class SessionSyncService {
     // ours to choose, and a history nobody reads is a Session that looks empty.
     if (frameType === 'snapshot' || frameType === 'opened') this.seedStream(handle, carrier)
     // The opening's cut, kept because a backwards page must be read against the
-    // same point the window was taken at 鈥?and the opening's own `hasMore`,
+    // same point the window was taken at — and the opening's own `hasMore`,
     // which is the only statement about history below the window.
     if (frameType === 'snapshot' || frameType === 'opened') {
       if (typeof carrier['cursor'] === 'number') handle.cursor = carrier['cursor']
