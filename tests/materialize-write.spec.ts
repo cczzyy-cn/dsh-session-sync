@@ -23,8 +23,9 @@ import {
   catchUpSession,
   materializeSession,
   startFor,
+  storedEventCount,
   type MaterializeInput,
-  type SessionWriteHandleLike,
+  type SessionHandleLike,
   type SessionPersistenceLike,
 } from '../src/host/materialize.ts'
 
@@ -48,8 +49,12 @@ function storage(stored?: number): {
   const written: unknown[][] = []
   const headers: Record<string, unknown>[] = []
   const opened: string[] = []
-  const handle = (): SessionWriteHandleLike => ({
+  const handle = (): SessionHandleLike => ({
     append: (batch: readonly unknown[]) => { written.push([...batch]); return Promise.resolve() },
+    // What a real backend answers: the events from `offset` to the end of the log.
+    read: (offset = 0) => Promise.resolve({
+      events: range(Math.max(0, (stored ?? 0) - offset)).map(index => ({ seq: index + offset })),
+    }),
     flush: () => Promise.resolve(),
     close: () => Promise.resolve(),
   })
@@ -62,11 +67,15 @@ function storage(stored?: number): {
         headers.push(header)
         return Promise.resolve(handle())
       },
-      open: (id: string) => {
-        opened.push(id)
+      open: (id: string, access: string) => {
+        opened.push(`${id}:${access}`)
         return Promise.resolve(handle())
       },
-      stat: () => Promise.resolve(stored === undefined ? undefined : { eventCount: stored }),
+      // The deployed JSONL backend states the header and an opaque revision, and
+      // no event count — `eventCount` is optional in the contract exactly because
+      // backends like it do not compute one. The fake has to say the same, or the
+      // fallback path is never exercised.
+      stat: () => Promise.resolve(stored === undefined ? undefined : {}),
     },
   }
 }
@@ -176,11 +185,36 @@ describe('the three situations behind one refused create', () => {
   })
 })
 
+describe('measuring a log whose backend states no count', () => {
+  // `eventCount` is optional in the storage contract ("when the backend can
+  // provide it cheaply from metadata; otherwise absent") and the JSONL backend
+  // does not provide it. Trusting the absent field is how a 705 KB log came to be
+  // recorded as `events: 0` on the deployed server and then misread as missing.
+  it('falls back to reading the log when stat omits the count', async () => {
+    const { persistence, opened } = storage(7)
+    assert.equal(await storedEventCount(persistence, 'session-measure'), 7)
+    assert.deepEqual(opened, ['session-measure:read'], 'the log itself is the authority')
+  })
+
+  it('uses a stated count without opening the log', async () => {
+    const { persistence, opened } = storage(7)
+    persistence.stat = () => Promise.resolve({ eventCount: 7 })
+    assert.equal(await storedEventCount(persistence, 'session-stated'), 7)
+    assert.deepEqual(opened, [], 'a stated count needs no read')
+  })
+
+  it('says a missing log is missing, rather than empty', async () => {
+    // The two were one number before, and "could not measure" read as "absent".
+    const { persistence } = storage()
+    assert.equal(await storedEventCount(persistence, 'session-absent'), undefined)
+  })
+})
+
 describe('continuing an existing mirror log', () => {
   it('appends only what the log is missing', async () => {
     const { persistence, written, opened } = storage(4)
     const result = await catchUpSession(persistence, 'session-grow', events(range(9)))
-    assert.deepEqual(opened, ['session-grow'])
+    assert.deepEqual(opened, ['session-grow:read', 'session-grow:write'], 'measured, then opened for the append')
     assert.equal(result.ok, true)
     assert.equal(result.written, 5, 'seqs 4..8')
     assert.equal(result.stored, 9)

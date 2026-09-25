@@ -68,34 +68,63 @@ export interface MirrorEnvelope {
   readonly data: unknown
 }
 
-/** The write handle the Host's durable storage hands out. */
-export interface SessionWriteHandleLike {
+/** The handle the Host's durable storage hands out. */
+export interface SessionHandleLike {
   append(events: readonly unknown[]): Promise<void>
+  read(offset?: number, length?: number): Promise<{ readonly events: readonly unknown[] }>
   flush(): Promise<void>
   close(): Promise<void>
 }
 
 /** What `stat` says about a stored Session. */
 export interface SessionStoredSnapshot {
-  /** How many events the log holds, when the backend reports it. */
+  /** How many events the log holds, when the backend reports it cheaply. */
   readonly eventCount?: number
 }
 
 /** The Host's durable Session storage. */
 export interface SessionPersistenceLike {
-  create(header: Record<string, unknown>): Promise<SessionWriteHandleLike>
+  create(header: Record<string, unknown>): Promise<SessionHandleLike>
   /**
-   * Take a write handle on an *existing* log and continue it.
+   * Take a handle on an *existing* log — for reading its extent, or for
+   * continuing it.
    *
-   * This is what makes the openable copy durable rather than one-shot: the
-   * handle starts at the stored event count, so an append has to begin at that
-   * sequence. It is also the single-writer claim — a Session already owned by a
-   * live run refuses it (`SessionAlreadyOwnedError`), which is the right answer
+   * A write handle starts at the stored event count, so an append has to begin at
+   * that sequence. It is also the single-writer claim — a Session already owned by
+   * a live run refuses it (`SessionAlreadyOwnedError`), which is the right answer
    * for a mirror.
    */
-  open(id: string, access: 'read' | 'write'): Promise<SessionWriteHandleLike>
-  /** Read a stored Session's shape without taking a handle. */
+  open(id: string, access: 'read' | 'write'): Promise<SessionHandleLike>
+  /** Read a stored Session's shape without taking a full read. */
   stat(id: string): Promise<SessionStoredSnapshot | undefined>
+}
+
+/**
+ * How many events one stored Session holds, or undefined when nothing is on disk.
+ *
+ * `eventCount` is optional in the storage contract — "when the backend can provide
+ * it cheaply from metadata; otherwise absent" — and the JSONL backend does not
+ * provide it, which is how a 705 KB log came to be recorded as `events: 0` and
+ * then misread as "the log is not on disk". So the fallback is the log itself:
+ * one read, at the moment a copy is adopted or first continued, with the count
+ * kept in the ledger afterwards.
+ * @param persistence - the Host's durable Session storage.
+ * @param sessionId - the Session to measure.
+ * @returns the stored event count, or undefined when no log exists.
+ */
+export async function storedEventCount(
+  persistence: SessionPersistenceLike,
+  sessionId: string,
+): Promise<number | undefined> {
+  const snapshot = await persistence.stat(sessionId)
+  if (snapshot === undefined) return undefined
+  if (typeof snapshot.eventCount === 'number') return snapshot.eventCount
+  const handle = await persistence.open(sessionId, 'read')
+  try {
+    return (await handle.read(0)).events.length
+  } finally {
+    await handle.close().catch(() => undefined)
+  }
 }
 
 /** What the writer needs to know about the Session it is materializing. */
@@ -247,7 +276,7 @@ export async function materializeSession(
     }
   }
 
-  let handle: SessionWriteHandleLike
+  let handle: SessionHandleLike
   try {
     // Restated for this Host's platform: the format validator's notion of
     // "absolute" is the one in force here, not the one where the Session ran.
@@ -303,11 +332,16 @@ export async function catchUpSession(
     ({ ok: false, written: 0, skipped: 0, stored, created: false, reason })
   if (persistence === undefined) return none(0, 'this Host has no session storage mounted')
 
-  let stored = 0
+  let stored: number
   try {
-    stored = (await persistence.stat(sessionId))?.eventCount ?? 0
+    const known = await storedEventCount(persistence, sessionId)
+    // No log at all, as opposed to a log that is merely empty. The two were once
+    // the same number here, and a copy whose extent could not be read was
+    // reported as absent — which is how a 705 KB log got marked "stopped".
+    if (known === undefined) return none(0, 'the log is not on disk; it has to be created first')
+    stored = known
   } catch (error: unknown) {
-    return none(0, `cannot stat the log: ${String(error)}`)
+    return none(0, `cannot read the log: ${String(error)}`)
   }
   if (stored === 0) return none(0, 'the log is not on disk; it has to be created first')
 
@@ -316,7 +350,7 @@ export async function catchUpSession(
   const { written, skipped, endsAt } = contiguous(pending, stored)
   if (written.length === 0) return none(stored, `the mirror holds nothing at seq ${String(stored)}`)
 
-  let handle: SessionWriteHandleLike
+  let handle: SessionHandleLike
   try {
     handle = await persistence.open(sessionId, 'write')
   } catch (error: unknown) {

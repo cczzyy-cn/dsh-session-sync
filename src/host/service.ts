@@ -39,6 +39,7 @@ import {
   catchUpSession,
   materializeSession,
   startFor,
+  storedEventCount,
   type MaterializeResult,
   type MirrorEnvelope,
   type SessionPersistenceLike,
@@ -676,7 +677,12 @@ export class SessionSyncService {
         // This Host's own Session: not ours to write, and not ours to gate.
         if (start === 'ours') continue
         if (start === 'adopt') {
-          await this.ledger.mark(session.sessionId, machine.machineName, stored?.eventCount ?? 0)
+          // `stat` states no cheap event count on this backend, so the log is
+          // measured once, here; the ledger carries the number from then on. A
+          // copy recorded as `0` would be misread as "not on disk" by the next
+          // pass and marked stopped.
+          const count = await storedEventCount(persistence, session.sessionId).catch(() => undefined)
+          await this.ledger.mark(session.sessionId, machine.machineName, count ?? 0)
           report.adopted += 1
           this.broadcastState()
           return report
