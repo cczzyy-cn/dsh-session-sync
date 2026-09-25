@@ -1331,6 +1331,16 @@ window.__ModuleLoader__.load({
 			transient = 0;
 			/** Highest durable sequence seen, the base of a transient row's position. */
 			lastSeq = -1;
+			/**
+			* Sequences the drawn window already carries.
+			*
+			* An older page reaches the mirror twice — once as the page this console read,
+			* once as ordinary frames when the origin replays it — and the second arrival
+			* must not be appended on top of the first. The shipped conversation's
+			* assembler requires each node's matches in sequence order, so a redelivered
+			* event, like an older one, would break the pane rather than merely duplicate.
+			*/
+			fed = /* @__PURE__ */ new Set();
 			released = false;
 			/**
 			* Take one remote Session up through whichever route this build offers.
@@ -1389,6 +1399,7 @@ window.__ModuleLoader__.load({
 				this.liveAttempt = void 0;
 				this.liveText.clear();
 				const events = transcript.events.filter((event) => !isPanelOnly(event));
+				this.fed = new Set(events.map((event) => event.seq));
 				if (this.handle !== void 0) {
 					this.handle.replace(events, false);
 					this.handle.setRunning(transcript.running);
@@ -1406,19 +1417,36 @@ window.__ModuleLoader__.load({
 			* A settlement goes through `settle` rather than `append`: it is the durable
 			* end of a live attempt, and the plugin's own rule — a settlement clears the
 			* step's streaming text — is exactly that act.
+			*
+			* Two of these envelopes are not news, and neither may be appended:
+			*
+			* - one the window already carries, because an older page reaches this console
+			*   both as the page it read and as the origin's ordinary replay frames;
+			* - one below the window, which is that replay: it is history, and the shipped
+			*   conversation's assembler requires each node's matches in sequence order, so
+			*   appending it breaks the pane instead of merely duplicating a row.
+			*
 			* @param events - the frame's envelopes.
 			*/
 			appendEvents(events) {
 				if (this.released) return;
+				const first = this.source?.getSnapshot().entries[0]?.event.seq;
+				const history = [];
 				for (const event of events) {
 					if (isPanelOnly(event)) {
 						this.observe(event.seq);
+						continue;
+					}
+					if (this.fed.has(event.seq)) continue;
+					if (first !== void 0 && event.seq < first) {
+						history.push(event);
 						continue;
 					}
 					if (isSettlement(event)) {
 						this.settle(event);
 						continue;
 					}
+					this.fed.add(event.seq);
 					if (this.handle !== void 0) {
 						this.handle.append(event);
 						continue;
@@ -1426,6 +1454,10 @@ window.__ModuleLoader__.load({
 					this.observe(event.seq);
 					this.source?.append(entryOf(event));
 				}
+				if (history.length > 0) this.prependOlder({
+					events: history,
+					hasMore: true
+				});
 			}
 			/**
 			* The sequence range the window this console drives covers.
@@ -1454,8 +1486,12 @@ window.__ModuleLoader__.load({
 			*/
 			prependOlder(page) {
 				if (this.released) return;
-				const events = page.events.filter((event) => !isPanelOnly(event));
+				const events = page.events.filter((event) => !isPanelOnly(event) && !this.fed.has(event.seq));
 				if (events.length === 0) return;
+				for (const event of events) {
+					this.fed.add(event.seq);
+					this.observe(event.seq);
+				}
 				this.source?.prepend(events.map(entryOf), page.hasMore);
 			}
 			/**
