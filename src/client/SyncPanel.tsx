@@ -529,6 +529,9 @@ function Conversation(props: {
     && state.transcript !== undefined
     ? props.official.referenceFor(props.machineName, session.sessionId)
     : undefined
+  // Read on every render of an open pane: the low end is what moves when older
+  // history is paged in, and a frame arriving is what re-renders this panel.
+  const paneRange = shipped === undefined ? undefined : props.official.windowRange()
   return (
     <>
       <header className={css.viewHeader}>
@@ -567,6 +570,7 @@ function Conversation(props: {
           {props.official.supported && (
             <span className={css.routeBadge} title={t('paneRouteHint')}>
               {t('paneRoute', { route: props.official.route ?? '' })}
+              {paneRange === undefined ? '' : ` · ${String(paneRange.first)}–${String(paneRange.last)}`}
             </span>
           )}
           <span className={css.viewSpacer} />

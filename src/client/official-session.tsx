@@ -323,6 +323,13 @@ export interface OfficialBridgeFace {
    */
   readonly route: OfficialRoute | undefined
   /**
+   * The sequence range the shipped window currently covers, when it is drawn.
+   *
+   * The low end is the one that moves when older history is paged in, so it is
+   * also the only way to see from the outside that paging reached the pane.
+   */
+  windowRange(): { first: number; last: number } | undefined
+  /**
    * Whether the console must draw the composer itself.
    *
    * True on the routes that drive the window directly: the shipped composer
@@ -555,6 +562,19 @@ export class OfficialMirror {
   }
 
   /**
+   * The sequence range the window this console drives covers.
+   * @returns the range, or undefined while no window is drawn.
+   */
+  windowRange(): { first: number; last: number } | undefined {
+    const entries = this.source?.getSnapshot().entries
+    if (entries === undefined || entries.length === 0) return undefined
+    const first = entries[0]?.event.seq
+    const last = entries[entries.length - 1]?.event.seq
+    if (first === undefined || last === undefined) return undefined
+    return { first, last }
+  }
+
+  /**
    * Put one older page below the window.
    *
    * This is the only way the older end is reachable in the shipped pane: the
@@ -762,6 +782,11 @@ export class OfficialSessions implements OfficialBridgeFace, SyncTransportObserv
   /** The route this build offers, for the panel to name. */
   get route(): OfficialRoute | undefined {
     return this.routeOf()
+  }
+
+  /** The sequence range the shipped window covers, for the panel to name. */
+  windowRange(): { first: number; last: number } | undefined {
+    return this.current?.mirror.windowRange()
   }
 
   /**

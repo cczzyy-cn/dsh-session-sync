@@ -1428,6 +1428,21 @@ window.__ModuleLoader__.load({
 				}
 			}
 			/**
+			* The sequence range the window this console drives covers.
+			* @returns the range, or undefined while no window is drawn.
+			*/
+			windowRange() {
+				const entries = this.source?.getSnapshot().entries;
+				if (entries === void 0 || entries.length === 0) return void 0;
+				const first = entries[0]?.event.seq;
+				const last = entries[entries.length - 1]?.event.seq;
+				if (first === void 0 || last === void 0) return void 0;
+				return {
+					first,
+					last
+				};
+			}
+			/**
 			* Put one older page below the window.
 			*
 			* This is the only way the older end is reachable in the shipped pane: the
@@ -1610,6 +1625,10 @@ window.__ModuleLoader__.load({
 			/** The route this build offers, for the panel to name. */
 			get route() {
 				return this.routeOf();
+			}
+			/** The sequence range the shipped window covers, for the panel to name. */
+			windowRange() {
+				return this.current?.mirror.windowRange();
 			}
 			/**
 			* Whether the console must draw the composer itself.
@@ -5251,6 +5270,7 @@ window.__ModuleLoader__.load({
 			};
 			const delivery = state.delivery;
 			const shipped = props.official.supported && props.renderSlot !== void 0 && props.SessionProvider !== void 0 && state.transcript !== void 0 ? props.official.referenceFor(props.machineName, session.sessionId) : void 0;
+			const paneRange = shipped === void 0 ? void 0 : props.official.windowRange();
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [
 				/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("header", {
 					className: sync_module_css_default.viewHeader,
@@ -5291,10 +5311,10 @@ window.__ModuleLoader__.load({
 								title: t("mirrorGaps"),
 								children: t("mirrorGapBadge", { n: session.missingEvents })
 							}),
-							props.official.supported && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+							props.official.supported && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
 								className: sync_module_css_default.routeBadge,
 								title: t("paneRouteHint"),
-								children: t("paneRoute", { route: props.official.route ?? "" })
+								children: [t("paneRoute", { route: props.official.route ?? "" }), paneRange === void 0 ? "" : ` · ${String(paneRange.first)}–${String(paneRange.last)}`]
 							}),
 							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { className: sync_module_css_default.viewSpacer }),
 							/* @__PURE__ */ (0, react_jsx_runtime.jsx)(ChromeChips, {
