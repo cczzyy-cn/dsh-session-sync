@@ -102,7 +102,6 @@ function makeOrigin(all: readonly MirrorEvent[], asks: { beforeSeq: number }[]):
       // never past what the origin's own page ceiling allows.
       const below = all.filter(event => event.seq < throughSeq + 1)
       const page = below.slice(-Math.max(1, maxMessages))
-      console.log('DBG origin page', JSON.stringify({ beforeSeq: throughSeq + 1, size: page.length, hasMissing: page.some(e => e.seq === MISSING) }))
       link.publishFrames(SESSION, page)
     },
   })

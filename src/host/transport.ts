@@ -391,6 +391,14 @@ export class OriginLink {
    * order, until the server answers 2xx.
    */
   private readonly outbox: { sessionId: string; events: readonly MirrorEvent[] }[] = []
+  /**
+   * The newest header per Session, waiting for a batch to ride out on.
+   *
+   * Held here rather than on a chosen batch because what goes out is whatever is at
+   * the head: a Session with events already queued has no "first batch of this call",
+   * and a header pinned to one would wait behind them.
+   */
+  private readonly headerOut: Map<string, SessionHeader> = new Map()
   /** Events held in the outbox, so the cap is measured in events, not batches. */
   private outboxEvents = 0
   /** Whether the drain loop is running, so only one posts at a time. */
@@ -442,6 +450,9 @@ export class OriginLink {
     // post history the Session may no longer even publish.
     this.outbox.length = 0
     this.outboxEvents = 0
+    // The header goes with the events it describes: a link that is over will re-read
+    // the opening window on its next follow, and that window carries it.
+    this.headerOut.clear()
     this.setLinked(false)
   }
 
@@ -463,9 +474,21 @@ export class OriginLink {
    * retried until accepted.
    * @param sessionId - the published Session.
    * @param events - the newly observed durable events.
+   * @param header - the Session's own header, when this publish is the one carrying it.
    */
-  publishFrames(sessionId: string, events: readonly MirrorEvent[]): void {
-    if (events.length === 0) return
+  publishFrames(sessionId: string, events: readonly MirrorEvent[], header?: SessionHeader): void {
+    // Recorded before the batch is judged, and never cleared on a successful post: a
+    // batch with no events is not a publish that carries nothing — it is the one that
+    // carries only the header. Clearing it once "sent" was a bookkeeping that raced the
+    // next statement: a header set while an earlier post was in flight was deleted by
+    // that post's completion, and the wire then carried none. Sending it with every
+    // batch is idempotent (the mirror overwrites), costs a few hundred bytes, and
+    // removes the ordering question entirely.
+    if (header !== undefined) this.headerOut.set(sessionId, header)
+    if (events.length === 0) {
+      this.pumpFrames()
+      return
+    }
     // One follow opening on a long Session is its whole window, megabytes at
     // once, and the server refuses a body over its limit. Sending it as one
     // batch did not merely fail: the same oversized batch was retried on every
@@ -517,9 +540,14 @@ export class OriginLink {
         for (;;) {
           const batch = this.outbox[0]
           if (batch === undefined) break
+          const carried = this.headerOut.get(batch.sessionId)
           const accepted = await this.post('/frames', {
             sessionId: batch.sessionId,
             events: batch.events,
+            // Sent with every batch, and not remembered as "sent": the mirror is what
+            // needs it, and a header held only in this process is a header the server
+            // cannot use when it writes the log. Re-sending is idempotent.
+            ...(carried === undefined ? {} : { header: carried }),
           })
           if (!accepted) break
           this.outbox.shift()

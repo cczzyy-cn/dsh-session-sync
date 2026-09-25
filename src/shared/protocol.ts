@@ -451,13 +451,49 @@ export interface PublishIndexPayload {
      * told there is none.
      */
     hasOlder?: boolean
+    /**
+     * The Session's own header, as this machine's log states it.
+     *
+     * It travels because the machine that *writes* a materialized Session is the
+     * server, while the header only exists on the machine that owns the Session:
+     * the server reads its own `follows` to find it and has none, so a field like
+     * `agentPreset` — which no event carries and nothing can infer — was silently
+     * dropped from every materialized log. Measured: 3,478 of 3,479 records came
+     * back byte-identical and the header was the one difference.
+     */
+    header?: SessionHeader
   }[]
+}
+
+/**
+ * The header of a Session's log, as the machine that owns it states it.
+ *
+ * Deliberately only the fields a writer may restate: the Session's own identity and
+ * timing, plus the two the format allows and no event carries. `agentPreset` is why
+ * this travels at all — a materialization wrote 3,478 of 3,479 records byte-identical
+ * and dropped exactly this from the header, because the machine that writes the log
+ * is not the machine that has the field.
+ */
+export interface SessionHeader {
+  id: string
+  createdAt: number
+  cwd?: string
+  agentPreset?: string
+  origin?: string
 }
 
 /** Origin → server: durable events appended to one published Session. */
 export interface PublishFramesPayload {
   sessionId: string
   events: MirrorEvent[]
+  /**
+   * The Session's own header, when this batch is the one that carried it.
+   *
+   * Sent with the frames as well as the index because the opening window is where
+   * the origin reads it, and a mirror that only learns it on the next index would
+   * materialize without it in the gap.
+   */
+  header?: SessionHeader
 }
 
 /** Handshake request body. */

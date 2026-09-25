@@ -501,10 +501,13 @@ export class SessionSyncService {
       }
       const row = this.hub.machines()
         .find(machine => machine.machineName === machineName)?.sessions.find(session => session.sessionId === sessionId)
-      // The origin's own header is preferred over what can be inferred here: it
-      // carries fields the mirror never sees (a real one lost `agentPreset`), and
-      // its `createdAt` is the Session's start rather than its first event's time.
-      const header = this.follows.get(sessionId)?.header
+      // The origin's header, which the mirror holds because the origin publishes it.
+      // This used to read `this.follows` — the *server's* own follow set, which is
+      // empty on a server, so every materialized log silently lost the fields no
+      // event carries (`agentPreset` went missing from a real Session while 3,478 of
+      // its 3,479 records came back byte-identical). The mirror is the one place both
+      // halves can see.
+      const header = this.hub.sessionHeader(machineName, sessionId) ?? this.follows.get(sessionId)?.header
       return await materializeSession(
         this.ctx.get('sessionPersistence') as SessionPersistenceLike | undefined,
         this.ctx.get('workspaceRegistry') as WorkspaceRegistryLike | undefined,
@@ -707,7 +710,7 @@ export class SessionSyncService {
    */
   private drain(handle: FollowHandle, sessionId: string): void {
     if (handle.pending.length === 0) return
-    this.link?.publishFrames(sessionId, handle.pending.splice(0, handle.pending.length))
+    this.link?.publishFrames(sessionId, handle.pending.splice(0, handle.pending.length), handle.header)
   }
 
   /**
@@ -789,7 +792,9 @@ export class SessionSyncService {
           events.push(mirrorOf(handle, event))
         }
         added = events.length
-        this.link?.publishFrames(sessionId, events)
+        // A page read is not the opening window, so it does not carry a header of its
+        // own — but it is an ordinary publish, and the mirror uses the latest one.
+        this.link?.publishFrames(sessionId, events, handle.header)
       }
       // The page knows where the log begins, so the next index tells the truth
       // about whether anything is still below — which is how the reader's
@@ -888,6 +893,10 @@ export class SessionSyncService {
           // Only said when true: the mirror reads absence as "no history below
           // the window", which is the answer for a Session that arrived whole.
           ...(handle?.hasOlder === true ? { hasOlder: true } : {}),
+          // The Session's own header, so the machine that *writes* the log can state
+          // it. This half reads it from the origin's opening window; the writer runs
+          // on the server, which never sees that window.
+          ...(handle?.header === undefined ? {} : { header: handle.header }),
         }
       }),
     } satisfies PublishIndexPayload)
@@ -1247,7 +1256,10 @@ export class SessionSyncService {
     if (link === undefined || !link.linked) return
     for (const [sessionId, handle] of this.follows) {
       if (handle.pending.length === 0) continue
-      link.publishFrames(sessionId, handle.pending.splice(0, handle.pending.length))
+      // The header travels with the frames, every flush: it is small, the mirror
+      // overwrites rather than accumulates it, and a mirror that only learned it
+      // once could lose it to a reconnect that happened before the write.
+      link.publishFrames(sessionId, handle.pending.splice(0, handle.pending.length), handle.header)
     }
   }
 

@@ -20,6 +20,7 @@ import {
   type MirroredSession,
   type PublishFramesPayload,
   type PublishIndexPayload,
+  type SessionHeader,
   type StreamDeltaPayload,
   type SyncState,
   type SyncStreamFrame,
@@ -145,6 +146,16 @@ interface SessionRecord {
    * by a later ordinary read.
    */
   retain?: number
+  /**
+   * The Session's own header, as the owning machine last stated it.
+   *
+   * Kept on the mirror because the *writer* of a materialized Session is the server,
+   * while the header only exists on the machine that owns the Session. Reading it
+   * from this half's own `follows` found nothing — a server has none — which is how a
+   * real Session's `agentPreset` was dropped from every materialized log while its
+   * 3,478 events came back byte-identical.
+   */
+  header?: SessionHeader
 }
 
 /** The one logger method the mirror needs, so it does not own a logging seam. */
@@ -273,6 +284,7 @@ export class SyncHub {
           maxSeq: -1,
           originSeq: reported(session.lastSeq),
           originHasOlder: session.hasOlder === true,
+          ...(session.header === undefined ? {} : { header: session.header }),
         })
         continue
       }
@@ -281,6 +293,10 @@ export class SyncHub {
       existing.running = session.running
       existing.originSeq = reported(session.lastSeq)
       existing.originHasOlder = session.hasOlder === true
+      // Replaced, never merged: the origin states the whole header, and a field it
+      // stopped naming must not linger from an earlier one.
+      if (session.header === undefined) delete existing.header
+      else existing.header = session.header
       if (session.cwd === undefined) delete existing.cwd
       else existing.cwd = session.cwd
     }
@@ -345,6 +361,10 @@ export class SyncHub {
     const record = this.machine(machineName)
     record.lastSeen = Date.now()
     const session = this.session(record, payload.sessionId)
+    // The header is taken *before* the batch is judged, and kept even when the batch is
+    // a replay that adds nothing: it is the Session's identity, not one of its events,
+    // and the batch carrying it is often exactly such a replay (a resync produces one).
+    if (payload.header !== undefined) session.header = payload.header
     const fresh: MirrorEvent[] = []
     for (const event of payload.events) {
       if (session.seqs.has(event.seq)) continue
@@ -600,6 +620,19 @@ export class SyncHub {
    *   history to retain while this caller works, and whether to drop that hold.
    * @returns the page, or undefined when the mirror holds no such Session.
    */
+  /**
+   * The header the owning machine last stated for one Session, if any.
+   *
+   * The read the writer needs: a materialized log has to state the Session's own
+   * fields, and the machine that writes it is not the machine that has them.
+   * @param machineName - owning machine.
+   * @param sessionId - published Session.
+   * @returns the header, or undefined when the origin has not stated one.
+   */
+  sessionHeader(machineName: string, sessionId: string): SessionHeader | undefined {
+    return this.records.get(machineName)?.sessions.get(sessionId)?.header
+  }
+
   transcript(
     machineName: string,
     sessionId: string,
