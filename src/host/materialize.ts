@@ -167,6 +167,17 @@ export interface MaterializeResult {
   readonly stored: number
   /** Whether this call created the log (false when it continued an existing one). */
   readonly created: boolean
+  /**
+   * True when the *mirror* is not ready, rather than the log being unusable.
+   *
+   * The two look identical from a refused append — both are "nothing was
+   * written" — and they call for opposite answers. A log that cannot be read or
+   * whose continuity is broken is done; a mirror that has not (yet) delivered the
+   * events the log needs will deliver them on a later pass, or the hub's own
+   * hole repair will. Stopping on the second is how a copy that was merely
+   * *behind* got recorded as permanently broken.
+   */
+  readonly wait?: boolean
   /** Why nothing was written, when nothing was. */
   readonly reason?: string
 }
@@ -348,7 +359,13 @@ export async function catchUpSession(
   const pending = events.filter(event => event.seq >= stored)
   if (pending.length === 0) return { ok: true, written: 0, skipped: 0, stored, created: false }
   const { written, skipped, endsAt } = contiguous(pending, stored)
-  if (written.length === 0) return none(stored, `the mirror holds nothing at seq ${String(stored)}`)
+  // Nothing appendable is a *mirror* condition: after a restart the mirror
+  // rebuilds from a tail window, so its run begins above the log's end and the
+  // stretch between them is missing. The hub asks the origin for exactly those
+  // holes, so the answer here is "ask again later", not "this log is finished".
+  if (written.length === 0) {
+    return { ok: false, written: 0, skipped, stored, created: false, wait: true, reason: `the mirror holds nothing at seq ${String(stored)}` }
+  }
 
   let handle: SessionHandleLike
   try {

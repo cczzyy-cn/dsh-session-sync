@@ -229,15 +229,25 @@ describe('continuing an existing mirror log', () => {
     assert.equal(written.length, 0, 'no handle is taken when there is nothing to append')
   })
 
-  it('refuses to invent the events between the log and the mirror', async () => {
-    // The log holds 0..3 and the mirror's next event is seq 6: a hole below the
-    // log's end can never be repaired by appending, so the pass must record why it
-    // stopped rather than write an event at the wrong sequence.
+  it('calls a not-yet-ready mirror a wait, not a broken log', async () => {
+    // After a restart the mirror rebuilds from a tail window, so its run begins
+    // above the log's end and the stretch between them is missing. The hub asks
+    // the origin for exactly those holes; stopping here recorded a copy that was
+    // merely behind as permanently finished.
     const { persistence, written } = storage(4)
     const result = await catchUpSession(persistence, 'session-gap', events([0, 1, 2, 3, 6, 7]))
     assert.equal(result.ok, false)
+    assert.equal(result.wait, true, 'the next pass may succeed')
     assert.equal(written.length, 0)
     assert.equal(result.stored, 4)
+  })
+
+  it('does not call a missing log a wait', async () => {
+    // This one is final: there is nothing to continue.
+    const { persistence } = storage()
+    const result = await catchUpSession(persistence, 'session-absent', events(range(3)))
+    assert.equal(result.ok, false)
+    assert.equal(result.wait, undefined)
   })
 
   it('says so when nothing is on disk to continue', async () => {

@@ -653,9 +653,12 @@ export class SessionSyncService {
         if (result.ok && result.written > 0) {
           await this.ledger.mark(session.sessionId, machine.machineName, result.stored)
           report.advanced += 1
-        } else if (!result.ok) {
-          // The log cannot be repaired by appending — a hole below its end stays a
-          // hole — so the reason is recorded once and the pass stops trying.
+        } else if (!result.ok && result.wait !== true) {
+          // Only a log this Host cannot use is final: a hole below its end stays a
+          // hole, and no later pass will fill it. A mirror that has not delivered
+          // the events yet is a *wait* — after a restart every mirror rebuilds
+          // from a tail window, so "nothing appendable" is the normal state for a
+          // while, and stopping on it recorded a merely-behind copy as broken.
           await this.ledger.stop(session.sessionId, result.reason ?? 'the copy stopped tracking the mirror')
         }
       }
