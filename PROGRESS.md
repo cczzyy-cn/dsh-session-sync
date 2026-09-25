@@ -9,13 +9,13 @@
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
 | 版本 | **`0.4.0`**（tag `v0.4.0` → `8eeb0dd`）· 本地 = 远端 = tag 所指提交 |
-| 服务器 | `210.16.120.228` · Ubuntu 24.04 · **DSH `0.1.7-rc.2`（npm `next` 通道，未打补丁）** · 插件 **`32298d1`** · unit `dsh-web.service` · active |
+| 服务器 | `210.16.120.228` · Ubuntu 24.04 · **DSH `0.1.7-rc.2`（npm `next` 通道，未打补丁）** · 插件 **`v0.4.0`**（依赖钉 tag，lock → `8eeb0dd`）· unit `dsh-web.service` · active |
 | 本机 | DSH 源码运行（checkout = `dsh-v0.1.7-rc.1` 标签）· pid 5636（17:02 起）· **带边界修正**（线上 walk 40 轮零空洞为证）· 缺后来的保留上限/预算/cwd 改动，但那些都在服务器侧 |
 | 控制台 | `https://dsh.c-zy.cc/?token=<43 位>` |
 | 镜像 | **内存态**：服务器一重启就没了，靠源站 10 秒 reconcile + follow 快照重建 |
 | 同步口 | `210.16.120.228:8791`（源站连它；**不经** Cloudflare） |
 
-**2026-09-25 服务器更新（两次）**：插件先到 `13b7aa2`（长会话回填：按字节切批 + 具名 413），再到 **`b2a7811`**（回填分页边界：`pullOlder` 把"含边界的上界"翻译成 `page` 的开区间）。两次都用 `pnpm update` 的 lock + 安装产物的代码标记核对过，`systemctl restart dsh-web` 后 active、3080/8791 在听。**本机 16:26 重启过一次，跑的是 `13b7aa2`——还缺边界修正**（那处译码在源站侧），所以要再重启一次本机，线上那条 11836 条的会话回填才会不留洞。
+**2026-09-25 服务器更新（三次）**：插件 `13b7aa2`（按字节切批 + 具名 413）→ `b2a7811`（回填分页边界）→ `4f3ed9a`/`c3862a2`/`5a80c15`/`32298d1`（保留上限 / 预算 / 跨平台 cwd / 拒写截断）→ **`v0.4.0`（tag）**。每次都用 lock 的 tar.gz + 安装产物的代码标记双向核对（`v0.4.0` 这次 9 个 host 标记 + 2 个 client 标记全中、旧串 `no follow or no page API` 为 0），`systemctl restart dsh-web` 后 active、3080/8791 在听。依赖也从裸 `github:` 改成 **`github:cczzyy-cn/dsh-session-sync#v0.4.0`**（lock → `8eeb0dd`），改前备份 `/root/package.json.bak-<时间戳>`。**本机 origin 跑的是 18:12:58 启动的构建**（`lib` 与仓库哈希一致，即含全部修复）。
 
 **2026-09-24 服务器更新**：DSH → 最新发布版 `0.1.7-rc.2`，插件 → `db28d2e`。**顺序很重要：先插件、后 DSH**——补丁那份产物只对 alpha.2 有效，升版后控制台靠插件里的 `scope` 路线画原件，而旧插件只会 `adopt`，顺序颠倒会掉回手绘面板。
 
