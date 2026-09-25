@@ -617,7 +617,20 @@ export class OfficialMirror {
    */
   prependOlder(page: MirrorTranscript): void {
     if (this.released) return
-    const events = page.events.filter(event => !isPanelOnly(event) && !this.fed.has(event.seq))
+    const entries = this.source?.getSnapshot().entries ?? []
+    // A page may already be here by the other road: the origin replays its window
+    // as ordinary frames, and a replay carries events the mirror now holds below
+    // the window — which `appendEvents` puts through this same prepend. The
+    // shipped conversation's assembler refuses a Match whose sequence is not
+    // greater than the last one it took (`received non-appended Match`), and that
+    // refusal is not local: it fails the whole event-feed subscriber, so the pane
+    // stops updating until it is reopened. So membership is checked here too, not
+    // only on the way in from a frame: an entry already in the window is skipped
+    // rather than re-inserted.
+    const held = new Set<number>()
+    for (const entry of entries) held.add(entry.event.seq)
+    const events = page.events.filter(event =>
+      !held.has(event.seq) && !isPanelOnly(event) && !this.fed.has(event.seq))
     if (events.length === 0) return
     for (const event of events) {
       this.fed.add(event.seq)
