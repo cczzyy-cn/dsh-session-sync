@@ -164,6 +164,23 @@ export async function materializeSession(
     expected += 1
   }
   if (written.length === 0) return { ok: false, written: 0, skipped, archived: false, reason: 'no event passed the write check' }
+  // A log is a contiguous run from its beginning, so one hole ends it: every
+  // event after the hole is skipped for being "out of order" whether it is or
+  // not. Writing what came before the hole reports success over a Session that
+  // stops mid-conversation, which is the one outcome worse than refusing — the
+  // mirror was short, and now a log claims otherwise. Measured live: a mirror
+  // missing one early event produced `ok: true, written: 767, skipped: 9323`,
+  // and the log it archived held seq 0..766 of 11,835.
+  if (expected < input.events.at(-1)!.seq + 1) {
+    return {
+      ok: false,
+      written: 0,
+      skipped,
+      archived: false,
+      reason: `the mirror's run stops at seq ${String(expected - 1)}; the rest is not contiguous, `
+        + 'so nothing was written — the Session needs its gaps filled first',
+    }
+  }
 
   let handle: SessionWriteHandleLike
   try {
