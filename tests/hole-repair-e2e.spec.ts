@@ -1,23 +1,12 @@
 /**
- * What the origin reads when the mirror reports a hole.
+ * A hole repaired through the real DSH-facing path.
  *
- * The hub-side rules are pinned in `tests/hole-repair.spec.ts`; this drives the
- * same thing through the real transport, so the bound the hub asks for is the bound
- * the origin's page reader is finally called with. That translation is where the
- * first version of this feature was wrong: the hub named the sequence *below* the
- * hole (`hole.from - 1`), the origin translated it faithfully into its own exclusive
- * bound, and the page came back ending *before* the hole — the ask looked right and
- * the mirror never became whole. This test is what caught it, and it is the
- * regression guard for it.
- *
- * What it deliberately does not assert: that the mirror ends up whole. The page is
- * buffered into the follow's handle and delivered as ordinary frames, and a `resync`
- * that fires while that read is in flight tears the handle down and re-opens the
- * follow underneath it. Measured here: the origin reads the right page, buffers 151
- * records, and the mirror stays one event short. Whether that is a second defect or
- * the cost of two repair mechanisms racing is not yet established, so this file
- * asserts only what it can say with certainty — named in PROGRESS as an open
- * question rather than papered over with a green tick.
+ * `tests/hole-repair.spec.ts` pins the hub-side rules and
+ * `tests/hole-repair-link.spec.ts` drives a synthetic origin over the real link;
+ * this one goes through the client-role engine itself, so the page is read by the
+ * real `pullOlder` and delivered as ordinary frames. It is what caught the first
+ * version's off-by-one — the hub named the sequence *below* the hole, the origin
+ * translated it faithfully, and the page came back ending before the hole began.
  */
 import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -140,15 +129,6 @@ describe('a hole reported by a live mirror', () => {
     service.start()
     disposers.push(async () => { await service.dispose() })
 
-    // The window arrives whole except for one event, so the mirror is short.
-    const short = await until(() => {
-      const session = hub.machines()
-        .find(machine => machine.machineName === MACHINE)
-        ?.sessions.find(item => item.sessionId === SESSION_ID)
-      return session !== undefined && session.eventCount === SESSION_EVENTS - 1 ? session : undefined
-    }, 'the opening window, one event short')
-    assert.equal(short.missingEvents, 1)
-
     // The sweep is what notices a hole nothing else mentions.
     hub.sweepGaps()
 
@@ -158,5 +138,15 @@ describe('a hole reported by a live mirror', () => {
     assert.equal(read.throughSeq, SESSION_EVENTS - 1)
     assert.equal(read.beforeSeq, MISSING + 1)
     assert.equal(read.withMissing, true, 'the page must carry the event the mirror lacks')
+
+    // And the page really closes the hole: it is delivered as ordinary frames, and
+    // the mirror becomes whole without the log being replayed.
+    const whole = await until(() => {
+      const session = hub.machines()
+        .find(machine => machine.machineName === MACHINE)
+        ?.sessions.find(item => item.sessionId === SESSION_ID)
+      return session !== undefined && session.missingEvents === 0 ? session : undefined
+    }, 'the mirror to become whole')
+    assert.equal(whole.eventCount, SESSION_EVENTS)
   })
 })

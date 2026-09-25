@@ -1,6 +1,6 @@
 {
   "name": "dsh-session-sync",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "private": true,
   "description": "Multi-machine Session sync for DeepSeek Harness: publish selected Sessions to a sync server and browse every connected machine's Sessions from the left sidebar.",
   "type": "module",

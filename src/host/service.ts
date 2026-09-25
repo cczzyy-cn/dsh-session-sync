@@ -747,13 +747,24 @@ export class SessionSyncService {
         handle.abort.signal,
       )
       let added = 0
-      for (const record of page.records) {
-        const event = record.event as WireEvent | undefined
-        if (event === undefined || typeof event.seq !== 'number') continue
-        // Membership is the mirror's business, not this one's: sending an event
-        // it already holds costs a round trip and changes nothing.
-        buffer(handle, event)
-        added += 1
+      if (page.records.length === 0) {
+        this.ctx.logger.info(`dsh-session-sync: no earlier event below ${String(beforeSeq)} for "${sessionId}"`)
+      } else {
+        // The page goes to the link *now*, as one batch, rather than into the
+        // follow's pending buffer. The buffer belongs to one open attempt: a resync
+        // aborts that attempt and replaces the handle, and the timer may not have
+        // emptied it by then. Measured: a 151-event page read correctly, buffered,
+        // and never posted, because a resync landed in between (`missingEvents`
+        // stayed at 1 while the origin reported the page was served). The outbox is
+        // the ordering authority either way, and it is not tied to a handle.
+        const events: MirrorEvent[] = []
+        for (const record of page.records) {
+          const event = record.event as WireEvent | undefined
+          if (event === undefined || typeof event.seq !== 'number') continue
+          events.push(mirrorOf(handle, event))
+        }
+        added = events.length
+        this.link?.publishFrames(sessionId, events)
       }
       // The page knows where the log begins, so the next index tells the truth
       // about whether anything is still below — which is how the reader's
@@ -773,7 +784,6 @@ export class SessionSyncService {
         hasMore: page.hasMore,
       }
       if (added > 0) {
-        this.flush()
         this.ctx.logger.info(`dsh-session-sync: sent ${String(added)} earlier event(s) of "${sessionId}"`)
       }
     } catch (error: unknown) {
@@ -1272,8 +1282,8 @@ export class SessionSyncService {
   }
 }
 
-/** Append one durable event to the buffer, bounded so memory cannot run away. */
-function buffer(handle: FollowHandle, event: MirrorEvent): void {
+/** Record what one event does to a follow's extent, and hand back its wire shape. */
+function mirrorOf(handle: FollowHandle, event: WireEvent): MirrorEvent {
   handle.seen += 1
   // The watermark is what the index publishes, so it tracks what this follow has
   // *read* rather than what is still queued: a flush empties the buffer, and an
@@ -1284,7 +1294,7 @@ function buffer(handle: FollowHandle, event: MirrorEvent): void {
   if (typeof event.seq === 'number' && (handle.firstSeq < 0 || event.seq < handle.firstSeq)) {
     handle.firstSeq = event.seq
   }
-  handle.pending.push({
+  return {
     type: event.type,
     seq: event.seq,
     time: event.time,
@@ -1296,7 +1306,12 @@ function buffer(handle: FollowHandle, event: MirrorEvent): void {
     // Surface placement travels with the event: without it a replacement window
     // reads as an append, and the console shows the history it superseded.
     ...(event.surfaceOp === undefined ? {} : { surfaceOp: event.surfaceOp }),
-  })
+  }
+}
+
+/** Append one durable event to the buffer, bounded so memory cannot run away. */
+function buffer(handle: FollowHandle, event: MirrorEvent): void {
+  handle.pending.push(mirrorOf(handle, event))
   if (handle.pending.length > BUFFER_LIMIT) {
     handle.pending.splice(0, handle.pending.length - BUFFER_LIMIT)
   }
