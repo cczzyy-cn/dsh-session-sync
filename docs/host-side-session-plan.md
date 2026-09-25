@@ -123,7 +123,26 @@ seq 9499..9898，前面还有九千多条）。所以物化前必须**回填源�
 5. 之后的新帧继续 append（同一个 handle）
 ```
 
-## 11. 物化写入器的端到端结果（2026-09-25，已跑）
+## 12. 长会话物化：写入器通过，回填的询问通道待修（2026-09-25）
+
+**写入器对长会话同样正确**。把 `session-f6ba2b3b`（3478 事件）的镜像从尾部窗口 3158 翻到 0 之后：
+
+```json
+{"result":{"ok":true,"written":3478,"skipped":0,"archived":true}}
+源站: 记录 3479 | seq 0..3477 | 首 session, permission/preset, sandbox/mode | 尾 turn/end, session/end-seed
+物化: 记录 3479 | seq 0..3477 | 首 session, permission/preset, sandbox/mode | 尾 turn/end, session/end-seed
+```
+
+**但"进程内回填"只跑一轮就退**（实测：耗时恰好 6s = 一个 tick 循环；镜像下沿停在 3158 不动）。
+外部用同一批 `transcript?before=…` 询问则能一路翻到 0（6 轮）⇒ 说明**分页本身没问题**，
+问题在"服务器把询问投给源站"这一步只成功过一次。
+
+已排除的假设：`hub.machine()` 不会重建记录（保留 `origin` ✓）；`publishIndex` 只改现有记录 ✓；
+`state.linked` 是"本实例是否为上游客户端"，与源站下行无关（server 角色恒为 false）✓。
+
+**下一步（有针对性）**：给服务器端加两个计数并导出到 `/state` —— `asksSent` 与 `asksSkippedNoOrigin` ——
+然后复现一次，直接读出是"没送出去"（`record.origin` 为空）还是"送了没人回"。据此再修。
+
 
 两个一次性实例（server 用**自己的** sessions 目录、origin 发布一条短会话 `session-4cf56909`，222 事件）。
 触发：`POST /dsh-session-sync/materialize {"machineName":"mat-origin","sessionId":"session-4cf56909-…"}`。
