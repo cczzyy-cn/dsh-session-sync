@@ -1499,7 +1499,10 @@ window.__ModuleLoader__.load({
 			*/
 			prependOlder(page) {
 				if (this.released) return;
-				const events = page.events.filter((event) => !isPanelOnly(event) && !this.fed.has(event.seq));
+				const entries = this.source?.getSnapshot().entries ?? [];
+				const held = /* @__PURE__ */ new Set();
+				for (const entry of entries) held.add(entry.event.seq);
+				const events = page.events.filter((event) => !held.has(event.seq) && !isPanelOnly(event) && !this.fed.has(event.seq));
 				if (events.length === 0) return;
 				for (const event of events) {
 					this.fed.add(event.seq);
