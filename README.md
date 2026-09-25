@@ -111,6 +111,15 @@ registered `main` keys.
   that block survives — another plugin publishing its own state for the same
   Session can clear it, which is why the seat is hidden rather than trusted.
 
+  Presentation follows the DSH install's own setting. The work-details mode
+  (`ui-chat`'s `transcriptView`: compact, standard, detailed, or verbose) is a
+  Host-backed chat setting read through the plugin's own `configForms` scope, and
+  the pane is that same client instance — so a mirrored Session folds completed
+  turns, groups its process rows, and previews settled reasoning exactly as the
+  server's own window does, including a change made while the pane is open. What
+  that setting does *not* cover is per-row disclosure: opening one reasoning or
+  tool row is local click state, in the console as everywhere else.
+
   `adopt` exists in no released DSH: it is a client-only addition to
   `@deepseek-ai/dsh-api-session-controller` (one `adopt` method on the Sessions
   service, plus the local-only Session generation behind it). `patches/` carries
@@ -315,17 +324,20 @@ All of them sit under `/dsh-session-sync` and behind the GUI's own gate.
   reported honestly (the console shows `缺 N 条` on its row and in the header)
   but stays short until the origin's window grows past the hole or the Session is
   re-published.
-- **Host-computed panels are unavailable for a mirrored Session, by nature.** The
-  shipped conversation still offers its change-review cards, and the official
-  `ui-deliverables` plugin fills them by asking *its own Host* for
+- **A mirrored transcript carries no Host-computed panels.** The shipped
+  conversation offers its change-review cards, and the official `ui-deliverables`
+  plugin fills one by asking *its own Host* for
   `/api/changes.summary?sessionId=…&seq=…`. A mirrored Session lives on the sync
-  server, so that Host answers 404 — which that plugin treats as its ordinary
-  "the Host no longer serves this" state, caches once, and never retries, leaving
-  the card marked unavailable. The data cannot be recovered from the mirror
-  either: a `workspace/changes` event carries only `{ turn }`, and the files and
-  totals are computed by the Host from its own workspace. Making those cards work
-  would mean carrying the summary over the sync link *and* writing it into that
-  plugin's own state table — a deeper coupling than this plugin takes on today.
+  server, so that Host would answer 404 for every announcement — the plugin's
+  ordinary "no longer served" state, one failed request each and a card stuck on
+  unavailable. The data cannot be recovered here either: a `workspace/changes`
+  event carries only `{ turn }`, while the files and totals are computed by the
+  Host that owns the workspace. So the announcement is filtered out of the window
+  the console feeds (`PANEL_ONLY_TYPES` in `src/client/official-session.tsx`) and
+  the cards never appear — the tool rows that actually changed the files are
+  ordinary events and stay. Making those cards work would mean carrying the
+  summary over the sync link *and* writing it into that plugin's own state table,
+  a deeper coupling than this plugin takes on today.
 - **One origin per machine name.** Two origins configured with the same
   `本机名称` will overwrite each other's mirror.
 - **A takeover prompt expires after two minutes**, and at most 32 may wait for

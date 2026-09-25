@@ -37,6 +37,21 @@
 
 ## 2. 推进日志（晚 → 早）
 
+### 交付物相关不显示 + 「工作详情」跟随服务器设置（2026-09-24）
+用户看到线上控制台一条 `GET /api/changes.summary?sessionId=dsh-session-sync:DESKTOP-M1EERFC/… 404`。查清了：
+
+- **是谁**：官方插件 `ui-deliverables`。它从 transcript 里认出 `workspace/changes` 事件（`turn-deliverables.ts:182` 记下 `{seq}`），再按 `(sessionId, seq)` 向 **Host** 要改动摘要（`Deliverables.tsx:80`）。
+- **为什么 404 无害但必须去掉**：Host 上根本没有这个合成会话。该插件的 `decode` 把 `!response.ok` 当成自己的 `'missing'`（"Host 不再提供"），而 `retryable: () => false` → 只读一次、不重试，卡片停在"不可用"。即代价 = **每条 announcement 一次 404 + 一张永远空的卡片**。
+- **为什么补不了**：`workspace/changes` 的 data 只有 `{ turn }`（`workspace-changes/src/types.ts:106`），files/added/deleted 是**拥有 workspace 的那台 Host 现算**的——镜像里没有这份数据。
+- **做法**：在**喂给渲染器**时过滤掉这类事件（`PANEL_ONLY_TYPES` / `isPanelOnly()`），但**仍然记下它的 seq**（那是实时行位置的基准）。镜像本身不删——服务端 `/transcript` 里仍能看到它们，所以"过滤确实生效"可以被独立证明。
+- **实测**：服务器部署 `5975820` 后，镜像窗口 395 条事件里**有 2 条** `workspace/changes`，而 DevTools Console **已无** `/api/changes.summary` 404；改动文件的工具行照常显示（它们是普通事件）。
+
+**「思考/工具详细是否展开」**——结论：**本来就跟随服务器 DSH 设置**，无需改动。
+- 它由 `ui-chat` 的 `transcriptView`（工作详情：compact/standard/detailed/verbose）决定，该设置经 `ctx.configForms.get('ui-chat')` 读取（`ui-chat/src/client/apply.ts:89`），是**插件级、Host 持久化**的值（`transcript-view.ts` 注释写着 "Host-backed"，`setMode` 经 `host.set()` 写回 Host）——**不是**按会话下发的投影。
+- 所以我们的面板（同一个客户端实例）读的就是同一个值：原件里的折叠/分组/预览与服务器自己的窗口一致，**设置改了也实时跟随**。
+- 它控制什么：完成回合是否折叠过程行、步骤分组（全部折叠 / 仅历史 / 不分组）、实时标题是否带详情、已结算的思考行是否预览首行。**单行展开是本地点击状态，不是设置项**（DSH 里也是如此）。
+- 服务器上目前**没有** `settings.yaml`（只有一个 `.imported`），因此取默认值 `standard`（折叠完成回合 + 分组步骤）——与控制台看到的 `用时 3 秒 ⌄`、`已读取文件并执行了命令` 完全一致。
+
 ### 降级阶梯：不用补丁也能画原件（已在本机 rc.1 端到端验证）
 用户问"能否伪装本地会话，寻找其他方案"。查了官方插件（唯一渲染"别人会话"的先例是 `ui-subagent`：`sessions.retain(address)` + `SessionProvider`）后，挖出三条缝并按优先级实现：
 
