@@ -19,6 +19,7 @@ import {
   type MirrorEvent,
   type MirrorTranscript,
   type PublishIndexPayload,
+  type SessionHeader,
   type StreamDeltaPayload,
   type SyncConfig,
   type SyncState,
@@ -33,11 +34,13 @@ import type {
   WireEvent,
 } from './dsh.ts'
 import { SyncHub, type BrowserSink } from './hub.ts'
+import { MirrorLedger } from './ledger.ts'
 import {
+  catchUpSession,
   materializeSession,
   type MaterializeResult,
+  type MirrorEnvelope,
   type SessionPersistenceLike,
-  type WorkspaceRegistryLike,
 } from './materialize.ts'
 import { OriginLink, startSyncServer, type SyncServerHandle } from './transport.ts'
 
@@ -188,7 +191,7 @@ interface FollowHandle {
    * the writer fell back to the first event's time. Only fields the format allows
    * and this half can vouch for are kept.
    */
-  header?: WireSessionHeader
+  header?: SessionHeader
   /**
    * Whether the opening snapshot ever arrived, and why the last attempt ended.
    *
@@ -275,12 +278,15 @@ export class SessionSyncService {
 
   /** The last publish attempt, as the settings page reports it. */
   private lastPublish: { at: number; ok: boolean; error?: string } | undefined
+  /** True while a materialize pass is in flight; see {@link materializeTick}. */
+  private materializing = false
   private disposed = false
 
   private constructor(
     private readonly ctx: HostContext,
     private readonly home: string,
     config: SyncConfig,
+    private readonly ledger: MirrorLedger,
   ) {
     this.config = config
     // The mirror emits data frames; every state frame is assembled here, where
@@ -298,7 +304,7 @@ export class SessionSyncService {
    */
   static async create(ctx: HostContext, home: string): Promise<SessionSyncService> {
     const config = await loadConfig(home, hostname())
-    return new SessionSyncService(ctx, home, config)
+    return new SessionSyncService(ctx, home, config, await MirrorLedger.open(home))
   }
 
   /** Begin reconciling and bring the configured role up. */
@@ -312,6 +318,10 @@ export class SessionSyncService {
       this.hub.expireCommands()
       this.hub.sweepGaps()
       void this.reconcile()
+      // Same pass, same reason: keeping the openable copies level with the mirror
+      // is exactly the kind of work that has nowhere else to be scheduled. It is
+      // serialized against itself so a slow create cannot overlap the next tick.
+      void this.materializeTick()
     }, RECONCILE_MS)
     this.flushTimer = setInterval(() => { this.flushStream(); this.flush() }, FLUSH_MS)
     void this.applyRole()
@@ -355,6 +365,18 @@ export class SessionSyncService {
       ...(this.linkError === undefined ? {} : { linkError: this.linkError }),
       machines: this.config.isServer ? this.hub.machines() : [],
       published: Object.values(this.config.syncSessions).filter(Boolean).length,
+      materialize: this.config.materialize,
+      ...(this.config.isServer
+        ? {
+          materialized: this.ledger.list().map(({ sessionId, entry }) => ({
+            sessionId,
+            machineName: entry.machineName,
+            events: entry.events,
+            at: entry.at,
+            ...(entry.stopped === undefined ? {} : { stopped: entry.stopped }),
+          })),
+        }
+        : {}),
       ...(this.lastPublish === undefined ? {} : { publish: this.lastPublish }),
       ...(this.config.isServer ? {} : {
         follow: {
@@ -425,6 +447,7 @@ export class SessionSyncService {
       listenHost: nonEmpty(patch.listenHost) ?? previous.listenHost,
       listenPort: validPort(patch.listenPort) ?? previous.listenPort,
       syncSessions: { ...previous.syncSessions },
+      materialize: patch.materialize ?? previous.materialize,
     }
     if (patch.sessionSync !== undefined) {
       if (patch.sessionSync.synced) next.syncSessions[patch.sessionSync.sessionId] = true
@@ -442,6 +465,10 @@ export class SessionSyncService {
       || (!next.isServer && previous.machineName !== next.machineName)
     if (roleChanged) await this.applyRole()
     else if (patch.sessionSync !== undefined) await this.reconcile()
+    // Switching the option on should show a Session rather than wait out the tick:
+    // the user just asked for it, and "nothing happened for ten seconds" reads as
+    // the switch being broken.
+    if (next.materialize && !previous.materialize) void this.materializeTick()
     this.broadcast({ type: 'state', state: this.view() })
     return this.configView()
   }
@@ -463,13 +490,19 @@ export class SessionSyncService {
   }
 
   /**
-   * Write one mirrored Session into this Host's own storage and archive it.
+   * Write one mirrored Session into this Host's own storage.
    *
    * The mirror holds a window, and this Host's storage refuses a log that does
-   * not begin at the Session's beginning, so the whole mirrored window is handed
-   * over and the writer decides: a Session short enough to arrive whole is
-   * materialized, a paged one is refused with the reason rather than written
-   * with a hole at the front.
+   * not begin at the Session's beginning, so the origin is walked back first and
+   * the writer decides: a Session that arrives whole becomes a real Session on
+   * this Host, a paged one is refused with the reason rather than written with a
+   * hole at the front.
+   *
+   * The Session is deliberately not archived. An archived Session cannot be
+   * opened in DSH's own page — the workspace browser answers with
+   * `archivedNotOpenable` and hides the row behind the default archived filter —
+   * so archiving it would defeat the point of writing it. Read-only is the
+   * plugin's own gate over {@link MirrorLedger.owns} instead.
    * @param machineName - the machine that owns the Session.
    * @param sessionId - the published Session.
    * @returns what was written, or why nothing was.
@@ -482,23 +515,19 @@ export class SessionSyncService {
     // a log that does not begin at zero, so this is a budget, not a promise.
     let transcript = this.hub.transcript(machineName, sessionId, { limit: 100_000, retain: Number.MAX_SAFE_INTEGER })
     try {
-      if (transcript === undefined) {
-        return { ok: false, written: 0, skipped: 0, archived: false, reason: 'nothing is mirrored under that address' }
-      }
+      const empty = (reason: string): MaterializeResult =>
+        ({ ok: false, written: 0, skipped: 0, stored: 0, created: false, reason })
+      if (transcript === undefined) return empty('nothing is mirrored under that address')
       // The mirror usually holds the newest window, and the storage layer refuses a
       // log that does not begin at the Session's beginning, so the origin is walked
       // back to the start first. It is bounded: a Session too long to backfill in
       // this budget is reported rather than half-written.
       const rounds = await this.backfill(machineName, sessionId, transcript)
       if (rounds > 0) transcript = this.hub.transcript(machineName, sessionId, { limit: 100_000 })
-      if (transcript === undefined) {
-        return { ok: false, written: 0, skipped: 0, archived: false, reason: 'the Session left the mirror while backfilling' }
-      }
+      if (transcript === undefined) return empty('the Session left the mirror while backfilling')
       const events = transcript.events
       const first = events[0]
-      if (first === undefined) {
-        return { ok: false, written: 0, skipped: 0, archived: false, reason: 'the mirror holds no events for this Session' }
-      }
+      if (first === undefined) return empty('the mirror holds no events for this Session')
       const row = this.hub.machines()
         .find(machine => machine.machineName === machineName)?.sessions.find(session => session.sessionId === sessionId)
       // The origin's header, which the mirror holds because the origin publishes it.
@@ -508,9 +537,8 @@ export class SessionSyncService {
       // its 3,479 records came back byte-identical). The mirror is the one place both
       // halves can see.
       const header = this.hub.sessionHeader(machineName, sessionId) ?? this.follows.get(sessionId)?.header
-      return await materializeSession(
+      const result = await materializeSession(
         this.ctx.get('sessionPersistence') as SessionPersistenceLike | undefined,
-        this.ctx.get('workspaceRegistry') as WorkspaceRegistryLike | undefined,
         {
           sessionId,
           createdAt: header?.createdAt ?? first.time,
@@ -522,12 +550,132 @@ export class SessionSyncService {
           events,
         },
       )
+      // Marked only on success, and marked *before* the caller can open the
+      // Session: between the log landing on disk and the ledger recording it,
+      // the copy is openable and ungated, which is the one window where a prompt
+      // could start a turn on this Host.
+      if (result.ok) await this.ledger.mark(sessionId, machineName, result.stored)
+      return result
     } finally {
       // The hold is for the walk, not for the Session's life: leaving it raised
       // would keep megabytes of history per materialized Session for as long as
       // this process lives, which is the cost the cap exists to bound.
       this.hub.transcript(machineName, sessionId, { limit: 1, release: true })
     }
+  }
+
+  /**
+   * Whether this Host holds a mirror-written copy of one Session.
+   *
+   * The `agent/pre-step` gate asks this on every proposed step. It answers from
+   * the durable ledger rather than from the mirror, so the answer survives a
+   * restart and does not depend on the origin still publishing.
+   * @param sessionId - the Session proposing a step.
+   * @returns whether the step must be refused.
+   */
+  holdsMirrorOf(sessionId: string): boolean {
+    return this.ledger.owns(sessionId)
+  }
+
+  /**
+   * Drop the read-only claim on one Session, leaving its log in place.
+   *
+   * This is the way out of the gate: the copy becomes an ordinary Session on this
+   * Host that its new owner may rename, continue or delete. Nothing deletes the
+   * log automatically — a mirror is regenerable, but a Session the operator has
+   * since edited is not, and no automatic pass may decide which one this is.
+   * @param sessionId - the Session to release.
+   * @returns whether the ledger held it.
+   */
+  async releaseMaterialized(sessionId: string): Promise<boolean> {
+    const released = await this.ledger.release(sessionId)
+    if (released) this.broadcastState()
+    return released
+  }
+
+  /**
+   * Run one materialize pass, at most one at a time.
+   *
+   * A create can walk the origin backwards, which takes longer than the tick that
+   * started it. Without this guard the next tick would start a second pass over
+   * the same Session, and the two would race the same log.
+   */
+  private async materializeTick(): Promise<void> {
+    if (this.materializing || this.disposed) return
+    this.materializing = true
+    try {
+      await this.syncMaterialized()
+    } catch (error: unknown) {
+      this.ctx.logger.warn(`dsh-session-sync: materialize pass failed: ${describe(error)}`)
+    } finally {
+      this.materializing = false
+    }
+  }
+
+  /**
+   * Keep every openable copy level with its mirror.
+   *
+   * One pass does two different jobs, in this order:
+   *
+   * - **catch up** each Session this Host already wrote, appending whatever the
+   *   mirror has grown since the log's own end. This is what makes the official
+   *   page a live view rather than a snapshot, and it is cheap: an append of the
+   *   events above the stored count.
+   * - **create** one new log, for the newest mirrored Session whose mirror holds
+   *   its beginning. At most one per pass, because creating is the expensive half
+   *   (it may walk the origin backwards first) and a Host with many newly
+   *   published Sessions should not read all of them at once.
+   *
+   * The switch is read every pass, so turning {@link SyncConfig.materialize} off
+   * stops new copies without touching the ones already written.
+   * @returns how many logs were created and how many were advanced.
+   */
+  private async syncMaterialized(): Promise<{ created: number; advanced: number }> {
+    const report = { created: 0, advanced: 0 }
+    if (!this.config.isServer || !this.config.materialize) return report
+    const persistence = this.ctx.get('sessionPersistence') as SessionPersistenceLike | undefined
+    if (persistence === undefined) return report
+
+    const machines = this.hub.machines()
+    // Advanced first: a row that already exists on disk is the common case, and
+    // its work is strictly smaller than a create's.
+    for (const machine of machines) {
+      for (const session of machine.sessions) {
+        if (!this.ledger.owns(session.sessionId)) continue
+        const entry = this.ledger.get(session.sessionId)
+        if (entry?.stopped !== undefined) continue
+        if (session.eventCount <= (entry?.events ?? 0)) continue
+        const transcript = this.hub.transcript(machine.machineName, session.sessionId, { limit: 100_000 })
+        if (transcript === undefined) continue
+        const result = await catchUpSession(persistence, session.sessionId, transcript.events as MirrorEnvelope[])
+        if (result.ok && result.written > 0) {
+          await this.ledger.mark(session.sessionId, machine.machineName, result.stored)
+          report.advanced += 1
+        } else if (!result.ok) {
+          // The log cannot be repaired by appending — a hole below its end stays a
+          // hole — so the reason is recorded once and the pass stops trying.
+          await this.ledger.stop(session.sessionId, result.reason ?? 'the copy stopped tracking the mirror')
+        }
+      }
+    }
+
+    for (const machine of machines) {
+      for (const session of machine.sessions) {
+        if (this.ledger.owns(session.sessionId)) continue
+        const transcript = this.hub.transcript(machine.machineName, session.sessionId, { limit: 1 })
+        // Only a Session whose mirror holds its beginning can be written; anything
+        // else needs a backfill, which the create path does for itself.
+        if (transcript === undefined) continue
+        const result = await this.materialize(machine.machineName, session.sessionId)
+        if (result.ok) {
+          report.created += 1
+          this.broadcastState()
+          // One create per pass: see the method comment.
+          return report
+        }
+      }
+    }
+    return report
   }
 
   /**
@@ -756,7 +904,7 @@ export class SessionSyncService {
       ...(handle === undefined ? {} : { throughSeq: handle.cursor }),
       ...(skip === undefined ? {} : { reason: skip }),
     }
-    if (skip !== undefined || handle === undefined) return
+    if (skip !== undefined || handle === undefined || controller === undefined) return
     const now = Date.now()
     const previous = this.pageAsked.get(sessionId)
     if (previous !== undefined && now - previous < PAGE_FLOOR_MS) {
@@ -1204,7 +1352,7 @@ export class SessionSyncService {
       // The header the origin stated, kept for the writer: it builds its own log
       // header, so what is not carried here is what a materialized Session loses.
       const header = jsonObject(carrier['header'])
-      if (header !== undefined) handle.header = header as unknown as WireSessionHeader
+      if (header !== undefined) handle.header = header as unknown as SessionHeader
       // Whether the frame really carried one, recorded on the frame that has it: a
       // header this half fails to read is invisible until a materialized log comes
       // back wrong, and the field names are the one thing this reader has to guess.
@@ -1314,6 +1462,11 @@ export class SessionSyncService {
       ...(item.cwd === undefined ? {} : { cwd: item.cwd }),
       synced: this.config.syncSessions[item.sessionId] === true,
     }
+  }
+
+  /** Push the current state to every subscribed browser. */
+  private broadcastState(): void {
+    this.broadcast({ type: 'state', state: this.view() })
   }
 
   /** Send one frame to every subscribed browser. */

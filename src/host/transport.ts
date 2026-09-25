@@ -26,6 +26,7 @@ import {
   type HandshakeResponse,
   type MirrorEvent,
   type PublishIndexPayload,
+  type SessionHeader,
   type StreamDeltaPayload,
 } from '../shared/protocol.ts'
 import type { SyncHub } from './hub.ts'

@@ -72,6 +72,8 @@ export const zh = {
   paneRoute: '原件 · {route}',
   paneRouteHint: '这个面板用的是 DSH 自己的会话页。adopt＝打了补丁，输入框也能发言；scope＝无宿主读取（推荐）；address＝契约层兜底，会有一次失败的宿主历史读取',
   openSession: '打开',
+  materializedBadge: '真会话',
+  materializedHint: '这条会话已经写进本机存储，由 DSH 自己的会话页打开与分页；它是只读的（发言仍走同步通道）',
 
   sessionsTitle: '会话',
   sessionsRunning: '个会话进行中',
@@ -357,6 +359,8 @@ export const en: Record<SessionSyncKey, string> = {
   paneRoute: 'Original · {route}',
   paneRouteHint: 'This pane is DSH\'s own conversation page. adopt = patched, so the shipped composer works too; scope = no Host read at all; address = contract-only fallback, which costs one failed Host history read',
   openSession: 'Open',
+  materializedBadge: 'Real Session',
+  materializedHint: 'This Session has been written into this Host\'s own storage: DSH\'s own page lists, opens and pages it. It is read-only — speaking in it still goes through the sync channel',
 
   sessionsTitle: 'Sessions',
   sessionsRunning: 'running',

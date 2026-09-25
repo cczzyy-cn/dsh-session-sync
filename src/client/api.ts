@@ -132,6 +132,10 @@ function idleState(): SyncState {
     linked: false,
     machines: [],
     published: 0,
+    // The Host answers with the real value on the first state frame; a neutral
+    // placeholder has to pick one, and "the switch is on" is the state every
+    // deployment this plugin ships to is in.
+    materialize: true,
   }
 }
 

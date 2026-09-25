@@ -17,10 +17,14 @@
  *   it is written and counts what it refused. A log with one bad record is not a
  *   log with one missing row: readers refuse the whole Session.
  *
- * The Session is archived once it is written. Archiving is what makes it
- * read-only: `agent/pre-step` rejects every step of an archived Session, so a
- * prompt that reaches this Host cannot start a turn and cannot grow a second
- * truth beside the machine that owns the Session.
+ * The Session is deliberately **not** archived, and that is a change from the
+ * first design. Archiving is the shipped way to make a Session read-only, but a
+ * closed Session cannot be read either: the workspace browser refuses to open an
+ * archived row (`archivedNotOpenable`) and hides it behind the default archived
+ * filter, so "materialize + archive" produced a Session that could not be looked
+ * at. The read-only half is the plugin's own `agent/pre-step` gate over
+ * {@link MirrorLedger} instead: the Session stays listed and openable, and any
+ * step proposed for it is refused before a model request.
  */
 
 import { isAbsolute } from 'node:path'
@@ -71,14 +75,27 @@ export interface SessionWriteHandleLike {
   close(): Promise<void>
 }
 
+/** What `stat` says about a stored Session. */
+export interface SessionStoredSnapshot {
+  /** How many events the log holds, when the backend reports it. */
+  readonly eventCount?: number
+}
+
 /** The Host's durable Session storage. */
 export interface SessionPersistenceLike {
   create(header: Record<string, unknown>): Promise<SessionWriteHandleLike>
-}
-
-/** The Host's workspace registry, for the archive that keeps a Session read-only. */
-export interface WorkspaceRegistryLike {
-  archiveSession(sessionId: string, options?: { readonly stopActivity?: boolean }): Promise<void>
+  /**
+   * Take a write handle on an *existing* log and continue it.
+   *
+   * This is what makes the openable copy durable rather than one-shot: the
+   * handle starts at the stored event count, so an append has to begin at that
+   * sequence. It is also the single-writer claim — a Session already owned by a
+   * live run refuses it (`SessionAlreadyOwnedError`), which is the right answer
+   * for a mirror.
+   */
+  open(id: string, access: 'read' | 'write'): Promise<SessionWriteHandleLike>
+  /** Read a stored Session's shape without taking a handle. */
+  stat(id: string): Promise<SessionStoredSnapshot | undefined>
 }
 
 /** What the writer needs to know about the Session it is materializing. */
@@ -107,12 +124,20 @@ export interface MaterializeInput {
 /** What the writer did. */
 export interface MaterializeResult {
   readonly ok: boolean
-  /** Events written to the new log. */
+  /** Events written by this call. */
   readonly written: number
   /** Events refused before the write, which is why a count of zero is worth reading. */
   readonly skipped: number
-  /** Whether the Session is now archived (read-only) in this Host. */
-  readonly archived: boolean
+  /**
+   * How many events the log holds after this call.
+   *
+   * The ledger records this rather than the per-call count: it is the sequence
+   * the *next* append has to continue from, and a resumed write needs to know it
+   * without reading the whole log back.
+   */
+  readonly stored: number
+  /** Whether this call created the log (false when it continued an existing one). */
+  readonly created: boolean
   /** Why nothing was written, when nothing was. */
   readonly reason?: string
 }
@@ -139,56 +164,50 @@ export function writable(envelope: unknown, expectedSeq: number): envelope is Mi
 }
 
 /**
- * Write one mirrored Session into this Host's storage and archive it.
+ * Write one mirrored Session into this Host's own storage.
  *
  * A Session that already exists under this id is left alone: the caller may be
  * looking at a mirror of a Session this Host ran itself, and overwriting that log
- * would destroy the original.
+ * would destroy the original. Continuing an existing *mirror* log is a different
+ * call ({@link catchUpSession}), which appends only what the log is missing.
  * @param persistence - the Host's durable Session storage, when it is mounted.
- * @param workspaces - the Host's workspace registry, when it is mounted.
  * @param input - the Session and the events the mirror holds for it.
  * @returns what was written, or why nothing was.
  */
 export async function materializeSession(
   persistence: SessionPersistenceLike | undefined,
-  workspaces: WorkspaceRegistryLike | undefined,
   input: MaterializeInput,
 ): Promise<MaterializeResult> {
-  const none = (reason: string): MaterializeResult => ({ ok: false, written: 0, skipped: 0, archived: false, reason })
+  const none = (reason: string): MaterializeResult =>
+    ({ ok: false, written: 0, skipped: 0, stored: 0, created: false, reason })
   if (persistence === undefined) return none('this Host has no session storage mounted')
   if (input.events.length === 0) return none('the mirror holds no events for this Session')
 
-  // The log has to begin at its beginning. A window that starts later is a gap
-  // the storage layer refuses, so the caller has to backfill first.
+  // The log has to begin at its beginning — seq 0, not "somewhere near zero". A
+  // window that starts later is a gap the storage layer refuses, so the caller
+  // has to backfill first.
   const first = input.events[0]
-  if (first === undefined || first.seq > 1) return none('the mirror holds only the newest window; backfill is required')
+  if (first === undefined || first.seq !== 0) return none('the mirror holds only the newest window; backfill is required')
 
-  const written: unknown[] = []
-  let skipped = 0
-  let expected = first.seq
-  for (const event of input.events) {
-    if (!writable(event, expected)) {
-      skipped += 1
-      continue
-    }
-    written.push(event)
-    expected += 1
+  const { written, skipped, endsAt } = contiguous(input.events, 0)
+  if (written.length === 0) {
+    return { ok: false, written: 0, skipped, stored: 0, created: false, reason: 'no event passed the write check' }
   }
-  if (written.length === 0) return { ok: false, written: 0, skipped, archived: false, reason: 'no event passed the write check' }
   // A log is a contiguous run from its beginning, so one hole ends it: every
   // event after the hole is skipped for being "out of order" whether it is or
   // not. Writing what came before the hole reports success over a Session that
   // stops mid-conversation, which is the one outcome worse than refusing — the
   // mirror was short, and now a log claims otherwise. Measured live: a mirror
   // missing one early event produced `ok: true, written: 767, skipped: 9323`,
-  // and the log it archived held seq 0..766 of 11,835.
-  if (expected < input.events.at(-1)!.seq + 1) {
+  // and the log it wrote held seq 0..766 of 11,835.
+  if (endsAt < input.events.at(-1)!.seq) {
     return {
       ok: false,
       written: 0,
       skipped,
-      archived: false,
-      reason: `the mirror's run stops at seq ${String(expected - 1)}; the rest is not contiguous, `
+      stored: 0,
+      created: false,
+      reason: `the mirror's run stops at seq ${String(endsAt - 1)}; the rest is not contiguous, `
         + 'so nothing was written — the Session needs its gaps filled first',
     }
   }
@@ -212,29 +231,107 @@ export async function materializeSession(
       ...(input.origin === undefined ? {} : { origin: input.origin }),
     })
   } catch (error: unknown) {
-    return { ok: false, written: 0, skipped, archived: false, reason: `cannot create the log: ${String(error)}` }
+    return { ok: false, written: 0, skipped, stored: 0, created: false, reason: `cannot create the log: ${String(error)}` }
   }
 
   try {
     await handle.append(written)
     await handle.flush()
   } catch (error: unknown) {
-    return { ok: false, written: 0, skipped, archived: false, reason: `cannot write the log: ${String(error)}` }
+    return { ok: false, written: 0, skipped, stored: 0, created: false, reason: `cannot write the log: ${String(error)}` }
   } finally {
     await handle.close().catch(() => undefined)
   }
 
-  // Archiving is the read-only half: it has to happen after the log exists,
-  // because the registry refuses a Session it does not know.
-  let archived = false
-  if (workspaces !== undefined) {
-    try {
-      await workspaces.archiveSession(input.sessionId, { stopActivity: true })
-      archived = true
-    } catch (error: unknown) {
-      return { ok: true, written: written.length, skipped, archived: false, reason: `written but not archived: ${String(error)}` }
-    }
+  return { ok: true, written: written.length, skipped, stored: written.length, created: true }
+}
+
+/**
+ * Continue an existing mirror log with whatever the mirror has grown since.
+ *
+ * The log is append-only and never rewritten, so this can only ever move it
+ * forward: it starts at the stored count, takes the contiguous run from there,
+ * and leaves the rest where it is. A mirror with a hole below the log's end
+ * cannot be repaired through this path, which is why the caller records why it
+ * stopped rather than retrying forever.
+ * @param persistence - the Host's durable Session storage.
+ * @param sessionId - the Session being continued.
+ * @param events - the mirrored events, in log order.
+ * @returns what was appended, or why nothing was.
+ */
+export async function catchUpSession(
+  persistence: SessionPersistenceLike | undefined,
+  sessionId: string,
+  events: readonly MirrorEnvelope[],
+): Promise<MaterializeResult> {
+  const none = (stored: number, reason: string): MaterializeResult =>
+    ({ ok: false, written: 0, skipped: 0, stored, created: false, reason })
+  if (persistence === undefined) return none(0, 'this Host has no session storage mounted')
+
+  let stored = 0
+  try {
+    stored = (await persistence.stat(sessionId))?.eventCount ?? 0
+  } catch (error: unknown) {
+    return none(0, `cannot stat the log: ${String(error)}`)
+  }
+  if (stored === 0) return none(0, 'the log is not on disk; it has to be created first')
+
+  const pending = events.filter(event => event.seq >= stored)
+  if (pending.length === 0) return { ok: true, written: 0, skipped: 0, stored, created: false }
+  const { written, skipped, endsAt } = contiguous(pending, stored)
+  if (written.length === 0) return none(stored, `the mirror holds nothing at seq ${String(stored)}`)
+
+  let handle: SessionWriteHandleLike
+  try {
+    handle = await persistence.open(sessionId, 'write')
+  } catch (error: unknown) {
+    return none(stored, `cannot open the log: ${String(error)}`)
+  }
+  try {
+    await handle.append(written)
+    await handle.flush()
+  } catch (error: unknown) {
+    return none(stored, `cannot append to the log: ${String(error)}`)
+  } finally {
+    await handle.close().catch(() => undefined)
   }
 
-  return { ok: true, written: written.length, skipped, archived }
+  return {
+    ok: true,
+    written: written.length,
+    skipped,
+    stored: endsAt,
+    created: false,
+    // The mirror's own later events may still be missing here; the caller reads
+    // `stored` against what the origin claims and records the shortfall.
+    ...(endsAt === events.at(-1)!.seq ? {} : { reason: `the mirror's run stops at seq ${String(endsAt - 1)}` }),
+  }
+}
+
+/**
+ * The leading run of events that can be appended from `from`.
+ *
+ * The write check is about shape and order rather than vocabulary: an event type
+ * this Host does not know is still a legitimate record, and the storage layer's
+ * own contiguity assertion is the backstop.
+ * @param events - the candidates, in log order.
+ * @param from - the sequence the log needs next.
+ * @returns the writable prefix, how many were refused, and where the run ends.
+ */
+function contiguous(
+  events: readonly MirrorEnvelope[],
+  from: number,
+): { written: MirrorEnvelope[]; skipped: number; endsAt: number } {
+  const written: MirrorEnvelope[] = []
+  let skipped = 0
+  let expected = from
+  for (const event of events) {
+    if (!writable(event, expected)) {
+      skipped += 1
+      continue
+    }
+    written.push(event)
+    expected += 1
+  }
+  return { written, skipped, endsAt: expected }
 }

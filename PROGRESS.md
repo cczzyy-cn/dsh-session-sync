@@ -105,6 +105,80 @@ cursor 为什么一直是 -1：follow 的开场快照是**一整帧**，源站�
 
 ## 2. 推进日志（晚 → 早）
 
+### 同步会话改用官方会话页面：选项 A 已实现（2026-09-25 深夜，**未上线验证**）
+
+用户要求"同步会话直接使用官方会话页面"。上线前的两条查证**改变了方案形状**：
+
+1. **线上 `/materialize` 实验成功**：对当时发布的那条会话（镜像 1016 条 / seq 0..1015 / 零空洞）
+   `POST /materialize` → `{"ok":true,"written":1016,"skipped":0,"archived":true}`，落盘
+   `/root/.dsh/sessions/--C-Users-14339-Desktop-git-dsh-session-sync--/session-e08471af-…/session.v4.jsonl.zstd`
+   （705 KB；1017 记录 = header + seq 0..1015，逐帧解出、零空洞）。
+   **服务器 Host 立刻认它，无需重启**：插件 `/sessions`（读 Host summaries）返回该会话，
+   `cwd` 正确、`blank:false`、`updatedAt` 等于源站 header 的 `createdAt`。
+2. **归档让它打不开——计划文档的错**：`ui-workspace/rows/WorkspaceBrowser.tsx:851-859` 的
+   `guardedOpen` 对归档行只提示 `archivedNotOpenable`（"已归档对话暂时无法查看，请取消归档后查看"），
+   而 `tree.ts:251-262` 的默认筛选**隐藏**归档行。所以 `docs/host-side-session-plan.md` 的
+   "物化 + 归档"形状**读不到页面**：为了只读而归档，代价是连读都不能读。
+3. **只读不必靠归档**：`agent/pre-step` 是插件可用的公开 waterfall（返回 `{kind:'reject'}` 即拒绝该步骤），
+   shipped 的 `ArchivedSessionGate`（`api/session-controller/src/archived-session-gate.ts:23-32`）就是这么做的。
+   Host API 侦察全文见 `docs/audit-host-api-recon.md`（另两条要点：`sessionPersistence.open(id,'write')`
+   **存在**，所以重启后能续写；`create` 不校验事件词表，一条非法 type 会让**整条日志**不可读）。
+
+按用户选定的**选项 A**（服务器端物化、不归档、插件自带门禁）实现：
+
+| 改动 | 文件 |
+| --- | --- |
+| **不再归档**；写入器只写日志，返回 `{ok,written,skipped,stored,created}`；seq 必须从 **0** 起（原判据 `> 1` 会放过 seq 1 起头的日志） | `src/host/materialize.ts` |
+| **增量追加**：`catchUpSession()` 用 `open(id,'write')` 从日志的 `eventCount` 续写，只追加缺的那段；洞在日志下沿之下就记录原因并停手（append 永远修不了洞） | 同上 |
+| **持久化台账**：门禁的权威，重启后仍只读；含 `stopped` 理由与 `release`（删声明、**不删日志**） | `src/host/ledger.ts`（新） |
+| **自动物化**：随 10 秒 tick 跑，先追平已写日志、每轮最多 create 一条（create 可能要回填）；开关 `materialize` 默认**开** | `src/host/service.ts` |
+| **门禁**：`ctx.on('agent/pre-step')` → 台账里有该会话就 `{kind:'reject'}` | `src/index.ts` |
+| `/materialize/release`：摘掉只读声明 | 同上 |
+| 客户端：状态里首次出现某个物化 id 时叫 shell `sessions.refresh()`（客户端列表**只拉不推**，raw 存储写入不产生任何列表事件） | `src/client/index.ts`、`SyncPanel.tsx` |
+| 客户端：**打开同步会话时走官方页面** —— 树行在有物化副本时改调 `uiWorkspace.openSession(id)`（= shipped 的 `retain(id,{source:'mainView'})` + `selectPanel(null)`），并先 `sessions.refresh()`（`retain` 对未知 id 会抛）；行上给一枚 `真会话` 徽标 | 同上 + `locales.ts`、`sync.module.css` |
+| 顺手修掉 Host 半边 **5 处既有类型错误**（`WireSessionHeader` 从未声明等）——现在 Host 半边 `tsc` 干净 | `service.ts`、`transport.ts` |
+
+**验证到哪一步**：`node --experimental-transform-types --test "tests/*.spec.ts"` → **50/50 通过**
+（原 38；`materialize-write` 新增 6 条钉住新语义：seq 必须从 0 起、追平只追加缺段、有洞即停且不写、
+无盘可续时报明；`config-document` 新增 2 条：缺 `materialize` 键读作**开**、显式 `false` 生效；
+`mirror-ledger`（新）6 条钉住门禁的**持久性**——重开后仍 `owns`、`stopped` 不会被后续 append 抹掉、
+`release` 幂等且不碰别的条目、文档损坏/形状不对时读作空）。Host 半边 `tsc --noEmit` **退出 0**；
+两半产物已重建（`lib/index.js` 129.7 kB、`client/client.js` 318.5 kB）。
+
+**未做（并且这一轮特意没做）**：**线上仍未部署**，所以"自动物化 + 门禁 + 打开走官方页"没有一条端到端跑过。
+本机的两个一次性实例（`%TEMP%\dsh-mat-origin` / `dsh-mat-server`）**不能直接用**：它们的 `profiles\web`
+是 **junction 到真实 profile** 的（本文件 §1 记过），把本地构建塞进去等于把未验证的客户端半边
+热更到**用户正在跑的那个实例**里；而本机又不能重启（会杀掉当前会话）。`dsh` 也不在 PATH 上。
+所以端到端只剩两条路，都需要用户点头：**部署到服务器**（commit+push → `pnpm update` → restart），
+或**新建两个隔离 home 的实例**（不复用旧 rig 的 junction）——后者是下一轮该做的。
+
+**下一步（部署后看三件事）**：① 发布一条会话，10–20 秒后它出现在**服务器自己的工作区列表**里；
+② 点开是**官方会话页面**（不是控制台面板）；③ 在它的输入框发一条消息 → 轮次以 `blocked` 收口、
+**没有模型请求**（门禁生效）。
+
+**仍然存在的缺口（新发现，未解）**：**标题**。物化日志里 seq 14/18 有两条 `session/title`
+（`检查服务端同步会话页面和dsh`、`服务端与dsh会话页面差异伪装`，都是 `messageSeqs:[9]` 指向 seq 9 的真人消息），
+但服务器 Host 的会话列表把这条会话显示成**会话 id**。
+
+**根因已定位**（不是日志的问题，是投影的问题）：插件列表里的标题来自 **Host 的会话投影**
+——`service.ts:1455` `item.projections?.values['title']`，取不到就回退成 `sessionId`。
+服务器 `/sessions` 的实测快照正好把这个分层照出来：
+
+```text
+session-e08471af-…  title = session-e08471af-…      ← 外来日志（本次物化）
+session-f6ba2b3b-…  title = session-f6ba2b3b-…      ← 外来日志（上次物化）
+session-cf35e2ac-…  title = session-cf35e2ac-…      ← 空会话（本来就没有标题）
+session-0a8b2f20-…  title = 你是什么模型             ← 这台 Host 自己跑过的会话
+```
+
+即：**投影只覆盖"这台 Host 自己跑的会话"**，日志里的事件再全也不进这一层。
+
+**候选修法（下一步验证）**：物化/首次追平时**追加一条 `session/title` 事件**，把源站的标题
+以 `source:{kind:'user'}` + `messageSeqs:[]` 的形式写进日志（这是"用户指定标题"的合法形状，
+`session-title/src/invariant.ts:29-52` 要求 `user` 源必须**不带**引用，正好合法），
+再用 `open(id,'write')` 追加到日志末尾。要验的是两件事：① 这条事件是否能让**投影**出现标题；
+② 若仍不行，说明投影来源另有其处（`sessionQuery.readTitle`？），那就改从那儿读。
+
 ### 中段空洞：`0.4.1` 写错了上界，`0.4.2` 修好了上界，`0.4.3` 才真正能送达（2026-09-25 晚）
 
 §4 第 1 条那个"中段空洞修不了"至此有了实现。做法不需要新协议——**把已经有的那次读页对准洞**：

@@ -36,7 +36,34 @@ export interface HostContext {
   get(name: string): unknown
   /** Wait for services, then run `callback` inside the scoped fiber. */
   inject(dependencies: readonly string[], callback: (scoped: HostContext) => void): void
+  /**
+   * Subscribe to a framework event.
+   *
+   * The plugin rides `agent/pre-step` and nothing else: it is the seam every
+   * proposal to run a model step passes through, and the one the shipped
+   * archived-Session gate uses for the same purpose. Declared narrowly so the
+   * shape this half depends on is written down rather than inferred.
+   * @param event - the event name.
+   * @param listener - the waterfall listener.
+   * @returns a disposer that removes the subscription.
+   */
+  on(
+    event: 'agent/pre-step',
+    listener: (payload: PreStepLike, next: () => Promise<PreStepDecisionLike>) => Promise<PreStepDecisionLike>,
+  ): () => void
 }
+
+/** One `agent/pre-step` proposal, as much of it as this plugin reads. */
+export interface PreStepLike {
+  readonly agent: {
+    readonly session: {
+      readonly header: { readonly id: string; readonly origin?: string; readonly parentSession?: string }
+    }
+  }
+}
+
+/** What a `agent/pre-step` listener answers with — `PreStepDecision`. */
+export type PreStepDecisionLike = { readonly kind: 'reject' } | { readonly kind: string; readonly [key: string]: unknown }
 
 /** One row of `SessionController.list` — `SessionSummary`. */
 export interface SessionSummaryRow {

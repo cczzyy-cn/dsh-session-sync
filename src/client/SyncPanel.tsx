@@ -141,6 +141,26 @@ export interface SyncPanelProps {
   renderSlot: RenderSlotLike
   /** The session-scope provider the child slot's declaration seats here. */
   SessionProvider: SessionProviderComponent
+  /**
+   * Tell the shell that this Host has written mirrored Sessions into its own
+   * storage, so it re-reads its Session list.
+   *
+   * A Session written straight through Host storage raises no client-side list
+   * event — there is no watcher on the sessions directory and no `api-session/added`
+   * for a raw write — so the shell would not know the Session exists until the
+   * page was reloaded. This is what makes "read it in DSH's own page" true
+   * without a reload. Absent on a composition with no client Session service.
+   */
+  sessionsWritten?: (sessionIds: readonly string[]) => void
+  /**
+   * Open one written Session in DSH's own conversation page.
+   *
+   * The Session exists in this Host's storage, so the shell can list it, retain
+   * it and page its history — none of which the console's own pane can offer.
+   * Absent on a composition with no workspace navigation service, where the
+   * console keeps opening its own pane.
+   */
+  openAsSession?: (sessionId: string) => void
 }
 
 /** One directory's Sessions, inside one machine. */
@@ -175,6 +195,29 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
    * then gets the whole width, which is what reading a mirrored Session wants.
    */
   const [listHidden, setListHidden] = React.useState(false)
+
+  /**
+   * The Sessions this Host has written into its own storage.
+   *
+   * `written` is the same set as one string, so the effect below runs when the
+   * *set* changes rather than on every render: the state frame is rebuilt on
+   * every broadcast, so an array identity would announce the same Sessions
+   * forever.
+   */
+  const materialized = React.useMemo(
+    () => new Set((state.state.materialized ?? []).map(entry => entry.sessionId)),
+    [state.state.materialized],
+  )
+  const written = React.useMemo(() => [...materialized].join('\n'), [materialized])
+  const announced = React.useRef<Set<string>>(new Set())
+  const announce = props.sessionsWritten
+  React.useEffect(() => {
+    if (announce === undefined) return
+    const fresh = written === '' ? [] : written.split('\n').filter(id => !announced.current.has(id))
+    if (fresh.length === 0) return
+    for (const id of fresh) announced.current.add(id)
+    announce(fresh)
+  }, [written, announce])
 
   const machines = state.state.machines
   const open = state.open
@@ -307,6 +350,17 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
                               : `${t('openSession')}: ${candidate.title} — ${gap}`}
                             title={candidate.title}
                             onClick={() => {
+                              // A Session this Host has written into its own
+                              // storage *is* a real Session, so it opens in DSH's
+                              // own conversation page — its header, its tabs, its
+                              // history paging — and not in this console's pane.
+                              // The pane is what a mirror looks like when there is
+                              // nothing else to show it with; once there is, using
+                              // it would be showing a copy beside the original.
+                              if (materialized.has(candidate.sessionId)) {
+                                props.openAsSession?.(candidate.sessionId)
+                                return
+                              }
                               void props.openSession(group.machine.machineName, candidate.sessionId)
                             }}
                           >
@@ -314,6 +368,11 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
                               {candidate.running && <StateDot state="ongoing" />}
                             </span>
                             <span className={css.rowTitle}>{candidate.title}</span>
+                            {materialized.has(candidate.sessionId) && (
+                              <span className={css.realBadge} title={t('materializedHint')}>
+                                {t('materializedBadge')}
+                              </span>
+                            )}
                             {gap !== undefined && (
                               <span className={css.gapBadge} title={gap}>{gap}</span>
                             )}
