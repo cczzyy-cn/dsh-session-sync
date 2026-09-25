@@ -1508,6 +1508,32 @@
   min-height: 0;
 }
 
+/* Every shipped pane, whichever route draws it.
+
+   Rating and branching are Host operations on the Session itself: a rating is a
+   record the owning Host keeps (`messageFeedback.put/list`), and a branch is a
+   Session that Host creates. A mirrored Session lives on the sync server, which
+   has neither, so both would fail — and the rating pair fails *on hover*, since
+   its actions load the existing rating before anything is clicked and then print
+   "could not load feedback" beside themselves.
+
+   The handles are DSH's own aria-labels, because that is all these controls
+   carry: `MessageIconActions` gives the branch button no stable marker of its
+   own, and the rating pair only a `data-active` once rated. A copy change
+   upstream makes this rule stop matching, which fails safe — the controls come
+   back rather than something else disappearing. Copy stays: it reads the text
+   the transcript already holds. */
+.officialPane [aria-label='好的回答'],
+.officialPane [aria-label='取消标记'],
+.officialPane [aria-label='有问题的回答'],
+.officialPane [aria-label='Good response'],
+.officialPane [aria-label='Remove rating'],
+.officialPane [aria-label='Bad response'],
+.officialPane [aria-label='在新对话中分支'],
+.officialPane [aria-label='Branch into a new conversation'] {
+  display: none;
+}
+
 /* This pane drives the Session's window itself — the routes other than `adopt`.
    Two pieces of the shipped furniture have to go with it:
 
