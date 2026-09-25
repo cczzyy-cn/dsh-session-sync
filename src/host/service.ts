@@ -686,7 +686,13 @@ export class SessionSyncService {
       // The page knows where the log begins, so the next index tells the truth
       // about whether anything is still below — which is how the reader's
       // "older" control finally goes away.
+      const hadOlder = handle.hasOlder
       handle.hasOlder = page.hasMore
+      // ...and the index has to be re-sent for that to reach the mirror: it is
+      // published on a reconcile, and `hasOlder` is only ever *named* when true,
+      // so a page that reached the beginning would otherwise leave the mirror
+      // believing there is more forever.
+      if (hadOlder !== handle.hasOlder) void this.reconcile()
       this.lastPageRead = {
         sessionId,
         beforeSeq,
