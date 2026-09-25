@@ -88,7 +88,53 @@
 2. **第一刀是否只做只读**（物化 + 归档 + 原版分页），把写动词（prompt/fork/反馈）保持在"拒绝 + 面板隐藏"，
    留作第二步。
 
-**两项已定（2026-09-25）：都按推荐来** —— 会话 id 复用源站 id；第一刀只做只读。
+## 9. 写入器的入口与一个新增前提（2026-09-25 探明）
+
+**入口（Host 侧服务，插件可用）**：
+
+```ts
+// session-persistence/src/index.ts:150
+abstract create(header: SessionHeader, options?): Promise<SessionHandle>   // id 已存在 → SessionAlreadyExistsError
+// session-persistence/src/handle.ts:97 / 109 / 116
+append(events: readonly SessionEvent[], options?): Promise<void>   // 收完整事件对象 ⇒ 源站 seq/time 原样带得进去
+flush() / close()
+```
+
+写入面无缺口：`append` 收的是完整事件，所以"保持源站 seq"不需要自己编码字节 ✓。
+日志格式、压缩、目录布局都由这一层负责 ✓。
+
+**新增前提：物化必须先拿到"从 seq 0 开始"的完整事件流。**
+
+同文件 118 行的语义写着：*"events are contiguous from seq 0 and never rewritten"* ——
+一个从中间开始的日志不是合法会话。而**镜像现在只持有尾部窗口**（实测：这个会话的窗口是
+seq 9499..9898，前面还有九千多条）。所以物化前必须**回填源站整条日志**：
+
+- 源站侧已经有分页能力（我们为"加载更早"做的 `{kind:'older'}` 正是它）⇒ 反复往回翻到 seq 0 即可；
+- 代价：一次性、按会话（当前量级：几千到一万条事件，几十页）；翻完之后的增量就是普通帧；
+- 短会话/新会话天然满足（窗口就覆盖了整条），长会话才需要回填。
+
+**因此写入器的顺序是**：
+
+```text
+1. 回填：把源站该会话从 seq 0 到当前的事件全部取到（分页前进，直到 hasMore=false）
+2. 逐条校验（事件类型、必要字段、seq 连续）；不过的不落盘，并在 state 里计数上报
+3. persistence.create(源站 header) → 按序 append → flush
+4. workspaceRegistry.archiveSession(源站 id) ⇒ 归档，只读
+5. 之后的新帧继续 append（同一个 handle）
+```
+
+**顺序上的另一个结论**：客户端那条伪装（合成 id + `retainAgentScope`）**暂时不动**——
+物化一旦成立，这条会话在服务器上就是真会话，DSH 自己能画，伪装那条路可以整条撤掉；
+但现在还没有物化，先动它会立刻破坏正在工作的控制台。
+
+## 10. 已定的两项（2026-09-25）
+
+1. **会话 id 复用源站 id**：不只是选择，而是**硬约束**——镜像事件自身带 `sessionId`
+   （如 `session-log-deepseek/delivery-accepted`，`invariant.ts:32` 要求它点名所在会话），
+   所以物化日志的会话 id 必须等于源站 id。
+2. **第一刀只做只读**：物化 + 归档 + 原版分页；写动词（prompt / fork / 反馈）保持"拒绝 + 面板隐藏"。
+
+
 
 ## 8. 第一刀的实验结果（2026-09-25，已跑）
 
