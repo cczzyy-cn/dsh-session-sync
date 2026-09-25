@@ -130,11 +130,17 @@ export interface OriginSink {
    *
    * Also not queued, and for a stronger reason than the resync: a page read for
    * a reader who has since looked away is work nobody wants.
+   *
+   * `throughSeq` is the mirror's *lowest held* sequence, and it is inclusive
+   * because that is what "the page below what I hold" means to the reader asking.
+   * The origin's own `page(beforeSeq)` is an exclusive bound, so the translation
+   * happens once, in the origin's `pullOlder` — asking for one below the edge
+   * (the mirror's old habit) left the edge's own event missing, one per page.
    * @param sessionId - the Session to read history for.
-   * @param beforeSeq - read strictly below this sequence.
+   * @param throughSeq - the reader's lowest held sequence; the page ends here.
    * @param maxMessages - how many messages the page should span, at most.
    */
-  older(sessionId: string, beforeSeq: number, maxMessages: number): void
+  older(sessionId: string, throughSeq: number, maxMessages: number): void
 }
 
 /** One browser watching the mirror. */
@@ -186,7 +192,7 @@ export class SyncHub {
    * Keyed by machine and Session: a second ask for the same page replaces the
    * first, because asking twice for the same thing is the same request.
    */
-  private readonly pendingOlder = new Map<string, { machineName: string; sessionId: string; beforeSeq: number; maxMessages: number }>()
+  private readonly pendingOlder = new Map<string, { machineName: string; sessionId: string; throughSeq: number; maxMessages: number }>()
 
   /**
    * Replace one machine's Session index.
@@ -546,12 +552,14 @@ export class SyncHub {
     const originHasOlder = session.originHasOlder
     // Asking is what a reader does by scrolling up, so it happens only when the
     // request actually reached past the mirror's edge. The origin reads its own
-    // log for it, which is work worth doing once and not per click.
+    // log for it, which is worth doing once and not per click.
     if (start === 0 && before !== undefined && originHasOlder) {
       const now = Date.now()
       const asked = this.olderAsked.get(`${machineName}|${sessionId}`)
       if (asked === undefined || now - asked >= OLDER_ASK_FLOOR_MS) {
         this.olderAsked.set(`${machineName}|${sessionId}`, now)
+        // The reader's window now begins at `before`, so that is the page's last
+        // event, not the one beneath it.
         record.origin?.older(sessionId, before, OLDER_PAGE_MESSAGES)
       }
     }
@@ -573,11 +581,11 @@ export class SyncHub {
    * it asks directly and in the largest pages the origin serves.
    * @param machineName - owning machine.
    * @param sessionId - published Session.
-   * @param beforeSeq - read strictly below this sequence.
+   * @param throughSeq - the lowest sequence the mirror holds; the page ends here.
    * @param maxMessages - how many messages the origin should page back over.
    * @returns whether there was an origin to ask.
    */
-  askOlder(machineName: string, sessionId: string, beforeSeq: number, maxMessages: number): boolean {
+  askOlder(machineName: string, sessionId: string, throughSeq: number, maxMessages: number): boolean {
     const record = this.records.get(machineName)
     if (record?.sessions.get(sessionId) === undefined) return false
     // The origin's downstream stream reconnects on its own schedule, so it is
@@ -585,10 +593,10 @@ export class SyncHub {
     // than dropped: a reader that scrolls up while the stream is down would
     // otherwise get nothing, and a backfill would give up on its first round.
     if (record.origin === undefined) {
-      this.pendingOlder.set(`${machineName}|${sessionId}`, { machineName, sessionId, beforeSeq, maxMessages })
+      this.pendingOlder.set(`${machineName}|${sessionId}`, { machineName, sessionId, throughSeq, maxMessages })
       return true
     }
-    record.origin.older(sessionId, beforeSeq, maxMessages)
+    record.origin.older(sessionId, throughSeq, maxMessages)
     return true
   }
 
@@ -597,7 +605,7 @@ export class SyncHub {
     for (const [key, ask] of [...this.pendingOlder]) {
       if (ask.machineName !== machineName) continue
       this.pendingOlder.delete(key)
-      this.records.get(machineName)?.origin?.older(ask.sessionId, ask.beforeSeq, ask.maxMessages)
+      this.records.get(machineName)?.origin?.older(ask.sessionId, ask.throughSeq, ask.maxMessages)
     }
   }
 
