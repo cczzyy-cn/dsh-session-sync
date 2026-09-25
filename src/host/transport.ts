@@ -15,7 +15,10 @@
 import { randomBytes, timingSafeEqual } from 'node:crypto'
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http'
 import {
+  batchEvents,
+  FRAMES_BODY_BYTES,
   KEEPALIVE_MS,
+  MAX_BODY_BYTES,
   type DownstreamCommand,
   type DownstreamFrame,
   type DownstreamOlder,
@@ -28,8 +31,14 @@ import {
 import type { SyncHub } from './hub.ts'
 import type { HostLogger } from './dsh.ts'
 
-/** Largest accepted request body, in bytes. */
-const MAX_BODY_BYTES = 4 * 1024 * 1024
+/**
+ * Durable events one published batch may carry, as a second bound on its size.
+ *
+ * The byte budget is what actually protects the wire; this keeps a pathological
+ * run (tiny events, or a size that cannot be measured) from becoming a batch
+ * with no shape at all.
+ */
+const FRAME_BATCH_EVENTS = 1_000
 
 /**
  * Durable events the outbox may hold before it drops the oldest.
@@ -78,6 +87,18 @@ export interface SyncServerHandle {
   close(): Promise<void>
 }
 
+/** How the last published frame batch was split, and what is still waiting. */
+export interface OriginBatchReport {
+  /** Largest batch the last publish was split into, in bytes. */
+  bytes?: number
+  /** Largest batch, as a number of events. */
+  size?: number
+  /** How many batches that publish became. */
+  batches?: number
+  /** Events still waiting in the outbox for an accepted POST. */
+  waiting?: number
+}
+
 /**
  * Start the server-role listener.
  * @param options - bind address, secret source, and the mirror to publish into.
@@ -98,6 +119,15 @@ export async function startSyncServer(options: SyncServerOptions): Promise<SyncS
 
   async function handle(request: IncomingMessage, response: ServerResponse): Promise<void> {
     const url = new URL(request.url ?? '/', 'http://sync.invalid')
+    // Refuse an oversized body before reading it, and say so by name. The reader
+    // below bounds memory either way, but an unread body makes Node reset the
+    // connection: the sender then sees a network error rather than a refusal, so
+    // it retries the same batch forever instead of splitting it.
+    const declared = Number(request.headers['content-length'] ?? Number.NaN)
+    if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) {
+      sendJson(response, 413, { error: `request body over ${String(MAX_BODY_BYTES)} bytes` })
+      return
+    }
     if (request.method === 'POST' && url.pathname === '/handshake') {
       const body = await readJson(request)
       const machineName = typeof body?.['machineName'] === 'string' ? body['machineName'] : ''
@@ -264,14 +294,20 @@ function secretsMatch(supplied: string, expected: string): boolean {
   return timingSafeEqual(left, right)
 }
 
-/** Read a JSON request body, bounded so a hostile peer cannot exhaust memory. */
+/**
+ * Read a JSON request body, bounded so a hostile peer cannot exhaust memory.
+ *
+ * A chunked request declares no length, so the cap is enforced while reading
+ * rather than trusted from the header. What it produces is a refusal the caller
+ * reports by name — never a truncated buffer parsed as if it were whole.
+ */
 async function readJson(request: IncomingMessage): Promise<Record<string, unknown> | undefined> {
   const chunks: Buffer[] = []
   let total = 0
   for await (const chunk of request) {
     const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk))
     total += buffer.byteLength
-    if (total > MAX_BODY_BYTES) throw new Error('request body too large')
+    if (total > MAX_BODY_BYTES) throw new Error(`request body over ${String(MAX_BODY_BYTES)} bytes`)
     chunks.push(buffer)
   }
   if (chunks.length === 0) return undefined
@@ -361,6 +397,8 @@ export class OriginLink {
   private pumping = false
   /** Whether the depth has been reported for the current episode. */
   private outboxWarned = false
+  /** What the last published batch looked like, as the wire will see it. */
+  private lastBatch: OriginBatchReport | undefined
 
   /** @param options - address, credentials, and the command callback. */
   constructor(private readonly options: OriginLinkOptions) {}
@@ -368,6 +406,22 @@ export class OriginLink {
   /** Whether an authenticated downstream stream is currently held. */
   get linked(): boolean {
     return this.isLinked
+  }
+
+  /**
+   * How the last published batch was split, and how deep the outbox is now.
+   *
+   * Published because a refusal by size is otherwise invisible from here: the
+   * sender only learns "the server answered 413", and the number that explains
+   * it — how many bytes one batch turned out to be — lived nowhere an operator
+   * could read. Only non-zero facts are returned.
+   */
+  batchReport(): OriginBatchReport | undefined {
+    if (this.lastBatch === undefined && this.outboxEvents === 0) return undefined
+    return {
+      ...(this.lastBatch ?? {}),
+      ...(this.outboxEvents === 0 ? {} : { waiting: this.outboxEvents }),
+    }
   }
 
   /** Begin connecting and keep reconnecting until {@link stop}. */
@@ -412,8 +466,20 @@ export class OriginLink {
    */
   publishFrames(sessionId: string, events: readonly MirrorEvent[]): void {
     if (events.length === 0) return
-    this.outbox.push({ sessionId, events })
-    this.outboxEvents += events.length
+    // One follow opening on a long Session is its whole window, megabytes at
+    // once, and the server refuses a body over its limit. Sending it as one
+    // batch did not merely fail: the same oversized batch was retried on every
+    // reconnect, so the follow never finished, its cursor stayed unset, and
+    // every page read that needed that cursor was refused. The batches below are
+    // the difference between "too big" and "delivered in order".
+    const split = batchEvents(events, FRAMES_BODY_BYTES, FRAME_BATCH_EVENTS)
+    for (const batch of split.batches) {
+      this.outbox.push({ sessionId, events: batch })
+      this.outboxEvents += batch.length
+    }
+    // The shape actually attempted, so "the server refused it" and "the server
+    // never saw it" stop being the same reading on the settings page.
+    this.lastBatch = { bytes: split.bytes, size: split.size, batches: split.batches.length }
     // Bounded, because a server that never answers must not grow this process
     // without limit. What overflows is dropped oldest-first and said out loud:
     // the mirror's own replay is what repairs that, and it can only do so if the

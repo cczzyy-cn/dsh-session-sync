@@ -23,6 +23,94 @@ export const OFFLINE_AFTER_MS = 45_000
 export const KEEPALIVE_MS = 15_000
 
 /**
+ * Largest request body the sync server will read, in bytes.
+ *
+ * This is a hard limit, not a preference: a body over it is refused rather than
+ * buffered, because the alternative is a peer deciding how much memory this
+ * process uses. It is shared rather than private to the listener because the
+ * *sender* has to respect it too — one `follow` opening on a long Session is
+ * megabytes of history, and a sender that hands all of it to one POST is
+ * refused, retries the same batch, and is refused again forever.
+ */
+export const MAX_BODY_BYTES = 4 * 1024 * 1024
+
+/**
+ * Largest one published frame batch may be, in bytes.
+ *
+ * Deliberately well under {@link MAX_BODY_BYTES}: the sender's estimate is of
+ * the event array, while the server measures the whole JSON envelope, and a
+ * batch that is near the limit on one side of the wire must not be over it on
+ * the other. Half the limit keeps that disagreement harmless.
+ */
+export const FRAMES_BODY_BYTES = MAX_BODY_BYTES / 2
+
+/** Shared encoder: this module is also bundled for the browser, where `Buffer` does not exist. */
+const utf8 = new TextEncoder()
+
+/** Bytes one serialized event costs, or -1 when it cannot be measured. */
+export function eventBytes(event: unknown): number {
+  try {
+    return utf8.encode(JSON.stringify(event) ?? '').byteLength
+  } catch {
+    // A value JSON cannot hold is not publishable, and the count-limit still
+    // bounds the batch the caller builds from it.
+    return -1
+  }
+}
+
+/** One run of events split for the wire, with what the split actually cost. */
+export interface EventBatches<T> {
+  /** Non-empty batches, in order; every input event appears exactly once. */
+  batches: T[][]
+  /** Largest batch, in bytes, as the sender measured it. */
+  bytes: number
+  /** Largest batch, as a number of events. */
+  size: number
+}
+
+/**
+ * Split one run of events into batches that respect a byte budget and a count.
+ *
+ * Order is preserved and nothing is dropped. A single event larger than the
+ * whole budget still travels alone — refusing to send it would turn a wire limit
+ * into silent data loss, and an event that big fails at the server with a named
+ * refusal instead of a size the sender quietly invented.
+ * @param events - the events to publish, in the order they were observed.
+ * @param budget - largest serialized event array, in bytes.
+ * @param countLimit - largest number of events per batch, as a second bound.
+ * @returns the batches and the size of the largest one.
+ */
+export function batchEvents<T>(
+  events: readonly T[],
+  budget: number,
+  countLimit: number,
+): EventBatches<T> {
+  const batches: T[][] = []
+  let current: T[] = []
+  let currentBytes = 0
+  let bytes = 0
+  let size = 0
+  const flush = (): void => {
+    if (current.length === 0) return
+    batches.push(current)
+    bytes = Math.max(bytes, currentBytes)
+    size = Math.max(size, current.length)
+    current = []
+    currentBytes = 0
+  }
+  for (const event of events) {
+    const eventSize = Math.max(0, eventBytes(event))
+    if (current.length > 0 && (currentBytes + eventSize > budget || current.length >= countLimit)) {
+      flush()
+    }
+    current.push(event)
+    currentBytes += eventSize
+  }
+  flush()
+  return { batches, bytes, size }
+}
+
+/**
  * How long a takeover command stays deliverable after the server accepted it.
  *
  * A prompt is a human act addressed at a Session that may have moved on: a
@@ -131,6 +219,41 @@ export interface SyncState {
    */
   follow?: { error?: string; sessionId?: string; frames: string[]; events: number; historyMisses?: number; localItems?: number; localRows?: number; shapes?: string[]; posts?: string[] }
   /**
+   * How the last published frame batch was split, and how much is still queued.
+   *
+   * The server refuses a body over its own limit, and the sender's only other
+   * evidence of that is a refusal with no size attached. This is where the size
+   * lives: it is the number that says whether a Session is delivered in one
+   * batch or several, and whether anything is stuck waiting to be accepted.
+   */
+  batch?: {
+    bytes?: number
+    size?: number
+    batches?: number
+    waiting?: number
+  }
+  /**
+   * Per-Session follow facts, newest first, bounded.
+   *
+   * `cursor` and `opened` together answer the question this feature has had to
+   * guess at twice: has the opening snapshot of this Session's follow ever been
+   * taken? A page read behind the mirror is cut against that cursor, so while it
+   * is unset, "the origin will not page" and "the origin never finished its
+   * opening" are indistinguishable from the mirror's side.
+   */
+  follows?: {
+    sessionId: string
+    cursor: number
+    firstSeq: number
+    lastSeq: number
+    hasOlder: boolean
+    opened: boolean
+    pending: number
+    events: number
+    /** Why the follow's last attempt ended, when it ended without an abort. */
+    ended?: string
+  }[]
+  /**
    * What the last backwards history read did.
    *
    * Reported for the same reason the follow is: a page that comes back empty or
@@ -144,6 +267,8 @@ export interface SyncState {
     throughSeq?: number
     records?: number
     hasMore?: boolean
+    /** Which precondition failed, when the read never happened. */
+    reason?: 'no-controller' | 'no-page-api' | 'no-follow' | 'no-cursor' | 'rate-limited'
     error?: string
   }
 }
