@@ -85,14 +85,25 @@ const PAGE_FLOOR_MS = 1_000
  *
  * The mirror holds the newest window, and a Session's log has to begin at its
  * beginning, so a long Session needs the origin to page backwards until it does.
- * One round is one ask plus one wait, so this is a time budget (about a minute)
- * rather than a statement about what is possible: a Session that needs more is
- * reported, not half-written.
+ * One round is one ask plus one wait, so this is a time budget rather than a
+ * statement about what is possible: a Session that needs more is reported, not
+ * half-written. Materializing a live Session wants the whole log, which for one
+ * measured here was 11,836 events, so the budget has to cover the pages that
+ * takes at the latency below.
  */
-const BACKFILL_ROUNDS = 20
+const BACKFILL_ROUNDS = 40
 
-/** How long one backfill round waits, in ticks of {@link BACKFILL_TICK_MS}. */
-const BACKFILL_TICKS = 12
+/**
+ * How long one backfill round waits, in ticks of {@link BACKFILL_TICK_MS}.
+ *
+ * This has to exceed a page's real round trip, which measured at ten to twenty
+ * seconds on a cross-border link: the ask is a frame down the origin's stream,
+ * then a read of that machine's log, then a POST of the page back. At the original
+ * six seconds the walk declared a page idle while it was still in flight, gave up
+ * with the low edge short, and released the retention hold — so the page that did
+ * arrive was trimmed away again.
+ */
+const BACKFILL_TICKS = 60
 
 /** One backfill tick: how often a waiting round re-reads the mirror's edge. */
 const BACKFILL_TICK_MS = 500
@@ -101,9 +112,9 @@ const BACKFILL_TICK_MS = 500
  * Rounds that may move nothing before materializing gives up.
  *
  * The origin reads its own log on its own schedule, so a single still round says
- * nothing; several in a row mean it has no more below, or is not answering.
+ * nothing; two in a row mean it has no more below, or is not answering.
  */
-const BACKFILL_IDLE_ROUNDS = 3
+const BACKFILL_IDLE_ROUNDS = 2
 
 /**
  * Messages one backfill page covers.
