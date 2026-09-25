@@ -1003,6 +1003,13 @@ function ChatView(props: { renderSlot: RenderSlotLike }): React.ReactElement {
  * beside the shell's own; the console's pane is exactly that. The phase is
  * `active`: what the mirror holds is a conversation, while the hero belongs to
  * a local new Session, which a remote one never is.
+ *
+ * The content shell is drawn whole, composer included, even on the routes whose
+ * composer is then hidden: rendering `conversation.session` directly was tried
+ * and draws an empty pane, because the shell is what supplies the context that
+ * View is written against. So this pane hides the furniture instead of omitting
+ * it, and accepts that a session-scoped integration behind it may still start a
+ * Host read that cannot succeed (see the README's limitations).
  * @param props - the renderer's Factory dispatcher.
  * @returns the shipped content occurrence.
  */

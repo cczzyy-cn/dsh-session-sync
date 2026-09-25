@@ -1508,13 +1508,22 @@
   min-height: 0;
 }
 
-/* A route that drives the window itself cannot use the shipped composer: its
-   prompt would go to a Host that has never heard of this Session, and the
-   composer-block registry is an affordance another plugin may clear. Hiding the
-   seat is therefore the pane's own decision, and the console's takeover composer
-   below is what speaks in the Session. `data-composer-seat` is the shipped
-   content's own marker for the element this replaces. */
-.composerReplaced [data-composer-seat] {
+/* This pane drives the Session's window itself — the routes other than `adopt`.
+   Two pieces of the shipped furniture have to go with it:
+
+   - the composer seat, because its prompt would be sent to a Host that has never
+     heard of this Session (the console's own takeover composer replaces it);
+   - the open-history banner, because that read is one this pane does not use and
+     cannot satisfy: a session-scoped integration behind the hidden composer may
+     still start it, and the answer is always "no such Session". The transcript
+     comes from the mirror, and the pane states its route in the header chip, so
+     the fact is moved out of the way rather than hidden.
+
+   `data-composer-seat` is the shipped content's own marker, and the shipped
+   CSS-module name keeps its readable half (`<hash>_openError`), which is what the
+   second selector matches. */
+.drivesWindow [data-composer-seat],
+.drivesWindow [class*="openError"] {
   display: none;
 }
 

@@ -606,7 +606,7 @@ function Conversation(props: {
             // there the shipped composer would carry its prompt to a Host that
             // has never heard of this Session, so its seat is hidden and the
             // console's own takeover composer stands in.
-            <div className={props.official.composerOwned ? `${css.officialPane} ${css.composerReplaced}` : css.officialPane}>
+            <div className={props.official.composerOwned ? `${css.officialPane} ${css.drivesWindow}` : css.officialPane}>
               <props.SessionProvider session={shipped}>
                 {props.renderSlot(OFFICIAL_SLOT, {})}
               </props.SessionProvider>
