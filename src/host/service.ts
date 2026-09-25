@@ -33,6 +33,12 @@ import type {
   WireEvent,
 } from './dsh.ts'
 import { SyncHub, type BrowserSink } from './hub.ts'
+import {
+  materializeSession,
+  type MaterializeResult,
+  type SessionPersistenceLike,
+  type WorkspaceRegistryLike,
+} from './materialize.ts'
 import { OriginLink, startSyncServer, type SyncServerHandle } from './transport.ts'
 
 /** How often the local index is re-read and the follow set reconciled. */
@@ -363,6 +369,42 @@ export class SessionSyncService {
     page?: { limit: number; before?: number },
   ): MirrorTranscript | undefined {
     return this.hub.transcript(machineName, sessionId, page)
+  }
+
+  /**
+   * Write one mirrored Session into this Host's own storage and archive it.
+   *
+   * The mirror holds a window, and this Host's storage refuses a log that does
+   * not begin at the Session's beginning, so the whole mirrored window is handed
+   * over and the writer decides: a Session short enough to arrive whole is
+   * materialized, a paged one is refused with the reason rather than written
+   * with a hole at the front.
+   * @param machineName - the machine that owns the Session.
+   * @param sessionId - the published Session.
+   * @returns what was written, or why nothing was.
+   */
+  async materialize(machineName: string, sessionId: string): Promise<MaterializeResult> {
+    const transcript = this.hub.transcript(machineName, sessionId, { limit: 100_000 })
+    if (transcript === undefined) {
+      return { ok: false, written: 0, skipped: 0, archived: false, reason: 'nothing is mirrored under that address' }
+    }
+    const events = transcript.events
+    const first = events[0]
+    if (first === undefined) {
+      return { ok: false, written: 0, skipped: 0, archived: false, reason: 'the mirror holds no events for this Session' }
+    }
+    const row = this.hub.machines()
+      .find(machine => machine.machineName === machineName)?.sessions.find(session => session.sessionId === sessionId)
+    return materializeSession(
+      this.ctx.get('sessionPersistence') as SessionPersistenceLike | undefined,
+      this.ctx.get('workspaceRegistry') as WorkspaceRegistryLike | undefined,
+      {
+        sessionId,
+        createdAt: first.time,
+        ...(row?.cwd === undefined ? {} : { cwd: row.cwd }),
+        events,
+      },
+    )
   }
 
   /**

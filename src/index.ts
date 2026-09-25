@@ -126,8 +126,23 @@ async function dispatch(
     return
   }
 
-  if (method === 'GET' && route === '/transcript') {
-    const machineName = url.searchParams.get('machine') ?? ''
+  // Materializing is a Host-side action on one mirrored Session: it writes what
+  // the mirror holds into this Host's own storage and archives it, which is what
+  // lets DSH read that Session by id. It is a POST because it writes, and it is
+  // explicit rather than automatic while the writer is still being proven.
+  if (method === 'POST' && route === '/materialize') {
+    const body = await readJsonBody(request)
+    const machineName = typeof body?.['machineName'] === 'string' ? body['machineName'] : ''
+    const sessionId = typeof body?.['sessionId'] === 'string' ? body['sessionId'] : ''
+    if (machineName === '' || sessionId === '') {
+      sendJson(response, 400, { error: 'machineName and sessionId are required' })
+      return
+    }
+    sendJson(response, 200, { result: await service.materialize(machineName, sessionId) })
+    return
+  }
+
+  if (method === 'GET' && route === '/transcript') {    const machineName = url.searchParams.get('machine') ?? ''
     const sessionId = url.searchParams.get('session') ?? ''
     // Absent means the mirror's own default window; a caller that has scrolled
     // asks for a specific size, and one that is paging older names the sequence
