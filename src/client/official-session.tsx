@@ -360,6 +360,25 @@ function remoteKey(machineName: string, sessionId: string): string {
   return `${machineName}\u0000${sessionId}`
 }
 
+/**
+ * Envelope types that exist only to point a Host-computed panel at its data.
+ *
+ * `workspace/changes` carries a turn number and nothing else; the files and
+ * totals beside it are served by whichever Host owns the Session, which for a
+ * mirrored one is a Host that has never heard of it. Official seats react to the
+ * announcement and ask for a summary that cannot arrive — one failed request per
+ * announcement, and a card left marked unavailable — so the announcement is
+ * dropped from the window this console feeds. Nothing visible is lost: the card
+ * it drives could never render, while the tool rows that actually changed the
+ * files are ordinary events and stay.
+ */
+const PANEL_ONLY_TYPES: ReadonlySet<string> = new Set(['workspace/changes'])
+
+/** Whether one envelope feeds a Host-computed panel and nothing else. */
+function isPanelOnly(event: MirrorEvent): boolean {
+  return PANEL_ONLY_TYPES.has(event.type)
+}
+
 /** Narrow one unknown value to a plain record. */
 function asRecord(value: unknown): Record<string, unknown> | undefined {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return undefined
@@ -476,18 +495,21 @@ export class OfficialMirror {
     if (this.released) return
     this.liveAttempt = undefined
     this.liveText.clear()
+    // Announcements are dropped from the window but still counted: the newest
+    // sequence is what a live row's position is measured against.
+    const events = transcript.events.filter(event => !isPanelOnly(event))
     if (this.handle !== undefined) {
       // A mirrored window is everything the server holds: it never reports older
       // history as reachable, so `hasMore` is false. Claiming otherwise would
       // make the shipped renderer offer a page that cannot arrive.
-      this.handle.replace(transcript.events, false)
+      this.handle.replace(events, false)
       this.handle.setRunning(transcript.running)
       return
     }
     this.transient = 0
     this.lastSeq = -1
     for (const event of transcript.events) this.observe(event.seq)
-    this.source?.replace(transcript.events.map(entryOf), false)
+    this.source?.replace(events.map(entryOf), false)
     this.face?.handleRunning?.(transcript.running)
   }
 
@@ -502,6 +524,10 @@ export class OfficialMirror {
   appendEvents(events: readonly MirrorEvent[]): void {
     if (this.released) return
     for (const event of events) {
+      if (isPanelOnly(event)) {
+        this.observe(event.seq)
+        continue
+      }
       if (isSettlement(event)) {
         this.settle(event)
         continue
