@@ -8,7 +8,7 @@
 | 项 | 值 |
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
-| 版本 | 本地 = 远端 = `32298d1`（长会话回填：切批 / 分页边界 / 保留上限 / 预算 / 跨平台 cwd / 拒写截断）|
+| 版本 | **`0.4.0`**（tag `v0.4.0` → `8eeb0dd`）· 本地 = 远端 = tag 所指提交 |
 | 服务器 | `210.16.120.228` · Ubuntu 24.04 · **DSH `0.1.7-rc.2`（npm `next` 通道，未打补丁）** · 插件 **`32298d1`** · unit `dsh-web.service` · active |
 | 本机 | DSH 源码运行（checkout = `dsh-v0.1.7-rc.1` 标签）· pid 5636（17:02 起）· **带边界修正**（线上 walk 40 轮零空洞为证）· 缺后来的保留上限/预算/cwd 改动，但那些都在服务器侧 |
 | 控制台 | `https://dsh.c-zy.cc/?token=<43 位>` |
@@ -37,7 +37,7 @@
 | 3 | **自动物化**：会话被镜像/发布时自动触发 | ⏳ 未开始 | 现在只能手工 `POST /dsh-session-sync/materialize` |
 | 4 | **部署到服务器并线上验证** | 🔶 服务器 ✅ / 本机待重启 | 服务器：插件已到 **`b2a7811`**（含边界修正），`dsh-web` restart 后 active、3080/8791 在听。本机 16:26 重启过、跑的是 `13b7aa2`，**还没有边界修正**（`pullOlder` 在源站侧）⇒ 要再重启一次本机，线上回填才会不留洞 |
 | 5 | **撤掉客户端伪装**（合成 id / `retainAgentScope` / 自绘「加载更早」退休） | ⏳ 未开始 | 依赖 1–4：不先让长会话有完整历史，撤掉伪装会立刻退化成"看不到历史" |
-| 6 | **文档与版本**（README + 本文件 + 版本号） | 🔶 随做随记 | 本节已改；插件版本仍 `0.3.0` |
+| 6 | **文档与版本**（README + 本文件 + 版本号） | ✅ **0.4.0 已发**（tag `v0.4.0`） | README / 本文件 / `docs/host-side-session-plan.md` 已跟到本轮；`package.json` → `0.4.0` |
 
 ### 1 的根因与证据（2026-09-25，已在两个一次性实例上端到端复现并修好）
 
@@ -443,7 +443,7 @@ README 里四处已过时：`Remote history paging is not implemented`（已实�
 3. **Cloudflare 会切断空闲 SSE**（浏览器报 `net::ERR_HTTP2_PROTOCOL_ERROR`）。nginx 侧超时 600 秒、当天无日志；DSH 的 SSE **不发心跳**。未修，暂靠使用频率绕过。
 4. **源站日志读不到**（`dsh-web.log` 只有 `dsh web: …token…` 一行）。运维可见的事实必须写进 state/UI —— 本项目既有模式，`state.follow` / `state.page` 都是这么来的。
 5. **每次源站侧改动都要重启本机**，而重启会杀掉正在跑的会话（所以要先问用户）。
-6. **版本仍 `0.3.0`**，但行为已差很远；是否发 `0.4.0` 待定（`github:` 依赖按 commit 解析，版本号只是标识）。
+6. ~~**版本仍 `0.3.0`**，但行为已差很远；是否发 `0.4.0` 待定。~~ **已发 `0.4.0`（tag `v0.4.0`）**。注意：`github:` 依赖仍按 **commit** 解析，版本号只是标识——所以**改完 `src/**` 必须把 `lib/`、`client/` 两个产物一起提交**，服务器装的是 tarball 里的它们。
 7. **控制台是"抄本"，不是原件。** 插件里有 `eccffad feat(client): render a mirrored Session through the shipped conversation page`，那条路要求客户端上下文提供 `ctx.sessions.adopt` **和** `retain`；**当前没有任何 DSH 构建提供 `adopt`**（`session-controller/src/client/sessions/service.ts` 只有 `retain`）。所以 `official.supported === false`，控制台一律走自己那套手绘面板——抄了 `ui-chat` 的样式表与行词汇，但**行标记是自己的**。后果：**原页面一变，抄本就会漂移**，而漂移只能靠人对着两个窗口比对发现（`16b46e0` 就是这么发现的）。
    - 同类风险面：`tool-presentation.ts` / `tool-cards.ts` 的家族表、`locales.ts` 里所有"抄自 ui-conversation 的串"。DSH 还有一个 `tool.title.inspect: '查看'` 本插件没映射（遇到 `inspect` 这类工具名会落到别的标题）。
    - 一旦某个 DSH 构建提供 `adopt`，这条抄本路径会被自动绕过、无需改代码。
