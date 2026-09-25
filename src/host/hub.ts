@@ -553,6 +553,27 @@ export class SyncHub {
     }
   }
 
+  /**
+   * Ask the origin for the page below one sequence, without reading a window.
+   *
+   * {@link SyncHub.transcript} asks as a side effect of a reader reaching the
+   * mirror's lower edge, and it is rate-limited because a reader asks once per
+   * scroll. Materializing is not reading: it needs the Session's *beginning*, so
+   * it asks directly and in the largest pages the origin serves.
+   * @param machineName - owning machine.
+   * @param sessionId - published Session.
+   * @param beforeSeq - read strictly below this sequence.
+   * @param maxMessages - how many messages the origin should page back over.
+   * @returns whether there was an origin to ask.
+   */
+  askOlder(machineName: string, sessionId: string, beforeSeq: number, maxMessages: number): boolean {
+    const record = this.records.get(machineName)
+    if (record?.sessions.get(sessionId) === undefined) return false
+    if (record.origin === undefined) return false
+    record.origin.older(sessionId, beforeSeq, maxMessages)
+    return true
+  }
+
   /** Push the current view to every browser (used when the wire reconnects). */
   refresh(): void {
     this.broadcastState()

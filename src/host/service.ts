@@ -80,6 +80,39 @@ const RESYNC_FLOOR_MS = 5_000
  */
 const PAGE_FLOOR_MS = 1_000
 
+/**
+ * How far materializing walks an origin back before it gives up.
+ *
+ * The mirror holds the newest window, and a Session's log has to begin at its
+ * beginning, so a long Session needs the origin to page backwards until it does.
+ * One round is one ask plus one wait, so this is a time budget (about a minute)
+ * rather than a statement about what is possible: a Session that needs more is
+ * reported, not half-written.
+ */
+const BACKFILL_ROUNDS = 20
+
+/** How long one backfill round waits, in ticks of {@link BACKFILL_TICK_MS}. */
+const BACKFILL_TICKS = 12
+
+/** One backfill tick: how often a waiting round re-reads the mirror's edge. */
+const BACKFILL_TICK_MS = 500
+
+/**
+ * Rounds that may move nothing before materializing gives up.
+ *
+ * The origin reads its own log on its own schedule, so a single still round says
+ * nothing; several in a row mean it has no more below, or is not answering.
+ */
+const BACKFILL_IDLE_ROUNDS = 3
+
+/**
+ * Messages one backfill page covers.
+ *
+ * Materializing is not scrolling: it wants the beginning as fast as the origin
+ * will serve it, and the origin's own page ceiling is 500 messages.
+ */
+const BACKFILL_PAGE_MESSAGES = 500
+
 /** The two kinds of text one step streams. */
 const STREAM_KINDS = ['reasoning', 'text'] as const
 
@@ -384,9 +417,18 @@ export class SessionSyncService {
    * @returns what was written, or why nothing was.
    */
   async materialize(machineName: string, sessionId: string): Promise<MaterializeResult> {
-    const transcript = this.hub.transcript(machineName, sessionId, { limit: 100_000 })
+    let transcript = this.hub.transcript(machineName, sessionId, { limit: 100_000 })
     if (transcript === undefined) {
       return { ok: false, written: 0, skipped: 0, archived: false, reason: 'nothing is mirrored under that address' }
+    }
+    // The mirror usually holds the newest window, and the storage layer refuses a
+    // log that does not begin at the Session's beginning, so the origin is walked
+    // back to the start first. It is bounded: a Session too long to backfill in
+    // this budget is reported rather than half-written.
+    const rounds = await this.backfill(machineName, sessionId, transcript)
+    if (rounds > 0) transcript = this.hub.transcript(machineName, sessionId, { limit: 100_000 })
+    if (transcript === undefined) {
+      return { ok: false, written: 0, skipped: 0, archived: false, reason: 'the Session left the mirror while backfilling' }
     }
     const events = transcript.events
     const first = events[0]
@@ -405,6 +447,53 @@ export class SessionSyncService {
         events,
       },
     )
+  }
+
+  /**
+   * Walk the origin back until the mirror holds this Session's beginning.
+   *
+   * One round asks the origin for the page below what the mirror holds and waits;
+   * the origin reads its own log and the page arrives as ordinary frames. The cap
+   * is a budget rather than a limit on what is possible: a Session that needs more
+   * rounds than this still materializes, just not inside one request.
+   * @param machineName - owning machine.
+   * @param sessionId - published Session.
+   * @param transcript - the window the mirror holds now.
+   * @returns how many rounds were spent.
+   */
+  private async backfill(
+    machineName: string,
+    sessionId: string,
+    transcript: MirrorTranscript,
+  ): Promise<number> {
+    // The edge is the *lowest* sequence, which is the first event of the whole
+    // window — a one-event page would answer with the newest instead.
+    const edge = (): number | undefined =>
+      this.hub.transcript(machineName, sessionId, { limit: 100_000 })?.events[0]?.seq
+    let lowest = transcript.events[0]?.seq
+    let rounds = 0
+    let idle = 0
+    while (lowest !== undefined && lowest > 1 && rounds < BACKFILL_ROUNDS) {
+      if (!this.hub.askOlder(machineName, sessionId, lowest, BACKFILL_PAGE_MESSAGES)) return rounds
+      // The origin reads its own log for that page, which takes longer than the
+      // ask does, so one round waits in ticks and takes whatever arrived.
+      let arrived = lowest
+      for (let tick = 0; tick < BACKFILL_TICKS; tick += 1) {
+        await new Promise<void>(resolve => { setTimeout(resolve, BACKFILL_TICK_MS) })
+        const next = edge()
+        if (next !== undefined && next < arrived) {
+          arrived = next
+          break
+        }
+      }
+      rounds += 1
+      // A round that moved nothing is not proof of the end — the origin may still
+      // be reading — so a few of them have to pass before this gives up.
+      idle = arrived < lowest ? 0 : idle + 1
+      lowest = arrived
+      if (idle >= BACKFILL_IDLE_ROUNDS) break
+    }
+    return rounds
   }
 
   /**
