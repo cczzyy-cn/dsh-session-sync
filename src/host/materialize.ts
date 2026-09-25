@@ -23,8 +23,38 @@
  * truth beside the machine that owns the Session.
  */
 
+import { isAbsolute } from 'node:path'
+
 /** The format version this Host writes. */
 export const MATERIALIZE_FORMAT_VERSION = 4
+
+/**
+ * Restate a Windows drive path so a POSIX Host reads it as absolute.
+ *
+ * The format validator asks `node:path.isAbsolute`, which answers for *this*
+ * Host's platform: on Linux it rejects `C:\\work`, so a Session mirrored from a
+ * Windows machine could never be written — every event was refused with
+ * `format v4 header cwd must be absolute` before a single byte was written. The
+ * drive is kept, only its notation changes: `C:\\a\\b` becomes `/C:/a/b`, which is
+ * absolute everywhere and still says which drive it was.
+ *
+ * Anything already absolute is left exactly as it is, and a path this cannot
+ * restate is dropped rather than guessed at — a wrong working directory is worse
+ * than none.
+ * @param cwd - the working directory the mirror reported.
+ * @param absolute - the platform's own test, injectable for tests.
+ * @returns a path this Host will accept, or undefined to leave it out.
+ */
+export function portableCwd(
+  cwd: string | undefined,
+  absolute: (path: string) => boolean,
+): string | undefined {
+  if (cwd === undefined) return undefined
+  if (absolute(cwd)) return cwd
+  const drive = /^([A-Za-z]):[\\/]/u.exec(cwd)
+  if (drive === null) return undefined
+  return `/${drive[1] ?? ''}:${cwd.slice(2).replaceAll('\\', '/')}`
+}
 
 /** One durable envelope, as the mirror holds it. */
 export interface MirrorEnvelope {
@@ -137,6 +167,9 @@ export async function materializeSession(
 
   let handle: SessionWriteHandleLike
   try {
+    // Restated for this Host's platform: the format validator's notion of
+    // "absolute" is the one in force here, not the one where the Session ran.
+    const cwd = portableCwd(input.cwd, isAbsolute)
     handle = await persistence.create({
       version: MATERIALIZE_FORMAT_VERSION,
       id: input.sessionId,
@@ -144,7 +177,7 @@ export async function materializeSession(
       // A mirrored Session is an ordinary conversation this Host did not run:
       // not seeded, not a subagent, no preset of its own.
       isSeeded: false,
-      ...(input.cwd === undefined ? {} : { cwd: input.cwd }),
+      ...(cwd === undefined ? {} : { cwd }),
     })
   } catch (error: unknown) {
     return { ok: false, written: 0, skipped, archived: false, reason: `cannot create the log: ${String(error)}` }
