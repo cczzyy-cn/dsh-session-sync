@@ -32,6 +32,7 @@ import type {
   SessionControllerLike,
   SessionSummaryRow,
   WireEvent,
+  WorkspaceRegistryLike,
 } from './dsh.ts'
 import { SyncHub, type BrowserSink } from './hub.ts'
 import { MirrorLedger } from './ledger.ts'
@@ -580,6 +581,31 @@ export class SessionSyncService {
   }
 
   /**
+   * Undo the archive an earlier build used to make a written copy read-only.
+   *
+   * Archiving looked like the shipped way to say "read-only", and it is — but it
+   * also says "not readable": the workspace browser refuses to open an archived
+   * row (`archivedNotOpenable`) and hides it behind the default archived filter.
+   * A copy in that state is the one combination nobody wants: unusable by the
+   * operator, and no longer needed by the plugin, whose gate is what keeps it
+   * read-only now.
+   * @param sessionId - the Session this Host just adopted.
+   */
+  private async clearStaleArchive(sessionId: string): Promise<void> {
+    const registry = this.ctx.get('workspaceRegistry') as WorkspaceRegistryLike | undefined
+    if (registry === undefined || !registry.archivedSessionIds.includes(sessionId)) return
+    try {
+      await registry.unarchiveSession(sessionId)
+      this.ctx.logger.info(`dsh-session-sync: unarchived the mirror copy of "${sessionId}"`)
+    } catch (error: unknown) {
+      // Not fatal: the copy is gated either way, and the console reports what the
+      // ledger holds. Reported rather than swallowed because the operator's next
+      // question would be "why can I not open it".
+      this.ctx.logger.warn(`dsh-session-sync: could not unarchive "${sessionId}": ${describe(error)}`)
+    }
+  }
+
+  /**
    * Drop the read-only claim on one Session, leaving its log in place.
    *
    * This is the way out of the gate: the copy becomes an ordinary Session on this
@@ -637,6 +663,12 @@ export class SessionSyncService {
     if (!this.config.isServer || !this.config.materialize) return report
     const persistence = this.ctx.get('sessionPersistence') as SessionPersistenceLike | undefined
     if (persistence === undefined) return report
+
+    // Migration, once per pass and cheap: a copy an *older* build archived is put
+    // back. It cannot live in the adoption branch alone — a copy adopted before
+    // this build existed is never adopted again, so it would keep the archive the
+    // new design abandoned and stay unopenable forever.
+    for (const { sessionId } of this.ledger.list()) await this.clearStaleArchive(sessionId)
 
     const machines = this.hub.machines()
     // Advanced first: a row that already exists on disk is the common case, and

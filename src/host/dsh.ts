@@ -65,6 +65,22 @@ export interface PreStepLike {
 /** What a `agent/pre-step` listener answers with — `PreStepDecision`. */
 export type PreStepDecisionLike = { readonly kind: 'reject' } | { readonly kind: string; readonly [key: string]: unknown }
 
+/**
+ * The Host's workspace registry, as far as this plugin needs it.
+ *
+ * Only the archive state: an earlier build of this plugin made its written copies
+ * read-only by archiving them, which turned out to make them unreadable — an
+ * archived Session cannot be opened in DSH's own page and is hidden behind the
+ * default archived filter. Read-only is the plugin's own `agent/pre-step` gate
+ * now, so a copy found under that older state is put back.
+ */
+export interface WorkspaceRegistryLike {
+  /** Every Session currently archived, in archive order. */
+  readonly archivedSessionIds: readonly string[]
+  /** Remove one Session from the archive set. */
+  unarchiveSession(sessionId: string): Promise<void>
+}
+
 /** One row of `SessionController.list` — `SessionSummary`. */
 export interface SessionSummaryRow {
   readonly sessionId: string
