@@ -422,13 +422,14 @@ export class SessionSyncService {
    * Read one page of a mirrored Session's transcript.
    * @param machineName - owning machine.
    * @param sessionId - published Session.
-   * @param page - page size and the exclusive upper sequence to read below.
+   * @param page - page size, the exclusive upper sequence to read below, and how
+   *   much history to retain while the caller works.
    * @returns the page, or undefined when nothing is mirrored under that address.
    */
   transcript(
     machineName: string,
     sessionId: string,
-    page?: { limit: number; before?: number },
+    page?: { limit: number; before?: number; retain?: number; release?: boolean },
   ): MirrorTranscript | undefined {
     return this.hub.transcript(machineName, sessionId, page)
   }
@@ -446,36 +447,48 @@ export class SessionSyncService {
    * @returns what was written, or why nothing was.
    */
   async materialize(machineName: string, sessionId: string): Promise<MaterializeResult> {
-    let transcript = this.hub.transcript(machineName, sessionId, { limit: 100_000 })
-    if (transcript === undefined) {
-      return { ok: false, written: 0, skipped: 0, archived: false, reason: 'nothing is mirrored under that address' }
+    // The ceiling is raised before anything is read: the mirror trims from the
+    // front at its own cap, so a backfill walking past that cap would have each
+    // page trimmed away again by the arrivals above it — the low edge parks at the
+    // cap and the Session looks whole while being short. The writer still refuses
+    // a log that does not begin at zero, so this is a budget, not a promise.
+    let transcript = this.hub.transcript(machineName, sessionId, { limit: 100_000, retain: Number.MAX_SAFE_INTEGER })
+    try {
+      if (transcript === undefined) {
+        return { ok: false, written: 0, skipped: 0, archived: false, reason: 'nothing is mirrored under that address' }
+      }
+      // The mirror usually holds the newest window, and the storage layer refuses a
+      // log that does not begin at the Session's beginning, so the origin is walked
+      // back to the start first. It is bounded: a Session too long to backfill in
+      // this budget is reported rather than half-written.
+      const rounds = await this.backfill(machineName, sessionId, transcript)
+      if (rounds > 0) transcript = this.hub.transcript(machineName, sessionId, { limit: 100_000 })
+      if (transcript === undefined) {
+        return { ok: false, written: 0, skipped: 0, archived: false, reason: 'the Session left the mirror while backfilling' }
+      }
+      const events = transcript.events
+      const first = events[0]
+      if (first === undefined) {
+        return { ok: false, written: 0, skipped: 0, archived: false, reason: 'the mirror holds no events for this Session' }
+      }
+      const row = this.hub.machines()
+        .find(machine => machine.machineName === machineName)?.sessions.find(session => session.sessionId === sessionId)
+      return await materializeSession(
+        this.ctx.get('sessionPersistence') as SessionPersistenceLike | undefined,
+        this.ctx.get('workspaceRegistry') as WorkspaceRegistryLike | undefined,
+        {
+          sessionId,
+          createdAt: first.time,
+          ...(row?.cwd === undefined ? {} : { cwd: row.cwd }),
+          events,
+        },
+      )
+    } finally {
+      // The hold is for the walk, not for the Session's life: leaving it raised
+      // would keep megabytes of history per materialized Session for as long as
+      // this process lives, which is the cost the cap exists to bound.
+      this.hub.transcript(machineName, sessionId, { limit: 1, release: true })
     }
-    // The mirror usually holds the newest window, and the storage layer refuses a
-    // log that does not begin at the Session's beginning, so the origin is walked
-    // back to the start first. It is bounded: a Session too long to backfill in
-    // this budget is reported rather than half-written.
-    const rounds = await this.backfill(machineName, sessionId, transcript)
-    if (rounds > 0) transcript = this.hub.transcript(machineName, sessionId, { limit: 100_000 })
-    if (transcript === undefined) {
-      return { ok: false, written: 0, skipped: 0, archived: false, reason: 'the Session left the mirror while backfilling' }
-    }
-    const events = transcript.events
-    const first = events[0]
-    if (first === undefined) {
-      return { ok: false, written: 0, skipped: 0, archived: false, reason: 'the mirror holds no events for this Session' }
-    }
-    const row = this.hub.machines()
-      .find(machine => machine.machineName === machineName)?.sessions.find(session => session.sessionId === sessionId)
-    return materializeSession(
-      this.ctx.get('sessionPersistence') as SessionPersistenceLike | undefined,
-      this.ctx.get('workspaceRegistry') as WorkspaceRegistryLike | undefined,
-      {
-        sessionId,
-        createdAt: first.time,
-        ...(row?.cwd === undefined ? {} : { cwd: row.cwd }),
-        events,
-      },
-    )
   }
 
   /**

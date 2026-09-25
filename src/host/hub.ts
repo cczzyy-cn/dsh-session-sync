@@ -29,6 +29,17 @@ import {
 const EVENT_LIMIT = 4_000
 
 /**
+ * Hard ceiling on the raised retention a caller may ask for.
+ *
+ * Materializing a long Session has to hold its whole log at once, and a real one
+ * on this deployment was 11,836 events. This is the bound that keeps "hold the
+ * history" from becoming "let a caller decide how much memory this process uses":
+ * a Session that needs more than this is refused by the writer rather than
+ * buffered without limit.
+ */
+const RETAIN_LIMIT = 40_000
+
+/**
  * Events one transcript page carries by default.
  *
  * A conversation reads from its newest end, so a page comfortably longer than a
@@ -107,6 +118,18 @@ interface SessionRecord {
    * origin's own opening window knows that.
    */
   originHasOlder: boolean
+  /**
+   * A higher event ceiling for this Session, while a caller needs the history.
+   *
+   * The mirror is a tail by design and trims from the front at
+   * {@link EVENT_LIMIT}. Materializing needs the *beginning*, so walking the
+   * origin back through that cap achieved nothing: each page arrived and was
+   * trimmed away again by the arrivals above it, and the low edge parked at the
+   * cap with the Session looking whole but short. The ceiling is raised only by
+   * an explicit caller, is capped by {@link RETAIN_LIMIT}, and is never lowered
+   * by a later ordinary read.
+   */
+  retain?: number
 }
 
 /** The one logger method the mirror needs, so it does not own a logging seam. */
@@ -309,8 +332,9 @@ export class SyncHub {
     // A late batch belongs where its sequence says, not at the end: the
     // transcript is rendered in this order.
     session.events.sort((left, right) => left.seq - right.seq)
-    if (session.events.length > EVENT_LIMIT) {
-      for (const dropped of session.events.splice(0, session.events.length - EVENT_LIMIT)) {
+    const ceiling = session.retain ?? EVENT_LIMIT
+    if (session.events.length > ceiling) {
+      for (const dropped of session.events.splice(0, session.events.length - ceiling)) {
         session.seqs.delete(dropped.seq)
       }
     }
@@ -525,17 +549,25 @@ export class SyncHub {
    * walks older, one page at a time, and `hasMore` says whether it is worth it.
    * @param machineName - owning machine.
    * @param sessionId - published Session.
-   * @param page - page size, and the exclusive upper sequence to read below.
+   * @param page - page size, the exclusive upper sequence to read below, how much
+   *   history to retain while this caller works, and whether to drop that hold.
    * @returns the page, or undefined when the mirror holds no such Session.
    */
   transcript(
     machineName: string,
     sessionId: string,
-    page: { limit: number; before?: number } = { limit: TRANSCRIPT_WINDOW },
+    page: { limit: number; before?: number; retain?: number; release?: boolean } = { limit: TRANSCRIPT_WINDOW },
   ): MirrorTranscript | undefined {
     const record = this.records.get(machineName)
     const session = record?.sessions.get(sessionId)
     if (record === undefined || session === undefined) return undefined
+    // Raise the ceiling before the page is read, so what this caller is about to
+    // ask for is not trimmed away by the time it arrives. Never lowered by
+    // implication: an ordinary read must not shrink what a backfill is holding.
+    if (page.release === true) session.retain = undefined
+    if (page.retain !== undefined) {
+      session.retain = Math.min(Math.max(session.retain ?? EVENT_LIMIT, page.retain), RETAIN_LIMIT)
+    }
     // Held in sequence order, so the window's start is a slice index rather than
     // a search — and a `before` that lands inside the window is where paging
     // overlaps and cannot silently skip a row.
@@ -544,7 +576,11 @@ export class SyncHub {
       ? session.events.length
       : session.events.findIndex(event => event.seq >= before)
     const stop = end < 0 ? session.events.length : end
-    const size = Math.min(Math.max(1, page.limit), EVENT_LIMIT)
+    // A page cannot be larger than what this Session is willing to hold: clamping
+    // to the default cap instead of the held ceiling would return the newest
+    // 4,000 of a 12,000-event window and look, from the caller's side, exactly
+    // like a backfill that never advanced.
+    const size = Math.min(Math.max(1, page.limit), session.retain ?? EVENT_LIMIT)
     const start = Math.max(0, stop - size)
     // Two different reasons older history exists, and a reader deserves both:
     // the mirror holds more below this page, or the Session began before the
