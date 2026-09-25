@@ -80,6 +80,15 @@ const RESYNC_RETRY_MS = 30_000
  */
 const OLDER_PAGE_MESSAGES = 500
 
+/**
+ * Messages one hole-repair page spans.
+ *
+ * A hole is repaired by re-reading the log around it, so the page is asked for as
+ * large as the origin will serve: the whole point is to arrive at the missing run
+ * in as few reads as the hole is deep.
+ */
+const HOLE_PAGE_MESSAGES = 500
+
 /** Shortest gap between two history asks for the same Session. */
 const OLDER_ASK_FLOOR_MS = 2_000
 
@@ -208,12 +217,25 @@ export class SyncHub {
    *   silently blank every field this class does not own.
    * @param logger - where an incomplete mirror is reported. Optional so a test
    *   or a headless composition can build a hub that says nothing.
+   * @param timings - the two retry floors, injectable so a test does not have to
+   *   wait out a production interval to see the second ask.
    */
   constructor(
     private readonly notify: (frame: SyncStreamFrame) => void,
     private readonly stateOf: () => SyncState,
     private readonly logger?: MirrorLogger,
+    private readonly timings: { resyncRetryMs?: number; olderAskFloorMs?: number } = {},
   ) {}
+
+  /** Shortest gap between two replay asks for one Session. */
+  private get resyncRetryMs(): number {
+    return this.timings.resyncRetryMs ?? RESYNC_RETRY_MS
+  }
+
+  /** Shortest gap between two reader-driven history asks for one Session. */
+  private get olderAskFloorMs(): number {
+    return this.timings.olderAskFloorMs ?? OLDER_ASK_FLOOR_MS
+  }
 
   /**
    * Older-history asks that arrived while their origin's stream was down.
@@ -397,13 +419,28 @@ export class SyncHub {
       return
     }
     const asked = this.gapAsked.get(key)
-    if (asked !== undefined && now - asked < RESYNC_RETRY_MS) return
+    if (asked !== undefined && now - asked < this.resyncRetryMs) return
     this.gapAsked.set(key, now)
+    // The replay ask fills a window, which reaches what is behind and what is near
+    // the top. A hole *below* the window is not reachable that way — the snapshot
+    // replays the newest window and stops — so each one is asked for as a page read
+    // aimed at it: the page that ends at the last sequence held above the hole, read
+    // from the origin's own log. Both asks travel the same downstream stream, and
+    // both are idempotent at the mirror (membership decides what is new).
+    const holes = holesOf(session)
+    for (const hole of holes) {
+      // `throughSeq` is inclusive: the page ends at the event just above the hole,
+      // which the mirror already holds, so the hole itself is what comes back.
+      record.origin?.older(session.sessionId, hole.from - 1, HOLE_PAGE_MESSAGES)
+    }
     if (asked === undefined) {
       this.logger?.warn(
         `dsh-session-sync: mirror for "${session.sessionId}" on "${record.machineName}" is missing `
         + `${String(missing)} event(s): it holds up to seq ${String(session.maxSeq)}, the origin `
-        + `reports ${String(session.originSeq)}; asked that machine to replay the Session`,
+        + `reports ${String(session.originSeq)}`
+        + (holes.length === 0
+          ? '; asked that machine to replay the Session'
+          : `; asked for ${String(holes.length)} hole page(s) and a replay`),
       )
     }
     record.origin?.resync(session.sessionId)
@@ -598,7 +635,7 @@ export class SyncHub {
     if (start === 0 && before !== undefined && originHasOlder) {
       const now = Date.now()
       const asked = this.olderAsked.get(`${machineName}|${sessionId}`)
-      if (asked === undefined || now - asked >= OLDER_ASK_FLOOR_MS) {
+      if (asked === undefined || now - asked >= this.olderAskFloorMs) {
         this.olderAsked.set(`${machineName}|${sessionId}`, now)
         // The reader's window now begins at `before`, so that is the page's last
         // event, not the one beneath it.
@@ -782,6 +819,33 @@ function missingOf(session: SessionRecord): number {
     : Math.max(0, session.maxSeq - lowest + 1 - session.seqs.size)
   const behind = Math.max(0, session.originSeq - session.maxSeq)
   return holes + behind
+}
+
+/** One run of sequences the mirror is missing inside the range it holds. */
+interface Hole {
+  /** First missing sequence. */
+  readonly from: number
+  /** Last missing sequence. */
+  readonly to: number
+}
+
+/**
+ * The runs of sequences missing *inside* the range this mirror holds.
+ *
+ * A count is enough to report, but not to repair: the replay ask fills a hole near
+ * the top of the window, and a hole below it needs a page read aimed at that hole.
+ * Events are held in sequence order, so one walk finds every run.
+ * @param session - the record to measure.
+ * @returns the holes, lowest first.
+ */
+function holesOf(session: SessionRecord): Hole[] {
+  const holes: Hole[] = []
+  let expected: number | undefined
+  for (const event of session.events) {
+    if (expected !== undefined && event.seq > expected) holes.push({ from: expected, to: event.seq - 1 })
+    expected = event.seq + 1
+  }
+  return holes
 }
 
 /** Read an origin's stated watermark, which is never a negative claim. */
