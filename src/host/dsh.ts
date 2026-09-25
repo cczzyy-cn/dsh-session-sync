@@ -104,13 +104,31 @@ export interface WireStreamBaseline {
 /** The opening window of a `follow` stream — `SessionFollowFrame` `snapshot`. */
 export interface FollowSnapshotFrame {
   readonly type: 'snapshot'
-  readonly header: { readonly id: string; readonly createdAt: number; readonly cwd?: string }
+  readonly header: WireSessionHeader
   readonly cursor: number
   readonly records: readonly WireRecord[]
   readonly hasMore: boolean
   readonly projections: { readonly values: Readonly<Record<string, unknown>> }
   /** Present only when the follow asked for assistant frames and one is open. */
   readonly assistantStream?: WireStreamBaseline
+}
+
+/**
+ * The Session header the opening window carries, as far as this plugin reads it.
+ *
+ * The writer builds its own log header, so what it cannot name here is what the
+ * materialized Session silently loses — measured: a real Session's
+ * `agentPreset: "standard"` went missing, and its `createdAt` drifted by 7 ms
+ * because the writer fell back to the first event's time.
+ */
+export interface WireSessionHeader {
+  readonly id: string
+  readonly createdAt: number
+  readonly cwd?: string
+  /** Which agent preset the Session ran under, when it named one. */
+  readonly agentPreset?: string
+  /** Set on a subagent's own Session. */
+  readonly origin?: string
 }
 
 /** One durable event frame — `SessionEventEntry`. */

@@ -89,6 +89,17 @@ export interface MaterializeInput {
   readonly createdAt: number
   /** The Session's working directory, when the mirror knows it. */
   readonly cwd?: string
+  /**
+   * The agent preset the Session ran under, when the origin named one.
+   *
+   * Not a detail the writer can infer and not one it may invent: the format allows
+   * it, and a materialized Session that loses it is not the Session the origin ran.
+   * Measured against a real materialization, where `agentPreset: "standard"` went
+   * missing because the header was rebuilt here instead of carried.
+   */
+  readonly agentPreset?: string
+  /** Set when the Session belongs to a subagent, as the origin stated it. */
+  readonly origin?: string
   /** The mirrored events, in log order. */
   readonly events: readonly MirrorEnvelope[]
 }
@@ -191,10 +202,14 @@ export async function materializeSession(
       version: MATERIALIZE_FORMAT_VERSION,
       id: input.sessionId,
       createdAt: input.createdAt,
-      // A mirrored Session is an ordinary conversation this Host did not run:
-      // not seeded, not a subagent, no preset of its own.
+      // A mirrored Session is an ordinary conversation this Host did not run, so it
+      // is not seeded and inherits nothing. What it *was* — its preset, and whether
+      // it belongs to a subagent — is carried from the origin's own header rather
+      // than assumed here.
       isSeeded: false,
       ...(cwd === undefined ? {} : { cwd }),
+      ...(input.agentPreset === undefined ? {} : { agentPreset: input.agentPreset }),
+      ...(input.origin === undefined ? {} : { origin: input.origin }),
     })
   } catch (error: unknown) {
     return { ok: false, written: 0, skipped, archived: false, reason: `cannot create the log: ${String(error)}` }

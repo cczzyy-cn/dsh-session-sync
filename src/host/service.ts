@@ -180,6 +180,16 @@ interface FollowHandle {
    */
   cursor: number
   /**
+   * The opening snapshot's Session header, as far as this half reads it.
+   *
+   * The writer builds its own header, so anything this does not carry is what a
+   * materialized Session silently loses. Measured against a real materialization:
+   * `agentPreset: "standard"` went missing, and `createdAt` drifted by 7 ms because
+   * the writer fell back to the first event's time. Only fields the format allows
+   * and this half can vouch for are kept.
+   */
+  header?: WireSessionHeader
+  /**
    * Whether the opening snapshot ever arrived, and why the last attempt ended.
    *
    * `cursor < 0` alone cannot say whether this follow is brand new or has been
@@ -484,13 +494,21 @@ export class SessionSyncService {
       }
       const row = this.hub.machines()
         .find(machine => machine.machineName === machineName)?.sessions.find(session => session.sessionId === sessionId)
+      // The origin's own header is preferred over what can be inferred here: it
+      // carries fields the mirror never sees (a real one lost `agentPreset`), and
+      // its `createdAt` is the Session's start rather than its first event's time.
+      const header = this.follows.get(sessionId)?.header
       return await materializeSession(
         this.ctx.get('sessionPersistence') as SessionPersistenceLike | undefined,
         this.ctx.get('workspaceRegistry') as WorkspaceRegistryLike | undefined,
         {
           sessionId,
-          createdAt: first.time,
-          ...(row?.cwd === undefined ? {} : { cwd: row.cwd }),
+          createdAt: header?.createdAt ?? first.time,
+          ...(row?.cwd === undefined && header?.cwd === undefined
+            ? {}
+            : { cwd: header?.cwd ?? row?.cwd }),
+          ...(header?.agentPreset === undefined ? {} : { agentPreset: header.agentPreset }),
+          ...(header?.origin === undefined ? {} : { origin: header.origin }),
           events,
         },
       )
@@ -1167,6 +1185,10 @@ export class SessionSyncService {
       // Session legitimately cuts at -1, and a follow that never opened must not
       // look like one that did.
       if (typeof carrier['cursor'] === 'number') handle.opened = true
+      // The header the origin stated, kept for the writer: it builds its own log
+      // header, so what is not carried here is what a materialized Session loses.
+      const header = jsonObject(carrier['header'])
+      if (header !== undefined) handle.header = header as unknown as WireSessionHeader
     }
     const page = carrier['page'] as Record<string, unknown> | undefined
     const records = Array.isArray(carrier['records'])

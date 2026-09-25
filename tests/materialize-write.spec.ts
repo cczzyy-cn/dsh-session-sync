@@ -23,17 +23,26 @@ function events(seqs: readonly number[]): MaterializeInput['events'] {
   return seqs.map(seq => ({ type: 'assistant/message', seq, time: 1_700_000_000_000 + seq, data: { seq } }))
 }
 
-/** Storage that records what it was asked to write. */
-function storage(): { persistence: SessionPersistenceLike; written: unknown[][] } {
+/** Storage that records what it was asked to write, and with which header. */
+function storage(): {
+  persistence: SessionPersistenceLike
+  written: unknown[][]
+  headers: Record<string, unknown>[]
+} {
   const written: unknown[][] = []
+  const headers: Record<string, unknown>[] = []
   return {
     written,
+    headers,
     persistence: {
-      create: () => Promise.resolve({
-        append: (batch: readonly unknown[]) => { written.push([...batch]); return Promise.resolve() },
-        flush: () => Promise.resolve(),
-        close: () => Promise.resolve(),
-      }),
+      create: (header: Record<string, unknown>) => {
+        headers.push(header)
+        return Promise.resolve({
+          append: (batch: readonly unknown[]) => { written.push([...batch]); return Promise.resolve() },
+          flush: () => Promise.resolve(),
+          close: () => Promise.resolve(),
+        })
+      },
     },
   }
 }
@@ -95,5 +104,32 @@ describe('materializing a mirrored log', () => {
     })
     assert.equal(result.ok, true)
     assert.equal(result.written, 3)
+  })
+
+  it('carries the origin\u2019s own header fields rather than rebuilding without them', async () => {
+    const { persistence, headers } = storage()
+    await materializeSession(persistence, archiving, {
+      sessionId: 'session-preset',
+      createdAt: 1_790_261_151_160,
+      cwd: '/C:/work',
+      agentPreset: 'standard',
+      events: events(range(3)),
+    })
+    const header = headers[0] ?? {}
+    // The Session's own start, not its first event's time.
+    assert.equal(header['createdAt'], 1_790_261_151_160)
+    assert.equal(header['agentPreset'], 'standard')
+    assert.equal(header['isSeeded'], false)
+    assert.equal(header['version'], 4)
+  })
+
+  it('leaves a preset out when the origin named none', async () => {
+    const { persistence, headers } = storage()
+    await materializeSession(persistence, archiving, {
+      sessionId: 'session-plain',
+      createdAt: 1,
+      events: events(range(3)),
+    })
+    assert.equal(Object.hasOwn(headers[0] ?? {}, 'agentPreset'), false)
   })
 })
