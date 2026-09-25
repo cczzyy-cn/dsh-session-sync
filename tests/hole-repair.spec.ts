@@ -63,7 +63,7 @@ function run(from: number, to: number, missing: readonly number[] = []): number[
 }
 
 describe('a hole in the middle of a mirror', () => {
-  it('asks the origin for the page that ends above the hole', () => {
+  it('asks the origin for the page that ends inside the hole', () => {
     const { hub, older, resyncs } = bench()
     // 100..199 held, 150..159 never arrived, 200..299 held.
     publish(hub, run(100, 199, run(150, 159)))
@@ -73,10 +73,12 @@ describe('a hole in the middle of a mirror', () => {
 
     const asks = older.filter(call => call.maxMessages === 500)
     assert.ok(asks.length >= 1, 'the hole must be asked for')
-    assert.ok(asks.length >= 1, 'the hole must be asked for')
-    // The page ends at 149, the last sequence held above the hole, so asking its
-    // log for one past that returns the missing run.
-    assert.ok(asks.some(call => call.throughSeq === 149), `asks: ${JSON.stringify(asks)}`)
+    // `throughSeq` is inclusive and the page it asks for ends there, so naming the
+    // hole's first sequence is what carries the hole into the page. Naming the one
+    // below it (`from - 1`) asks for a page that ends before the hole starts and
+    // repairs nothing — the mistake the end-to-end test caught.
+    assert.ok(asks.some(call => call.throughSeq === 150), `asks: ${JSON.stringify(asks)}`)
+    assert.ok(asks.every(call => call.throughSeq !== 149), 'never one below the hole')
   })
 
   it('stops asking once the hole is filled', () => {
@@ -107,8 +109,8 @@ describe('a hole in the middle of a mirror', () => {
     publish(hub, run(100, 299, [...run(150, 155), ...run(250, 253)]))
     hub.transcript(MACHINE, SESSION, { limit: 1 })
     const asked = older.map(call => call.throughSeq)
-    assert.ok(asked.includes(149), `asks: ${JSON.stringify(asked)}`)
-    assert.ok(asked.includes(249), `asks: ${JSON.stringify(asked)}`)
+    assert.ok(asked.includes(150), `asks: ${JSON.stringify(asked)}`)
+    assert.ok(asked.includes(250), `asks: ${JSON.stringify(asked)}`)
   })
 
   it('asks again on the sweep while the hole survives', () => {

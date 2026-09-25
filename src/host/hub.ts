@@ -429,9 +429,13 @@ export class SyncHub {
     // both are idempotent at the mirror (membership decides what is new).
     const holes = holesOf(session)
     for (const hole of holes) {
-      // `throughSeq` is inclusive: the page ends at the event just above the hole,
-      // which the mirror already holds, so the hole itself is what comes back.
-      record.origin?.older(session.sessionId, hole.from - 1, HOLE_PAGE_MESSAGES)
+      // `throughSeq` is inclusive and the page it asks for ends there, so the value
+      // is the hole's own first sequence: the origin reads strictly below one past
+      // it, which is the run itself. Naming the sequence *below* the hole (the
+      // obvious-looking `hole.from - 1`) asks for a page that ends before the hole
+      // starts and repairs nothing — the ask looks right and the mirror never
+      // becomes whole, which is exactly what the end-to-end test caught.
+      record.origin?.older(session.sessionId, hole.from, HOLE_PAGE_MESSAGES)
     }
     if (asked === undefined) {
       this.logger?.warn(
