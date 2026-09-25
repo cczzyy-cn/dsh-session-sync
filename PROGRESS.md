@@ -1,7 +1,7 @@
 # dsh-session-sync 推进记录
 
 > 只写被证据支撑的事实：跑过的命令、测到的数字、看到的现象。每条结论都要能指出它是怎么被验证的。
-> 本文件不参与构建。最近更新：2026-09-24（服务器升到最新 DSH + 插件；控制台用原件渲染）
+> 本文件不参与构建。最近更新：2026-09-25（长会话回填的根因是"一批装不下"，已修；未上线）
 
 ## 0. 现状一眼看
 
@@ -30,29 +30,54 @@
 
 | # | 任务 | 状态 | 说明 |
 | --- | --- | --- | --- |
-| 1 | **长会话回填**（镜像只有尾部窗口时，翻到 seq 0 再物化） | 🔶 写入器 ✅ / 询问通道受限于 follow 自锁 | 短、长会话物化都**逐条一致**（222 / 3478 事件，seq 0..N，头尾类型相同）并归档只读；卡点见下 |
+| 1 | **长会话回填**（镜像只有尾部窗口时，翻到 seq 0 再物化） | ✅ **通了**（2026-09-25，见下） | 根因不是分页也不是链路，而是**一批装不下**：回填自己走完 3478 事件，物化 `written 3478 / skipped 0 / archived true` |
 | 2 | **增量追加**：物化后持有 handle，新帧继续 append | ⏳ 未开始 | 现在写完即 `close()`，物化后新事件不会进日志 |
 | 3 | **自动物化**：会话被镜像/发布时自动触发 | ⏳ 未开始 | 现在只能手工 `POST /dsh-session-sync/materialize` |
-| 4 | **部署到服务器并线上验证** | ⏳ 未开始 | 服务器插件仍是 `242bb8f`；物化相关改动（`0b206f9` 起）都还没上线 |
+| 4 | **部署到服务器并线上验证** | ⏳ 未开始 | 服务器插件仍是 `242bb8f`；物化相关改动（`0b206f9` 起）都还没上线。**顺序：先升服务器、后重启本机**（见下） |
 | 5 | **撤掉客户端伪装**（合成 id / `retainAgentScope` / 自绘「加载更早」退休） | ⏳ 未开始 | 依赖 1–4：不先让长会话有完整历史，撤掉伪装会立刻退化成"看不到历史" |
-| 6 | **文档与版本**（README + 本文件 + 版本号） | 🔶 随做随记 | README 与 `docs/host-side-session-plan.md` 已跟到第 12 节；插件版本仍 `0.3.0` |
+| 6 | **文档与版本**（README + 本文件 + 版本号） | 🔶 随做随记 | 本节已改；插件版本仍 `0.3.0` |
 
-**第 1 项的具体卡点（源站 state 原话，2026-09-25）**：
+### 1 的根因与证据（2026-09-25，已在两个一次性实例上端到端复现并修好）
 
-```json
-"page": {"sessionId":"session-f6ba2b3b-…","beforeSeq":3158,"throughSeq":-1,
-         "error":"no follow or no page API"}
-"linkError": "This operation was aborted"
-"follow": {"frames":["snapshot"],"events":18,"posts":["/publish:18","/frames:9!"]}
+**上一轮写的"下一步"（修 follow 开场快照的韧性）方向对了一半，但它不是根因。** 真正的因果链是：
+
+```text
+物化要先回填 ⇒ 服务器向源站要 {kind:'older'} 页 ⇒ 源站 pullOlder 要用 follow 的 cursor 当 throughSeq
+                                        ⇒ cursor 一直是 -1 ⇒ 源站直接 return，一页都不读
+cursor 为什么一直是 -1：follow 的开场快照是**一整帧**，源站把它交给 /frames 时
+                        那一批是 12 MB，而服务器 MAX_BODY_BYTES = 4 MB ⇒ 每次都被拒
+                        同一批在每次重连后原样重发 ⇒ 永远拒 ⇒ 快照永远"没送完"
 ```
 
-推理链：`page` 存在 ⇒ `pullOlder` 被调用过（请求送到了）；`throughSeq=-1` ⇒ 该会话 follow 的
-**开场快照从未完成**（`cursor` 一直 -1）；源站据此拒绝分页；而 `linkError: This operation was aborted`
-说明链路反复中断、**每次中断都打断进行中的快照读** ⇒ 快照永远完不成、分页永远不可用，自锁。
+**实测数字（源站 `session-f6ba2b3b`，3479 条日志）**：
 
-**下一步（单一）**：修 follow 开场快照的韧性——链路中断时重试同一代 follow，或让 `pullOlder` 在
-`cursor < 0` 时先请求一次新快照再分页。外部已实测"全程可达 seq 0"（6 轮翻页），所以这一步过了，
-回填就能自己走通。
+| 量 | 值 | 怎么测的 |
+| --- | --- | --- |
+| 整场日志作为**一个** `/frames` body | **12.55 MB** | 解压源站 `session.v4.jsonl.zstd`，按 `{sessionId,events}` 序列化后量长度 |
+| 最新 400 条 | 1.04 MB | 同上 |
+| 最新 1000 条 | 3.15 MB | 同上 |
+| 服务器上一批的实测体积 | **426 KB / 222 条**（短会话） | 源站 state 的新字段 `batch` |
+| 修复后同一条长会话 | 镜像 320 → **3478** 条，`missingEvents: 0` | 服务器 state |
+| 修复后源站读页 | `records: 3158, hasMore: false, throughSeq: 3477` | 源站 state 的 `page`（上一轮这里只有 `throughSeq: -1` + 报错） |
+| 修复后物化 | `written 3478 / skipped 0 / archived true`，日志 3479 条 / seq 0..3477，头尾类型与源站相同 | `POST /materialize` + 逐帧解压比对 |
+
+**改了什么**（提交 `ff98129`）：
+
+1. `batchEvents()`（`shared/protocol.ts`）按**字节预算**切批，保序、不丢件；单条超过整个预算时**单独成批**（宁可让服务器按名字拒它，也不在发送端静默丢）。
+2. `MAX_BODY_BYTES`（4 MB）与 `FRAMES_BODY_BYTES`（2 MB）搬进共享协议——发送端的预算从**接收端真正执行的限制**推导，而不是各自猜一个数。
+3. 服务器对超大 body **先按 `content-length` 回 413**（带字节数），不再"读到一半抛异常"：那样 Node 会重置连接，发送端只看到网络错误，于是把同一批重试到天荒地老。
+
+**这一条为什么之前查不出来**：发送端唯一能看到的证据是"服务器答了 413"，而**那批到底多大**没有任何地方记。现在 state 里有 `batch`（最大批字节数/条数/切了几批/还排队多少）和 `follows[]`（每会话 `cursor`、`opened`、`firstSeq..lastSeq`、`pending`），以及 `page.reason` 的具名取值（`no-cursor` 等）。`cursor: -1` 从此区分得开"刚打开"和"开场一小时没成"。
+
+**上线顺序（`ff98129` 起）**：
+
+1. **先升服务器**（`210.16.120.228`）：它现在的版本收不下大 body、也不会回 413，先换成带 413 的版本——**服务器侧只多接一个 413 分支，旧源站照旧工作**，所以这一步单独上是安全的、可停可留。
+2. **再重启本机源站**：本机插件才带切批逻辑（`batchEvents`）。重启会杀掉本机正在跑的会话，**要先问用户**。
+3. 之后线上验证只看两个数字：服务器 state 里该会话的 `eventCount` 是否等于源站日志条数、`missingEvents` 是否为 0；以及源站 `page.reason` 是否消失（即读页真的发生了）。
+
+> 反过来（先重启本机、后升服务器）不会坏，但中间那段仍然会撞 4 MB：源站切好的批 ≤2 MB，旧服务器照样只认 ≤4 MB，所以**只要本机先带切批就没有硬卡点**——顺序的真正约束是"服务器得能回 413，才不会让发送端把网络错误当重试理由"。
+
+
 
 **环境坑（已记）**：`job_kill` 只杀 pwsh 外壳，**node 子进程会活着**——曾出现 8799 上听着残留实例、
 源站连它而我查询另一台（3099），两台镜像各自为政，浪费了一轮排查。清理要按 `--port 3098/3099` 精确杀进程。
@@ -68,10 +93,28 @@
 - **本机配置**：`~/.dsh/dsh-session-sync.json` —— `machineName: DESKTOP-M1EERFC`、`serverUrl: 210.16.120.228:8791`、`syncSessions` = 两个会话 id。
 - **GitHub**：`~/.dsh/tools/gh/bin/gh.exe` 已不存在；token 在 **Windows 凭据管理器** `gh:github.com:cczzyy-cn`，推送时用 P/Invoke `CredRead` 读出，临时改 remote URL，推完还原。
 - **端口 22 会短暂不可达**（实测约 2 分钟；同一时刻 8791 也不可达，443/80 与经 Cloudflare 的 web 正常；服务器上**没有 fail2ban、没有针对本机 IP 的 DROP 规则**）。所以"连不上"先按链路抖动处理，不要急着改配置。
+- **`DSH_HOME` 会被 harness 覆写注入**：本会话的 shell 子进程里 `$env:DSH_HOME` 恒等于**本机真实 home** `C:\Users\14339\.dsh`（实测：设完再读，读回来还是真实 home）。所以想让一次性实例用独立 home，**不能靠在自己这条命令里设 `$env:DSH_HOME`**——包一层 `.ps1` 再 `Start-Process -File`（已验证：探针在实例进程内读到的是参数里那个 home）。
+- **一次性实例的搭法（本次实测可用）**：`$env:TEMP\dsh-mat-origin`（client，3098）与 `dsh-mat-server`（server，3099），两边 `profiles\web` 都 junction 到真实 profile。**`profiles\web` 是 junction 时 `dsh plugin add` 会把真实 profile 清空**（踩过）；正确顺序是"先装插件、再建 junction"。server 侧的 `sessions` 指向自己的空树（放一份要物化的源日志），origin 侧 junction 到真实 sessions（于是有真实长会话可回填）。
+- **`.ps1` 里别用 `$Home` 当参数名**（PS 只读自动变量，报 `VariableNotWritable`）；也别用 `$pid`。
 
 ---
 
 ## 2. 推进日志（晚 → 早）
+
+### 长会话回填通了：根因是**一批装不下**，不是分页（2026-09-25）
+
+上一轮把卡点记成"follow 开场快照的韧性 / 分页被自锁"，方向只对了一半。真实的单一根因是**体积**：
+
+| 提交 | 做了什么 | 为什么 |
+| --- | --- | --- |
+| `ff98129` | `batchEvents()` 按字节预算切批（保序、不丢件、单条超预算则单独成批）；`MAX_BODY_BYTES`/`FRAMES_BODY_BYTES` 进共享协议；服务器对超大 body **先回 413**（带字节数）再读 | 源站把 3478 条开场快照作**一个** 12 MB 的 `/frames` body 发出去，服务器上限 4 MB，每次都被拒；被拒的那批**原样留队重试**，于是快照永远送不完、`cursor` 永远 -1、要 cursor 的读页永远被拒。**一个硬上限自锁了整条链** |
+| `e6e00d5` | `loadConfig` 容忍 UTF-8 BOM | 搭一次性实例时踩到：PowerShell/记事本写出的配置带 BOM，`JSON.parse` 直接拒，而"配置读不出来"被当成"没有配置文件"⇒ **全部设置静默回默认** |
+| `745f702` | state 新增 `batch`（最大批字节/条数/批数/排队数）、`follows[]`（每会话 `cursor`/`opened`/`firstSeq..lastSeq`/`pending`）、`page.reason` 具名化 | 发送端唯一能看到的证据是"服务器答了 413"，而**那批多大**没有任何地方记；`cursor: -1` 也分不开"刚打开"和"开场一小时没成" |
+| `eabaff6` | `tests/`：9 个确定性测试（`node --experimental-transform-types --test "tests/*.spec.ts"`） | 端到端那条用**真的**同步服务器 + 真的镜像 + 真的 client 角色引擎 + 12 MB 的假会话；**在修复前的代码上它会失败**（`timed out waiting for all 3478 events in the mirror`）——这是"测试确实抓到了这个 bug"的证据 |
+
+**验证（两个一次性实例，同一份构建）**：源站 `page = {beforeSeq: 3158, throughSeq: 3477, records: 3158, hasMore: false}`（上一轮这里是 `throughSeq: -1` + `no follow or no page API`）；服务器镜像 `eventCount` 320 → **3478**、`missingEvents: 0`；`POST /materialize` → `written 3478 / skipped 0 / archived true`，落盘日志 3479 条 / seq 0..3477 / 头尾类型与源站逐个一致。
+
+**顺带一条方法论教训**：上一轮把"`throughSeq: -1` + `linkError: This operation was aborted`"读成"链路抖动打断快照读"。真实的 `linkError` 是**下游效应**——被拒的 POST 触发 `reconnect()`，abort 掉了正在跑的流。**"同时出现的两个症状"很容易被读成一个因果链，而它们可能都是第三个原因的结果。**
 
 ### 镜像的旧历史终于能进 shipped 面板（2026-09-24/25）
 用户报「没有加载历史会话」。查明：**镜像只持有尾部窗口**（这个会话最新 seq 已过万，窗口只有 400 条），而 shipped 面板**没有回到更早的路**——它自己的"加载更早"会去问 Host（从没听说过这个合成会话），而我当初给窗口传 `hasMore:false`，所以它连显示都没有；插件自己的分页通道此前**只有手绘面板在用**。
@@ -245,17 +288,33 @@ README 里四处已过时：`Remote history paging is not implemented`（已实�
 
 **体积**：209 条事件 ≈ 417 KB（≈2 KB/条）→ 4,000 条的窗口 ≈ 8 MB。一次切换原本要把这个全传一遍、不缓存、过 Cloudflare。
 
-**确定性测试（可复跑，均在 `%TEMP%` 下的 `.mts`）**
+**长会话的实测体积（2026-09-25，源站 `session-f6ba2b3b`，3479 条日志、3.4 MB zstd）**
+
+| 一个 `/frames` body 装多少 | 字节 | 说明 |
+| --- | --- | --- |
+| 整场日志（3478 条） | **12.55 MB** | 正是 follow 开场快照那一帧；服务器上限 **4 MB** ⇒ 必被拒 |
+| 最新 1000 条 | 3.15 MB | 一次 flush 若攒到 1000 条就已经贴着上限 |
+| 最新 400 条 | 1.04 MB | |
+| 实际发出的最大一批（修复后） | **0.81 MB / 320 条** | 源站 state 的 `batch.bytes` / `batch.size` |
+
+结论：**触发条件不是"会话多大"，而是"一帧里有多少条"**——该会话每条约 3.6 KB（比早先估的 2 KB 大一倍），所以约 1100 条就会顶到 4 MB。
+
+**确定性测试（可复跑）**
+
+仓库内 `tests/*.spec.ts`（9 条，`node --experimental-transform-types --test "tests/*.spec.ts"`，不需要 DSH）：
 
 | 测试 | 断言 |
 | --- | --- |
-| 乱序到达 | 注入 `[5..13]` → 一条不少 |
-| 洞重放 | `[5..20]` 完整 |
-| 缺口检测 | `missingEvents 6`，3 秒内发出请求；30 秒后重试；补齐后停止 |
-| 空镜像 + 水位 | `missing 222` 并请求重放 |
-| 发件箱 | `/frames` 被拒 2 次 → 重连 → 重试 → `[0,1,2,3,4]` 全到且顺序正确 |
-| 历史拉取 | `page()` 收到 `throughSeq=904, beforeSeq=900, maxMessages=50`，旧事件确实送出 |
-| `hasOlder` | 索引 `hasOlder:true` → 读尽后该字段消失 |
+| 切批不越线 | 12 MB 的 3478 条 → 每批的 `{sessionId,events}` body ≤ `MAX_BODY_BYTES`；顺序不变、一件不丢 |
+| 超预算单条 | 单独成批，不丢 |
+| 条数上限 | 小事件按 1000 条封顶 |
+| 服务器收超大 body | 413 且**点名字节数**；同一连接随后的小批仍 200 |
+| 切批后端到端 | 每一批都被接受，总条数不变 |
+| 长会话快照（端到端） | 镜像拿到全部 3478 条、`missingEvents 0`、`opened: true` 且 `cursor` 有值、读页真的到达源站 |
+| 没有快照时 | `opened: false`、`cursor: -1`（具名状态，不是含糊的一句错） |
+| 配置文档 | 存读往返；带 BOM 的文档仍读得出；真损坏的仍当"没有" |
+
+`%TEMP%` 下的旧 `.mts` 脚本（本轮之前）：乱序到达 / 洞重放 / 缺口检测 / 空镜像 + 水位 / 发件箱 / 历史拉取 / `hasOlder` —— 见上一版记录。
 
 **运行期读数（源站 `state`）**：`linked=true`、无 `linkError`、`posts: /publish:44 /frames:118 /stream-delta:270`、`follow.events=5489`。
 
@@ -309,8 +368,21 @@ curl -s -b /tmp/cj "http://127.0.0.1:3080/dsh-session-sync/transcript?machine=�
 
 ```powershell
 curl.exe -s -b "$env:TEMP\local-cj.txt" http://127.0.0.1:3080/dsh-session-sync/state
-# 看 follow.linked / linkError / posts，以及 page = { beforeSeq, throughSeq, records, hasMore, error }
+# 看 follow.linked / linkError / posts，以及：
+#   page    = { beforeSeq, throughSeq, records, hasMore, reason }
+#   batch   = { bytes, size, batches, waiting }   ← 一批到底多大 / 还排队多少
+#   follows = [{ sessionId, cursor, opened, firstSeq, lastSeq, pending, events, ended }]
+# 判据：`opened: true` 且 `cursor >= 0` 才意味着这一会话的读页通道是通的；
+#       `page.reason` 直接说被跳过的原因（no-cursor / no-follow / rate-limited …）。
 ```
+
+**跑仓库内的确定性测试**（不需要 DSH，不碰任何运行中的实例）
+
+```powershell
+node --experimental-transform-types --test "tests/*.spec.ts"
+```
+
+> `--experimental-transform-types` 是必需的：`service.ts` 用了构造函数参数属性，Node 的 strip-only 模式不支持。
 
 **远端一次内联命令的正确写法**（详见 skill `remote-ssh-ops`）
 
@@ -333,5 +405,10 @@ ssh -n root@210.16.120.228 "echo <base64> | base64 -d > /tmp/t.sh && bash /tmp/t
 | **点击坐标** | 自己按截图算，偏了 290 像素，于是"按钮点了没反应" | 用 `see(text=true)` 给的 `screen_center`，不要手算 |
 | 日志读不到 | 两端都看不见插件日志 | 把事实写进 state（既有模式），别指望日志 |
 | 结论过头 | "重放既不重复也不丢失" 被后续证据证伪 | 先写症状与证据，再写根因；范围要写清（例如 `drain` 只覆盖一个 flush 周期） |
+| **两个症状读成一个因果链** | `throughSeq: -1` 和 `linkError: This operation was aborted` 一起出现，于是记成"链路抖动打断快照读、快照因此完不成"，烧掉一轮 | 它们可能都是**第三个原因**的结果（这里是被拒的 12 MB POST 触发 `reconnect()` 才 abort 了流）。先找"谁能解释**两个**症状"，再下结论 |
+| **硬上限最容易被跳过** | 12 MB 一帧撞 4 MB 上限，表现成"分页不可用 / 链路抖动 / 快照完不成"三种像模像样的症状 | 看到"某件事永远完不成"先量**体积/条数**，和两端的限制对一遍；**把实测值写进 state**（`batch`） |
+| **PowerShell 写文件带 BOM** | `Set-Content -Encoding UTF8`（PS 5.1）写出 EF BB BF，`JSON.parse` 直接拒；"配置读不出"被当成"没有配置"⇒ 全部回默认，看起来像插件忘了设置 | 写文件用 `[IO.File]::WriteAllText($p, $s, (New-Object Text.UTF8Encoding($false)))`；读文件容忍 BOM（`e6e00d5` 已修） |
+| **harness 覆写 `DSH_HOME`** | 在自己命令里设 `$env:DSH_HOME` 没用（被覆写成真实 home），一次性实例于是读真实配置 | 包一层 `.ps1` + `Start-Process -File`（参数传 home）；先用"在实例进程里打印 home"的探针验证一次 |
+| **`profiles\web` 是 junction 时装插件** | `dsh plugin add` 会把真实 profile（连同其它插件）清空 | 顺序反过来：**先**在真实 profile 里 `add`，**再**建 junction；或者不要在 junction 上跑 `add` |
 
-**验证纪律**：能在本地用假控件复现的，先写确定性测试（本轮 7 个测试抓到 2 个真 bug）；生产验证要给出**数字**（seq 范围、条数、耗时），不要只说"好了"。
+**验证纪律**：能在本地用假控件复现的，先写确定性测试（本轮 9 个测试；其中端到端那条**在修复前的代码上确实失败**——新写的测试要在旧代码上跑一遍，否则不知道它测的是什么）；生产验证要给出**数字**（seq 范围、条数、字节数、耗时），不要只说"好了"。

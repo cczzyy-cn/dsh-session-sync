@@ -213,6 +213,19 @@ normal way to edit it.
   (`{kind:'older'}`, 50 messages). The origin reads that page out of its own log
   — against the same cut the window was taken at — and it comes back as ordinary
   durable events.
+- **A published batch is split to fit the wire.** A follow opening on a long
+  Session is its whole window in one frame, which is megabytes: measured here,
+  3,478 events of a real Session serialize to 12.5 MB, and the sync server refuses
+  a request body over `MAX_BODY_BYTES` (4 MB). One oversized POST is not a single
+  failure — the batch stays at the head of the outbox and is retried on every
+  reconnect, so the follow never finishes, its `cursor` stays `-1`, and every page
+  read cut against that cursor is refused. So `batchEvents`
+  (`src/shared/protocol.ts`) splits one run of events by a byte budget derived
+  from that same limit, in order, dropping nothing; a single event larger than the
+  whole budget travels alone rather than being dropped. The listener answers an
+  oversized body with a named 413 *before* reading it, because throwing on an
+  unread body makes Node reset the connection — and a network error is not a
+  refusal the sender can act on.
 - Un-publishing a Session removes it from the index, which drops the mirror and
   its events.
 - Takeover prompts go down the origin's own SSE stream; the origin calls
@@ -253,6 +266,7 @@ All of them sit under `/dsh-session-sync` and behind the GUI's own gate.
 | `/state` | GET | The state every surface reads: role, link, mirror, and the per-Session counts |
 | `/sessions` | GET | This machine's own Session list, for the publish picker |
 | `/transcript` | GET | A page of one mirrored Session (`machine`, `session`, optional `limit`, `before`); asks the owning machine for history below its window when a reader reaches the mirror's edge |
+| `/materialize` | POST | Write one mirrored Session into this Host's own storage and archive it (`machineName`, `sessionId`); walks the origin back to the Session's beginning first, and refuses rather than writing a log with a hole at the front |
 | `/command` | POST | One takeover prompt; answers with the `commandId` its status is narrated under |
 | `/events` | GET | The SSE stream: state frames, per-Session event frames, and transient live text |
 
