@@ -105,6 +105,25 @@ cursor 为什么一直是 -1：follow 的开场快照是**一整帧**，源站�
 
 ## 2. 推进日志（晚 → 早）
 
+### `non-appended Match 2897`：同一页从两条路进来，第二次没被拦（2026-09-25 晚，已修）
+
+用户贴出 Console 里这条：
+
+```
+[session-controller] event feed subscriber failed: Error: conversation Context 25:trajectory-assistant-step5:107 received non-appended Match 2897
+```
+
+这是 `ui-conversation` 的装配器在 `assembler.ts:539` 抛的：**同一个 context 的 Match 必须严格按 seq 递增**。而它一旦抛出，**整个 event-feed subscriber 就废了**——面板从此不再更新，直到重新打开会话。所以这不只是"一条日志"。
+
+**为什么重复**：一页会走**两条路**到达面板——
+
+1. 客户端自己 `GET /transcript` 读到的那一页，经 `prependOlder` 插到窗口之前；
+2. 源站按普通事件帧**重放**它窗口里的事件，而重放里包含"镜像现在已经持有的、位于窗口之下"的那些——`appendEvents` 判断"低于窗口下沿 ⇒ 当历史"，于是**也走 `prependOlder`**。
+
+`appendEvents` 已经按窗口成员去重，但 `prependOlder` **没有**：第二条路把第一条路已经插进去的事件**又插了一遍**，装配器的严格递增规则就拒了。修法（`85909df`）：`prependOlder` 也拿**当前窗口快照**做成员判断（那是唯一知道窗口里到底有什么的地方），已在窗口里的事件跳过而不是重插。
+
+> **教训**：`242bb8f` 修的是"**帧**里的旧事件不要当新事件 append"，这次是"**页**里的旧事件不要重复 prepend"——同一个不变量（**同一条事件只能进窗口一次**）有两条入口，上一轮只堵了一条。
+
 ### "历史按钮一直在、点了不加载"：翻页是通的，慢在投递（2026-09-25 晚，已修）
 
 用户报"服务器历史按钮一直显示且无法加载历史会话"。**先量，不猜**——在一次点击前后同时读两端：
