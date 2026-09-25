@@ -606,11 +606,30 @@ function Conversation(props: {
             // there the shipped composer would carry its prompt to a Host that
             // has never heard of this Session, so its seat is hidden and the
             // console's own takeover composer stands in.
-            <div className={props.official.composerOwned ? `${css.officialPane} ${css.drivesWindow}` : css.officialPane}>
-              <props.SessionProvider session={shipped}>
-                {props.renderSlot(OFFICIAL_SLOT, {})}
-              </props.SessionProvider>
-            </div>
+            <>
+              {/* The shipped conversation's own older-end control asks the Host,
+                  which has never heard of this Session, so the window it is given
+                  never claims more. Paging is this console's own road — it reads
+                  the older page over the sync link and hands it to the same
+                  window — and this is its control. */}
+              {state.transcript?.hasMore === true && (
+                <div className={css.olderRow}>
+                  <button
+                    type="button"
+                    className={css.olderButton}
+                    disabled={state.loadingOlder}
+                    onClick={() => { void props.loadOlder() }}
+                  >
+                    {state.loadingOlder ? t('loadingOlder') : t('loadOlder')}
+                  </button>
+                </div>
+              )}
+              <div className={props.official.composerOwned ? `${css.officialPane} ${css.drivesWindow}` : css.officialPane}>
+                <props.SessionProvider session={shipped}>
+                  {props.renderSlot(OFFICIAL_SLOT, {})}
+                </props.SessionProvider>
+              </div>
+            </>
           )
           : (
             <div className={css.viewScroll} ref={body}>

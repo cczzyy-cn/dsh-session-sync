@@ -175,6 +175,15 @@ export interface SyncTransportObserver {
   opened(open: OpenSession): void
   /** The opening window arrived. */
   loaded(open: OpenSession, transcript: MirrorTranscript): void
+  /**
+   * One older page arrived, below everything the consumer already holds.
+   *
+   * Separate from {@link SyncTransportObserver.loaded} because it is the one
+   * arrival that goes *before* the window rather than replacing it: a consumer
+   * that draws the mirror's window has to prepend it, or the transcript would
+   * jump back to where the page begins.
+   */
+  older(open: OpenSession, page: MirrorTranscript): void
   /** One `events` frame's durable envelopes, in order. */
   appended(open: OpenSession, frame: SyncEventsFrame): void
   /** One accepted live delta frame. */
@@ -432,6 +441,9 @@ export class SyncClient {
           },
           loadingOlder: false,
         })
+        // The consumer is told the page itself, not the merged list: it holds its
+        // own window, and a page is the part of it that goes before.
+        this.notify(observer => { observer.older(open, older) })
         return
       }
       if (!older.hasMore) {

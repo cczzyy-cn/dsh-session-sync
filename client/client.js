@@ -903,6 +903,9 @@ window.__ModuleLoader__.load({
 							},
 							loadingOlder: false
 						});
+						this.notify((observer) => {
+							observer.older(open, older);
+						});
 						return;
 					}
 					if (!older.hasMore) {
@@ -1364,6 +1367,7 @@ window.__ModuleLoader__.load({
 						handle.release();
 						throw error;
 					}
+					this.source = service.binding?.(sessionId)?.eventSource;
 					return;
 				}
 				this.handle = void 0;
@@ -1422,6 +1426,22 @@ window.__ModuleLoader__.load({
 					this.observe(event.seq);
 					this.source?.append(entryOf(event));
 				}
+			}
+			/**
+			* Put one older page below the window.
+			*
+			* This is the only way the older end is reachable in the shipped pane: the
+			* shipped control asks the Host, which has never heard of this Session, so the
+			* window it is given never claims more (`hasMore` stays false) and the console
+			* pages through its own channel instead. What arrives goes *before* the window
+			* rather than replacing it, so the reader keeps their place.
+			* @param page - the older page, whose events sit below everything held.
+			*/
+			prependOlder(page) {
+				if (this.released) return;
+				const events = page.events.filter((event) => !isPanelOnly(event));
+				if (events.length === 0) return;
+				this.source?.prepend(events.map(entryOf), page.hasMore);
 			}
 			/**
 			* Feed one live delta frame: the whole step text so far, replaced as it grows.
@@ -1638,6 +1658,14 @@ window.__ModuleLoader__.load({
 			*/
 			loaded(open, transcript) {
 				if (this.matches(open)) this.current?.mirror.replace(transcript);
+			}
+			/**
+			* The panel paged up: one older page arrived for the open Session.
+			* @param open - the remote Session it belongs to.
+			* @param page - the page.
+			*/
+			older(open, page) {
+				if (this.matches(open)) this.current?.mirror.prependOlder(page);
 			}
 			/**
 			* One `events` frame arrived.
@@ -5304,13 +5332,24 @@ window.__ModuleLoader__.load({
 					cells,
 					stats: chrome.stats,
 					labels
-				}) : shipped !== void 0 ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+				}) : shipped !== void 0 ? /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [state.transcript?.hasMore === true && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+					className: sync_module_css_default.olderRow,
+					children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
+						type: "button",
+						className: sync_module_css_default.olderButton,
+						disabled: state.loadingOlder,
+						onClick: () => {
+							props.loadOlder();
+						},
+						children: state.loadingOlder ? t("loadingOlder") : t("loadOlder")
+					})
+				}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
 					className: props.official.composerOwned ? `${sync_module_css_default.officialPane} ${sync_module_css_default.drivesWindow}` : sync_module_css_default.officialPane,
 					children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(props.SessionProvider, {
 						session: shipped,
 						children: props.renderSlot(OFFICIAL_SLOT, {})
 					})
-				}) : /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+				})] }) : /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 					className: sync_module_css_default.viewScroll,
 					ref: body,
 					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {

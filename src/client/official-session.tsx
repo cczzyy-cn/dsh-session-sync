@@ -204,6 +204,8 @@ export interface SubagentAddressLike {
  */
 export interface SessionEventSourceLike {
   replace(entries: readonly unknown[], hasMore: boolean): void
+  /** Put entries below the window, which is how older history is added. */
+  prepend(entries: readonly unknown[], hasMore: boolean): void
   append(entry: unknown): void
   /** Retire one attempt's transient rows, inserting its durable settlement. */
   settleAssistant(attemptId: string, entry?: unknown): void
@@ -473,6 +475,9 @@ export class OfficialMirror {
         handle.release()
         throw error
       }
+      // The window is still reached directly for the one thing the handle does
+      // not carry: putting an older page below what is already drawn.
+      this.source = service.binding?.(sessionId)?.eventSource
       return
     }
 
@@ -547,6 +552,23 @@ export class OfficialMirror {
       this.observe(event.seq)
       this.source?.append(entryOf(event))
     }
+  }
+
+  /**
+   * Put one older page below the window.
+   *
+   * This is the only way the older end is reachable in the shipped pane: the
+   * shipped control asks the Host, which has never heard of this Session, so the
+   * window it is given never claims more (`hasMore` stays false) and the console
+   * pages through its own channel instead. What arrives goes *before* the window
+   * rather than replacing it, so the reader keeps their place.
+   * @param page - the older page, whose events sit below everything held.
+   */
+  prependOlder(page: MirrorTranscript): void {
+    if (this.released) return
+    const events = page.events.filter(event => !isPanelOnly(event))
+    if (events.length === 0) return
+    this.source?.prepend(events.map(entryOf), page.hasMore)
   }
 
   /**
@@ -800,6 +822,15 @@ export class OfficialSessions implements OfficialBridgeFace, SyncTransportObserv
    */
   loaded(open: OpenSession, transcript: MirrorTranscript): void {
     if (this.matches(open)) this.current?.mirror.replace(transcript)
+  }
+
+  /**
+   * The panel paged up: one older page arrived for the open Session.
+   * @param open - the remote Session it belongs to.
+   * @param page - the page.
+   */
+  older(open: OpenSession, page: MirrorTranscript): void {
+    if (this.matches(open)) this.current?.mirror.prependOlder(page)
   }
 
   /**
