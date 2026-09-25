@@ -164,6 +164,41 @@ export function writable(envelope: unknown, expectedSeq: number): envelope is Mi
 }
 
 /**
+ * What to do about one mirrored Session whose log may already exist.
+ *
+ * `create` refuses an id that is already on disk, which is right — overwriting a
+ * log destroys whatever it held — but it is not an answer, because the caller has
+ * three different situations behind that one refusal:
+ *
+ * - **nothing on disk**: write it;
+ * - **a log this Host itself ran** (`owner` is this Host): leave it alone. The
+ *   Session belongs to this Host, and gating or rewriting it would damage the
+ *   original — this is the case the writer's "an existing id is left alone" rule
+ *   exists for;
+ * - **a log under an id another machine owns**: this Host wrote it from a mirror
+ *   in an earlier life — before a restart, before the ledger existed, or under a
+ *   build that did not keep one. It is a copy, so it is *ours to own*: adopting it
+ *   into the ledger is what puts it back under the gate.
+ *
+ * Without the third case the automatic pass retries `create` forever — measured
+ * live, against a log an earlier manual materialization had left: `materialized`
+ * stayed empty, the copy stopped tracking the mirror, and it was outside the gate
+ * the whole time.
+ * @param stored - what `stat` says about the id, or undefined when nothing is on disk.
+ * @param owner - the machine the mirror says owns the Session.
+ * @param self - this Host's own machine name.
+ * @returns which of the three situations this is.
+ */
+export function startFor(
+  stored: SessionStoredSnapshot | undefined,
+  owner: string,
+  self: string,
+): 'create' | 'adopt' | 'ours' {
+  if (stored === undefined) return 'create'
+  return owner === self ? 'ours' : 'adopt'
+}
+
+/**
  * Write one mirrored Session into this Host's own storage.
  *
  * A Session that already exists under this id is left alone: the caller may be

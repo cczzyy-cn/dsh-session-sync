@@ -38,6 +38,7 @@ import { MirrorLedger } from './ledger.ts'
 import {
   catchUpSession,
   materializeSession,
+  startFor,
   type MaterializeResult,
   type MirrorEnvelope,
   type SessionPersistenceLike,
@@ -630,8 +631,8 @@ export class SessionSyncService {
    * stops new copies without touching the ones already written.
    * @returns how many logs were created and how many were advanced.
    */
-  private async syncMaterialized(): Promise<{ created: number; advanced: number }> {
-    const report = { created: 0, advanced: 0 }
+  private async syncMaterialized(): Promise<{ created: number; adopted: number; advanced: number }> {
+    const report = { created: 0, adopted: 0, advanced: 0 }
     if (!this.config.isServer || !this.config.materialize) return report
     const persistence = this.ctx.get('sessionPersistence') as SessionPersistenceLike | undefined
     if (persistence === undefined) return report
@@ -666,11 +667,25 @@ export class SessionSyncService {
         // Only a Session whose mirror holds its beginning can be written; anything
         // else needs a backfill, which the create path does for itself.
         if (transcript === undefined) continue
+        // A log may already be on disk under this id — from an earlier life of
+        // this Host, before a restart or before this ledger existed. `create`
+        // refuses it, and refusing forever is how the copy stayed outside the
+        // gate: see {@link startFor}.
+        const stored = await persistence.stat(session.sessionId).catch(() => undefined)
+        const start = startFor(stored, machine.machineName, this.config.machineName)
+        // This Host's own Session: not ours to write, and not ours to gate.
+        if (start === 'ours') continue
+        if (start === 'adopt') {
+          await this.ledger.mark(session.sessionId, machine.machineName, stored?.eventCount ?? 0)
+          report.adopted += 1
+          this.broadcastState()
+          return report
+        }
         const result = await this.materialize(machine.machineName, session.sessionId)
         if (result.ok) {
           report.created += 1
           this.broadcastState()
-          // One create per pass: see the method comment.
+          // One write per pass: see the method comment.
           return report
         }
       }

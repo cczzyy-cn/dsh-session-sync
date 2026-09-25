@@ -22,6 +22,7 @@ import assert from 'node:assert/strict'
 import {
   catchUpSession,
   materializeSession,
+  startFor,
   type MaterializeInput,
   type SessionWriteHandleLike,
   type SessionPersistenceLike,
@@ -149,6 +150,29 @@ describe('materializing a mirrored log', () => {
       events: events(range(3)),
     })
     assert.equal(Object.hasOwn(headers[0] ?? {}, 'agentPreset'), false)
+  })
+})
+
+describe('the three situations behind one refused create', () => {
+  // `create` refuses an id already on disk. That refusal covers three different
+  // facts, and treating them alike is what left a copy outside the gate: the
+  // automatic pass retried `create` forever and never recorded the Session it
+  // could not write. Measured live on the deployed server: `materialized: []`
+  // with a 705 KB log sitting under the id.
+  it('writes when nothing is on disk', () => {
+    assert.equal(startFor(undefined, 'OTHER-MACHINE', 'THIS-MACHINE'), 'create')
+  })
+
+  it('adopts a log under an id another machine owns', () => {
+    // The Host wrote it from a mirror in an earlier life — before a restart, or
+    // before the ledger existed. It is a copy, so it is ours to own and to gate.
+    assert.equal(startFor({ eventCount: 705 }, 'OTHER-MACHINE', 'THIS-MACHINE'), 'adopt')
+  })
+
+  it('leaves this Host\u2019s own Session alone', () => {
+    // Same id, owned by this Host: rewriting it would destroy the original, and
+    // gating it would make the operator's own Session read-only.
+    assert.equal(startFor({ eventCount: 12 }, 'THIS-MACHINE', 'THIS-MACHINE'), 'ours')
   })
 })
 
