@@ -564,6 +564,11 @@ function Conversation(props: {
               {t('mirrorGapBadge', { n: session.missingEvents })}
             </span>
           )}
+          {props.official.supported && (
+            <span className={css.routeBadge} title={t('paneRouteHint')}>
+              {t('paneRoute', { route: props.official.route ?? '' })}
+            </span>
+          )}
           <span className={css.viewSpacer} />
 
           <ChromeChips t={t} chrome={chrome} />

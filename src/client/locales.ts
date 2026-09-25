@@ -69,6 +69,8 @@ export const zh = {
   loadOlder: '加载更早的消息',
   loadingOlder: '正在加载…',
   composerBlocked: '这个会话运行在另一台机器上，请用下方的接管输入框发言',
+  paneRoute: '原件 · {route}',
+  paneRouteHint: '这个面板用的是 DSH 自己的会话页。adopt＝打了补丁，输入框也能发言；scope＝无宿主读取（推荐）；address＝契约层兜底，会有一次失败的宿主历史读取',
   openSession: '打开',
 
   sessionsTitle: '会话',
@@ -352,6 +354,8 @@ export const en: Record<SessionSyncKey, string> = {
   loadOlder: 'Load older messages',
   loadingOlder: 'Loading…',
   composerBlocked: 'This Session runs on another machine; use the takeover composer below to speak in it',
+  paneRoute: 'Original · {route}',
+  paneRouteHint: 'This pane is DSH\'s own conversation page. adopt = patched, so the shipped composer works too; scope = no Host read at all; address = contract-only fallback, which costs one failed Host history read',
   openSession: 'Open',
 
   sessionsTitle: 'Sessions',

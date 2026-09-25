@@ -444,6 +444,19 @@
   white-space: nowrap;
 }
 
+/* Which route the shipped pane is drawn through. Quiet on purpose: it states a
+   fact about the build, and its tooltip carries what that route costs. */
+.routeBadge {
+  flex: none;
+  margin-right: 6px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-text-secondary);
+  font: var(--dsw-font-xxs-12);
+  white-space: nowrap;
+}
+
 /*
  * The top of a transcript page.
  *

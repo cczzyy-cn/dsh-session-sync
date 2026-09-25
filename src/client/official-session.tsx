@@ -313,6 +313,14 @@ export interface OfficialBridgeFace {
   /** False on any build where no route to the shipped renderer exists. */
   readonly supported: boolean
   /**
+   * Which route the shipped pane is drawn through, when there is one.
+   *
+   * Operator-visible on purpose: the routes differ in what the pane can do and
+   * in what they cost, and which one a given build takes is not something to
+   * discover by reading a bundle.
+   */
+  readonly route: OfficialRoute | undefined
+  /**
    * Whether the console must draw the composer itself.
    *
    * True on the routes that drive the window directly: the shipped composer
@@ -726,7 +734,12 @@ export class OfficialSessions implements OfficialBridgeFace, SyncTransportObserv
 
   /** Whether this build can render a Session through the shipped conversation. */
   get supported(): boolean {
-    return this.route() !== undefined
+    return this.routeOf() !== undefined
+  }
+
+  /** The route this build offers, for the panel to name. */
+  get route(): OfficialRoute | undefined {
+    return this.routeOf()
   }
 
   /**
@@ -736,7 +749,7 @@ export class OfficialSessions implements OfficialBridgeFace, SyncTransportObserv
    * would carry its prompt to a Host that has never heard of this Session.
    */
   get composerOwned(): boolean {
-    const route = this.route()
+    const route = this.routeOf()
     return route !== undefined && route !== 'adopt'
   }
 
@@ -758,7 +771,7 @@ export class OfficialSessions implements OfficialBridgeFace, SyncTransportObserv
    */
   opened(open: OpenSession): void {
     const service = this.service()
-    const route = this.route()
+    const route = this.routeOf()
     if (service === undefined || route === undefined) return
     const key = remoteKey(open.machineName, open.sessionId)
     // Re-opening the same Session is not a switch: the handle survives and the
@@ -893,7 +906,7 @@ export class OfficialSessions implements OfficialBridgeFace, SyncTransportObserv
    * draws.
    * @returns the route, or undefined when the build offers none.
    */
-  private route(): OfficialRoute | undefined {
+  private routeOf(): OfficialRoute | undefined {
     const service = this.service()
     if (service === undefined) return undefined
     if (typeof service.adopt === 'function') return 'adopt'
