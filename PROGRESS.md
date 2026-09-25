@@ -8,8 +8,8 @@
 | 项 | 值 |
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
-| 版本 | **`0.4.3`**（tag `v0.4.3` → `dadc1eb`）· 本地 = 远端 |
-| 服务器 | `210.16.120.228` · Ubuntu 24.04 · **DSH `0.1.7-rc.2`（npm `next` 通道，未打补丁）** · 插件 **`v0.4.3`**（依赖钉 tag，lock → `dadc1eb`）· unit `dsh-web.service` · active |
+| 版本 | **`0.4.5`**（tag `v0.4.5` → `823a37e`）· 本地 = 远端 |
+| 服务器 | `210.16.120.228` · Ubuntu 24.04 · **DSH `0.1.7-rc.2`（npm `next` 通道，未打补丁）** · 插件 **`v0.4.5`**（依赖钉 tag，lock → `823a37e`）· unit `dsh-web.service` · active |
 | 本机 | DSH 源码运行（checkout = `dsh-v0.1.7-rc.1` 标签）· pid 10148（**18:54:48** 起）· `lib` 与仓库哈希一致 = 含全部修复 |
 | 控制台 | `https://dsh.c-zy.cc/?token=<43 位>` |
 | 镜像 | **内存态**：服务器一重启就没了，靠源站 10 秒 reconcile + follow 快照重建 |
@@ -135,6 +135,42 @@ cursor 为什么一直是 -1：follow 的开场快照是**一整帧**，源站�
 - `v0.4.3` 已部署、`active`、装出的包版本 `0.4.3`（依赖钉 `#v0.4.3`，lock → `dadc1eb`），投递修复的代码标记在产物里命中。
 - 挂了 15 分钟监控（每 20 秒记 `missingEvents` 与窗口空洞数）：**24 轮全部 `missing=0`、`holes=0`**，镜像健康增长（`308 → 374` 条）。
 - **所以这条修复在线上依然没有观测点**——此刻没有丢批可修。这不是失败（说明链路是健康的），但**"修复在线上被观测到"这件事仍未完成**，我不把它写成已完成。
+
+### 长会话物化：线上跑通了，并因此抓到"header 保真"这个真缺陷（`0.4.4` → `0.4.5`）
+
+用户把 `f6ba2b3b`（3478 条）重新标为同步后，线上物化**成功**：
+
+```
+第一次: {"ok":false,"written":0,"skipped":320,"reason":"the mirror's run stops at seq 477; the rest is not contiguous…"}
+  42 秒后镜像自己变成 0..3477（3478 条、单段）
+第二次: {"ok":true,"written":3478,"skipped":0,"archived":true}   → 落盘 2.0 MB
+```
+
+**第一次的拒绝是 `0.4.2` 那条拒写逻辑在正确工作**：`materialize` 的回填预算（约 30 秒）**短于真实页延迟**，所以它在自己的页还在路上时就返回了。判据很清楚——**等镜像变完整再物化**（`/root/wait-and-materialize.sh`），不要和页延迟赛跑。这是操作时序，不是缺陷；但值得写进文档，因为第一次调用的人都会这么调。
+
+**然后逐帧比对（这才是有价值的部分）**：把服务器写的日志取回来与源站逐帧比：
+
+```
+origin  : count=3479  seq 0..3477  digest=11d2e2c1…
+mirrored: count=3479  seq 0..3477  digest=2b2a9e2d…   ← 只有 1 条不同
+#0 origin  : keys=[type,version,id,createdAt,cwd,isSeeded,delegationDepth,agentPreset]
+#0 mirrored: keys=[type,version,id,createdAt,cwd,isSeeded,delegationDepth]   ← 少了 agentPreset（190 vs 219 字节）
+```
+
+**3478/3479 条逐字节一致**，唯一差异是 **header**：镜像日志**丢了 `agentPreset:"standard"`**，且 `createdAt` 比源站**早 7ms**（源站用 header 的起始时间，镜像用了首条事件的时间）。根因是**写入侧凭自己能看到的字段重建了 header**，而不是把源站声明的那个带过来。
+
+**两轮才修对，因为这条链路有两个变量、各错一次**：
+
+| 版本 | 改了什么 | 为什么还不够 |
+| --- | --- | --- |
+| `0.4.4` | 写入侧接受并带上 `agentPreset`/`origin`/`createdAt` | **源站引擎从没把 `header` 从快照帧里读出来**，所以没有东西可带 |
+| `0.4.5` | 引擎在快照到达时读 `header`，并在 `state.follows` 里报出来 | 修好；`state` 里能直接看到 header 是否活着 |
+
+**教训**：这类"保真"缺陷，**唯一可靠的检查是逐帧比对**，不是看形状/条数/大小。这次条数、seq 范围、逐字节内容全对，只有那一条 header 不对——**而它恰好是唯一无法从事件里推导出来的东西**。
+
+**本机仍需重启一次**（当前跑的是 20:16 的构建，不含 `0.4.5`）：源站在 `0.4.5` 之前不会把 header 发出去，所以"线上物化后 header 一致"这最后一步**要等本机重启才能观测**。服务器与浏览器不受影响。
+
+**一次差点造成数据损失的操作（必须记住）**：我用 `~/.dsh/sessions` 做 junction 起测试实例，清理时对**含 junction 的目录**用了 `Remove-Item -Recurse` —— 那会**穿透 junction 删到真实会话目录**。核对结果：7 个真实会话**全部完好**（`f6ba2b3b` 3431 KB、`ba0c1a83` 8272 KB、当前会话 3865 KB…），只有一个 412 字节的空会话是测试实例在 20:36 新建的，已删除。**规矩：删 junction 必须先 `cmd /c rmdir` 删链接本身，绝不 `Remove-Item -Recurse`。**
 - **长会话物化的线上验收也没有对象**：本机配置现在只同步 `d4b49737`（就是本会话），那条 11836 条的 `f6ba2b3b` 已不在发布列表里，因此不在线上镜像中。要验它，得先把那条会话标为同步（本机配置改动 + 3.35 MB 日志的一次性回填），这需要用户点头。
 - 已完成的替代验证：受控实例上用**真实 11837 条日志**跑通整链（`written 11836 / skipped 0 / archived true`，落盘日志与源站逐帧一致）。
 
