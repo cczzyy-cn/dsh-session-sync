@@ -595,6 +595,7 @@ window.__ModuleLoader__.load({
 		const ROUTE_PREFIX = "/dsh-session-sync";
 		/** Default listen port of the sync server. */
 		const DEFAULT_LISTEN_PORT = 8791;
+		new TextEncoder();
 		/** Build the config a fresh install starts from. */
 		function defaultConfig(machineName) {
 			return {
