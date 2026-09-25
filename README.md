@@ -111,6 +111,17 @@ registered `main` keys.
   that block survives — another plugin publishing its own state for the same
   Session can clear it, which is why the seat is hidden rather than trusted.
 
+  Older history is reachable from the pane. A mirror serves a tail window, and
+  the shipped conversation's own older-end control would ask the Host that has
+  never heard of the Session, so the window it is given never claims more; the
+  console's own paging is the road, and a `加载更早的消息` control above the pane
+  reads one page over the sync link per click and prepends it to the same window,
+  so the reader keeps their place. Pages arrive over two roads — the page the
+  console read, and the origin's ordinary replay frames once the mirror has grown
+  downward — so the pane drops envelopes the window already carries and treats
+  ones below it as history, because the shipped conversation's assembler requires
+  each node's matches in sequence order and an appended older event breaks it.
+
   Presentation follows the DSH install's own setting. The work-details mode
   (`ui-chat`'s `transcriptView`: compact, standard, detailed, or verbose) is a
   Host-backed chat setting read through the plugin's own `configForms` scope, and

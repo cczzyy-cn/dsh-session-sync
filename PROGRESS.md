@@ -37,6 +37,23 @@
 
 ## 2. 推进日志（晚 → 早）
 
+### 镜像的旧历史终于能进 shipped 面板（2026-09-24/25）
+用户报「没有加载历史会话」。查明：**镜像只持有尾部窗口**（这个会话最新 seq 已过万，窗口只有 400 条），而 shipped 面板**没有回到更早的路**——它自己的"加载更早"会去问 Host（从没听说过这个合成会话），而我当初给窗口传 `hasMore:false`，所以它连显示都没有；插件自己的分页通道此前**只有手绘面板在用**。
+
+服务端事实：默认窗口是尾部（400 条，seq 9499..9898，`hasMore: true`），显式 `before=9476` 要一页 → 返回 298 条（seq 9178..9475）✓。
+
+三次提交，每一步都被线上现象推着走：
+
+| 提交 | 做了什么 | 为什么 |
+| --- | --- | --- |
+| `7cf951b` | `api.ts` 旧页到达时**单独通知观察者**（`older`）；`OfficialMirror.prependOlder()` 用 `prepend` 并入同一窗口；`SyncPanel` 在 shipped 面板上方放「加载更早的消息」 | 旧页是唯一"插在窗口之前"的到达，不能当 replace |
+| `0de5282` | 路线标记带上窗口范围（`原件 · scope · 9574–10252`） | 分页是否到达面板，从外面看不见；低位 seq 是唯一判据 |
+| `242bb8f` | **帧不再是"都是新闻"**：窗口已有的 seq 丢弃；**低于窗口下沿的当历史 prepend**（每帧一批、帧内升序＝跨帧降序正好是 prepend 语义） | 旧页会**以两条路**到达——客户端读的那页，和服务端镜像长出后源站按普通 `events` 帧重放的那份。后者被当新事件 append，于是 seq 8819 落在窗口（9418+）之前，`ui-conversation` 的装配器抛 `received non-appended Match`（`assembler.ts:538`：同一节点的 match 必须严格按 seq 递增），**事件流随之中断、面板不再更新** |
+
+**线上实测**：点一次「加载更早的消息」，标记低位 **9873 → 9574**（一页），高位随实时流增长，面板继续正常渲染——`non-appended Match` 没有再出现。
+
+**顺带两次教训（都是本轮被打断的原因）**：本会话两次在同一类失败上结束——模型流式返回的 tool call 参数不是合法 JSON，DeepSeek 拒绝整段请求，DSH 以 `turn/end reason=error code=MALFORMED_RESPONSE` 结束该轮，并把 `错误 本轮运行失败…` 注入 agent 收件箱（`agent/inbox/spliced`）。两次都**没有把畸形调用写进历史**（据镜像：52/52 条 `tool/call` 的 `arguments` 都能解析；且失败后的下一轮能正常发出请求）。缓解办法：**单轮更短、工具输入更小**——最长的工具参数（大段 PowerShell 内联脚本）正是最可能被截断成非法 JSON 的地方；凭据推送逻辑因此固化成 `%TEMP%\dsh-push.ps1`，以后推送是一行调用。
+
 ### 线上「历史加载失败：session "dsh-session-sync:…" not found」的定性与处置（2026-09-24）
 **这是 shipped 聊天自己的错误条**（`ui-chat` 的 `chat.loadError`，`ChatView.tsx:236` 只在 `openState === 'error'` 时渲染），含义是：**有人对合成会话调用过 `open()`，Host 读了历史并回了 `session/not-found`**。
 
