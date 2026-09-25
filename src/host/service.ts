@@ -248,6 +248,8 @@ export class SessionSyncService {
   private localRows = 0
   /** Field names seen in the opening frames, recorded once. */
   private readonly followShapes: string[] = []
+  /** What the last opening frame said about its header, and whether it was read. */
+  private headerSeen: string | undefined
   /** Posts per route: the split between the origin and the server. */
   private readonly postCounts = new Map<string, { count: number; at: number; ok: boolean }>()
   private followError: string | undefined
@@ -363,6 +365,7 @@ export class SessionSyncService {
           localRows: this.localRows,
           posts: [...this.postCounts].map(([route, entry]) => route + ':' + String(entry.count) + (entry.ok ? '' : '!')),
           shapes: this.followShapes,
+          ...(this.headerSeen === undefined ? {} : { headerSeen: this.headerSeen }),
           ...(this.followError === undefined ? {} : { error: this.followError }),
           ...(this.followErrorSession === undefined ? {} : { sessionId: this.followErrorSession }),
         },
@@ -1193,6 +1196,12 @@ export class SessionSyncService {
       // header, so what is not carried here is what a materialized Session loses.
       const header = jsonObject(carrier['header'])
       if (header !== undefined) handle.header = header as unknown as WireSessionHeader
+      // Whether the frame really carried one, recorded on the frame that has it: a
+      // header this half fails to read is invisible until a materialized log comes
+      // back wrong, and the field names are the one thing this reader has to guess.
+      this.headerSeen = header === undefined
+        ? `absent on ${frameType}{${Object.keys(carrier).slice(0, 10).join(',')}}`
+        : `read from ${frameType}`
     }
     const page = carrier['page'] as Record<string, unknown> | undefined
     const records = Array.isArray(carrier['records'])
