@@ -338,6 +338,17 @@ All of them sit under `/dsh-session-sync` and behind the GUI's own gate.
   ordinary events and stay. Making those cards work would mean carrying the
   summary over the sync link *and* writing it into that plugin's own state table,
   a deeper coupling than this plugin takes on today.
+- **A mirrored pane hides the shipped history-failure line.** A session-scoped
+  integration behind the (hidden) shipped composer can still retain the Session
+  through the contract, and a retained Session opens history against the Host
+  that owns it — for a mirror, a Host that has never heard of it. The answer is
+  `session/not-found`, and the shipped chat draws its own "history failed to
+  load" line for it. That line describes a read this pane neither uses (the
+  transcript comes from the mirror) nor can satisfy, so it is hidden inside the
+  pane on every route but `adopt`; the header chip names the route, which is
+  where that fact belongs. Drawing the session View *without* the content shell
+  was tried as a way to avoid the read altogether and renders an empty pane — the
+  shell is what supplies the context that View is written against.
 - **One origin per machine name.** Two origins configured with the same
   `本机名称` will overwrite each other's mirror.
 - **A takeover prompt expires after two minutes**, and at most 32 may wait for

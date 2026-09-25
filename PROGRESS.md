@@ -37,6 +37,22 @@
 
 ## 2. 推进日志（晚 → 早）
 
+### 线上「历史加载失败：session "dsh-session-sync:…" not found」的定性与处置（2026-09-24）
+**这是 shipped 聊天自己的错误条**（`ui-chat` 的 `chat.loadError`，`ChatView.tsx:236` 只在 `openState === 'error'` 时渲染），含义是：**有人对合成会话调用过 `open()`，Host 读了历史并回了 `session/not-found`**。
+
+查证链（避免猜）：
+- 客户端**唯一**会 open 的公开入口是 `retain()`（`service.ts:289 reference.attachOpening(this.manager.get(id).open())`）；`manager.get()` 注释明确 "no auto-open"，生产代码里也没有谁直接调 `session.open()`（只有测试会）。
+- **我们这边不是发起者**：面板头部标记显示线上走的是 `scope` 路线，而 `retainAgentScope → retainScope` 不 attach opening。
+- 会 retain 的 shipped 集成有一批，且都被"会话级 Host 数据"驱动：`ui-commands` 的 `sessions.using(sessionId, …)`（命令目录）、`ui-workspace/navigation.ts:387` 的 `retain(target,{source:'mainView'})`、`ui-sidebar-right/session-view.ts:33` 的 `retain(…, {source:'sidebarView'})`，以及 shipped 输入框够得着的一切。**把输入框用 CSS 藏起来并不能阻止它运行**——这正是它间歇出现的原因。
+
+**试过并否决的方案**：feed 路线只渲染 `conversation.session`（不带 content 外壳，从根上不挂载输入框那一族）。实测**面板画成空白**——content 外壳提供的正是这个 View 所依赖的上下文。已回退，并把这条结论写进 `OfficialConversation` 的注释。
+
+**最终处置**：
+1. 头部加**路线标记**（`原件 · adopt|scope|address`，带 tooltip 说明各自代价）。这是"给定构建走哪条路"的可见事实——它当场回答了本次调查的第一个问题。
+2. feed 路线（`drivesWindow` 类）在面板内隐藏两样 shipped 家具：输入框 seat（`data-composer-seat`）与那条历史失败横幅（`[class*="openError"]`）。**可匹配性有据**：shipped 的 CSS-module 类名保留了可读半段（实测 `EvIC1a_openError`），`data-composer-seat` 也在 bundle 里。横幅被藏的理由写进了 CSS 注释：它报告的是一次**本面板既不用也无法满足**的宿主读取（transcript 来自镜像），事实本身仍由路线标记呈现。
+
+**验证**：一次性实例（本机 rc.1）上——面板正常渲染、shipped 输入框隐藏、接管输入框在、无横幅；线上部署 `6c20d5c` 后——面板头部 `原件 · scope`、内容正常、无横幅。
+
 ### 交付物相关不显示 + 「工作详情」跟随服务器设置（2026-09-24）
 用户看到线上控制台一条 `GET /api/changes.summary?sessionId=dsh-session-sync:DESKTOP-M1EERFC/… 404`。查清了：
 
