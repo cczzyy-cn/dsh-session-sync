@@ -181,6 +181,14 @@ export class SyncHub {
   ) {}
 
   /**
+   * Older-history asks that arrived while their origin's stream was down.
+   *
+   * Keyed by machine and Session: a second ask for the same page replaces the
+   * first, because asking twice for the same thing is the same request.
+   */
+  private readonly pendingOlder = new Map<string, { machineName: string; sessionId: string; beforeSeq: number; maxMessages: number }>()
+
+  /**
    * Replace one machine's Session index.
    * A Session that disappears from the index is dropped with its events, which
    * is what "stopped syncing" means from here. Because disappearance is the
@@ -375,6 +383,9 @@ export class SyncHub {
     const record = this.machine(machineName)
     record.lastSeen = Date.now()
     record.origin = sink
+    // Asks that arrived while this stream was down go out first: they are what a
+    // reader or a backfill is waiting on.
+    this.flushPendingOlder(machineName)
     const now = Date.now()
     const queued = record.pending.splice(0, record.pending.length)
     for (const command of queued) {
@@ -569,9 +580,25 @@ export class SyncHub {
   askOlder(machineName: string, sessionId: string, beforeSeq: number, maxMessages: number): boolean {
     const record = this.records.get(machineName)
     if (record?.sessions.get(sessionId) === undefined) return false
-    if (record.origin === undefined) return false
+    // The origin's downstream stream reconnects on its own schedule, so it is
+    // absent often enough to matter. An ask made in that window is held rather
+    // than dropped: a reader that scrolls up while the stream is down would
+    // otherwise get nothing, and a backfill would give up on its first round.
+    if (record.origin === undefined) {
+      this.pendingOlder.set(`${machineName}|${sessionId}`, { machineName, sessionId, beforeSeq, maxMessages })
+      return true
+    }
     record.origin.older(sessionId, beforeSeq, maxMessages)
     return true
+  }
+
+  /** Deliver the older-history asks that waited for an origin to attach. */
+  private flushPendingOlder(machineName: string): void {
+    for (const [key, ask] of [...this.pendingOlder]) {
+      if (ask.machineName !== machineName) continue
+      this.pendingOlder.delete(key)
+      this.records.get(machineName)?.origin?.older(ask.sessionId, ask.beforeSeq, ask.maxMessages)
+    }
   }
 
   /** Push the current view to every browser (used when the wire reconnects). */
