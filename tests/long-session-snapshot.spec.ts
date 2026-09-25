@@ -70,7 +70,13 @@ function fakeController(events: readonly ReturnType<typeof snapshotEvent>[]): {
     follow: (_request, signal) => (async function* () {
       yield {
         type: 'snapshot',
-        header: { id: SESSION_ID, createdAt: 1_700_000_000_000, cwd: 'C:\\work' },
+        header: {
+          id: SESSION_ID,
+          createdAt: 1_700_000_000_000,
+          cwd: 'C:\\work',
+          // What a real Session's header carries and the writer cannot infer.
+          agentPreset: 'standard',
+        },
         cursor: events.at(-1)?.seq ?? -1,
         records: events.map(event => ({ type: 'event', event })),
         hasMore: true,
@@ -107,8 +113,49 @@ function fakeContext(controller: SessionControllerLike): HostContext {
   }
 }
 
-/** Write the plugin's own config document into a throwaway home. */
-async function clientHome(serverUrl: string): Promise<string> {
+/**
+ * A Host context that also answers the two services materializing writes through.
+ *
+ * `sessionPersistence` is where the log header is decided, so this is the only place
+ * the header the writer produced can be observed.
+ */
+function materializingContext(controller: SessionControllerLike): {
+  context: HostContext
+  headers: Record<string, unknown>[]
+} {
+  const headers: Record<string, unknown>[] = []
+  return {
+    headers,
+    context: {
+      ...fakeContext(controller),
+      get: (name: string) => {
+        if (name === 'sessionController') return controller
+        if (name === 'sessionPersistence') {
+          return {
+            create: (header: Record<string, unknown>) => {
+              headers.push(header)
+              return Promise.resolve({
+                append: () => Promise.resolve(),
+                flush: () => Promise.resolve(),
+                close: () => Promise.resolve(),
+              })
+            },
+          }
+        }
+        if (name === 'workspaceRegistry') return { archiveSession: () => Promise.resolve() }
+        return undefined
+      },
+    },
+  }
+}
+
+/**
+ * Write the plugin's own config document into a throwaway home.
+ *
+ * The listener port is an argument because a file-level port shared by three servers
+ * that all stay up until the file finishes is a collision waiting to happen.
+ */
+async function clientHome(serverUrl: string, listenPort = CLIENT_PORT): Promise<string> {
   const home = await mkdtemp(join(tmpdir(), 'sync-frames-'))
   homes.push(home)
   await writeFile(join(home, 'dsh-session-sync.json'), JSON.stringify({
@@ -117,7 +164,7 @@ async function clientHome(serverUrl: string): Promise<string> {
     isServer: false,
     password: PASSWORD,
     listenHost: '127.0.0.1',
-    listenPort: CLIENT_PORT,
+    listenPort,
     syncSessions: { [SESSION_ID]: true },
   }), 'utf8')
   return home
@@ -218,5 +265,31 @@ describe('a long Session\u2019s opening snapshot', () => {
     const handle = await until(() => service.view().follows?.[0], 'the follow to be listed')
     assert.equal(handle.opened, false)
     assert.equal(handle.cursor, -1)
+  })
+
+  it('keeps the opening snapshot\u2019s header for the writer to use', async () => {
+    // The header the origin states is the only source for fields the mirror never
+    // sees. Measured live: a materialized Session lost `agentPreset: "standard"` and
+    // its `createdAt` was 7 ms early, because this engine never read that field out
+    // of the snapshot — so there was nothing for the writer to carry, however right
+    // the writer's own handling was (pinned in tests/materialize-write.spec.ts).
+    const events = Array.from({ length: 300 }, (_, index) => snapshotEvent(index))
+    const { controller } = fakeController(events)
+    const service = await SessionSyncService.create(
+      fakeContext(controller),
+      await clientHome(`127.0.0.1:${String(SERVER_PORT)}`, CLIENT_PORT + 40),
+    )
+    service.start()
+    disposers.push(async () => { await service.dispose() })
+
+    const handle = await until(() => {
+      const follow = service.view().follows?.find(item => item.sessionId === SESSION_ID)
+      return follow?.opened === true ? follow : undefined
+    }, 'the opening snapshot to be read')
+    assert.equal(handle.cursor, 299)
+    // The header travels on the same frame as the cursor, so a snapshot that arrived
+    // is a snapshot whose header was there to be read.
+    assert.equal(handle.header?.agentPreset, 'standard')
+    assert.equal(handle.header?.createdAt, 1_700_000_000_000)
   })
 })

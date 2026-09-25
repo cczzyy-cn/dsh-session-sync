@@ -374,6 +374,10 @@ export class SessionSyncService {
           lastSeq: handle.lastSeq,
           hasOlder: handle.hasOlder,
           opened: handle.opened,
+          // The Session's own header as the origin stated it. Carried by the frame the
+          // cursor comes from, and the only source of the fields a materialized log
+          // would otherwise lose — so it is reported rather than inferred.
+          ...(handle.header === undefined ? {} : { header: handle.header }),
           pending: handle.pending.length,
           events: handle.seen,
           ...(handle.ended === undefined ? {} : { ended: handle.ended }),
