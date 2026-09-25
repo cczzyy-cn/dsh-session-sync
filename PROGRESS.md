@@ -23,6 +23,42 @@
 
 ---
 
+## 0.5 任务清单（进行中，随进展更新）
+
+目标：**让镜像会话在同步服务器上成为"真会话"**（Host 侧适配），于是 DSH 自己的历史分页/跳转/面板全部可用，
+而写入（prompt / fork / 反馈）仍回源站。方案与证据见 `docs/host-side-session-plan.md`。
+
+| # | 任务 | 状态 | 说明 |
+| --- | --- | --- | --- |
+| 1 | **长会话回填**（镜像只有尾部窗口时，翻到 seq 0 再物化） | 🔶 写入器 ✅ / 询问通道受限于 follow 自锁 | 短、长会话物化都**逐条一致**（222 / 3478 事件，seq 0..N，头尾类型相同）并归档只读；卡点见下 |
+| 2 | **增量追加**：物化后持有 handle，新帧继续 append | ⏳ 未开始 | 现在写完即 `close()`，物化后新事件不会进日志 |
+| 3 | **自动物化**：会话被镜像/发布时自动触发 | ⏳ 未开始 | 现在只能手工 `POST /dsh-session-sync/materialize` |
+| 4 | **部署到服务器并线上验证** | ⏳ 未开始 | 服务器插件仍是 `242bb8f`；物化相关改动（`0b206f9` 起）都还没上线 |
+| 5 | **撤掉客户端伪装**（合成 id / `retainAgentScope` / 自绘「加载更早」退休） | ⏳ 未开始 | 依赖 1–4：不先让长会话有完整历史，撤掉伪装会立刻退化成"看不到历史" |
+| 6 | **文档与版本**（README + 本文件 + 版本号） | 🔶 随做随记 | README 与 `docs/host-side-session-plan.md` 已跟到第 12 节；插件版本仍 `0.3.0` |
+
+**第 1 项的具体卡点（源站 state 原话，2026-09-25）**：
+
+```json
+"page": {"sessionId":"session-f6ba2b3b-…","beforeSeq":3158,"throughSeq":-1,
+         "error":"no follow or no page API"}
+"linkError": "This operation was aborted"
+"follow": {"frames":["snapshot"],"events":18,"posts":["/publish:18","/frames:9!"]}
+```
+
+推理链：`page` 存在 ⇒ `pullOlder` 被调用过（请求送到了）；`throughSeq=-1` ⇒ 该会话 follow 的
+**开场快照从未完成**（`cursor` 一直 -1）；源站据此拒绝分页；而 `linkError: This operation was aborted`
+说明链路反复中断、**每次中断都打断进行中的快照读** ⇒ 快照永远完不成、分页永远不可用，自锁。
+
+**下一步（单一）**：修 follow 开场快照的韧性——链路中断时重试同一代 follow，或让 `pullOlder` 在
+`cursor < 0` 时先请求一次新快照再分页。外部已实测"全程可达 seq 0"（6 轮翻页），所以这一步过了，
+回填就能自己走通。
+
+**环境坑（已记）**：`job_kill` 只杀 pwsh 外壳，**node 子进程会活着**——曾出现 8799 上听着残留实例、
+源站连它而我查询另一台（3099），两台镜像各自为政，浪费了一轮排查。清理要按 `--port 3098/3099` 精确杀进程。
+
+---
+
 ## 1. 环境与访问事实
 
 - **SSH**：`root@210.16.120.228`，只能用 `~/.ssh/id_ed25519_dsh`；客户端是 `OpenSSH_for_windows_7.7p1`。
