@@ -80,6 +80,9 @@ export const zh = {
   materializedEmpty: '还没有',
   materializedEvents: '条事件',
   materializedStopped: '已停更',
+  materializedBehind: '落后',
+  materializedWaiting: '等待中',
+  materializedWaitingHint: '副本现在追不上：最常见的原因是这条会话正在 DSH 里被打开着——它在服务器上成了 live 会话，日志写句柄被它持有，插件的追加会被拒。关掉那个页面，下一轮就会补齐',
   materializedStoppedHint: '这份副本长出了自己的事件（有人在里面发过言），它已不再是镜像的那个会话，所以停止跟进。重建请依次：release、停服务、移走日志、起服务',
 
   sessionsTitle: '会话',
@@ -374,6 +377,9 @@ export const en: Record<SessionSyncKey, string> = {
   materializedEmpty: 'none yet',
   materializedEvents: 'events',
   materializedStopped: 'stalled',
+  materializedBehind: 'behind',
+  materializedWaiting: 'waiting',
+  materializedWaitingHint: 'The copy cannot advance right now. The usual reason is that this Session is open in DSH: that makes it a live Session on the server, the live machinery owns its log, and the plugin\'s append is refused. Close the page and the next pass catches up',
   materializedStoppedHint: 'This copy grew events of its own (someone spoke in it), so it is no longer the Session the mirror holds and it has stopped following. To rebuild: release, stop the Host, move the log aside, start the Host',
 
   sessionsTitle: 'Sessions',

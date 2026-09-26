@@ -312,6 +312,19 @@ export interface SyncState {
     at: number
     /** Why the copy stopped tracking the mirror, when it did. */
     stopped?: string
+    /**
+     * The last attempt to advance this copy that could not, and why.
+     *
+     * A copy can be behind without being broken — most often because DSH has the
+     * Session open, which makes it live on this Host and lets the live machinery
+     * own its log, so the plugin's append is refused until it goes cold. That
+     * state used to be reported as nothing at all: the count simply stopped
+     * moving, which reads as a broken feature rather than a wait. This is what
+     * says otherwise, and the mirror's own count beside it says how far behind.
+     */
+    waiting?: string
+    /** When that attempt was made, in epoch ms. */
+    waitingAt?: number
   }[]
   /**
    * Whether the server writes mirrored Sessions into its own storage at all.

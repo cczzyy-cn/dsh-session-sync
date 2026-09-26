@@ -283,6 +283,14 @@ export class SessionSyncService {
   /** When each Session was last asked for an older page of history. */
   private readonly pageAsked = new Map<string, number>()
   /**
+   * Why the last attempt to advance each copy could not, by Session id.
+   *
+   * Kept in memory rather than in the ledger: it is a reading about the last ten
+   * seconds, not a durable fact, and persisting it would rewrite a file on every
+   * tick that a Session sat open in the browser. Cleared when an append lands.
+   */
+  private readonly waits = new Map<string, { at: number; reason: string }>()
+  /**
    * What the last history read did, for the settings page.
    *
    * The host half writes its log where this deployment cannot read it, and a
@@ -383,13 +391,17 @@ export class SessionSyncService {
       materialize: this.config.materialize,
       ...(this.config.isServer
         ? {
-          materialized: this.ledger.list().map(({ sessionId, entry }) => ({
-            sessionId,
-            machineName: entry.machineName,
-            events: entry.events,
-            at: entry.at,
-            ...(entry.stopped === undefined ? {} : { stopped: entry.stopped }),
-          })),
+          materialized: this.ledger.list().map(({ sessionId, entry }) => {
+            const wait = this.waits.get(sessionId)
+            return {
+              sessionId,
+              machineName: entry.machineName,
+              events: entry.events,
+              at: entry.at,
+              ...(entry.stopped === undefined ? {} : { stopped: entry.stopped }),
+              ...(wait === undefined ? {} : { waiting: wait.reason, waitingAt: wait.at }),
+            }
+          }),
         }
         : {}),
       ...(this.lastPublish === undefined ? {} : { publish: this.lastPublish }),
@@ -754,9 +766,23 @@ export class SessionSyncService {
             return await catchUpSession(persistence, session.sessionId, transcript.events as MirrorEnvelope[])
           })()
           if (result.ok && result.written > 0) {
+            this.waits.delete(session.sessionId)
             await this.ledger.mark(session.sessionId, machine.machineName, result.stored)
             report.advanced += 1
-          } else if (!result.ok && result.wait !== true) {
+          } else if (result.ok) {
+            // Level with the mirror: nothing was owed, and nothing is being waited
+            // on either.
+            this.waits.delete(session.sessionId)
+          } else if (result.wait === true) {
+            // Behind, and not broken. Recorded rather than left silent: this is the
+            // state an operator meets as "the page stopped updating", and without a
+            // reason it reads as a broken feature. The count beside it in `state`
+            // says how far behind.
+            this.waits.set(session.sessionId, {
+              at: Date.now(),
+              reason: result.reason ?? 'the mirror is not ready to be appended',
+            })
+          } else {
             // Only a log this Host cannot use is final: a hole below its end stays a
             // hole, and no later pass will fill it. A mirror that has not delivered
             // the events yet is a *wait* — after a restart every mirror rebuilds

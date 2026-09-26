@@ -303,6 +303,10 @@ function MaterializedBlock({ t, state }: {
   // only ever say "none yet".
   if (state.state.role !== 'server') return null
   const entries = state.state.materialized ?? []
+  // The mirror's own count, so "behind" has a number rather than an adjective.
+  const mirrored = new Map(
+    state.state.machines.flatMap(machine => machine.sessions.map(session => [session.sessionId, session.eventCount] as const)),
+  )
   return (
     <div className={css.group}>
       <h3 className={css.groupTitle}>{t('materializedTitle')}</h3>
@@ -310,21 +314,34 @@ function MaterializedBlock({ t, state }: {
         ? <span className={css.empty}>{t('materializedEmpty')}</span>
         : (
           <div className={css.sessionList}>
-            {entries.map(entry => (
-              <div key={entry.sessionId} className={css.sessionRow}>
-                <span className={css.sessionText}>
-                  <span className={css.sessionTitle}>{entry.sessionId}</span>
-                  <span className={css.sessionMeta}>
-                    <span>{String(entry.events)}{' '}{t('materializedEvents')}</span>
-                    {entry.stopped !== undefined && (
-                      <span className={css.failed} title={t('materializedStoppedHint')}>
-                        {t('materializedStopped')}
+            {entries.map(entry => {
+              const behind = mirrored.get(entry.sessionId)
+              return (
+                <div key={entry.sessionId} className={css.sessionRow}>
+                  <span className={css.sessionText}>
+                    <span className={css.sessionTitle}>{entry.sessionId}</span>
+                    <span className={css.sessionMeta}>
+                      <span>
+                        {String(entry.events)}{' '}{t('materializedEvents')}
+                        {behind === undefined || behind <= entry.events
+                          ? null
+                          : ` · ${t('materializedBehind')} ${String(behind - entry.events)}`}
                       </span>
-                    )}
+                      {entry.stopped !== undefined && (
+                        <span className={css.failed} title={t('materializedStoppedHint')}>
+                          {t('materializedStopped')}
+                        </span>
+                      )}
+                      {entry.waiting !== undefined && (
+                        <span title={`${t('materializedWaitingHint')}\n${entry.waiting}`}>
+                          {t('materializedWaiting')}
+                        </span>
+                      )}
+                    </span>
                   </span>
-                </span>
-              </div>
-            ))}
+                </div>
+              )
+            })}
           </div>
         )}
     </div>
