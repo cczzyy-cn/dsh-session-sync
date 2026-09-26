@@ -105,6 +105,25 @@ cursor 为什么一直是 -1：follow 的开场快照是**一整帧**，源站�
 
 ## 2. 推进日志（晚 → 早）
 
+### 孤儿副本清理：顺带验到了 `clearStaleArchive`（部署了却从没跑过的那条迁移）
+
+**孤儿是什么**：`session-f6ba2b3b` 是更早一轮用 **v0.4.7** 物化的副本。那个构建写完日志后会 `archiveSession`（当时的记录：`{"ok":true,"written":3478,"skipped":0,"archived":true}`）。后来设计改成"不归档、改用门禁"，而清理归档的那段代码（`clearStaleArchive`）只对**台账里的**条目生效——这条副本比台账还老，所以永远进不去、也就永远带着那个被放弃的归档：在侧栏里**默认隐藏、点击只提示"暂时无法查看"**。
+
+**修法用的是现成路径，没加代码**：它的源站还在本机，把它重新发布 → 服务端的**认领**分支跑起来（`startFor`：日志已存在 + 拥有者不是本机 ⇒ `adopt`）→ `mark` 之后紧跟 `clearStaleArchive`：
+
+```text
+POST /dsh-session-sync/config {"sessionSync":{"sessionId":"session-f6ba2b3b-…","synced":true}}   # 等于在设置页里勾一下
+→ 30 秒后台账里出现第二条：{ sessionId: session-f6ba2b3b…, events: 3478 }，无 stopped
+→ 服务器的 storages/workspace.json: archivedSessionIds 里已经没有它（旧构建归档过，这次被放回来了）
+→ 副本文件 2,046,418 字节仍在（与 PROGRESS 早先记录的 2046418 一致）
+→ 再把发布列表还原成只发布 e08471af
+```
+
+**这一轮同时验到三件事**：① 认领路径在**大副本**（3478 条）上正确，且条数是从日志读出来的真值；② `clearStaleArchive` 这条迁移**确实在工作**（部署后第一次真跑）；③ 副本被"读过一次"才有标题投影——这条由文件布局独立印证：`storages/session_projcache/sessions/` 里有 `session-e08471af-….json`（132 KB），而 `f6ba2b3b` **没有**缓存文件，所以它的列表标题至今是 id。
+
+**当前服务器状态**：台账两条（`e08471af` 2941 条在跟、`f6ba2b3b` 3478 条已停更），都无 `stopped`、都受门禁、都可读；镜像只留 `e08471af`（`f6ba2b3b` 已取消发布）。留档一份 `/root/diverged-copy2-1790436235`（1.4 MB，我测试稿污染过的那份旧副本，未删）。
+
+
 ### 官方页上的"历史/跳转"验到哪一步，以及新设计带来的一处新噪音
 
 副本重建干净之后，用它把目标里"列表、历史分页、跳转"这半逐个过了一遍：
