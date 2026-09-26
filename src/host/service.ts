@@ -620,30 +620,25 @@ export class SessionSyncService {
   /**
    * Whether a copy has events of its own, rather than what the mirror delivered.
    *
-   * The cheap trigger is "the log is longer than this Host last recorded", but that
-   * baseline is lost at adoption — after a restart, or after a release, the ledger
-   * learns the count from the log itself and the drift becomes invisible. So
-   * adoption compares too: the mirror still speaks for those sequences then, and a
-   * copy that fails the comparison is adopted (it must be, or it would sit outside
-   * the gate) *and* stopped, with the reason said out loud.
+   * Called at the two moments that matter: adoption, where the baseline is taken
+   * from the log itself (so a drift that happened earlier would never show up as
+   * "longer than recorded"), and just before an append, which is the only moment a
+   * hole could be embedded. The mirror events are passed in because both callers
+   * already hold them — the comparison costs one small read of the log, no more.
    * @param persistence - the Host's durable Session storage.
-   * @param machineName - the machine that owns the Session.
    * @param sessionId - the Session under test.
    * @param stored - how many events the log holds.
+   * @param mirrored - the events the mirror holds, which must cover the log's tail.
    * @returns whether the log's tail disagrees with the mirror.
    */
   private async copyDiverged(
     persistence: SessionPersistenceLike,
-    machineName: string,
     sessionId: string,
     stored: number,
+    mirrored: readonly MirrorEnvelope[],
   ): Promise<boolean> {
-    if (stored === 0) return false
-    const tail = this.hub.transcript(machineName, sessionId, { limit: LOG_TAIL_WINDOW, before: stored })?.events ?? []
-    // Nothing to compare with: the mirror serves a tail window, and a log whose own
-    // tail sits below it cannot be judged. A guard that cannot see is permissive.
-    if (tail.length === 0) return false
-    const agrees = await logAgreesWithMirror(persistence, sessionId, tail as MirrorEnvelope[], stored)
+    if (stored === 0 || mirrored.length === 0) return false
+    const agrees = await logAgreesWithMirror(persistence, sessionId, mirrored, stored)
       .catch(() => undefined)
     return agrees === false
   }
@@ -722,19 +717,6 @@ export class SessionSyncService {
         const entry = this.ledger.get(session.sessionId)
         if (entry?.stopped !== undefined) continue
         const needs = entry?.events ?? 0
-        // Something other than this pass may have written to the copy: opening it
-        // in DSH's own page makes it a live Session here, and a prompt — even one
-        // the gate refuses at `agent/pre-step` — still opens and closes a turn in
-        // its log. Those local events take the sequences the origin's own next
-        // events will arrive under, so growing the log above them would embed a
-        // hole where the origin's events should have gone. A copy like that is
-        // stopped and *said so*, rather than grown into a plausible-looking lie.
-        const heldNow = await storedEventCount(persistence, session.sessionId).catch(() => undefined)
-        if (heldNow !== undefined && heldNow > needs
-          && await this.copyDiverged(persistence, machine.machineName, session.sessionId, heldNow)) {
-          await this.ledger.stop(session.sessionId, DIVERGED_REASON)
-          continue
-        }
         // The *newest* sequence the mirror holds is the signal, not how many events
         // it holds. A mirror serves a tail window, so its count says nothing about
         // where it sits: a 310-event window sitting at seq 1100..1409 has a count
@@ -760,7 +742,17 @@ export class SessionSyncService {
             await this.backfill(machine.machineName, session.sessionId, transcript)
             continue
           }
-          const result = await catchUpSession(persistence, session.sessionId, transcript.events as MirrorEnvelope[])
+          const result = await (async (): Promise<MaterializeResult> => {
+            // Judged here, not on "the log got longer": the baseline is taken from
+            // the log at adoption, so a drift that happened before this build — or
+            // while a live run held the log — never shows up as growth. This is the
+            // moment it would be *acted on*, by appending above the local events.
+            if (await this.copyDiverged(persistence, session.sessionId, needs, transcript.events as MirrorEnvelope[])) {
+              await this.ledger.stop(session.sessionId, DIVERGED_REASON)
+              return { ok: false, written: 0, skipped: 0, stored: needs, created: false, reason: DIVERGED_REASON }
+            }
+            return await catchUpSession(persistence, session.sessionId, transcript.events as MirrorEnvelope[])
+          })()
           if (result.ok && result.written > 0) {
             await this.ledger.mark(session.sessionId, machine.machineName, result.stored)
             report.advanced += 1
@@ -801,13 +793,19 @@ export class SessionSyncService {
           // pass and marked stopped.
           const count = await storedEventCount(persistence, session.sessionId).catch(() => undefined)
           await this.ledger.mark(session.sessionId, machine.machineName, count ?? 0)
-          // Adoption is where the baseline is lost — the ledger learns the count
-          // from the log, so a drift that happened before this pass would never show
-          // up as "longer than recorded". The mirror still speaks for those
-          // sequences here, so the copy is judged now; it is adopted either way,
-          // because an unadopted copy would sit outside the gate.
-          if (count !== undefined && await this.copyDiverged(persistence, machine.machineName, session.sessionId, count)) {
-            await this.ledger.stop(session.sessionId, DIVERGED_REASON)
+          // Adoption is where the baseline comes *from the log*, so this is the last
+          // moment a pre-existing drift can be seen at all: afterwards the ledger's
+          // count already includes it. The copy is adopted either way — an
+          // unadopted one would sit outside the gate — and stopped when the log's
+          // tail disagrees with what the mirror delivered there.
+          if (count !== undefined && count > 0) {
+            const tail = this.hub.transcript(machine.machineName, session.sessionId, {
+              limit: LOG_TAIL_WINDOW,
+              before: count,
+            })?.events ?? []
+            if (await this.copyDiverged(persistence, session.sessionId, count, tail as MirrorEnvelope[])) {
+              await this.ledger.stop(session.sessionId, DIVERGED_REASON)
+            }
           }
           report.adopted += 1
           this.broadcastState()
