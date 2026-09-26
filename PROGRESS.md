@@ -105,6 +105,36 @@ cursor 为什么一直是 -1：follow 的开场快照是**一整帧**，源站�
 
 ## 2. 推进日志（晚 → 早）
 
+### 更正上一条：`create` 是收敛的；"没重新物化"的真因是存储进程还记得那个 id
+
+上一段把"6 分钟没重新物化"记成 **create 路径（要走回 seq 0）不收敛**。**这是错的**，两处查证把真因换掉了：
+
+1. **镜像其实早就走到底了**：服务端 `/transcript` 读到 `low: 0, high: 2834, count: 2835` —— backfill 已经把镜像走到 seq 0。所以源站 state 里**没有 `page` 记录**并不是"询问通道坏了"（我一开始这么读的），而是 `backfill` 的 `while (lowest > 1)` 直接返回、**根本没有需要问的东西**。
+   > 教训：`page` 的缺席只说明"这次没读"，不说明"读不了"。要判通道好坏得让它**真有事可做**再看——这次是靠 count/low 的读数才把因果摆正。
+2. **真因是存储层的记忆**：`create` 的拒绝原话是
+   `cannot create the log: SessionAlreadyExistsError: session "…" already exists`
+   ——我把日志文件挪走了，但**服务器进程还记得这个 id**（客户端当时开着它）。文件不在 ≠ 存储层忘了它。
+
+**验证（干净重建，一次通过）**：先 `release` 摘掉台账条目 → `systemctl stop dsh-web` → 把旧副本 `mv` 到 `/root/diverged-copy2-<ts>`（留档、没删）→ `systemctl start dsh-web` → **30 秒内**：
+
+```text
+ledgerEvents: 2847   mirrorCount: 2847   stopped: (无)
+新日志 1,637,295 bytes
+```
+
+即：**从完整镜像 create 一份新副本是通的**，新副本与镜像条数一致、零标注、活的。所以"长会话第一次被物化"这条路没有缺陷——上一条报错了。
+
+**顺带把"重建一份干净副本"的正确步骤固定下来**（这是操作序列，不是代码缺陷）：
+
+```text
+1. POST /dsh-session-sync/materialize/release {"sessionId": …}    # 摘掉只读声明与台账条目
+2. systemctl stop dsh-web                                        # 让存储层忘掉这个 id
+3. mv <sessions>/…/session-<id>  /root/diverged-copy-<ts>        # 留档，别删
+4. systemctl start dsh-web
+5. 等一个 tick：自动物化会用镜像重建它（本例 30 秒）
+```
+
+
 ### 上线后又修两件 + 撞出一个新缺陷（v0.5.6 / v0.5.7，2026-09-25）
 
 背景：门禁测试在官方输入框里发了一条消息。它被拦下了（`turn/end{blocked}`、无模型请求——判据 ③ 通过），但**回合骨架本身写进了副本日志**（`turn/start` + `agent/inbox/spliced` + `turn/end`），于是副本在源站接下来要用的那些 seq 上有了自己的事件。据此修两件：
