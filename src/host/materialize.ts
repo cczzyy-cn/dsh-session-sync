@@ -182,6 +182,74 @@ export interface MaterializeResult {
   readonly reason?: string
 }
 
+/** How many trailing events are compared before a copy is called diverged. */
+export const LOG_TAIL_WINDOW = 8
+
+/**
+ * Whether a failure means the log is in use rather than unusable.
+ *
+ * A copy opened in DSH's own page becomes a live Session on this Host, and a live
+ * Session's machinery claims its log's write handle — so the plugin's append is
+ * refused with `SessionAlreadyOwnedError`. That is a *wait*: the claim is released
+ * when the Session goes cold, and the events are still in the mirror. The seam
+ * exports no error class to test against, so the name is checked first and the
+ * handle's own wording second.
+ * @param error - what `open('write')` threw.
+ * @returns whether the log is busy rather than broken.
+ */
+export function isLogBusy(error: unknown): boolean {
+  if (typeof error === 'object' && error !== null && (error as { name?: unknown }).name === 'SessionAlreadyOwnedError') {
+    return true
+  }
+  return error instanceof Error && /already owned by an active write handle/u.test(error.message)
+}
+
+/**
+ * Whether the log still holds, at the sequences it shares with the mirror, the
+ * events the mirror delivered there.
+ *
+ * This is the cheap test for "something else wrote to this copy". A prompt typed
+ * into the copy opens a turn even when the gate refuses its step — the shipped
+ * archived-Session gate leaves the same `turn/start` / `turn/end` trail — and
+ * those local events take the very sequences the origin's own next events will
+ * arrive under. Appending above them embeds a hole where the origin's events
+ * should have gone, and the log stops being the Session while still looking
+ * whole. Only a bounded tail is compared, and only when the log is longer than
+ * this Host last recorded, so the read is paid once per surprise.
+ * @param persistence - the Host's durable Session storage.
+ * @param sessionId - the Session under test.
+ * @param events - the events the mirror holds.
+ * @param stored - how many events the log holds.
+ * @returns false when the log has diverged, true when it agrees, undefined when
+ *   there is nothing to compare.
+ */
+export async function logAgreesWithMirror(
+  persistence: SessionPersistenceLike,
+  sessionId: string,
+  events: readonly MirrorEnvelope[],
+  stored: number,
+  window = LOG_TAIL_WINDOW,
+): Promise<boolean | undefined> {
+  if (stored === 0) return true
+  const from = Math.max(0, stored - window)
+  const handle = await persistence.open(sessionId, 'read')
+  try {
+    const held = (await handle.read(from, stored - from)).events as readonly MirrorEnvelope[]
+    if (held.length === 0) return undefined
+    for (const [index, row] of held.entries()) {
+      const seq = from + index
+      const mirrored = events.find(event => event.seq === seq)
+      // The mirror may not hold that far down any more — it serves a tail window —
+      // and a sequence it cannot speak for is not evidence of anything.
+      if (mirrored === undefined) continue
+      if (row.type !== mirrored.type || row.seq !== seq) return false
+    }
+    return true
+  } finally {
+    await handle.close().catch(() => undefined)
+  }
+}
+
 /**
  * Whether one envelope can be written as-is.
  *
@@ -371,6 +439,10 @@ export async function catchUpSession(
   try {
     handle = await persistence.open(sessionId, 'write')
   } catch (error: unknown) {
+    // A live Session owns the log: wait for it, do not bury it.
+    if (isLogBusy(error)) {
+      return { ok: false, written: 0, skipped: 0, stored, created: false, wait: true, reason: 'the log is held by a live run on this Host' }
+    }
     return none(stored, `cannot open the log: ${String(error)}`)
   }
   try {

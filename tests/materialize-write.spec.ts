@@ -21,6 +21,8 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import {
   catchUpSession,
+  isLogBusy,
+  logAgreesWithMirror,
   materializeSession,
   startFor,
   storedEventCount,
@@ -182,6 +184,82 @@ describe('the three situations behind one refused create', () => {
     // Same id, owned by this Host: rewriting it would destroy the original, and
     // gating it would make the operator's own Session read-only.
     assert.equal(startFor({ eventCount: 12 }, 'THIS-MACHINE', 'THIS-MACHINE'), 'ours')
+  })
+})
+
+describe('a log a live Session is holding', () => {
+  // Opening a copy in DSH's own page makes it a live Session on this Host, and a
+  // live Session's machinery claims its log's write handle. That is a wait — the
+  // claim is released when the Session goes cold — and it was once recorded as a
+  // permanent `stopped`.
+  it('is recognised by the error class name', () => {
+    const busy = Object.assign(new Error('session "x" is already owned by an active write handle'), { name: 'SessionAlreadyOwnedError' })
+    assert.equal(isLogBusy(busy), true)
+  })
+
+  it('is recognised by the handle\u2019s own wording', () => {
+    assert.equal(isLogBusy(new Error('session "x" is already owned by an active write handle')), true)
+    assert.equal(isLogBusy(new Error('cannot open the log: something else')), false)
+    assert.equal(isLogBusy(undefined), false)
+  })
+
+  it('is reported as a wait rather than a broken log', async () => {
+    const { persistence } = storage(4)
+    // Only the *write* claim is refused: measuring the log reads it, and a read
+    // handle coexists with a live run.
+    const read = persistence.open
+    persistence.open = (id: string, access: 'read' | 'write') => access === 'write'
+      ? Promise.reject(
+        Object.assign(new Error('session "g" is already owned by an active write handle'), { name: 'SessionAlreadyOwnedError' }),
+      )
+      : read(id, access)
+    const result = await catchUpSession(persistence, 'session-busy', events(range(9)))
+    assert.equal(result.ok, false)
+    assert.equal(result.wait, true)
+    assert.match(result.reason ?? '', /live run/u)
+  })
+})
+
+describe('a copy something else has written to', () => {
+  /** Storage whose log carries typed events, so the tail comparison has something to read. */
+  function typedLog(count: number, typeAt: (seq: number) => string): SessionPersistenceLike {
+    return {
+      create: () => Promise.reject(new Error('not used')),
+      open: () => Promise.resolve({
+        append: () => Promise.resolve(),
+        read: (offset = 0, length?: number) => Promise.resolve({
+          events: Array.from({ length: Math.max(0, count - offset) }, (_, index) => ({
+            seq: offset + index,
+            type: typeAt(offset + index),
+          })).slice(0, length),
+        }),
+        flush: () => Promise.resolve(),
+        close: () => Promise.resolve(),
+      }),
+      stat: () => Promise.resolve({}),
+    }
+  }
+
+  it('agrees when the tail is what the mirror delivered', async () => {
+    const persistence = typedLog(10, () => 'assistant/message')
+    const mirrored = events([2, 3, 4, 5, 6, 7, 8, 9]).map(event => ({ ...event, type: 'assistant/message' }))
+    assert.equal(await logAgreesWithMirror(persistence, 'session-same', mirrored, 10), true)
+  })
+
+  it('disagrees when a turn was opened in it', async () => {
+    // The local turn's skeleton lands on the sequences the origin's own events will
+    // arrive under: `turn/start` where the mirror has an assistant message.
+    const persistence = typedLog(10, seq => (seq >= 8 ? 'turn/start' : 'assistant/message'))
+    const mirrored = events([2, 3, 4, 5, 6, 7, 8, 9]).map(event => ({ ...event, type: 'assistant/message' }))
+    assert.equal(await logAgreesWithMirror(persistence, 'session-drift', mirrored, 10), false)
+  })
+
+  it('cannot judge a sequence the mirror no longer holds', async () => {
+    // The mirror serves a tail window, so a log whose tail sits *below* that window
+    // cannot be compared at all — and a guard that cannot see is permissive, not
+    // accusatory. (The caller stops only on an evidenced `false`.)
+    const persistence = typedLog(10, () => 'turn/start')
+    assert.equal(await logAgreesWithMirror(persistence, 'session-blind', events([100]), 10), true)
   })
 })
 
