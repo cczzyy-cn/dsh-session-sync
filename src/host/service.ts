@@ -317,6 +317,14 @@ export class SessionSyncService {
    * usually still open, and the repair has to wait for that to end.
    */
   private readonly repairs = new Map<string, number>()
+  /**
+   * Owns the signal for the cold history reads the backfill makes.
+   *
+   * Service-scoped on purpose: a page read is a read of the Session's log, not a
+   * step of any follow attempt, so tying it to a follow's lifecycle is what made
+   * every walk back to seq 0 die with "this operation was aborted".
+   */
+  private readonly pageAbort = new AbortController()
 
   /**
    * How to append through the Session DSH has open, when it has one.
@@ -1262,6 +1270,14 @@ export class SessionSyncService {
     }
     this.pageAsked.set(sessionId, now)
     try {
+      // Aborted by this service, never by the follow. The read is a cold read of
+      // the Session's own log — it does not depend on the follow's attempt — and
+      // its result is posted straight to the outbox for the same reason. Passed the
+      // follow's signal, it was killed whenever the origin resynced that follow,
+      // which is often: measured as `page … error: "This operation was aborted"`,
+      // and it is why a mirror could never be walked back to the Session's
+      // beginning — which in turn is the only way a long Session can be written at
+      // all, since a copy has to start at seq 0.
       const page = await controller.page(
         {
           address: { kind: 'session', sessionId },
@@ -1269,7 +1285,7 @@ export class SessionSyncService {
           beforeSeq,
           maxMessages,
         },
-        handle.abort.signal,
+        this.pageAbort.signal,
       )
       let added = 0
       if (page.records.length === 0) {
