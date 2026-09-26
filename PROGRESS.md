@@ -114,6 +114,38 @@ cursor 为什么一直是 -1：follow 的开场快照是**一整帧**，源站�
 
 ## 2. 推进日志（晚 → 早）
 
+### 事故：副本被 DSH 自己写坏，而我的写入逻辑静默跳过（v0.6.1 修复 + 重建）
+
+**现象**（用户报）：官方页 `历史加载失败：failed to project session "…": invalid persisted inbox splice at session seq 2943（gateway/internal）`。
+
+**根因（对比镜像与副本日志得到，不是推演）**：seq 2941 在镜像是 `agent/inbox/spliced{inserted:[提示]}`，在副本却成了 `session/end-seed {}`。而 DSH 的 `core/session/src/index.ts:616-620` 正是**"带 seed 恢复会话、且日志末尾不是 end-seed 时，补一条自己的标记"**。于是：
+
+```text
+镜像: 2940 turn/end · 2941 inbox/spliced(插入提示) · 2942 turn/start · 2943 inbox/spliced(移除)
+副本: 2940 turn/end · 2941 session/end-seed(DSH 自己写的) · 2942 turn/start · 2943 inbox/spliced(移除)
+```
+
+2943 的"移除"没有可移除的插入 ⇒ 投影炸。
+
+**真正的漏洞在守卫的端点，而且 0.6.0 之前就存在**：`stored` 是从**日志长度**读的，守卫却按**台账记录的位置**取窗口——两者之间那段没人看过。追加从日志长度起步，于是镜像那条被顶掉的事件被**静默跳过**。以前因为 busy 一直 `wait` 所以没暴露；一旦能写（0.6.0）就撞上；**即使回到 `wait`，等副本冷下来也会照样静默跳过**。
+
+**修复（`0.6.1`）**：追加前先读日志**自己的**长度；只要超出台账记录，就用**覆盖整段未记账区域**的窗口去比镜像（不是默认的 8 条尾巴），不一致就停手并标注。文案也改成同时涵盖"有人在里面开过回合"与"DSH 恢复时补了自己的标记"两种情形。测试 75 → 76（"标记落在默认窗口之外、宽窗口之内"这条正是按这个 bug 写的）。
+
+**重建一份被换掉的日志时，必须连投影缓存一起清掉**（本次踩到的新知识）：`storages/session_projcache/sessions/<id>.json` 存着**从旧日志算出的投影快照**；日志整体被替换后，从那个快照继续折叠会重新撞上同一处不一致。完整序列：
+
+```text
+1. POST /dsh-session-sync/materialize/release {"sessionId": …}
+2. systemctl stop dsh-web；mv <sessions>/…/session-<id> /root/corrupt-copy-<ts>
+3. mv /root/.dsh/storages/session_projcache/sessions/<id>.json /root/projcache-bad-<ts>.json
+4. systemctl start dsh-web；等一个 tick，插件用完整镜像重建
+5. 客户端要重载页面（旧页面缓存着被移走的那个 id，会报 session/not-found）
+```
+
+**实测结果**：重建后日志 4277 条记录、`seq 2941` 恢复为 `agent/inbox/spliced{inserted}` ✓；台账 4276 与镜像齐平；页面重载后**能正常投影并显示**（截屏里那段"历史加载失败…"其实是**用户消息的正文**，被副本照实渲染，不是 UI 报错）。随后这次恢复里 DSH 又补了一次标记 ⇒ **新守卫按设计把它判停（状态片显示 `已停更`），没有埋成坏日志** ✓。
+
+**遗留（下一轮）**：标记的唯一条件是 `seed !== undefined`，而仓里只有两处构造 seed——`api/session-controller/src/commands.ts:255` 的 `buildForkSeed`（fork）与客户端 adopt 的 `MutableSessionEventSource`。到底是哪条路给这次恢复提供了 seed 还没查实；查实并消除它，"实时跟进"才不会每次重启都掉一份副本。
+
+
 ### 实时跟进做出来了：被读着也能前进（v0.6.0，线上实测）
 
 用户要求"实现实时跟进"。做法就是把写入路径在 busy 时改走 **DSH 自己的会话**（`catchUpSession` 新增可选的 `LiveAppender`；`service` 用 `ctx.get('sessions')` 取那个 live 会话）：
