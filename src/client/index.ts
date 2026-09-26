@@ -11,6 +11,9 @@
  *    reachable in the collapsed rail.
  *  - `main` — the console: a machine → directory → Session tree beside the
  *    opened Session's conversation and the takeover composer.
+ *  - `conversation.session.header.actions` — a chip in DSH's own Session header
+ *    for a Session this Host has written, saying whether the copy the reader is
+ *    looking at is current.
  *
  * The conversation itself is the shipped renderer where the build supports it:
  * when the client context offers `ctx.sessions.adopt`, the open remote Session
@@ -26,6 +29,7 @@
 import type { Context as ClientContext } from '@deepseek-ai/cordis'
 import type { ConfigPatch } from '../shared/protocol.ts'
 import { ConfigSection } from './ConfigSection.tsx'
+import { CopyStateAction } from './CopyStateAction.tsx'
 import { OFFICIAL_SLOT, OfficialConversation, OfficialSessions } from './official-session.tsx'
 import { PanelIcon } from './PanelIcon.tsx'
 import { SyncPanel } from './SyncPanel.tsx'
@@ -178,6 +182,22 @@ export function apply(ctx: ClientContext): void {
       official,
     }),
   }, SyncPanel))
+
+  // A chip in DSH's own Session header for a Session this Host has written, so
+  // the page a reader is looking at says whether it is current. This cannot be
+  // done from the log: a copy falls behind precisely when someone has it open —
+  // the live Session owns its log, so the plugin's append is refused until it
+  // goes cold — which makes the header of that very page the only place the
+  // state can reach the person waiting for it. A build that does not declare
+  // this seat simply never renders it.
+  ctx.slots.inject('conversation.session.header.actions', () => ctx.slots.register({
+    name: 'conversation.session.header.actions',
+    id: 'session-sync-copy',
+    // After the background-job list in the header actions band.
+    order: 30,
+    locale: NS,
+    inject: () => ({ hooks: { sync: client.snapshot } }),
+  }, CopyStateAction))
 
   // The pane body itself: the shipped conversation.content Factory occurrence,
   // registered against the child slot the panel declares.

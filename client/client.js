@@ -665,6 +665,41 @@ window.__ModuleLoader__.load({
 			});
 		}
 		//#endregion
+		//#region src/client/CopyStateAction.tsx
+		/**
+		* A chip in DSH's own Session header for a Session this Host has written.
+		*
+		* The console already badges these rows, but the reader who needs this reading
+		* is the one looking at DSH's own page — and that page cannot be annotated from
+		* the log, because a copy is behind *precisely* when someone has it open: the
+		* live Session owns its log, so the plugin's append is refused until it goes
+		* cold. That makes this chip the one place the state can reach the reader who
+		* is waiting for the content it describes.
+		*
+		* It renders nothing at all for a Session this Host has not written, which is
+		* every other Session in every other header.
+		*/
+		/**
+		* Render the chip, or nothing when this Session is not one of ours.
+		* @param props - the Session id, copy, and the snapshot hook.
+		* @returns the chip.
+		*/
+		function CopyStateAction(props) {
+			const snapshot = props.useSync((current) => current);
+			const entry = (snapshot.state.materialized ?? []).find((row) => row.sessionId === props.sessionId);
+			if (entry === void 0) return null;
+			const mirrored = (snapshot.state.machines ?? []).flatMap((machine) => machine.sessions).find((session) => session.sessionId === props.sessionId)?.eventCount;
+			const behind = mirrored === void 0 ? 0 : Math.max(0, mirrored - entry.events);
+			const stopped = entry.stopped !== void 0;
+			const label = stopped ? props.t("materializedStopped") : behind === 0 ? props.t("materializedBadge") : `${props.t("materializedBadge")} · ${props.t("materializedBehind")} ${String(behind)}`;
+			const hint = stopped ? props.t("materializedStoppedHint") : entry.waiting === void 0 ? props.t("materializedHint") : `${props.t("materializedWaitingHint")}\n${entry.waiting}`;
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+				className: stopped ? sync_module_css_default.failed : sync_module_css_default.realBadge,
+				title: hint,
+				children: label
+			});
+		}
+		//#endregion
 		//#region src/shared/protocol.ts
 		/**
 		* Wire and persisted shapes shared by the Host half, the sync server, and the
@@ -7069,6 +7104,13 @@ window.__ModuleLoader__.load({
 					official
 				})
 			}, SyncPanel));
+			ctx.slots.inject("conversation.session.header.actions", () => ctx.slots.register({
+				name: "conversation.session.header.actions",
+				id: "session-sync-copy",
+				order: 30,
+				locale: NS,
+				inject: () => ({ hooks: { sync: client.snapshot } })
+			}, CopyStateAction));
 			ctx.slots.inject(OFFICIAL_SLOT, () => ctx.slots.register({ name: OFFICIAL_SLOT }, OfficialConversation));
 		}
 		//#endregion
