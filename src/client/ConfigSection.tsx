@@ -337,6 +337,11 @@ function MaterializedBlock({ t, state }: {
                           {t('materializedWaiting')}
                         </span>
                       )}
+                      {entry.live !== undefined && (
+                        <span title={t('materializedLiveHint')}>
+                          {String(entry.live)}{' '}{t('materializedLive')}
+                        </span>
+                      )}
                     </span>
                   </span>
                 </div>

@@ -29,6 +29,7 @@ import { loadConfig, saveConfig } from './config.ts'
 import type {
   FollowFrame,
   HostContext,
+  LiveSessionLike,
   SessionControllerLike,
   SessionSummaryRow,
   WireEvent,
@@ -43,6 +44,8 @@ import {
   materializeSession,
   startFor,
   storedEventCount,
+  surfaceIntent,
+  type LiveAppender,
   type MaterializeResult,
   type MirrorEnvelope,
   type SessionPersistenceLike,
@@ -291,6 +294,48 @@ export class SessionSyncService {
    */
   private readonly waits = new Map<string, { at: number; reason: string }>()
   /**
+   * How many events of each copy went through the Host's own live Session.
+   *
+   * Those carry this Host's clock instead of the origin's (`Session.append`
+   * stamps `time` itself), so the count is kept and reported: the plugin's claim
+   * has always been that a copy is what the origin holds, and that claim is
+   * conditional for exactly these events.
+   */
+  private readonly liveAppends = new Map<string, number>()
+
+  /**
+   * How to append through the Session DSH has open, when it has one.
+   *
+   * Returns `undefined` when this Host has no Session store or no such Session —
+   * in which case the copy waits, which is what it did before this road existed.
+   * @param sessionId - the copy's Session id.
+   * @returns the seam, or `undefined` when there is nothing live to write through.
+   */
+  private liveAppender(sessionId: string): LiveAppender | undefined {
+    // Read through `get` like every other service here: this plugin declares no
+    // dependency on the Session store, so the property form is not guaranteed to
+    // be populated even when the service is loaded.
+    const store = this.ctx.get('sessions') as { get(id: string): LiveSessionLike | undefined } | undefined
+    const session = store?.get(sessionId)
+    if (session === undefined) return undefined
+    return (event) => {
+      // The sequence this returns is checked by the writer against the one the log
+      // needed; this seam only has to hand back what the Session actually did.
+      const logged = session.append(event.type, event.data, surfaceIntent(event))
+      return logged.seq
+    }
+  }
+
+  /**
+   * Note that some of a copy's events were written through a live Session.
+   * @param sessionId - the copy's Session id.
+   * @param count - how many this pass recorded that way; zero is ignored.
+   */
+  private noteLive(sessionId: string, count: number): void {
+    if (count <= 0) return
+    this.liveAppends.set(sessionId, (this.liveAppends.get(sessionId) ?? 0) + count)
+  }
+  /**
    * What the last history read did, for the settings page.
    *
    * The host half writes its log where this deployment cannot read it, and a
@@ -393,6 +438,7 @@ export class SessionSyncService {
         ? {
           materialized: this.ledger.list().map(({ sessionId, entry }) => {
             const wait = this.waits.get(sessionId)
+            const live = this.liveAppends.get(sessionId)
             return {
               sessionId,
               machineName: entry.machineName,
@@ -400,6 +446,7 @@ export class SessionSyncService {
               at: entry.at,
               ...(entry.stopped === undefined ? {} : { stopped: entry.stopped }),
               ...(wait === undefined ? {} : { waiting: wait.reason, waitingAt: wait.at }),
+              ...(live === undefined ? {} : { live }),
             }
           }),
         }
@@ -763,10 +810,16 @@ export class SessionSyncService {
               await this.ledger.stop(session.sessionId, DIVERGED_REASON)
               return { ok: false, written: 0, skipped: 0, stored: needs, created: false, reason: DIVERGED_REASON }
             }
-            return await catchUpSession(persistence, session.sessionId, transcript.events as MirrorEnvelope[])
+            return await catchUpSession(
+              persistence,
+              session.sessionId,
+              transcript.events as MirrorEnvelope[],
+              this.liveAppender(session.sessionId),
+            )
           })()
           if (result.ok && result.written > 0) {
             this.waits.delete(session.sessionId)
+            this.noteLive(session.sessionId, result.live ?? 0)
             await this.ledger.mark(session.sessionId, machine.machineName, result.stored)
             report.advanced += 1
           } else if (result.ok) {
