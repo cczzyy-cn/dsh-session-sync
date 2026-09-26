@@ -321,6 +321,19 @@ describe('a copy something else has written to', () => {
     const persistence = typedLog(10, () => 'turn/start')
     assert.equal(await logAgreesWithMirror(persistence, 'session-blind', events([100]), 10), true)
   })
+
+  it('finds a foreign event anywhere the wider window reaches', async () => {
+    // A copy DSH has open is not passive: a seeded resume makes the Session append
+    // its own `session/end-seed` into it. That happened far enough back that the
+    // default tail window looked past it, so the caller widens the window to cover
+    // everything the log holds beyond what the ledger recorded.
+    const persistence = typedLog(20, seq => (seq === 5 ? 'session/end-seed' : 'assistant/message'))
+    const mirrored = events(range(20).slice(2)).map(event => ({ ...event, type: 'assistant/message' }))
+    assert.equal(await logAgreesWithMirror(persistence, 'session-marker', mirrored, 20), true,
+      'the default tail window sits above seq 5')
+    assert.equal(await logAgreesWithMirror(persistence, 'session-marker', mirrored, 20, 20), false,
+      'a window covering the whole unaccounted stretch sees it')
+  })
 })
 
 describe('measuring a log whose backend states no count', () => {

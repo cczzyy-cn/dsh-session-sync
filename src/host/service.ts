@@ -56,14 +56,18 @@ import { OriginLink, startSyncServer, type SyncServerHandle } from './transport.
 const RECONCILE_MS = 10_000
 
 /**
- * Why a copy stopped tracking its mirror because it grew on its own.
+ * Why a copy stopped tracking its mirror because it grew events of its own.
  *
  * Said once, here, because it is reported in `state` and in the console: a copy
  * that has events of its own is no longer the Session, and the operator needs to
- * know that rather than see a log that looks complete.
+ * know that rather than see a log that looks complete. Two ways it happens, and
+ * the wording has to cover both: a turn opened in the copy (a prompt typed into
+ * it leaves `turn/start` and `turn/end` behind even though the gate refuses the
+ * step), and DSH itself appending a `session/end-seed` marker when the Session is
+ * resumed with a seed. Either one takes a sequence the origin's next event needs.
  */
 const DIVERGED_REASON =
-  'this copy grew on its own (a turn was opened in it), so it is no longer the Session the mirror holds'
+  'this copy grew on its own (a turn was opened in it, or DSH appended its own marker when resuming it), so it is no longer the Session the mirror holds'
 
 /**
  * How often buffered events, and the streaming text, are handed to the link.
@@ -695,9 +699,10 @@ export class SessionSyncService {
     sessionId: string,
     stored: number,
     mirrored: readonly MirrorEnvelope[],
+    window: number = LOG_TAIL_WINDOW,
   ): Promise<boolean> {
     if (stored === 0 || mirrored.length === 0) return false
-    const agrees = await logAgreesWithMirror(persistence, sessionId, mirrored, stored)
+    const agrees = await logAgreesWithMirror(persistence, sessionId, mirrored, stored, window)
       .catch(() => undefined)
     return agrees === false
   }
@@ -802,11 +807,19 @@ export class SessionSyncService {
             continue
           }
           const result = await (async (): Promise<MaterializeResult> => {
-            // Judged here, not on "the log got longer": the baseline is taken from
-            // the log at adoption, so a drift that happened before this build — or
-            // while a live run held the log — never shows up as growth. This is the
-            // moment it would be *acted on*, by appending above the local events.
-            if (await this.copyDiverged(persistence, session.sessionId, needs, transcript.events as MirrorEnvelope[])) {
+            // Judged against the log's *own* extent, not the count the ledger
+            // recorded. A copy DSH has open is not passive: a seeded resume makes
+            // the Session append its own `session/end-seed` marker into it, so the
+            // log can hold events this plugin never wrote. The append below starts
+            // from the log's extent, so anything in that unaccounted stretch would
+            // be silently skipped over — displacing a mirrored event and leaving a
+            // log no reader can project (an inbox removal with no insertion). The
+            // window therefore covers the whole stretch, not just its tail.
+            const extent = await storedEventCount(persistence, session.sessionId)
+              .catch(() => undefined) ?? needs
+            const unaccounted = Math.max(LOG_TAIL_WINDOW, extent - needs)
+            if (extent > needs
+              && await this.copyDiverged(persistence, session.sessionId, extent, transcript.events as MirrorEnvelope[], unaccounted)) {
               await this.ledger.stop(session.sessionId, DIVERGED_REASON)
               return { ok: false, written: 0, skipped: 0, stored: needs, created: false, reason: DIVERGED_REASON }
             }
