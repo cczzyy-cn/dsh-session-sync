@@ -1,5 +1,24 @@
 # Host 侧适配：让镜像会话在服务器上成为"真会话"
 
+> ## ⚠️ 本文的方案已按实测改过两处，别再照 §2、§9 的原文实现
+>
+> **① 不归档。** 原文推荐"物化 + **归档**"，理由是归档能让会话只读。实测证明它同时让会话**不可读**：
+> `ui-workspace` 的 `guardedOpen`（`rows/WorkspaceBrowser.tsx:851-859`）对归档行只提示
+> `archivedNotOpenable`（"已归档对话暂时无法查看"），而 `tree.ts:251-262` 的默认筛选**直接隐藏**归档行。
+> 为只读而归档，代价是连读都读不了。
+>
+> **现在的形状**：物化（不归档）+ 插件自己的 `agent/pre-step` 门禁（返回 `{kind:'reject'}`）+ 一份持久化台账
+> （`$DSH_HOME/dsh-session-sync-materialized.json`）。shipped 的 `ArchivedSessionGate`
+> （`api/session-controller/src/archived-session-gate.ts:23-32`）就是同一个接缝。`0.5.5` 起，旧构建留下的归档
+> 会在认领时被自动取消。
+>
+> **② 写入顺序的收尾不同。** §9 的清单以 `workspaceRegistry.archiveSession(源站 id)` 收尾，现在没有这一步；
+> 换成"记进台账"，并在每次追加前把日志尾部与镜像在同一 seq 上的事件比一次（不一致就停手并上报——
+> 副本自己长出来的事件会占用源站接下来要用的 seq，在其上继续追加等于在中段埋一个洞）。
+>
+> 线上验证（三条判据）与那两个只有真跑起来才现形的缺陷（`SessionAlreadyOwnedError` 该算 `wait`、
+> `eventCount` 在契约里是可选的）记在 `PROGRESS.md` §2。下面的正文保留原样，作为当时的推理记录。
+
 > 结论先行：不必给 Host 打补丁。DSH 已经有两条现成机制——**冷读日志的历史分页** 和
 > **归档闸门**（归档会话不可能跑出模型步）——所以正确形状是"**物化 + 归档**"：
 > 由插件的 Host 半边把镜像写成一份符合 DSH 格式的会话日志，再把它归档。

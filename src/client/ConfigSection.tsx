@@ -35,6 +35,7 @@ interface Draft {
   machineName: string
   serverUrl: string
   isServer: boolean
+  materialize: boolean
   password: string
   listenHost: string
   listenPort: string
@@ -46,6 +47,7 @@ function draftOf(config: SyncConfig): Draft {
     machineName: config.machineName,
     serverUrl: config.serverUrl,
     isServer: config.isServer,
+    materialize: config.materialize,
     password: config.password,
     listenHost: config.listenHost,
     listenPort: String(config.listenPort),
@@ -97,6 +99,7 @@ export function ConfigSection(props: ConfigSectionProps): React.ReactElement {
       machineName: draft.machineName,
       serverUrl: draft.serverUrl,
       isServer: draft.isServer,
+      materialize: draft.materialize,
       password: draft.password,
       listenHost: draft.listenHost,
       listenPort: Number.parseInt(draft.listenPort, 10),
@@ -142,6 +145,18 @@ export function ConfigSection(props: ConfigSectionProps): React.ReactElement {
               checked={draft.isServer}
               label={t('isServer')}
               onChange={(next) => { edit({ isServer: next }) }}
+            />
+          </div>
+
+          <div className={css.fieldRow}>
+            <span className={css.fieldText}>
+              <span className={css.label}>{t('materializeLabel')}</span>
+              <span className={css.hint}>{t('materializeHint')}</span>
+            </span>
+            <Switch
+              checked={draft.materialize}
+              label={t('materializeLabel')}
+              onChange={(next) => { edit({ materialize: next }) }}
             />
           </div>
 
@@ -196,6 +211,8 @@ export function ConfigSection(props: ConfigSectionProps): React.ReactElement {
       </div>
 
       <StatusBlock t={t} state={state} />
+
+      <MaterializedBlock t={t} state={state} />
 
       <div className={css.group}>
         <h3 className={css.groupTitle}>{t('sessions')}</h3>
@@ -266,6 +283,50 @@ function StatusBlock({ t, state }: {
         {detail !== undefined && detail !== '' && <span className={css.failed}>{detail}</span>}
         {state.error !== undefined && <span className={css.failed}>{state.error}</span>}
       </div>
+    </div>
+  )
+}
+
+/**
+ * The Sessions this Host has written into its own storage.
+ *
+ * Reported next to the switch that produces them, because the two questions an
+ * operator has here are one question: "is it on, and what did it write". A copy
+ * that stopped following says so, with the rebuild sequence in its tooltip —
+ * otherwise a log that no longer matches its Session looks like a working one.
+ */
+function MaterializedBlock({ t, state }: {
+  t: (key: SessionSyncKey) => string
+  state: SyncClientSnapshot
+}): React.ReactElement | null {
+  // The list is a server-role fact: a client writes nothing, so the block would
+  // only ever say "none yet".
+  if (state.state.role !== 'server') return null
+  const entries = state.state.materialized ?? []
+  return (
+    <div className={css.group}>
+      <h3 className={css.groupTitle}>{t('materializedTitle')}</h3>
+      {entries.length === 0
+        ? <span className={css.empty}>{t('materializedEmpty')}</span>
+        : (
+          <div className={css.sessionList}>
+            {entries.map(entry => (
+              <div key={entry.sessionId} className={css.sessionRow}>
+                <span className={css.sessionText}>
+                  <span className={css.sessionTitle}>{entry.sessionId}</span>
+                  <span className={css.sessionMeta}>
+                    <span>{String(entry.events)}{' '}{t('materializedEvents')}</span>
+                    {entry.stopped !== undefined && (
+                      <span className={css.failed} title={t('materializedStoppedHint')}>
+                        {t('materializedStopped')}
+                      </span>
+                    )}
+                  </span>
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
     </div>
   )
 }

@@ -57,6 +57,7 @@ import {
 import type { MirroredMachine, MirroredSession } from '../shared/protocol.ts'
 import type { CommandDelivery, SyncClientSnapshot } from './api.ts'
 import type { SessionSyncKey, SessionSyncTranslate } from './locales.ts'
+import { freshIds, rowTarget } from './routing.ts'
 import {
   compactTokens,
   sessionChrome,
@@ -213,7 +214,7 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
   const announce = props.sessionsWritten
   React.useEffect(() => {
     if (announce === undefined) return
-    const fresh = written === '' ? [] : written.split('\n').filter(id => !announced.current.has(id))
+    const fresh = freshIds(announced.current, written === '' ? [] : written.split('\n'))
     if (fresh.length === 0) return
     for (const id of fresh) announced.current.add(id)
     announce(fresh)
@@ -357,7 +358,12 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
                               // The pane is what a mirror looks like when there is
                               // nothing else to show it with; once there is, using
                               // it would be showing a copy beside the original.
-                              if (materialized.has(candidate.sessionId)) {
+                              const target = rowTarget(
+                                materialized,
+                                candidate.sessionId,
+                                props.openAsSession !== undefined,
+                              )
+                              if (target === 'official') {
                                 props.openAsSession?.(candidate.sessionId)
                                 return
                               }
