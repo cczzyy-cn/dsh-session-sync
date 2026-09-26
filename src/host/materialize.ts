@@ -562,6 +562,40 @@ function appendLive(
 }
 
 /**
+ * Which of a copy's unaccounted records are the Host's own resume markers.
+ *
+ * The stretch between what the ledger recorded and what the log now holds is
+ * usually *mixed*: a pass can end after writing mirrored events but before
+ * recording them, and a seeded resume drops a `session/end-seed` in among them. So
+ * the question is not "is everything here a marker" — that reads a recoverable
+ * copy as broken — but "is anything here neither the mirror's event nor a
+ * marker".
+ * @param log - the log's records from the ledger's end onward.
+ * @param mirrored - the mirror's events, which must cover those sequences.
+ * @returns how many markers are there, or `undefined` when a record disagrees with
+ *   the mirror and is not a marker, which is a real divergence. A sequence the
+ *   mirror no longer holds cannot be judged; a guard that cannot see stays
+ *   permissive, as everywhere else.
+ */
+export function unaccountedMarkers(
+  log: readonly MirrorEnvelope[],
+  mirrored: readonly MirrorEnvelope[],
+): number | undefined {
+  const expected = new Map(mirrored.map(event => [event.seq, event]))
+  let markers = 0
+  for (const event of log) {
+    if (event.type === 'session/end-seed') {
+      markers += 1
+      continue
+    }
+    const mirror = expected.get(event.seq)
+    if (mirror === undefined) continue
+    if (mirror.type !== event.type || JSON.stringify(mirror.data) !== JSON.stringify(event.data)) return undefined
+  }
+  return markers
+}
+
+/**
  * The surface metadata a mirrored event carries, in the shape `Session.append`
  * takes as its optional third argument.
  *

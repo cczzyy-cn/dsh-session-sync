@@ -37,7 +37,7 @@ import type {
 } from './dsh.ts'
 import { SyncHub, type BrowserSink } from './hub.ts'
 import { MirrorLedger } from './ledger.ts'
-import { clearProjectionCache, dropTrailingMarkers, findLogFile, RESUME_MARKER } from './logfile.ts'
+import { clearProjectionCache, dropTrailingMarkers, findLogFile } from './logfile.ts'
 import { resolveHome } from './config.ts'
 import {
   catchUpSession,
@@ -47,6 +47,7 @@ import {
   startFor,
   storedEventCount,
   surfaceIntent,
+  unaccountedMarkers,
   type LiveAppender,
   type MaterializeResult,
   type MirrorEnvelope,
@@ -775,18 +776,25 @@ export class SessionSyncService {
   }
 
   /**
-   * Whether everything the log holds beyond what the ledger recorded is DSH's own
-   * resume marker — the one divergence a copy is allowed to recover from.
+   * How many of the log's records beyond the ledger's record are DSH's own resume
+   * marker — the one divergence a copy is allowed to recover from.
+   *
+   * Mixed stretches are the normal case, not the exception: a pass can write
+   * mirrored events and be cut off before recording them, and a seeded resume drops
+   * a marker in among them. So the caller asks `unaccountedMarkers`, which ignores
+   * records that are the mirror's event at their sequence and counts only markers.
    * @param persistence - the Host's durable Session storage.
    * @param sessionId - the copy under test.
    * @param from - the sequence the ledger's record ends at.
-   * @returns how many trailing markers the log holds there, or `undefined` when
-   *   anything else is there (or the stretch cannot be read).
+   * @param mirrored - the mirror's window, which the caller already holds.
+   * @returns the marker count, or `undefined` when something there is neither the
+   *   mirror's event nor a marker.
    */
-  private async trailingMarkers(
+  private async unaccounted(
     persistence: SessionPersistenceLike,
     sessionId: string,
     from: number,
+    mirrored: readonly MirrorEnvelope[],
   ): Promise<number | undefined> {
     let handle: { read(offset?: number): Promise<{ readonly events: readonly unknown[] }>; close(): Promise<unknown> }
     try {
@@ -796,9 +804,7 @@ export class SessionSyncService {
     }
     try {
       const page = await handle.read(from)
-      const types = page.events.map(event => String((event as { type?: unknown }).type ?? ''))
-      if (types.length === 0) return 0
-      return types.every(type => type === RESUME_MARKER) ? types.length : undefined
+      return unaccountedMarkers(page.events as readonly MirrorEnvelope[], mirrored)
     } catch {
       return undefined
     } finally {
@@ -931,7 +937,12 @@ export class SessionSyncService {
               // cold — which is the difference between a copy that survives a restart
               // and one that has to be rebuilt by hand every time. Anything else in
               // that stretch is a real divergence and stops the copy as before.
-              const markers = await this.trailingMarkers(persistence, session.sessionId, needs)
+              const markers = await this.unaccounted(
+                persistence,
+                session.sessionId,
+                needs,
+                transcript.events as MirrorEnvelope[],
+              )
               if (markers !== undefined && markers > 0) {
                 this.repairs.set(session.sessionId, markers)
                 this.waits.set(session.sessionId, {

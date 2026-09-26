@@ -26,6 +26,7 @@ import {
   materializeSession,
   startFor,
   storedEventCount,
+  unaccountedMarkers,
   type MaterializeInput,
   type SessionHandleLike,
   type SessionPersistenceLike,
@@ -277,6 +278,32 @@ describe('a copy kept current through the live Session itself', () => {
     const result = await catchUpSession(busy(4), 'session-cold', events(range(9)))
     assert.equal(result.wait, true)
     assert.equal(result.written, 0)
+  })
+})
+
+describe('what a copy holds beyond the ledger\u2019s record', () => {
+  // The stretch is normally mixed: a pass can write mirrored events and be cut off
+  // before recording them, and a seeded resume drops a marker in among them. Asking
+  // "is everything here a marker" reads a recoverable copy as broken — which is
+  // exactly what stopped one on the deployed server.
+  const mirrored = events([10, 11, 12]).map(event => ({ ...event, type: 'assistant/message' }))
+  const marker = (seq: number): MaterializeInput['events'][number] => ({ ...events([seq])[0]!, type: 'session/end-seed' })
+
+  it('counts a marker among the mirror\u2019s own events', () => {
+    assert.equal(unaccountedMarkers([mirrored[0]!, marker(11), mirrored[2]!], mirrored), 1)
+  })
+
+  it('says nothing is recoverable when a record is neither the mirror\u2019s nor a marker', () => {
+    assert.equal(unaccountedMarkers([mirrored[0]!, { ...mirrored[1]!, type: 'turn/start' }], mirrored), undefined)
+  })
+
+  it('does not object to a sequence the mirror no longer holds', () => {
+    // Permissive, like every other guard here: a guard that cannot see must not accuse.
+    assert.equal(unaccountedMarkers([{ ...mirrored[0]!, seq: 900 }], mirrored), 0)
+  })
+
+  it('counts several markers', () => {
+    assert.equal(unaccountedMarkers([marker(10), marker(11)], mirrored), 2)
   })
 })
 
