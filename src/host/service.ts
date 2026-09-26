@@ -37,6 +37,8 @@ import type {
 } from './dsh.ts'
 import { SyncHub, type BrowserSink } from './hub.ts'
 import { MirrorLedger } from './ledger.ts'
+import { clearProjectionCache, dropTrailingMarkers, findLogFile, RESUME_MARKER } from './logfile.ts'
+import { resolveHome } from './config.ts'
 import {
   catchUpSession,
   LOG_TAIL_WINDOW,
@@ -306,6 +308,15 @@ export class SessionSyncService {
    * conditional for exactly these events.
    */
   private readonly liveAppends = new Map<string, number>()
+  /**
+   * Copies holding DSH's own resume marker, and how many markers to take back
+   * out, by Session id.
+   *
+   * Recorded when the marker is found and acted on when the Session is next cold:
+   * the marker is written by a resume, so at the moment it is found the Session is
+   * usually still open, and the repair has to wait for that to end.
+   */
+  private readonly repairs = new Map<string, number>()
 
   /**
    * How to append through the Session DSH has open, when it has one.
@@ -708,6 +719,86 @@ export class SessionSyncService {
   }
 
   /**
+   * Take DSH's own resume markers back out of a copy, once it is cold.
+   *
+   * The alignment a copy lives by is broken by the Host itself: resuming a
+   * Session with a seed makes it append a `session/end-seed` marker, which takes
+   * a sequence the origin's next event needs. The marker is always trailing, so
+   * removing it restores the log without rebuilding anything — and unlike a
+   * rebuild it asks nothing of the storage layer, which is what makes it possible
+   * from inside a plugin at all (the Host has no seam to forget a Session, and a
+   * `create` under an id it still knows is refused).
+   *
+   * The proof that the Session is cold is the write claim itself: a live Session
+   * owns its log, so `open(id, 'write')` succeeding means nothing on this Host has
+   * it in memory — which is exactly the condition under which cutting the file is
+   * safe. Cutting it under a live Session would leave that Session's next append
+   * writing over a hole.
+   * @param persistence - the Host's durable Session storage.
+   * @param sessionId - the copy to repair.
+   * @returns whether a repair ran.
+   */
+  private async repairCopy(persistence: SessionPersistenceLike, sessionId: string): Promise<boolean> {
+    const pending = this.repairs.get(sessionId)
+    if (pending === undefined) return false
+    let handle: { close(): Promise<unknown> }
+    try {
+      handle = await persistence.open(sessionId, 'write')
+    } catch {
+      // Still held, so still live. The next pass asks again.
+      return false
+    }
+    await handle.close().catch(() => undefined)
+    this.repairs.delete(sessionId)
+    const home = resolveHome()
+    const path = await findLogFile(home, sessionId)
+    if (path === undefined) return false
+    const dropped = await dropTrailingMarkers(path, pending).catch(() => 0)
+    if (dropped === 0) return false
+    // The cached projections were folded from the log that just changed; leaving
+    // them reproduces the same failure one layer up.
+    const cleared = await clearProjectionCache(home, sessionId).catch(() => false)
+    this.waits.delete(sessionId)
+    this.ctx.logger.info(
+      `dsh-session-sync: took ${String(dropped)} resume marker(s) back out of "${sessionId}"`
+      + (cleared ? ' and dropped its cached projections' : ''),
+    )
+    return true
+  }
+
+  /**
+   * Whether everything the log holds beyond what the ledger recorded is DSH's own
+   * resume marker — the one divergence a copy is allowed to recover from.
+   * @param persistence - the Host's durable Session storage.
+   * @param sessionId - the copy under test.
+   * @param from - the sequence the ledger's record ends at.
+   * @returns how many trailing markers the log holds there, or `undefined` when
+   *   anything else is there (or the stretch cannot be read).
+   */
+  private async trailingMarkers(
+    persistence: SessionPersistenceLike,
+    sessionId: string,
+    from: number,
+  ): Promise<number | undefined> {
+    let handle: { read(offset?: number): Promise<{ readonly events: readonly unknown[] }>; close(): Promise<unknown> }
+    try {
+      handle = await persistence.open(sessionId, 'read')
+    } catch {
+      return undefined
+    }
+    try {
+      const page = await handle.read(from)
+      const types = page.events.map(event => String((event as { type?: unknown }).type ?? ''))
+      if (types.length === 0) return 0
+      return types.every(type => type === RESUME_MARKER) ? types.length : undefined
+    } catch {
+      return undefined
+    } finally {
+      await handle.close().catch(() => undefined)
+    }
+  }
+
+  /**
    * Drop the read-only claim on one Session, leaving its log in place.
    *
    * This is the way out of the gate: the copy becomes an ordinary Session on this
@@ -778,6 +869,11 @@ export class SessionSyncService {
     for (const machine of machines) {
       for (const session of machine.sessions) {
         if (!this.ledger.owns(session.sessionId)) continue
+        // A repair comes before any advance: the log's end is not where the mirror
+        // left it while a marker sits there, so appending would be landing on the
+        // wrong sequence. It is attempted every pass and does nothing until the
+        // Session is cold (`repairCopy`).
+        if (this.repairs.has(session.sessionId)) await this.repairCopy(persistence, session.sessionId)
         const entry = this.ledger.get(session.sessionId)
         if (entry?.stopped !== undefined) continue
         const needs = entry?.events ?? 0
@@ -820,6 +916,22 @@ export class SessionSyncService {
             const unaccounted = Math.max(LOG_TAIL_WINDOW, extent - needs)
             if (extent > needs
               && await this.copyDiverged(persistence, session.sessionId, extent, transcript.events as MirrorEnvelope[], unaccounted)) {
+              // One divergence is the Host's own bookkeeping rather than anyone's
+              // content: a seeded resume appends `session/end-seed` into the log,
+              // which takes a sequence the origin's next event needs. That marker is
+              // trailing and contentless, so it is taken back out once the Session is
+              // cold — which is the difference between a copy that survives a restart
+              // and one that has to be rebuilt by hand every time. Anything else in
+              // that stretch is a real divergence and stops the copy as before.
+              const markers = await this.trailingMarkers(persistence, session.sessionId, needs)
+              if (markers !== undefined && markers > 0) {
+                this.repairs.set(session.sessionId, markers)
+                this.waits.set(session.sessionId, {
+                  at: Date.now(),
+                  reason: "waiting for the Session to go cold, to take DSH's own resume marker back out",
+                })
+                return { ok: false, written: 0, skipped: 0, stored: needs, created: false, wait: true, reason: 'the Host wrote its own resume marker into this copy' }
+              }
               await this.ledger.stop(session.sessionId, DIVERGED_REASON)
               return { ok: false, written: 0, skipped: 0, stored: needs, created: false, reason: DIVERGED_REASON }
             }
