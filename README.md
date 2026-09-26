@@ -154,7 +154,10 @@ normal way to edit it.
 4. Leave **监听地址** at `0.0.0.0` to accept other machines, or set `127.0.0.1`
    to accept only this host.
 5. **监听端口** defaults to `8791`; change it if that port is taken.
-6. Save.
+6. Leave **写成真会话** on (the default) if this server should write each
+   mirrored Session into its own storage, so DSH's own pages can read it; see
+   [A mirrored Session becomes a real one](#a-mirrored-session-becomes-a-real-one).
+7. Save.
 
 ### Client side
 
@@ -266,9 +269,49 @@ All of them sit under `/dsh-session-sync` and behind the GUI's own gate.
 | `/state` | GET | The state every surface reads: role, link, mirror, and the per-Session counts |
 | `/sessions` | GET | This machine's own Session list, for the publish picker |
 | `/transcript` | GET | A page of one mirrored Session (`machine`, `session`, optional `limit`, `before`); asks the owning machine for history below its window when a reader reaches the mirror's edge |
-| `/materialize` | POST | Write one mirrored Session into this Host's own storage and archive it (`machineName`, `sessionId`); walks the origin back to the Session's beginning first, and refuses rather than writing a log with a hole at the front |
+| `/materialize` | POST | Write one mirrored Session into this Host's own storage (`machineName`, `sessionId`); walks the origin back to the Session's beginning first, and refuses rather than writing a log with a hole at the front. The automatic pass calls the same code, so this is only an operator's "do it now" |
+| `/materialize/release` | POST | Drop this plugin's read-only claim on one written Session (`sessionId`) and leave its log in place — the way out of the gate, for a copy its new owner wants to continue |
 | `/command` | POST | One takeover prompt; answers with the `commandId` its status is narrated under |
 | `/events` | GET | The SSE stream: state frames, per-Session event frames, and transient live text |
+
+### A mirrored Session becomes a real one
+
+The point of the server half is that a mirrored Session stops being something
+only this plugin can draw. With `materialize` on (the default), each published
+Session is written into the server's **own** session storage, which makes it a
+real Session there: DSH lists it in the workspace browser, opens it in its own
+conversation page, and serves its history, its paging and its jumps through the
+Host. The console's own pane stops being the only road, and for a Session that
+has been written it stops being used at all — the row opens DSH's page.
+
+What keeps it honest:
+
+- **It is written, never archived.** Archiving is the shipped way to make a
+  Session read-only, and it also makes it *unreadable*: the workspace browser
+  refuses to open an archived row (`archivedNotOpenable`) and hides it behind the
+  default archived filter. So read-only is this plugin's own `agent/pre-step`
+  gate over a durable ledger in `$DSH_HOME/dsh-session-sync-materialized.json`:
+  every step proposed for a written copy is refused before any model request —
+  the same shape as the shipped archived-Session gate, without the unreadability.
+  A copy an *older* build archived is unarchived again on the next pass.
+- **The copy is kept level with the mirror.** A pass on the same ten-second tick
+  appends whatever the mirror has grown since the log's own end. When the log's
+  end and the mirror's window are apart — after a restart the mirror rebuilds
+  from a tail window — the mirror is walked down to meet the log first with the
+  same read a manual materialization uses.
+- **A copy that grows on its own is stopped, not grown further.** A prompt typed
+  into the copy opens a turn even though the gate refuses its step, and that turn
+  writes `turn/start` / `turn/end` into the log — on the very sequences the
+  origin's own next events will arrive under. Appending above them would embed a
+  hole where the origin's events should have gone, so the plugin compares the
+  log's tail with what the mirror delivered at those sequences and, when they
+  disagree, stops and says so in `state` rather than writing a log that looks
+  whole. (There is no seam earlier than `agent/pre-step` to refuse the turn
+  itself: the shipped archive gate leaves the same trail.)
+- **Rebuilding a diverged copy** is an operation, not a code path: `release` the
+  Session, stop the Host (so its storage forgets the id — moving the file is not
+  enough), move the log aside, start the Host, and the next pass writes a fresh
+  copy from the mirror.
 
 ### Two listeners, two purposes
 - **The sync transport** is a `node:http` listener this plugin owns
