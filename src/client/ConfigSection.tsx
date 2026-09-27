@@ -224,6 +224,16 @@ function StatusBlock({ t, state }: {
       : (linked ? t('statusLinked') : t('statusUnlinked')))
   const healthy = role === 'server' ? listening : linked
   const detail = state.state.listenError ?? state.state.linkError
+  // Version handshake: this Host half states its own build, and every machine on
+  // the mirror states the build it is running. Two halves of one deployment are
+  // loaded at different times — an origin keeps what it started with, a server
+  // keeps what `pnpm install` last put there — so a difference is the one thing
+  // an operator needs to see before believing either end's behaviour.
+  const own = state.state.pluginVersion
+  const peers = machines
+    .map(machine => ({ name: machine.machineName, version: machine.pluginVersion }))
+    .filter((peer): peer is { name: string; version: string } => peer.version !== undefined)
+  const skewed = peers.filter(peer => peer.version !== own)
   // A mirror that is missing events cannot repair itself, so the one number an
   // operator has to act on is shown only when it is not zero.
   const missing = machines.reduce(
@@ -260,6 +270,21 @@ function StatusBlock({ t, state }: {
             <span className={css.statusItem}>
               {t('mirrorGaps')}
               <span className={css.statusBad}>{String(missing)}</span>
+            </span>
+          )}
+          <span className={css.statusItem} title={t('pluginVersionHint')}>
+            {t('pluginVersion')}
+            <span className={skewed.length === 0 ? css.statusValue : css.statusBad}>{own}</span>
+            {peers.length > 0 && (
+              <span className={skewed.length === 0 ? css.statusValue : css.statusBad}>
+                {' · '}
+                {peers.map(peer => `${peer.name} ${peer.version}`).join(', ')}
+              </span>
+            )}
+          </span>
+          {skewed.length > 0 && (
+            <span className={css.statusItem}>
+              <span className={css.statusBad}>{t('pluginVersionSkew')}</span>
             </span>
           )}
         </div>

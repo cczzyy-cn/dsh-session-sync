@@ -238,5 +238,14 @@ describe('the whole chain over the real link', () => {
     // 6. A machine may not be driven for a Session it never published.
     const refused = server.submitCommand(ORIGIN, 'session-not-published-0000', 'hi')
     assert.equal(refused.ok, false)
+
+    // 7. Version handshake: the server states the version the *origin* says it is
+    //    running, not the one it happens to have installed — that difference is
+    //    what a two-build deployment looks like from here.
+    const originVersion = origin.view().pluginVersion
+    assert.match(originVersion, /^\d+\.\d+\.\d+/u)
+    assert.equal(server.view().pluginVersion, originVersion)
+    const mirroredMachine = server.view().machines.find(machine => machine.machineName === ORIGIN)
+    assert.equal(mirroredMachine?.pluginVersion, originVersion)
   })
 })

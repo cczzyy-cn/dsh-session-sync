@@ -168,6 +168,14 @@ interface MachineRecord {
   machineName: string
   readonly sessions: Map<string, SessionRecord>
   lastSeen: number
+  /**
+   * The plugin version this machine last stated with its index.
+   *
+   * Reported so two halves of one deployment can be compared without reading a
+   * lockfile on each: an origin keeps the Host half it loaded at start, and a
+   * server keeps whatever `pnpm install` last put there.
+   */
+  pluginVersion?: string
   origin?: OriginSink
   /** Commands issued while no origin stream was attached. */
   readonly pending: DownstreamCommand[]
@@ -234,6 +242,10 @@ export class SyncHub {
   publishIndex(payload: PublishIndexPayload): void {
     const record = this.machine(payload.machineName)
     record.lastSeen = Date.now()
+    // Replaced, never merged: an origin that stopped stating a version must not
+    // keep looking like the build it used to be.
+    if (payload.pluginVersion === undefined) delete record.pluginVersion
+    else record.pluginVersion = payload.pluginVersion
     const seen = new Set<string>()
     for (const session of payload.sessions) {
       seen.add(session.sessionId)
@@ -557,6 +569,7 @@ export class SyncHub {
         machineName: record.machineName,
         online: record.origin !== undefined || now - record.lastSeen < OFFLINE_AFTER_MS,
         lastSeen: record.lastSeen,
+        ...(record.pluginVersion === undefined ? {} : { pluginVersion: record.pluginVersion }),
         sessions: [...record.sessions.values()]
           .map(session => summary(session))
           .sort((left, right) => right.updatedAt - left.updatedAt),

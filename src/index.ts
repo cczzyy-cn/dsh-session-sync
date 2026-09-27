@@ -26,8 +26,18 @@ import type {
   WebServerLike,
 } from './host/dsh.ts'
 import { SessionSyncService } from './host/service.ts'
+import { pluginVersion } from './host/version.ts'
 
 export const name = 'dsh-session-sync'
+
+/**
+ * The version of this build, re-exported for the operator.
+ *
+ * A profile install has no way to ask a running plugin what it is — the manifest
+ * on disk says what was installed, not what this process loaded — so the answer
+ * is exported here, where `node -e "import('…/lib/index.js')"` can read it.
+ */
+export { pluginVersion }
 
 /** Largest accepted browser request body, in bytes. */
 const MAX_BODY_BYTES = 1024 * 1024

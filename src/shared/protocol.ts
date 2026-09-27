@@ -178,6 +178,17 @@ export interface MirroredMachine {
   machineName: string
   online: boolean
   lastSeen: number
+  /**
+   * The plugin version this machine last stated with its index.
+   *
+   * Absent for a machine that has not published since this field existed, or
+   * whose build could not state a version at all. It travels because the two
+   * halves of one deployment are loaded at different times: an origin keeps the
+   * Host half it started with, a server keeps what `pnpm install` last put
+   * there, and the only other way to notice the difference was reading both
+   * lockfiles by hand.
+   */
+  pluginVersion?: string
   sessions: MirroredSession[]
 }
 
@@ -189,6 +200,8 @@ export interface SyncState {
   role: SyncRole
   machineName: string
   serverUrl: string
+  /** The plugin version this Host half is running; `unknown` when it cannot say. */
+  pluginVersion: string
   /** True when the sync server listener is up (server role). */
   listening: boolean
   /** Listener failure text, when binding failed. */
@@ -423,6 +436,13 @@ export interface CommandAckPayload {
 /** Origin → server: the identity and Session index this machine publishes. */
 export interface PublishIndexPayload {
   machineName: string
+  /**
+   * The publishing build's plugin version.
+   *
+   * Small, idempotent, and sent with every index, so a server always states the
+   * version the machine is actually running rather than the one it installed.
+   */
+  pluginVersion?: string
   sessions: {
     sessionId: string
     title: string

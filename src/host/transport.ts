@@ -156,8 +156,13 @@ export async function startSyncServer(options: SyncServerOptions): Promise<SyncS
     if (request.method === 'POST' && url.pathname === '/publish') {
       const body = await readJson(request)
       const sessions = Array.isArray(body?.['sessions']) ? body['sessions'] : []
+      const version = body?.['pluginVersion']
       const payload = {
         machineName,
+        // The machine's own reading of the build it is running. Only a string is
+        // taken: a peer stating a version it cannot vouch for is worse than one
+        // stating none, and the hub keeps the last one it was told.
+        ...(typeof version === 'string' && version !== '' ? { pluginVersion: version } : {}),
         sessions: sessions as PublishIndexPayload['sessions'],
       }
       options.hub.publishIndex(payload)
@@ -450,7 +455,14 @@ export class OriginLink {
    * @param payload - the Sessions currently marked for sync.
    */
   publishIndex(payload: PublishIndexPayload): void {
-    void this.post('/publish', { sessions: payload.sessions })
+    // The machine name is not sent: the server takes it from the token this
+    // client authenticated with, so a peer cannot publish under another's
+    // identity. The version is this client's own reading of itself, which the
+    // server has no other way to learn.
+    void this.post('/publish', {
+      sessions: payload.sessions,
+      ...(payload.pluginVersion === undefined ? {} : { pluginVersion: payload.pluginVersion }),
+    })
   }
 
   /**

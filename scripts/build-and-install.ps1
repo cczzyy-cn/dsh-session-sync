@@ -38,6 +38,18 @@ try {
   if (Test-Path $junction) { cmd /c rmdir "$junction" | Out-Null }
 }
 
+# The version a build states is the one thing a deployment gets checked against,
+# and the bundle reads it from `package.json` at runtime rather than embedding it
+# — so the check is to ask the built module, not to grep for a string. It is also
+# the reading `/state` reports and the settings page compares across machines.
+$manifest = Get-Content (Join-Path $package 'package.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+$entry = (Join-Path $package 'lib/index.js') -replace '\\', '/'
+$reported = & node -e "import('file:///$entry').then(m => { process.stdout.write(String(m.pluginVersion())) })"
+if ($reported -ne $manifest.version) {
+  throw "the bundle states version '$reported' but package.json says '$manifest.version'"
+}
+Write-Host "built $($manifest.version); the bundle states the same version"
+
 if (-not (Test-Path $installed)) {
   Write-Warning "not installed in the web profile yet; run: dsh plugin --profile web add file:$package"
   exit 0

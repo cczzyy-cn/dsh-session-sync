@@ -101,22 +101,19 @@
 
 每步都给验收判据；判据必须可执行、给数字。
 
-**Phase 0 — 卫生与对齐（约半天）—— 本版已完成大半**
+**Phase 0 — 卫生与对齐 —— ✅ 已完成（2026-09-27）**
 
-- ✅ 已完成：`scope` 收口（删 adopt/address）、物化整条移除、README/PROGRESS/本文同步、`tool-cards.ts` 的既有类型错。
-- 待办：**版本握手**——发布时带 `pluginVersion`，`/state` 与控制台显示两端版本及是否一致（今天两端倾斜是"看文件才知道"的）。
-- 待办：发布校验加一条"产物里含 `package.json` 的版本串"。
-- **验收**：`/state` 一眼看到两端版本；产物校验脚本化。
+- ✅ `scope` 收口（删 adopt/address）、物化整条移除、README/PROGRESS/本文同步、`tool-cards.ts` 的既有类型错。
+- ✅ **版本握手**：`src/host/version.ts` 从自身模块推 `package.json`；`state.pluginVersion` 与 `machines[].pluginVersion`（源站每次索引自报）；设置页显示并在两端不一致时标红。
+- ✅ **发布校验**：`scripts/build-and-install.ps1` 构建后**问产物本人**自报的版本，与 `package.json` 不一致即抛错。
 
-**Phase 1 — 把端到端验证搬进仓库（1 天，收益最大）—— 2026-09-27 做了第一档**
+**Phase 1 — 把端到端验证搬进仓库 —— ✅ 两档都做了（2026-09-27）**
 
-- ✅ **进程内整链**（`tests/e2e-chain.spec.ts`）：真 server-role 引擎（自起监听）+ 真 client-role 引擎（自开链路）+ 真镜像，
-  源站是一个 `SessionController` 替身。串起六件事：发布 → 镜像窗口 → 读页（边界钉在"下沿 + 1"）→ **那一页真的到达镜像** →
-  **接管**（`submitCommand` → 源站 `prompt` 收到文本 → 控制台收到 `accepted`）→ 契约守卫（`state` 里没有 `materialize`）。
-  0.3 秒跑完，不需要 DSH、不需要用户机器、不占 3098/3099。测试总数 28 → **29**。
-- 待办：**真实例那一档**——两个隔离 home 的 `dsh web`（`profiles\web` **不 junction 到真实 profile**，那是上一轮 rig 报废的原因；
-  `DSH_HOME` 要包一层 `.ps1` 才能注入），验"插件能在真 DSH 里加载、真 `SessionController` 的行为是否与替身一致"。
-- **验收**：这一档也要一条命令跑完，且跑完进程、端口、临时目录全部清理（本项目有残留实例的前科）。
+- ✅ **进程内整链**（`tests/e2e-chain.spec.ts`）：真 server-role 引擎 + 真 client-role 引擎 + 真镜像，源站是一个 `SessionController` 替身。
+  0.3 秒跑完，不需要 DSH、不需要用户机器、不占 3098/3099。
+- ✅ **真实例那一档**（`scripts/e2e-dsh.ps1`）：先构建工作树并把它装进一次性 profile，再起两个隔离 home 的真 `dsh web`，源站发布一份真会话日志，
+  断言服务器 `/state` 里镜像 222 条零缺口、`transcript` 读得出来、两端版本一致；跑完按端口精确杀进程、`cmd /c rmdir` 删 junction、清临时树。
+  实测 `all checks passed`（约 40 秒）。
 
 **Phase 2 — 控制台的诚实性（1 天）**
 

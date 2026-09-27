@@ -16,7 +16,9 @@
 | 本机（源站） | DSH 源码运行（checkout = `dsh-v0.1.7-rc.1`）· profile 装 **0.8.0**、**Host 半边已随 23:40 的重启换新**（`/state` 里已无 `materialize`） |
 | 控制台 | `https://dsh.c-zy.cc/?token=<43 位>`（浏览器 cookie 持久） |
 | 同步口 | `210.16.120.228:8791`（源站连它；**不经** Cloudflare） |
-| 测试 | **29 通过 / 0 失败**（10 suites，1.0s）· 含整链回归 `tests/e2e-chain.spec.ts` |
+| 测试 | **30 通过 / 0 失败**（11 suites，1.0s）· 含整链回归 `tests/e2e-chain.spec.ts` 与版本 `tests/version.spec.ts` |
+| 端到端脚本 | `scripts/e2e-dsh.ps1`：构建工作树 → 两个真 `dsh web` 实例（3098/3099）→ 发布真会话 → 断言镜像 222 条 / 零缺口 / 版本握手，跑完自清理。**实测 all checks passed** |
+| 版本握手 | `state.pluginVersion`（本机）+ `machines[].pluginVersion`（各源站自报）；设置页显示并在不一致时标红；`build-and-install.ps1` 会核对产物自报的版本 |
 
 **2026-09-25 服务器更新（三次）**：插件 `13b7aa2`（按字节切批 + 具名 413）→ `b2a7811`（回填分页边界）→ `4f3ed9a`/`c3862a2`/`5a80c15`/`32298d1`（保留上限 / 预算 / 跨平台 cwd / 拒写截断）→ **`v0.4.0`（tag）**。每次都用 lock 的 tar.gz + 安装产物的代码标记双向核对（`v0.4.0` 这次 9 个 host 标记 + 2 个 client 标记全中、旧串 `no follow or no page API` 为 0），`systemctl restart dsh-web` 后 active、3080/8791 在听。依赖也从裸 `github:` 改成 **`github:cczzyy-cn/dsh-session-sync#v0.4.0`**（lock → `8eeb0dd`），改前备份 `/root/package.json.bak-<时间戳>`。**本机 origin 跑的是 18:12:58 启动的构建**（`lib` 与仓库哈希一致，即含全部修复）。
 
@@ -116,6 +118,36 @@ cursor 为什么一直是 -1：follow 的开场快照是**一整帧**，源站�
 ---
 
 ## 2. 推进日志（晚 → 早）
+
+### Phase 1 第二档：两个真 `dsh web` 实例的端到端脚本（`scripts/e2e-dsh.ps1`，2026-09-27）
+
+**它跑了什么**（`powershell -ExecutionPolicy Bypass -File scripts/e2e-dsh.ps1`，约 40 秒）：
+
+1. **先构建工作树**，再把它装进一次性 profile——所以它验的是"你正在改的这份代码"，而不是上一次发布的包；
+2. 两个隔离 home（`%TEMP%\dsh-sync-e2e-<ts>\{server,origin}`）各起一个真 `dsh web`（3099 / 3098）；
+3. 源站发布一份**真会话日志**（这次是 140 KB 的 `session-4cf56909`，从真实 home **复制**，不动原件）；
+4. 断言**服务器插件的 `/state`**：镜像里那条会话 `eventCount 222`、`missingEvents 0`；`transcript` 路由读得出来；源站自报 `linked: true` 与 `published: 1`；
+5. 断言**版本握手**：两端都报出被装进去的那份构建的版本（见下一条）；
+6. 收尾：按 `--port` 精确杀进程、用 `cmd /c rmdir` 删 junction、删临时树——**跑完复核过：端口 3098/3099 已释放、临时目录已空**（这条必须验，本项目有过残留实例的前科）。
+
+**实跑**：`all checks passed`（exit 0），222 条事件、零缺口。
+
+**它遵守的规矩**（每条都踩过一次）：`DSH_HOME` 用包一层 `.ps1` 的 `Start-Process` 注入（harness 会覆写自己 shell 里的 `DSH_HOME`）；**不用 junction 当 profile**（`dsh plugin add` 会把真实 profile 清空），而是复制真 profile 的形状、只把 `.pnpm` 与 `vision` 这类只读入口 junction 过去，插件本体是工作树的**拷贝**；junction 一律 `cmd /c rmdir`；参数与变量都不叫 `$home`（PS 自动变量）也不叫 `$pid`。
+
+### 版本握手：两端插件版本随发布过去，并在设置页比较（2026-09-27）
+
+**它要解决的问题**：这个项目已经两次靠人手读 lockfile 才发现"两边不是同一份构建"（0.4.x 那次，以及本机 0.7.1 / 服务器 0.7.3 那次）。协议里没有任何字段说这件事。
+
+**做了什么**：
+
+- 新增 `src/host/version.ts` 的 `pluginVersion()`：从**自己所在的模块**推 `package.json`（构建产物在 `lib/`、源码在 `src/host/`，两个候选都试），并**按 name 校验**——拿到的版本必须属于这个包，否则报 `unknown`，绝不猜。
+- 协议：`PublishIndexPayload.pluginVersion?`、`MirroredMachine.pluginVersion?`、`SyncState.pluginVersion`（本机自己的）。
+- 发布链路：源站每次索引都带上自己的版本 → `OriginLink.publishIndex` 原样发出（机器名仍由 token 决定，客户端不报名字）→ 服务器只接受字符串，存进 machine record，**整体替换不合并**（不再声明的机器不该继续显示旧版本）。
+- 设置页状态块：`插件版本 0.8.0 · DESKTOP-M1EERFC 0.8.0`，两端不一致时标红并写"两端版本不一致"。
+- 出口：`src/index.ts` 重新导出 `pluginVersion()`，于是 `node -e "import('…/lib/index.js')"` 能问出一份**装好的**构建自报的版本——这是唯一能问"这个进程加载的是哪份代码"的办法。
+- `scripts/build-and-install.ps1` 加了一道发布校验：构建后**问产物本人**（不是 grep 字符串）它自报的版本，与 `package.json` 不一致就抛错。实跑输出：`built 0.8.0; the bundle states the same version`。
+
+**验证**：`tests/version.spec.ts` 钉住"从源码侧也读得出真版本"；`tests/e2e-chain.spec.ts` 多一条——镜像里的机器版本必须等于源站自报的版本（穿过真实的 `/publish` 与 hub）；两实例脚本里再验一次。
 
 ### Phase 1：整条链的端到端回归进了仓库（`tests/e2e-chain.spec.ts`，2026-09-27）
 

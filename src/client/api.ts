@@ -128,6 +128,10 @@ function idleState(): SyncState {
     role: 'client',
     machineName: '',
     serverUrl: '',
+    // The Host answers with its own reading on the first state frame; until then
+    // this browser knows nothing about the build it is talking to, which is what
+    // "unknown" is for.
+    pluginVersion: 'unknown',
     listening: false,
     linked: false,
     machines: [],

@@ -35,6 +35,7 @@ import type {
 import { SyncHub, type BrowserSink } from './hub.ts'
 import { resolveHome } from './config.ts'
 import { OriginLink, startSyncServer, type SyncServerHandle } from './transport.ts'
+import { pluginVersion } from './version.ts'
 
 /** How often the local index is re-read and the follow set reconciled. */
 const RECONCILE_MS = 10_000
@@ -298,6 +299,7 @@ export class SessionSyncService {
       role: this.config.isServer ? 'server' : 'client',
       machineName: this.config.machineName,
       serverUrl: this.config.serverUrl,
+      pluginVersion: pluginVersion(),
       listening,
       ...(this.listenError === undefined ? {} : { listenError: this.listenError }),
       linked,
@@ -709,6 +711,7 @@ export class SessionSyncService {
     }
     this.link?.publishIndex({
       machineName: this.config.machineName,
+      pluginVersion: pluginVersion(),
       sessions: rows.filter(row => row.synced).map(row => {
         const handle = this.follows.get(row.sessionId)
         const lastSeq = handle?.lastSeq

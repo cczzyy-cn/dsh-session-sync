@@ -487,6 +487,12 @@ window.__ModuleLoader__.load({
 			const connected = role === "server" ? listening ? t("statusListening") : t("statusNotListening") : state.config.serverUrl.trim() === "" ? t("statusNotConfigured") : linked ? t("statusLinked") : t("statusUnlinked");
 			const healthy = role === "server" ? listening : linked;
 			const detail = state.state.listenError ?? state.state.linkError;
+			const own = state.state.pluginVersion;
+			const peers = machines.map((machine) => ({
+				name: machine.machineName,
+				version: machine.pluginVersion
+			})).filter((peer) => peer.version !== void 0);
+			const skewed = peers.filter((peer) => peer.version !== own);
 			const missing = machines.reduce((total, machine) => total + machine.sessions.reduce((sum, session) => sum + (session.missingEvents ?? 0), 0), 0);
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 				className: sync_module_css_default.group,
@@ -534,6 +540,28 @@ window.__ModuleLoader__.load({
 										className: sync_module_css_default.statusBad,
 										children: String(missing)
 									})]
+								}),
+								/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
+									className: sync_module_css_default.statusItem,
+									title: t("pluginVersionHint"),
+									children: [
+										t("pluginVersion"),
+										/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+											className: skewed.length === 0 ? sync_module_css_default.statusValue : sync_module_css_default.statusBad,
+											children: own
+										}),
+										peers.length > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
+											className: skewed.length === 0 ? sync_module_css_default.statusValue : sync_module_css_default.statusBad,
+											children: [" · ", peers.map((peer) => `${peer.name} ${peer.version}`).join(", ")]
+										})
+									]
+								}),
+								skewed.length > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+									className: sync_module_css_default.statusItem,
+									children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+										className: sync_module_css_default.statusBad,
+										children: t("pluginVersionSkew")
+									})
 								})
 							]
 						}),
@@ -659,6 +687,7 @@ window.__ModuleLoader__.load({
 				role: "client",
 				machineName: "",
 				serverUrl: "",
+				pluginVersion: "unknown",
 				listening: false,
 				linked: false,
 				machines: [],
@@ -6201,6 +6230,9 @@ window.__ModuleLoader__.load({
 			machineSessions: "个会话",
 			mirrorGaps: "镜像缺失事件",
 			mirrorGapBadge: "缺 {n} 条",
+			pluginVersion: "插件版本",
+			pluginVersionHint: "本机 Host 半边正在运行的版本，后面是各源站自己上报的版本。两端版本不同通常意味着有一侧还没重启或还没更新",
+			pluginVersionSkew: "两端版本不一致",
 			loadOlder: "加载更早的消息",
 			loadingOlder: "正在加载…",
 			composerBlocked: "这个会话运行在另一台机器上，请用下方的接管输入框发言",
@@ -6454,6 +6486,9 @@ window.__ModuleLoader__.load({
 			machineSessions: "Sessions",
 			mirrorGaps: "missing mirrored events",
 			mirrorGapBadge: "{n} missing",
+			pluginVersion: "Plugin version",
+			pluginVersionHint: "The version this Host half is running, then what each origin reports for itself. A difference usually means one side has not been restarted or updated yet",
+			pluginVersionSkew: "the two sides differ",
 			loadOlder: "Load older messages",
 			loadingOlder: "Loading…",
 			composerBlocked: "This Session runs on another machine; use the takeover composer below to speak in it",
