@@ -8,7 +8,7 @@
 | 项 | 值 |
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
-| 版本 | **`0.8.0`**（tag `v0.8.0`）· 物化整条移除，见 §2 |
+| 版本 | **`0.8.0`**（tag `v0.8.0` → `f2b167a`）· 已推送远端 · **尚未部署**（物化整条移除，见 §2） |
 | 服务器 | `210.16.120.228` · DSH **`0.1.7-rc.2`**（`npx` 缓存 `4f4f47d9854f3c73`）· unit `dsh-web.service` |
 | 控制台路线 | **`scope`**：服务器上 `dsh-api-session-controller/lib/client.js` 命中 `retainAgentScope` ⇒ 特性探测确定走它；`adopt` 在任何已发布构建里都不存在（该路线已从代码删除） |
 | 服务器镜像 | `session-e08471af` **4000 条**（窗口上限）、`missingEvents: 0`；`f6ba2b3b` 已取消发布 |
