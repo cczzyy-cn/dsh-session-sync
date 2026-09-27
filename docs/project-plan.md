@@ -108,12 +108,15 @@
 - 待办：发布校验加一条"产物里含 `package.json` 的版本串"。
 - **验收**：`/state` 一眼看到两端版本；产物校验脚本化。
 
-**Phase 1 — 把端到端验证搬进仓库（1 天，收益最大）**
+**Phase 1 — 把端到端验证搬进仓库（1 天，收益最大）—— 2026-09-27 做了第一档**
 
-- 两个**隔离 home** 的一次性实例（server 用空 sessions、origin 用合成会话；`profiles\web` **不 junction 到真实 profile**——那是上一轮 rig 报废的原因）。
-- 脚本化跑：publish → 镜像 → 读页（含洞）→ 接管 prompt 被源站接纳 → 断言；外加"控制台能列出/阅读"的最小检查。
-- **验收**：一条命令跑完（`node --experimental-transform-types --test "tests/e2e/*.spec.ts"` 或 `scripts/e2e.ps1`），
-  不需要用户机器、不需要重启用户实例；跑完进程、端口、临时目录全部清理（本项目有残留实例的前科）。
+- ✅ **进程内整链**（`tests/e2e-chain.spec.ts`）：真 server-role 引擎（自起监听）+ 真 client-role 引擎（自开链路）+ 真镜像，
+  源站是一个 `SessionController` 替身。串起六件事：发布 → 镜像窗口 → 读页（边界钉在"下沿 + 1"）→ **那一页真的到达镜像** →
+  **接管**（`submitCommand` → 源站 `prompt` 收到文本 → 控制台收到 `accepted`）→ 契约守卫（`state` 里没有 `materialize`）。
+  0.3 秒跑完，不需要 DSH、不需要用户机器、不占 3098/3099。测试总数 28 → **29**。
+- 待办：**真实例那一档**——两个隔离 home 的 `dsh web`（`profiles\web` **不 junction 到真实 profile**，那是上一轮 rig 报废的原因；
+  `DSH_HOME` 要包一层 `.ps1` 才能注入），验"插件能在真 DSH 里加载、真 `SessionController` 的行为是否与替身一致"。
+- **验收**：这一档也要一条命令跑完，且跑完进程、端口、临时目录全部清理（本项目有残留实例的前科）。
 
 **Phase 2 — 控制台的诚实性（1 天）**
 
