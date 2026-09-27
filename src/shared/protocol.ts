@@ -325,17 +325,6 @@ export interface SyncState {
     waiting?: string
     /** When that attempt was made, in epoch ms. */
     waitingAt?: number
-    /**
-     * How many of this copy's events were recorded through DSH's own live
-     * Session, and therefore carry this Host's clock rather than the origin's.
-     *
-     * Reported because "the copy is what the origin holds" is this plugin's
-     * central claim, and it is conditional for exactly these events: their type,
-     * payload, surface placement and sequence are the origin's, their timestamp
-     * is not. Those events are the price of a copy that keeps up while someone is
-     * reading it — the alternative was a page frozen for as long as it was open.
-     */
-    live?: number
   }[]
   /**
    * Whether the server writes mirrored Sessions into its own storage at all.

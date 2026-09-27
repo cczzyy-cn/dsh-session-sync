@@ -180,35 +180,7 @@ export interface MaterializeResult {
   readonly wait?: boolean
   /** Why nothing was written, when nothing was. */
   readonly reason?: string
-  /**
-   * Of `written`, how many went through the Host's own live Session.
-   *
-   * Those events are no longer byte-identical to the origin's: the Session store
-   * stamps `time` from its own clock, where a direct append copies the origin's.
-   * Their *content* and their sequences are the origin's; only the timestamp is
-   * this Host's. Counted rather than hidden, because "identical to the origin" is
-   * a claim this plugin has measured, and it stops being unconditionally true the
-   * moment a copy is written through a live Session.
-   */
-  readonly live?: number
 }
-
-/**
- * How to append one mirrored event through the Host's own open Session.
- *
- * The seam exists because a copy that DSH has open cannot be written directly:
- * the live Session owns the log's write handle, so `open('write')` is refused
- * for as long as someone is reading it — which is exactly when the reader wants
- * it current. Going through the Session instead removes the conflict, because
- * DSH records the events itself, and it is also what makes them appear live in
- * the page that is open.
- * @param event - the mirrored event, at the sequence the log needs next.
- * @returns the sequence the Session's own log assigned it.
- * @throws when the Session refuses the event; a sequence other than the one the
- *   log needed is caught by the writer, which is where the check cannot be
- *   forgotten.
- */
-export type LiveAppender = (event: MirrorEnvelope) => number
 
 /** How many trailing events are compared before a copy is called diverged. */
 export const LOG_TAIL_WINDOW = 8
@@ -434,7 +406,6 @@ export async function catchUpSession(
   persistence: SessionPersistenceLike | undefined,
   sessionId: string,
   events: readonly MirrorEnvelope[],
-  live?: LiveAppender,
 ): Promise<MaterializeResult> {
   const none = (stored: number, reason: string): MaterializeResult =>
     ({ ok: false, written: 0, skipped: 0, stored, created: false, reason })
@@ -468,18 +439,22 @@ export async function catchUpSession(
   try {
     handle = await persistence.open(sessionId, 'write')
   } catch (error: unknown) {
-    // A live Session owns the log. Writing it directly is refused — and writing
-    // the file behind that Session's back is worse than refusing, because its own
-    // log would then disagree with the file about what the next sequence is. The
-    // one road that is both allowed and correct is the Session itself: DSH
-    // records the events, so there is no claim to fight and the reader watching
-    // that page sees them arrive. Its cost is the timestamp, which the Session
-    // store stamps from its own clock; the caller counts those events.
+    // A live Session owns the log, and that is a *wait* — the claim is released
+    // when the Session goes cold, and the events are still in the mirror.
+    //
+    // Going through that Session instead was tried, and it cannot work: handing
+    // DSH the events makes it a participant in the conversation, not a recorder of
+    // one. Measured on the deployed server, with the copy open in a browser: the
+    // mirrored `tool/result` marked `interrupted-…` made the Host *end the turn in
+    // the copy* (`turn/end {reason: interrupted}` where the origin's log has the
+    // next `step/start`), and a seeded resume appended its own `session/end-seed` —
+    // two writes that take sequences the origin's own events need. A copy that DSH
+    // writes into is no longer the Session it mirrors, which is exactly what this
+    // plugin exists to avoid. So the copy is advanced only while it is cold, and a
+    // reader is told it is behind rather than shown a conversation the Host has
+    // started editing.
     if (isLogBusy(error)) {
-      if (live === undefined) {
-        return { ok: false, written: 0, skipped: 0, stored, created: false, wait: true, reason: 'the log is held by a live run on this Host' }
-      }
-      return appendLive(live, written, skipped, stored, events)
+      return { ok: false, written: 0, skipped: 0, stored, created: false, wait: true, reason: 'the log is held by a live run on this Host' }
     }
     return none(stored, `cannot open the log: ${String(error)}`)
   }
@@ -500,63 +475,6 @@ export async function catchUpSession(
     created: false,
     // The mirror's own later events may still be missing here; the caller reads
     // `stored` against what the origin claims and records the shortfall.
-    ...(endsAt === events.at(-1)!.seq + 1 ? {} : { reason: `the mirror's run stops at seq ${String(endsAt - 1)}` }),
-  }
-}
-
-/**
- * Append the writable prefix through the Host's own live Session.
- *
- * Each event's assigned sequence is checked against the one the log needed: the
- * Session numbers its own log, so an event landing anywhere else means this copy
- * and that Session have stopped describing the same conversation — the one
- * failure a retry cannot fix, reported as such rather than looped on.
- * @param live - the Session-append seam.
- * @param written - the events to record, in order.
- * @param skipped - events refused by the writability check, passed through.
- * @param stored - the sequence the log needed next.
- * @param events - the mirror's whole window, for the shortfall note.
- * @returns what was recorded.
- */
-function appendLive(
-  live: LiveAppender,
-  written: readonly MirrorEnvelope[],
-  skipped: number,
-  stored: number,
-  events: readonly MirrorEnvelope[],
-): MaterializeResult {
-  let endsAt = stored
-  for (const event of written) {
-    try {
-      // The writer checks the sequence rather than trusting the seam to: it is the
-      // only place that knows which sequence the log needed, and this is the one
-      // failure no later pass can undo.
-      const recorded = live(event)
-      if (recorded !== event.seq) {
-        throw new Error(`it logged the event at seq ${String(recorded)} instead`)
-      }
-    } catch (error: unknown) {
-      const recorded = endsAt - stored
-      return {
-        ok: false,
-        written: recorded,
-        skipped,
-        stored: endsAt,
-        created: false,
-        ...(recorded === 0 ? {} : { live: recorded }),
-        reason: `the live Session would not record seq ${String(event.seq)}: ${String(error)}`,
-      }
-    }
-    endsAt = event.seq + 1
-  }
-  const recorded = endsAt - stored
-  return {
-    ok: true,
-    written: recorded,
-    skipped,
-    stored: endsAt,
-    created: false,
-    ...(recorded === 0 ? {} : { live: recorded }),
     ...(endsAt === events.at(-1)!.seq + 1 ? {} : { reason: `the mirror's run stops at seq ${String(endsAt - 1)}` }),
   }
 }
@@ -593,26 +511,6 @@ export function unaccountedMarkers(
     if (mirror.type !== event.type || JSON.stringify(mirror.data) !== JSON.stringify(event.data)) return undefined
   }
   return markers
-}
-
-/**
- * The surface metadata a mirrored event carries, in the shape `Session.append`
- * takes as its optional third argument.
- *
- * Both fields are the origin's, copied through: they are what places the event
- * on the derived surface, and losing them would change the conversation the
- * reader sees rather than merely its timestamps.
- * @param event - the mirrored event.
- * @returns the metadata, or `undefined` when the event carries none.
- */
-export function surfaceIntent(event: MirrorEnvelope): { surfaceOp?: unknown; sourceEventSeqs?: unknown } | undefined {
-  const op = (event as { surfaceOp?: unknown }).surfaceOp
-  const sources = (event as { sourceEventSeqs?: unknown }).sourceEventSeqs
-  if (op === undefined && sources === undefined) return undefined
-  return {
-    ...(op === undefined ? {} : { surfaceOp: op }),
-    ...(sources === undefined ? {} : { sourceEventSeqs: sources }),
-  }
 }
 
 /**

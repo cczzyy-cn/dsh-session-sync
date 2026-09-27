@@ -221,66 +221,6 @@ describe('a log a live Session is holding', () => {
   })
 })
 
-describe('a copy kept current through the live Session itself', () => {
-  // The claim is on the *file*, and only on the file: the Session holding it can
-  // still record the events — which is also what makes them appear in the page
-  // the reader has open. Its one cost is `time`, which the Session store stamps
-  // from its own clock, so how many events went that way is reported.
-  const busy = (stored: number): SessionPersistenceLike => {
-    const { persistence } = storage(stored)
-    const read = persistence.open
-    persistence.open = (id: string, access: 'read' | 'write') => access === 'write'
-      ? Promise.reject(
-        Object.assign(new Error('session "g" is already owned by an active write handle'), { name: 'SessionAlreadyOwnedError' }),
-      )
-      : read(id, access)
-    return persistence
-  }
-
-  it('records the run through the Session when the log cannot be opened', async () => {
-    const recorded: number[] = []
-    const result = await catchUpSession(busy(4), 'session-live', events(range(9)), (event) => {
-      recorded.push(event.seq)
-      return event.seq
-    })
-    assert.deepEqual(recorded, [4, 5, 6, 7, 8])
-    assert.equal(result.ok, true)
-    assert.equal(result.written, 5)
-    assert.equal(result.live, 5)
-    assert.equal(result.stored, 9)
-  })
-
-  it('refuses to loop when the Session numbers an event somewhere else', async () => {
-    // A copy and the Session holding it that disagree about the next sequence no
-    // longer describe the same conversation: retrying would ask the same question
-    // forever, so it is reported instead.
-    const result = await catchUpSession(busy(4), 'session-live', events(range(9)), event => event.seq + 10)
-    assert.equal(result.ok, false)
-    assert.equal(result.wait, undefined)
-    assert.equal(result.written, 0)
-    assert.match(result.reason ?? '', /would not record seq 4/u)
-  })
-
-  it('keeps the events it did record when a later one is refused', async () => {
-    let calls = 0
-    const result = await catchUpSession(busy(4), 'session-live', events(range(9)), (event) => {
-      calls += 1
-      if (calls > 2) throw new Error('the Session is gone')
-      return event.seq
-    })
-    assert.equal(result.ok, false)
-    assert.equal(result.written, 2)
-    assert.equal(result.live, 2)
-    assert.equal(result.stored, 6)
-  })
-
-  it('still waits when this Host has no Session to write through', async () => {
-    const result = await catchUpSession(busy(4), 'session-cold', events(range(9)))
-    assert.equal(result.wait, true)
-    assert.equal(result.written, 0)
-  })
-})
-
 describe('what a copy holds beyond the ledger\u2019s record', () => {
   // The stretch is normally mixed: a pass can write mirrored events and be cut off
   // before recording them, and a seeded resume drops a marker in among them. Asking

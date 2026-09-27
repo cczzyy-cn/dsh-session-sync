@@ -51,38 +51,11 @@ export interface HostContext {
     event: 'agent/pre-step',
     listener: (payload: PreStepLike, next: () => Promise<PreStepDecisionLike>) => Promise<PreStepDecisionLike>,
   ): () => void
-  /**
-   * The Host's own Session store.
-   *
-   * Read for one purpose: when DSH has a written copy open, that Session is the
-   * only thing allowed to append to its log — the live machinery holds the write
-   * handle — so it becomes the road the copy is kept current through. Optional,
-   * because a build without the store cannot offer that road and the copy then
-   * waits, as it did before.
-   */
-  readonly sessions?: {
-    get(sessionId: string): LiveSessionLike | undefined
-  }
-}
-
-/** One open Session on this Host, as much of it as this plugin uses. */
-export interface LiveSessionLike {
-  /**
-   * Append one typed event to this Session's log.
-   *
-   * The store assigns `seq` (the log's length) and stamps `time` from its own
-   * clock, which is the one difference from a direct write — the payload and the
-   * surface placement are the caller's.
-   * @param type - the event type.
-   * @param data - the event payload.
-   * @param surface - `surfaceOp`/`sourceEventSeqs`, for a surface-eligible type.
-   * @returns the logged event, carrying its assigned sequence.
-   */
-  append(type: string, data: unknown, surface?: unknown): { readonly seq: number }
 }
 
 /** One `agent/pre-step` proposal, as much of it as this plugin reads. */
-export interface PreStepLike {  readonly agent: {
+export interface PreStepLike {
+  readonly agent: {
     readonly session: {
       readonly header: { readonly id: string; readonly origin?: string; readonly parentSession?: string }
     }
