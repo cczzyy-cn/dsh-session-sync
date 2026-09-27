@@ -47,19 +47,6 @@ async function initialize(ctx: HostContext): Promise<void> {
     const service = await SessionSyncService.create(ctx, resolveHome())
     ctx.logger.info(`dsh-session-sync: engine ready (config ${configPath(resolveHome())})`)
     ctx.effect(() => () => { void service.dispose() }, 'dsh-session-sync: engine')
-    // The read-only half of mirroring. A Session this Host wrote from a mirror is
-    // an ordinary Session to DSH — listed, openable, paged — and the only thing
-    // stopping it from *running* is this gate: a step proposed for it is refused
-    // before any model request, exactly as the shipped archived-Session gate does
-    // for an archived one. The ledger is durable, so the refusal survives a
-    // restart and does not depend on the origin still publishing.
-    ctx.effect(
-      () => ctx.on('agent/pre-step', (payload, next) =>
-        service.holdsMirrorOf(payload.agent.session.header.id)
-          ? Promise.resolve({ kind: 'reject' as const })
-          : next()),
-      'dsh-session-sync: mirrored-Session gate',
-    )
     ctx.inject(['webServer'], (webCtx) => {
       const webServer = webCtx.get('webServer') as WebServerLike | undefined
       if (webServer === undefined) return
@@ -136,39 +123,6 @@ async function dispatch(
       // enough for the page to re-render what the user just changed.
       sessions: await service.localSessions(),
     })
-    return
-  }
-
-  // Materializing is a Host-side action on one mirrored Session: it writes what
-  // the mirror holds into this Host's own storage, which is what makes DSH able
-  // to read that Session by id — in its own workspace browser, through its own
-  // conversation page, with its own history paging. It is a POST because it
-  // writes, and the automatic pass calls the same code so a manual call is only
-  // ever an operator's "do it now".
-  if (method === 'POST' && route === '/materialize') {
-    const body = await readJsonBody(request)
-    const machineName = typeof body?.['machineName'] === 'string' ? body['machineName'] : ''
-    const sessionId = typeof body?.['sessionId'] === 'string' ? body['sessionId'] : ''
-    if (machineName === '' || sessionId === '') {
-      sendJson(response, 400, { error: 'machineName and sessionId are required' })
-      return
-    }
-    sendJson(response, 200, { result: await service.materialize(machineName, sessionId) })
-    return
-  }
-
-  // Drop the read-only claim on one written Session, leaving its log in place.
-  // Nothing else can lift the gate: the Session is an ordinary Session to DSH, so
-  // without this the copy could never be continued, renamed into a different
-  // life, or deleted through the UI.
-  if (method === 'POST' && route === '/materialize/release') {
-    const body = await readJsonBody(request)
-    const sessionId = typeof body?.['sessionId'] === 'string' ? body['sessionId'] : ''
-    if (sessionId === '') {
-      sendJson(response, 400, { error: 'sessionId is required' })
-      return
-    }
-    sendJson(response, 200, { released: await service.releaseMaterialized(sessionId) })
     return
   }
 

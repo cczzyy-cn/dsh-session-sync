@@ -55,7 +55,6 @@ function controller(): {
       follow: (_request, signal) => (async function* () {
         yield {
           type: 'snapshot',
-          header: { id: SESSION_ID, createdAt: 1_700_000_000_000, cwd: 'C:\\work' },
           cursor: SESSION_EVENTS - 1,
           // One event short, which is what a dropped batch leaves behind.
           records: all.filter(item => item.seq !== MISSING).map(item => ({ type: 'event', event: item })),

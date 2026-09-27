@@ -53,7 +53,6 @@ function controller(): { value: SessionControllerLike; calls: { throughSeq: numb
       follow: (_request, signal) => (async function* () {
         yield {
           type: 'snapshot',
-          header: { id: SESSION_ID, createdAt: 1, cwd: 'C:\\work' },
           cursor: SESSION_EVENTS - 1,
           // The mirror starts on a tail window, exactly like a real follow.
           records: all.slice(-100).map(item => ({ type: 'event', event: item })),

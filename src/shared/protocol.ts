@@ -13,15 +13,6 @@ export const ROUTE_PREFIX = '/dsh-session-sync'
 /** Where the plugin keeps its own persisted configuration inside the Harness home. */
 export const CONFIG_FILE_NAME = 'dsh-session-sync.json'
 
-/**
- * Where the plugin records the Sessions it wrote into this Host's own storage.
- *
- * Separate from the configuration on purpose: this is engine state, it grows by
- * itself, and the gate that keeps a mirrored Session read-only reads it at boot
- * — a document the user edits in the settings page is the wrong place for it.
- */
-export const MATERIALIZED_FILE_NAME = 'dsh-session-sync-materialized.json'
-
 /** Default listen port of the sync server. */
 export const DEFAULT_LISTEN_PORT = 8791
 
@@ -146,16 +137,6 @@ export interface SyncConfig {
   listenPort: number
   /** Per-Session publish switch, keyed by Session id. */
   syncSessions: Record<string, boolean>
-  /**
-   * Whether the server writes each mirrored Session into its own storage.
-   *
-   * On, a mirrored Session becomes a real Session on this Host: it appears in
-   * the workspace browser and opens in DSH's own conversation page, with the
-   * Host answering its history, its paging and its jumps — while the plugin's
-   * `agent/pre-step` gate keeps it read-only. Off, the console's own pane is the
-   * only way to read a mirror.
-   */
-  materialize: boolean
 }
 
 /** One locally listed Session, as the configuration page renders it. */
@@ -290,50 +271,6 @@ export interface SyncState {
     reason?: 'no-controller' | 'no-page-api' | 'no-follow' | 'no-cursor' | 'rate-limited'
     error?: string
   }
-  /**
-   * The mirrored Sessions this Host has written into its own storage.
-   *
-   * This is the answer to "can I open that Session with DSH's own page instead of
-   * the console's copy": a listed id is a real Session on this Host, with the
-   * Host serving its history. It is also the read-only ledger — every id here is
-   * refused a model step by the plugin's own `agent/pre-step` gate, so the page
-   * reads and does not run.
-   *
-   * Reported as its own list rather than a flag on `machines[].sessions[]`
-   * because the two sets differ: a Session stays written after the origin stops
-   * publishing it, and that is exactly the copy the operator most needs to see.
-   */
-  materialized?: {
-    sessionId: string
-    machineName: string
-    /** Events the openable log holds. */
-    events: number
-    /** When this Host wrote it, in epoch ms. */
-    at: number
-    /** Why the copy stopped tracking the mirror, when it did. */
-    stopped?: string
-    /**
-     * The last attempt to advance this copy that could not, and why.
-     *
-     * A copy can be behind without being broken — most often because DSH has the
-     * Session open, which makes it live on this Host and lets the live machinery
-     * own its log, so the plugin's append is refused until it goes cold. That
-     * state used to be reported as nothing at all: the count simply stopped
-     * moving, which reads as a broken feature rather than a wait. This is what
-     * says otherwise, and the mirror's own count beside it says how far behind.
-     */
-    waiting?: string
-    /** When that attempt was made, in epoch ms. */
-    waitingAt?: number
-  }[]
-  /**
-   * Whether the server writes mirrored Sessions into its own storage at all.
-   *
-   * The switch is reported next to what it produced: "no Session is openable"
-   * and "this Host was told not to write any" look identical from the mirror's
-   * side, and the settings page is not always the page being read.
-   */
-  materialize: boolean
 }
 
 /** Where one event sits on the Session surface — `SessionWireSurfaceOp`. */
@@ -514,49 +451,13 @@ export interface PublishIndexPayload {
      * told there is none.
      */
     hasOlder?: boolean
-    /**
-     * The Session's own header, as this machine's log states it.
-     *
-     * It travels because the machine that *writes* a materialized Session is the
-     * server, while the header only exists on the machine that owns the Session:
-     * the server reads its own `follows` to find it and has none, so a field like
-     * `agentPreset` — which no event carries and nothing can infer — was silently
-     * dropped from every materialized log. Measured: 3,478 of 3,479 records came
-     * back byte-identical and the header was the one difference.
-     */
-    header?: SessionHeader
   }[]
-}
-
-/**
- * The header of a Session's log, as the machine that owns it states it.
- *
- * Deliberately only the fields a writer may restate: the Session's own identity and
- * timing, plus the two the format allows and no event carries. `agentPreset` is why
- * this travels at all — a materialization wrote 3,478 of 3,479 records byte-identical
- * and dropped exactly this from the header, because the machine that writes the log
- * is not the machine that has the field.
- */
-export interface SessionHeader {
-  id: string
-  createdAt: number
-  cwd?: string
-  agentPreset?: string
-  origin?: string
 }
 
 /** Origin → server: durable events appended to one published Session. */
 export interface PublishFramesPayload {
   sessionId: string
   events: MirrorEvent[]
-  /**
-   * The Session's own header, when this batch is the one that carried it.
-   *
-   * Sent with the frames as well as the index because the opening window is where
-   * the origin reads it, and a mirror that only learns it on the next index would
-   * materialize without it in the gap.
-   */
-  header?: SessionHeader
 }
 
 /** Handshake request body. */
@@ -584,8 +485,6 @@ export interface ConfigPatch {
   listenPort?: number
   /** One Session's publish switch. */
   sessionSync?: { sessionId: string; synced: boolean }
-  /** Whether the server writes mirrored Sessions into its own storage. */
-  materialize?: boolean
 }
 
 /** One browser-facing SSE frame. */
@@ -607,9 +506,6 @@ export function defaultConfig(machineName: string): SyncConfig {
     listenHost: '0.0.0.0',
     listenPort: DEFAULT_LISTEN_PORT,
     syncSessions: {},
-    // On by default: a mirrored Session that only the console can read is the
-    // state this option exists to leave behind.
-    materialize: true,
   }
 }
 
@@ -641,10 +537,6 @@ export function normalizeConfig(raw: unknown, fallbackMachineName: string): Sync
       ? port
       : base.listenPort,
     syncSessions,
-    // Absent means on: the option was added after the first deployments, and a
-    // document written before it existed must not read as "off" — that would
-    // silently leave every mirror unreadable outside the console.
-    materialize: source['materialize'] !== false,
   }
 }
 

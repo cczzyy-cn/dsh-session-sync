@@ -19,7 +19,6 @@ import {
   type MirrorEvent,
   type MirrorTranscript,
   type PublishIndexPayload,
-  type SessionHeader,
   type StreamDeltaPayload,
   type SyncConfig,
   type SyncState,
@@ -32,42 +31,13 @@ import type {
   SessionControllerLike,
   SessionSummaryRow,
   WireEvent,
-  WorkspaceRegistryLike,
 } from './dsh.ts'
 import { SyncHub, type BrowserSink } from './hub.ts'
-import { MirrorLedger } from './ledger.ts'
-import { clearProjectionCache, dropTrailingMarkers, findLogFile } from './logfile.ts'
 import { resolveHome } from './config.ts'
-import {
-  catchUpSession,
-  LOG_TAIL_WINDOW,
-  logAgreesWithMirror,
-  materializeSession,
-  startFor,
-  storedEventCount,
-  unaccountedMarkers,
-  type MaterializeResult,
-  type MirrorEnvelope,
-  type SessionPersistenceLike,
-} from './materialize.ts'
 import { OriginLink, startSyncServer, type SyncServerHandle } from './transport.ts'
 
 /** How often the local index is re-read and the follow set reconciled. */
 const RECONCILE_MS = 10_000
-
-/**
- * Why a copy stopped tracking its mirror because it grew events of its own.
- *
- * Said once, here, because it is reported in `state` and in the console: a copy
- * that has events of its own is no longer the Session, and the operator needs to
- * know that rather than see a log that looks complete. Two ways it happens, and
- * the wording has to cover both: a turn opened in the copy (a prompt typed into
- * it leaves `turn/start` and `turn/end` behind even though the gate refuses the
- * step), and DSH itself appending a `session/end-seed` marker when the Session is
- * resumed with a seed. Either one takes a sequence the origin's next event needs.
- */
-const DIVERGED_REASON =
-  'this copy grew on its own (a turn was opened in it, or DSH appended its own marker when resuming it), so it is no longer the Session the mirror holds'
 
 /**
  * How often buffered events, and the streaming text, are handed to the link.
@@ -104,50 +74,6 @@ const RESYNC_FLOOR_MS = 5_000
  * this keeps a burst of clicks from becoming a burst of disk reads.
  */
 const PAGE_FLOOR_MS = 1_000
-
-/**
- * How far materializing walks an origin back before it gives up.
- *
- * The mirror holds the newest window, and a Session's log has to begin at its
- * beginning, so a long Session needs the origin to page backwards until it does.
- * One round is one ask plus one wait, so this is a time budget rather than a
- * statement about what is possible: a Session that needs more is reported, not
- * half-written. Materializing a live Session wants the whole log, which for one
- * measured here was 11,836 events, so the budget has to cover the pages that
- * takes at the latency below.
- */
-const BACKFILL_ROUNDS = 40
-
-/**
- * How long one backfill round waits, in ticks of {@link BACKFILL_TICK_MS}.
- *
- * This has to exceed a page's real round trip, which measured at ten to twenty
- * seconds on a cross-border link: the ask is a frame down the origin's stream,
- * then a read of that machine's log, then a POST of the page back. At the original
- * six seconds the walk declared a page idle while it was still in flight, gave up
- * with the low edge short, and released the retention hold — so the page that did
- * arrive was trimmed away again.
- */
-const BACKFILL_TICKS = 60
-
-/** One backfill tick: how often a waiting round re-reads the mirror's edge. */
-const BACKFILL_TICK_MS = 500
-
-/**
- * Rounds that may move nothing before materializing gives up.
- *
- * The origin reads its own log on its own schedule, so a single still round says
- * nothing; two in a row mean it has no more below, or is not answering.
- */
-const BACKFILL_IDLE_ROUNDS = 2
-
-/**
- * Messages one backfill page covers.
- *
- * Materializing is not scrolling: it wants the beginning as fast as the origin
- * will serve it, and the origin's own page ceiling is 500 messages.
- */
-const BACKFILL_PAGE_MESSAGES = 500
 
 /** The two kinds of text one step streams. */
 const STREAM_KINDS = ['reasoning', 'text'] as const
@@ -204,16 +130,6 @@ interface FollowHandle {
    * window the reader is looking at. -1 until a snapshot has been taken.
    */
   cursor: number
-  /**
-   * The opening snapshot's Session header, as far as this half reads it.
-   *
-   * The writer builds its own header, so anything this does not carry is what a
-   * materialized Session silently loses. Measured against a real materialization:
-   * `agentPreset: "standard"` went missing, and `createdAt` drifted by 7 ms because
-   * the writer fell back to the first event's time. Only fields the format allows
-   * and this half can vouch for are kept.
-   */
-  header?: SessionHeader
   /**
    * Whether the opening snapshot ever arrived, and why the last attempt ended.
    *
@@ -273,8 +189,6 @@ export class SessionSyncService {
   private localRows = 0
   /** Field names seen in the opening frames, recorded once. */
   private readonly followShapes: string[] = []
-  /** What the last opening frame said about its header, and whether it was read. */
-  private headerSeen: string | undefined
   /** Posts per route: the split between the origin and the server. */
   private readonly postCounts = new Map<string, { count: number; at: number; ok: boolean }>()
   private followError: string | undefined
@@ -290,28 +204,12 @@ export class SessionSyncService {
   /** When each Session was last asked for an older page of history. */
   private readonly pageAsked = new Map<string, number>()
   /**
-   * Why the last attempt to advance each copy could not, by Session id.
-   *
-   * Kept in memory rather than in the ledger: it is a reading about the last ten
-   * seconds, not a durable fact, and persisting it would rewrite a file on every
-   * tick that a Session sat open in the browser. Cleared when an append lands.
-   */
-  private readonly waits = new Map<string, { at: number; reason: string }>()
-  /**
-   * Copies holding DSH's own resume marker, and how many markers to take back
-   * out, by Session id.
-   *
-   * Recorded when the marker is found and acted on when the Session is next cold:
-   * the marker is written by a resume, so at the moment it is found the Session is
-   * usually still open, and the repair has to wait for that to end.
-   */
-  private readonly repairs = new Map<string, number>()
-  /**
-   * Owns the signal for the cold history reads the backfill makes.
+   * Owns the signal for the history reads a reader's paging triggers.
    *
    * Service-scoped on purpose: a page read is a read of the Session's log, not a
    * step of any follow attempt, so tying it to a follow's lifecycle is what made
-   * every walk back to seq 0 die with "this operation was aborted".
+   * a page read die with "this operation was aborted" whenever the follow was
+   * replaced underneath it.
    */
   private readonly pageAbort = new AbortController()
 
@@ -326,15 +224,12 @@ export class SessionSyncService {
 
   /** The last publish attempt, as the settings page reports it. */
   private lastPublish: { at: number; ok: boolean; error?: string } | undefined
-  /** True while a materialize pass is in flight; see {@link materializeTick}. */
-  private materializing = false
   private disposed = false
 
   private constructor(
     private readonly ctx: HostContext,
     private readonly home: string,
     config: SyncConfig,
-    private readonly ledger: MirrorLedger,
   ) {
     this.config = config
     // The mirror emits data frames; every state frame is assembled here, where
@@ -352,7 +247,7 @@ export class SessionSyncService {
    */
   static async create(ctx: HostContext, home: string): Promise<SessionSyncService> {
     const config = await loadConfig(home, hostname())
-    return new SessionSyncService(ctx, home, config, await MirrorLedger.open(home))
+    return new SessionSyncService(ctx, home, config)
   }
 
   /** Begin reconciling and bring the configured role up. */
@@ -366,10 +261,6 @@ export class SessionSyncService {
       this.hub.expireCommands()
       this.hub.sweepGaps()
       void this.reconcile()
-      // Same pass, same reason: keeping the openable copies level with the mirror
-      // is exactly the kind of work that has nowhere else to be scheduled. It is
-      // serialized against itself so a slow create cannot overlap the next tick.
-      void this.materializeTick()
     }, RECONCILE_MS)
     this.flushTimer = setInterval(() => { this.flushStream(); this.flush() }, FLUSH_MS)
     void this.applyRole()
@@ -413,22 +304,6 @@ export class SessionSyncService {
       ...(this.linkError === undefined ? {} : { linkError: this.linkError }),
       machines: this.config.isServer ? this.hub.machines() : [],
       published: Object.values(this.config.syncSessions).filter(Boolean).length,
-      materialize: this.config.materialize,
-      ...(this.config.isServer
-        ? {
-          materialized: this.ledger.list().map(({ sessionId, entry }) => {
-            const wait = this.waits.get(sessionId)
-            return {
-              sessionId,
-              machineName: entry.machineName,
-              events: entry.events,
-              at: entry.at,
-              ...(entry.stopped === undefined ? {} : { stopped: entry.stopped }),
-              ...(wait === undefined ? {} : { waiting: wait.reason, waitingAt: wait.at }),
-            }
-          }),
-        }
-        : {}),
       ...(this.lastPublish === undefined ? {} : { publish: this.lastPublish }),
       ...(this.config.isServer ? {} : {
         follow: {
@@ -439,7 +314,6 @@ export class SessionSyncService {
           localRows: this.localRows,
           posts: [...this.postCounts].map(([route, entry]) => route + ':' + String(entry.count) + (entry.ok ? '' : '!')),
           shapes: this.followShapes,
-          ...(this.headerSeen === undefined ? {} : { headerSeen: this.headerSeen }),
           ...(this.followError === undefined ? {} : { error: this.followError }),
           ...(this.followErrorSession === undefined ? {} : { sessionId: this.followErrorSession }),
         },
@@ -451,10 +325,6 @@ export class SessionSyncService {
           lastSeq: handle.lastSeq,
           hasOlder: handle.hasOlder,
           opened: handle.opened,
-          // The Session's own header as the origin stated it. Carried by the frame the
-          // cursor comes from, and the only source of the fields a materialized log
-          // would otherwise lose — so it is reported rather than inferred.
-          ...(handle.header === undefined ? {} : { header: handle.header }),
           pending: handle.pending.length,
           events: handle.seen,
           ...(handle.ended === undefined ? {} : { ended: handle.ended }),
@@ -499,7 +369,6 @@ export class SessionSyncService {
       listenHost: nonEmpty(patch.listenHost) ?? previous.listenHost,
       listenPort: validPort(patch.listenPort) ?? previous.listenPort,
       syncSessions: { ...previous.syncSessions },
-      materialize: patch.materialize ?? previous.materialize,
     }
     if (patch.sessionSync !== undefined) {
       if (patch.sessionSync.synced) next.syncSessions[patch.sessionSync.sessionId] = true
@@ -517,10 +386,6 @@ export class SessionSyncService {
       || (!next.isServer && previous.machineName !== next.machineName)
     if (roleChanged) await this.applyRole()
     else if (patch.sessionSync !== undefined) await this.reconcile()
-    // Switching the option on should show a Session rather than wait out the tick:
-    // the user just asked for it, and "nothing happened for ten seconds" reads as
-    // the switch being broken.
-    if (next.materialize && !previous.materialize) void this.materializeTick()
     this.broadcast({ type: 'state', state: this.view() })
     return this.configView()
   }
@@ -529,518 +394,15 @@ export class SessionSyncService {
    * Read one page of a mirrored Session's transcript.
    * @param machineName - owning machine.
    * @param sessionId - published Session.
-   * @param page - page size, the exclusive upper sequence to read below, and how
-   *   much history to retain while the caller works.
+   * @param page - page size and the exclusive upper sequence to read below.
    * @returns the page, or undefined when nothing is mirrored under that address.
    */
   transcript(
     machineName: string,
     sessionId: string,
-    page?: { limit: number; before?: number; retain?: number; release?: boolean },
+    page?: { limit: number; before?: number },
   ): MirrorTranscript | undefined {
     return this.hub.transcript(machineName, sessionId, page)
-  }
-
-  /**
-   * Write one mirrored Session into this Host's own storage.
-   *
-   * The mirror holds a window, and this Host's storage refuses a log that does
-   * not begin at the Session's beginning, so the origin is walked back first and
-   * the writer decides: a Session that arrives whole becomes a real Session on
-   * this Host, a paged one is refused with the reason rather than written with a
-   * hole at the front.
-   *
-   * The Session is deliberately not archived. An archived Session cannot be
-   * opened in DSH's own page — the workspace browser answers with
-   * `archivedNotOpenable` and hides the row behind the default archived filter —
-   * so archiving it would defeat the point of writing it. Read-only is the
-   * plugin's own gate over {@link MirrorLedger.owns} instead.
-   * @param machineName - the machine that owns the Session.
-   * @param sessionId - the published Session.
-   * @returns what was written, or why nothing was.
-   */
-  async materialize(machineName: string, sessionId: string): Promise<MaterializeResult> {
-    // The ceiling is raised before anything is read: the mirror trims from the
-    // front at its own cap, so a backfill walking past that cap would have each
-    // page trimmed away again by the arrivals above it — the low edge parks at the
-    // cap and the Session looks whole while being short. The writer still refuses
-    // a log that does not begin at zero, so this is a budget, not a promise.
-    let transcript = this.hub.transcript(machineName, sessionId, { limit: 100_000, retain: Number.MAX_SAFE_INTEGER })
-    try {
-      const empty = (reason: string): MaterializeResult =>
-        ({ ok: false, written: 0, skipped: 0, stored: 0, created: false, reason })
-      if (transcript === undefined) return empty('nothing is mirrored under that address')
-      // The mirror usually holds the newest window, and the storage layer refuses a
-      // log that does not begin at the Session's beginning, so the origin is walked
-      // back to the start first. It is bounded: a Session too long to backfill in
-      // this budget is reported rather than half-written.
-      const rounds = await this.backfill(machineName, sessionId, transcript)
-      if (rounds > 0) transcript = this.hub.transcript(machineName, sessionId, { limit: 100_000 })
-      if (transcript === undefined) return empty('the Session left the mirror while backfilling')
-      const events = transcript.events
-      const first = events[0]
-      if (first === undefined) return empty('the mirror holds no events for this Session')
-      const row = this.hub.machines()
-        .find(machine => machine.machineName === machineName)?.sessions.find(session => session.sessionId === sessionId)
-      // The origin's header, which the mirror holds because the origin publishes it.
-      // This used to read `this.follows` — the *server's* own follow set, which is
-      // empty on a server, so every materialized log silently lost the fields no
-      // event carries (`agentPreset` went missing from a real Session while 3,478 of
-      // its 3,479 records came back byte-identical). The mirror is the one place both
-      // halves can see.
-      const header = this.hub.sessionHeader(machineName, sessionId) ?? this.follows.get(sessionId)?.header
-      const result = await materializeSession(
-        this.ctx.get('sessionPersistence') as SessionPersistenceLike | undefined,
-        {
-          sessionId,
-          createdAt: header?.createdAt ?? first.time,
-          ...(row?.cwd === undefined && header?.cwd === undefined
-            ? {}
-            : { cwd: header?.cwd ?? row?.cwd }),
-          ...(header?.agentPreset === undefined ? {} : { agentPreset: header.agentPreset }),
-          ...(header?.origin === undefined ? {} : { origin: header.origin }),
-          events,
-        },
-      )
-      // Marked only on success, and marked *before* the caller can open the
-      // Session: between the log landing on disk and the ledger recording it,
-      // the copy is openable and ungated, which is the one window where a prompt
-      // could start a turn on this Host.
-      if (result.ok) await this.ledger.mark(sessionId, machineName, result.stored)
-      return result
-    } finally {
-      // The hold is for the walk, not for the Session's life: leaving it raised
-      // would keep megabytes of history per materialized Session for as long as
-      // this process lives, which is the cost the cap exists to bound.
-      this.hub.transcript(machineName, sessionId, { limit: 1, release: true })
-    }
-  }
-
-  /**
-   * Whether this Host holds a mirror-written copy of one Session.
-   *
-   * The `agent/pre-step` gate asks this on every proposed step. It answers from
-   * the durable ledger rather than from the mirror, so the answer survives a
-   * restart and does not depend on the origin still publishing.
-   * @param sessionId - the Session proposing a step.
-   * @returns whether the step must be refused.
-   */
-  holdsMirrorOf(sessionId: string): boolean {
-    return this.ledger.owns(sessionId)
-  }
-
-  /**
-   * Undo the archive an earlier build used to make a written copy read-only.
-   *
-   * Archiving looked like the shipped way to say "read-only", and it is — but it
-   * also says "not readable": the workspace browser refuses to open an archived
-   * row (`archivedNotOpenable`) and hides it behind the default archived filter.
-   * A copy in that state is the one combination nobody wants: unusable by the
-   * operator, and no longer needed by the plugin, whose gate is what keeps it
-   * read-only now.
-   * @param sessionId - the Session this Host just adopted.
-   */
-  private async clearStaleArchive(sessionId: string): Promise<void> {
-    const registry = this.ctx.get('workspaceRegistry') as WorkspaceRegistryLike | undefined
-    if (registry === undefined || !registry.archivedSessionIds.includes(sessionId)) return
-    try {
-      await registry.unarchiveSession(sessionId)
-      this.ctx.logger.info(`dsh-session-sync: unarchived the mirror copy of "${sessionId}"`)
-    } catch (error: unknown) {
-      // Not fatal: the copy is gated either way, and the console reports what the
-      // ledger holds. Reported rather than swallowed because the operator's next
-      // question would be "why can I not open it".
-      this.ctx.logger.warn(`dsh-session-sync: could not unarchive "${sessionId}": ${describe(error)}`)
-    }
-  }
-
-  /**
-   * Whether a copy has events of its own, rather than what the mirror delivered.
-   *
-   * Called at the two moments that matter: adoption, where the baseline is taken
-   * from the log itself (so a drift that happened earlier would never show up as
-   * "longer than recorded"), and just before an append, which is the only moment a
-   * hole could be embedded. The mirror events are passed in because both callers
-   * already hold them — the comparison costs one small read of the log, no more.
-   * @param persistence - the Host's durable Session storage.
-   * @param sessionId - the Session under test.
-   * @param stored - how many events the log holds.
-   * @param mirrored - the events the mirror holds, which must cover the log's tail.
-   * @returns whether the log's tail disagrees with the mirror.
-   */
-  private async copyDiverged(
-    persistence: SessionPersistenceLike,
-    sessionId: string,
-    stored: number,
-    mirrored: readonly MirrorEnvelope[],
-    window: number = LOG_TAIL_WINDOW,
-  ): Promise<boolean> {
-    if (stored === 0 || mirrored.length === 0) return false
-    const agrees = await logAgreesWithMirror(persistence, sessionId, mirrored, stored, window)
-      .catch(() => undefined)
-    return agrees === false
-  }
-
-  /**
-   * Take DSH's own resume markers back out of a copy, once it is cold.
-   *
-   * The alignment a copy lives by is broken by the Host itself: resuming a
-   * Session with a seed makes it append a `session/end-seed` marker, which takes
-   * a sequence the origin's next event needs. The marker is always trailing, so
-   * removing it restores the log without rebuilding anything — and unlike a
-   * rebuild it asks nothing of the storage layer, which is what makes it possible
-   * from inside a plugin at all (the Host has no seam to forget a Session, and a
-   * `create` under an id it still knows is refused).
-   *
-   * The proof that the Session is cold is the write claim itself: a live Session
-   * owns its log, so `open(id, 'write')` succeeding means nothing on this Host has
-   * it in memory — which is exactly the condition under which cutting the file is
-   * safe. Cutting it under a live Session would leave that Session's next append
-   * writing over a hole.
-   * @param persistence - the Host's durable Session storage.
-   * @param sessionId - the copy to repair.
-   * @returns whether a repair ran.
-   */
-  private async repairCopy(persistence: SessionPersistenceLike, sessionId: string): Promise<boolean> {
-    const pending = this.repairs.get(sessionId)
-    if (pending === undefined) return false
-    let handle: { close(): Promise<unknown> }
-    try {
-      handle = await persistence.open(sessionId, 'write')
-    } catch {
-      // Still held, so still live. The next pass asks again.
-      return false
-    }
-    await handle.close().catch(() => undefined)
-    this.repairs.delete(sessionId)
-    const home = resolveHome()
-    const path = await findLogFile(home, sessionId)
-    if (path === undefined) return false
-    const dropped = await dropTrailingMarkers(path, pending).catch(() => 0)
-    if (dropped === 0) return false
-    // The cached projections were folded from the log that just changed; leaving
-    // them reproduces the same failure one layer up.
-    const cleared = await clearProjectionCache(home, sessionId).catch(() => false)
-    this.waits.delete(sessionId)
-    this.ctx.logger.info(
-      `dsh-session-sync: took ${String(dropped)} resume marker(s) back out of "${sessionId}"`
-      + (cleared ? ' and dropped its cached projections' : ''),
-    )
-    return true
-  }
-
-  /**
-   * How many of the log's records beyond the ledger's record are DSH's own resume
-   * marker — the one divergence a copy is allowed to recover from.
-   *
-   * Mixed stretches are the normal case, not the exception: a pass can write
-   * mirrored events and be cut off before recording them, and a seeded resume drops
-   * a marker in among them. So the caller asks `unaccountedMarkers`, which ignores
-   * records that are the mirror's event at their sequence and counts only markers.
-   * @param persistence - the Host's durable Session storage.
-   * @param sessionId - the copy under test.
-   * @param from - the sequence the ledger's record ends at.
-   * @param mirrored - the mirror's window, which the caller already holds.
-   * @returns the marker count, or `undefined` when something there is neither the
-   *   mirror's event nor a marker.
-   */
-  private async unaccounted(
-    persistence: SessionPersistenceLike,
-    sessionId: string,
-    from: number,
-    mirrored: readonly MirrorEnvelope[],
-  ): Promise<number | undefined> {
-    let handle: { read(offset?: number): Promise<{ readonly events: readonly unknown[] }>; close(): Promise<unknown> }
-    try {
-      handle = await persistence.open(sessionId, 'read')
-    } catch {
-      return undefined
-    }
-    try {
-      const page = await handle.read(from)
-      return unaccountedMarkers(page.events as readonly MirrorEnvelope[], mirrored)
-    } catch {
-      return undefined
-    } finally {
-      await handle.close().catch(() => undefined)
-    }
-  }
-
-  /**
-   * Drop the read-only claim on one Session, leaving its log in place.
-   *
-   * This is the way out of the gate: the copy becomes an ordinary Session on this
-   * Host that its new owner may rename, continue or delete. Nothing deletes the
-   * log automatically — a mirror is regenerable, but a Session the operator has
-   * since edited is not, and no automatic pass may decide which one this is.
-   * @param sessionId - the Session to release.
-   * @returns whether the ledger held it.
-   */
-  async releaseMaterialized(sessionId: string): Promise<boolean> {
-    const released = await this.ledger.release(sessionId)
-    if (released) this.broadcastState()
-    return released
-  }
-
-  /**
-   * Run one materialize pass, at most one at a time.
-   *
-   * A create can walk the origin backwards, which takes longer than the tick that
-   * started it. Without this guard the next tick would start a second pass over
-   * the same Session, and the two would race the same log.
-   */
-  private async materializeTick(): Promise<void> {
-    if (this.materializing || this.disposed) return
-    this.materializing = true
-    try {
-      await this.syncMaterialized()
-    } catch (error: unknown) {
-      this.ctx.logger.warn(`dsh-session-sync: materialize pass failed: ${describe(error)}`)
-    } finally {
-      this.materializing = false
-    }
-  }
-
-  /**
-   * Keep every openable copy level with its mirror.
-   *
-   * One pass does two different jobs, in this order:
-   *
-   * - **catch up** each Session this Host already wrote, appending whatever the
-   *   mirror has grown since the log's own end. This is what makes the official
-   *   page a live view rather than a snapshot, and it is cheap: an append of the
-   *   events above the stored count.
-   * - **create** one new log, for the newest mirrored Session whose mirror holds
-   *   its beginning. At most one per pass, because creating is the expensive half
-   *   (it may walk the origin backwards first) and a Host with many newly
-   *   published Sessions should not read all of them at once.
-   *
-   * The switch is read every pass, so turning {@link SyncConfig.materialize} off
-   * stops new copies without touching the ones already written.
-   * @returns how many logs were created and how many were advanced.
-   */
-  private async syncMaterialized(): Promise<{ created: number; adopted: number; advanced: number }> {
-    const report = { created: 0, adopted: 0, advanced: 0 }
-    if (!this.config.isServer || !this.config.materialize) return report
-    const persistence = this.ctx.get('sessionPersistence') as SessionPersistenceLike | undefined
-    if (persistence === undefined) return report
-
-    // Migration, once per pass and cheap: a copy an *older* build archived is put
-    // back. It cannot live in the adoption branch alone — a copy adopted before
-    // this build existed is never adopted again, so it would keep the archive the
-    // new design abandoned and stay unopenable forever.
-    for (const { sessionId } of this.ledger.list()) await this.clearStaleArchive(sessionId)
-
-    const machines = this.hub.machines()
-    // Advanced first: a row that already exists on disk is the common case, and
-    // its work is strictly smaller than a create's.
-    for (const machine of machines) {
-      for (const session of machine.sessions) {
-        if (!this.ledger.owns(session.sessionId)) continue
-        // A repair comes before any advance: the log's end is not where the mirror
-        // left it while a marker sits there, so appending would be landing on the
-        // wrong sequence. It is attempted every pass and does nothing until the
-        // Session is cold (`repairCopy`).
-        if (this.repairs.has(session.sessionId)) await this.repairCopy(persistence, session.sessionId)
-        const entry = this.ledger.get(session.sessionId)
-        if (entry?.stopped !== undefined) continue
-        const needs = entry?.events ?? 0
-        // The *newest* sequence the mirror holds is the signal, not how many events
-        // it holds. A mirror serves a tail window, so its count says nothing about
-        // where it sits: a 310-event window sitting at seq 1100..1409 has a count
-        // below a 1016-event log's end while carrying plenty to append. Reading the
-        // count as a high-water mark is what kept this copy frozen.
-        const newest = this.hub.transcript(machine.machineName, session.sessionId, { limit: 1 })?.events[0]?.seq
-        if (newest === undefined || newest < needs) continue
-        // The ceiling is raised for the read *and* the walk: the mirror trims from
-        // the front at its own cap, so a page walking past it would be trimmed away
-        // by the arrivals above it and the low edge would park at the cap.
-        const transcript = this.hub.transcript(machine.machineName, session.sessionId, {
-          limit: 100_000,
-          retain: Number.MAX_SAFE_INTEGER,
-        })
-        try {
-          if (transcript === undefined) continue
-          const lowest = transcript.events[0]?.seq
-          if (lowest !== undefined && lowest > needs) {
-            // The log's end and the mirror's start are apart — after a restart the
-            // mirror rebuilds from a tail window, so this is the normal shape. Walk
-            // the mirror down to meet the log with the same read a manual
-            // materialize uses; the next pass appends what that fetched.
-            await this.backfill(machine.machineName, session.sessionId, transcript)
-            continue
-          }
-          const result = await (async (): Promise<MaterializeResult> => {
-            // Judged against the log's *own* extent, not the count the ledger
-            // recorded. A copy DSH has open is not passive: a seeded resume makes
-            // the Session append its own `session/end-seed` marker into it, so the
-            // log can hold events this plugin never wrote. The append below starts
-            // from the log's extent, so anything in that unaccounted stretch would
-            // be silently skipped over — displacing a mirrored event and leaving a
-            // log no reader can project (an inbox removal with no insertion). The
-            // window therefore covers the whole stretch, not just its tail.
-            const extent = await storedEventCount(persistence, session.sessionId)
-              .catch(() => undefined) ?? needs
-            const unaccounted = Math.max(LOG_TAIL_WINDOW, extent - needs)
-            if (extent > needs
-              && await this.copyDiverged(persistence, session.sessionId, extent, transcript.events as MirrorEnvelope[], unaccounted)) {
-              // One divergence is the Host's own bookkeeping rather than anyone's
-              // content: a seeded resume appends `session/end-seed` into the log,
-              // which takes a sequence the origin's next event needs. That marker is
-              // trailing and contentless, so it is taken back out once the Session is
-              // cold — which is the difference between a copy that survives a restart
-              // and one that has to be rebuilt by hand every time. Anything else in
-              // that stretch is a real divergence and stops the copy as before.
-              const markers = await this.unaccounted(
-                persistence,
-                session.sessionId,
-                needs,
-                transcript.events as MirrorEnvelope[],
-              )
-              if (markers !== undefined && markers > 0) {
-                this.repairs.set(session.sessionId, markers)
-                this.waits.set(session.sessionId, {
-                  at: Date.now(),
-                  reason: "waiting for the Session to go cold, to take DSH's own resume marker back out",
-                })
-                return { ok: false, written: 0, skipped: 0, stored: needs, created: false, wait: true, reason: 'the Host wrote its own resume marker into this copy' }
-              }
-              await this.ledger.stop(session.sessionId, DIVERGED_REASON)
-              return { ok: false, written: 0, skipped: 0, stored: needs, created: false, reason: DIVERGED_REASON }
-            }
-            return await catchUpSession(persistence, session.sessionId, transcript.events as MirrorEnvelope[])
-          })()
-          if (result.ok && result.written > 0) {
-            this.waits.delete(session.sessionId)
-            await this.ledger.mark(session.sessionId, machine.machineName, result.stored)
-            report.advanced += 1
-          } else if (result.ok) {
-            // Level with the mirror: nothing was owed, and nothing is being waited
-            // on either.
-            this.waits.delete(session.sessionId)
-          } else if (result.wait === true) {
-            // Behind, and not broken. Recorded rather than left silent: this is the
-            // state an operator meets as "the page stopped updating", and without a
-            // reason it reads as a broken feature. The count beside it in `state`
-            // says how far behind.
-            this.waits.set(session.sessionId, {
-              at: Date.now(),
-              reason: result.reason ?? 'the mirror is not ready to be appended',
-            })
-          } else {
-            // Only a log this Host cannot use is final: a hole below its end stays a
-            // hole, and no later pass will fill it. A mirror that has not delivered
-            // the events yet is a *wait* — after a restart every mirror rebuilds
-            // from a tail window, so "nothing appendable" is the normal state for a
-            // while, and stopping on it recorded a merely-behind copy as broken.
-            await this.ledger.stop(session.sessionId, result.reason ?? 'the copy stopped tracking the mirror')
-          }
-        } finally {
-          // The hold is for the walk, not for the Session's life.
-          this.hub.transcript(machine.machineName, session.sessionId, { limit: 1, release: true })
-        }
-      }
-    }
-
-    for (const machine of machines) {
-      for (const session of machine.sessions) {
-        if (this.ledger.owns(session.sessionId)) continue
-        const transcript = this.hub.transcript(machine.machineName, session.sessionId, { limit: 1 })
-        // Only a Session whose mirror holds its beginning can be written; anything
-        // else needs a backfill, which the create path does for itself.
-        if (transcript === undefined) continue
-        // A log may already be on disk under this id — from an earlier life of
-        // this Host, before a restart or before this ledger existed. `create`
-        // refuses it, and refusing forever is how the copy stayed outside the
-        // gate: see {@link startFor}.
-        const stored = await persistence.stat(session.sessionId).catch(() => undefined)
-        const start = startFor(stored, machine.machineName, this.config.machineName)
-        // This Host's own Session: not ours to write, and not ours to gate.
-        if (start === 'ours') continue
-        if (start === 'adopt') {
-          // `stat` states no cheap event count on this backend, so the log is
-          // measured once, here; the ledger carries the number from then on. A
-          // copy recorded as `0` would be misread as "not on disk" by the next
-          // pass and marked stopped.
-          const count = await storedEventCount(persistence, session.sessionId).catch(() => undefined)
-          await this.ledger.mark(session.sessionId, machine.machineName, count ?? 0)
-          // Adoption is where the baseline comes *from the log*, so this is the last
-          // moment a pre-existing drift can be seen at all: afterwards the ledger's
-          // count already includes it. The copy is adopted either way — an
-          // unadopted one would sit outside the gate — and stopped when the log's
-          // tail disagrees with what the mirror delivered there.
-          if (count !== undefined && count > 0) {
-            const tail = this.hub.transcript(machine.machineName, session.sessionId, {
-              limit: LOG_TAIL_WINDOW,
-              before: count,
-            })?.events ?? []
-            if (await this.copyDiverged(persistence, session.sessionId, count, tail as MirrorEnvelope[])) {
-              await this.ledger.stop(session.sessionId, DIVERGED_REASON)
-            }
-          }
-          report.adopted += 1
-          this.broadcastState()
-          return report
-        }
-        const result = await this.materialize(machine.machineName, session.sessionId)
-        if (result.ok) {
-          report.created += 1
-          this.broadcastState()
-          // One write per pass: see the method comment.
-          return report
-        }
-      }
-    }
-    return report
-  }
-
-  /**
-   * Walk the origin back until the mirror holds this Session's beginning.
-   *
-   * One round asks the origin for the page below what the mirror holds and waits;
-   * the origin reads its own log and the page arrives as ordinary frames. The cap
-   * is a budget rather than a limit on what is possible: a Session that needs more
-   * rounds than this still materializes, just not inside one request.
-   * @param machineName - owning machine.
-   * @param sessionId - published Session.
-   * @param transcript - the window the mirror holds now.
-   * @returns how many rounds were spent.
-   */
-  private async backfill(
-    machineName: string,
-    sessionId: string,
-    transcript: MirrorTranscript,
-  ): Promise<number> {
-    // The edge is the *lowest* sequence the mirror holds. It is passed through
-    // as-is because the ask's bound is inclusive — the page the origin reads ends
-    // at that event — and the translation to the page API's exclusive bound
-    // happens in {@link pullOlder}, which is the one place that knows both.
-    const edge = (): number | undefined =>
-      this.hub.transcript(machineName, sessionId, { limit: 100_000 })?.events[0]?.seq
-    let lowest = transcript.events[0]?.seq
-    let rounds = 0
-    let idle = 0
-    while (lowest !== undefined && lowest > 1 && rounds < BACKFILL_ROUNDS) {
-      if (!this.hub.askOlder(machineName, sessionId, lowest, BACKFILL_PAGE_MESSAGES)) return rounds
-      // The origin reads its own log for that page, which takes longer than the
-      // ask does, so one round waits in ticks and takes whatever arrived.
-      let arrived = lowest
-      for (let tick = 0; tick < BACKFILL_TICKS; tick += 1) {
-        await new Promise<void>(resolve => { setTimeout(resolve, BACKFILL_TICK_MS) })
-        const next = edge()
-        if (next !== undefined && next < arrived) {
-          arrived = next
-          break
-        }
-      }
-      rounds += 1
-      // A round that moved nothing is not proof of the end — the origin may still
-      // be reading — so a few of them have to pass before this gives up.
-      idle = arrived < lowest ? 0 : idle + 1
-      lowest = arrived
-      if (idle >= BACKFILL_IDLE_ROUNDS) break
-    }
-    return rounds
   }
 
   /**
@@ -1174,7 +536,7 @@ export class SessionSyncService {
    */
   private drain(handle: FollowHandle, sessionId: string): void {
     if (handle.pending.length === 0) return
-    this.link?.publishFrames(sessionId, handle.pending.splice(0, handle.pending.length), handle.header)
+    this.link?.publishFrames(sessionId, handle.pending.splice(0, handle.pending.length))
   }
 
   /**
@@ -1264,9 +626,7 @@ export class SessionSyncService {
           events.push(mirrorOf(handle, event))
         }
         added = events.length
-        // A page read is not the opening window, so it does not carry a header of its
-        // own — but it is an ordinary publish, and the mirror uses the latest one.
-        this.link?.publishFrames(sessionId, events, handle.header)
+        this.link?.publishFrames(sessionId, events)
       }
       // The page knows where the log begins, so the next index tells the truth
       // about whether anything is still below — which is how the reader's
@@ -1365,10 +725,6 @@ export class SessionSyncService {
           // Only said when true: the mirror reads absence as "no history below
           // the window", which is the answer for a Session that arrived whole.
           ...(handle?.hasOlder === true ? { hasOlder: true } : {}),
-          // The Session's own header, so the machine that *writes* the log can state
-          // it. This half reads it from the origin's opening window; the writer runs
-          // on the server, which never sees that window.
-          ...(handle?.header === undefined ? {} : { header: handle.header }),
         }
       }),
     } satisfies PublishIndexPayload)
@@ -1673,16 +1029,6 @@ export class SessionSyncService {
       // Session legitimately cuts at -1, and a follow that never opened must not
       // look like one that did.
       if (typeof carrier['cursor'] === 'number') handle.opened = true
-      // The header the origin stated, kept for the writer: it builds its own log
-      // header, so what is not carried here is what a materialized Session loses.
-      const header = jsonObject(carrier['header'])
-      if (header !== undefined) handle.header = header as unknown as SessionHeader
-      // Whether the frame really carried one, recorded on the frame that has it: a
-      // header this half fails to read is invisible until a materialized log comes
-      // back wrong, and the field names are the one thing this reader has to guess.
-      this.headerSeen = header === undefined
-        ? `absent on ${frameType}{${Object.keys(carrier).slice(0, 10).join(',')}}`
-        : `read from ${frameType}`
     }
     const page = carrier['page'] as Record<string, unknown> | undefined
     const records = Array.isArray(carrier['records'])
@@ -1728,10 +1074,7 @@ export class SessionSyncService {
     if (link === undefined || !link.linked) return
     for (const [sessionId, handle] of this.follows) {
       if (handle.pending.length === 0) continue
-      // The header travels with the frames, every flush: it is small, the mirror
-      // overwrites rather than accumulates it, and a mirror that only learned it
-      // once could lose it to a reconnect that happened before the write.
-      link.publishFrames(sessionId, handle.pending.splice(0, handle.pending.length), handle.header)
+      link.publishFrames(sessionId, handle.pending.splice(0, handle.pending.length))
     }
   }
 

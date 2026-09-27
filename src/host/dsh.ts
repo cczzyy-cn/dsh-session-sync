@@ -18,8 +18,6 @@
  * therefore safe; a value import would not be, and there are none.
  */
 
-import type { SessionHeader } from '../shared/protocol.ts'
-
 /** One Host log sink. */
 export interface HostLogger {
   info(message: string): void
@@ -36,49 +34,6 @@ export interface HostContext {
   get(name: string): unknown
   /** Wait for services, then run `callback` inside the scoped fiber. */
   inject(dependencies: readonly string[], callback: (scoped: HostContext) => void): void
-  /**
-   * Subscribe to a framework event.
-   *
-   * The plugin rides `agent/pre-step` and nothing else: it is the seam every
-   * proposal to run a model step passes through, and the one the shipped
-   * archived-Session gate uses for the same purpose. Declared narrowly so the
-   * shape this half depends on is written down rather than inferred.
-   * @param event - the event name.
-   * @param listener - the waterfall listener.
-   * @returns a disposer that removes the subscription.
-   */
-  on(
-    event: 'agent/pre-step',
-    listener: (payload: PreStepLike, next: () => Promise<PreStepDecisionLike>) => Promise<PreStepDecisionLike>,
-  ): () => void
-}
-
-/** One `agent/pre-step` proposal, as much of it as this plugin reads. */
-export interface PreStepLike {
-  readonly agent: {
-    readonly session: {
-      readonly header: { readonly id: string; readonly origin?: string; readonly parentSession?: string }
-    }
-  }
-}
-
-/** What a `agent/pre-step` listener answers with — `PreStepDecision`. */
-export type PreStepDecisionLike = { readonly kind: 'reject' } | { readonly kind: string; readonly [key: string]: unknown }
-
-/**
- * The Host's workspace registry, as far as this plugin needs it.
- *
- * Only the archive state: an earlier build of this plugin made its written copies
- * read-only by archiving them, which turned out to make them unreadable — an
- * archived Session cannot be opened in DSH's own page and is hidden behind the
- * default archived filter. Read-only is the plugin's own `agent/pre-step` gate
- * now, so a copy found under that older state is put back.
- */
-export interface WorkspaceRegistryLike {
-  /** Every Session currently archived, in archive order. */
-  readonly archivedSessionIds: readonly string[]
-  /** Remove one Session from the archive set. */
-  unarchiveSession(sessionId: string): Promise<void>
 }
 
 /** One row of `SessionController.list` — `SessionSummary`. */
@@ -149,11 +104,6 @@ export interface WireStreamBaseline {
 /** The opening window of a `follow` stream — `SessionFollowFrame` `snapshot`. */
 export interface FollowSnapshotFrame {
   readonly type: 'snapshot'
-  /**
-   * The Session's own header. The same shape the protocol carries, because it has to
-   * travel: the machine that reads it here is not the machine that writes the log.
-   */
-  readonly header: SessionHeader
   readonly cursor: number
   readonly records: readonly WireRecord[]
   readonly hasMore: boolean

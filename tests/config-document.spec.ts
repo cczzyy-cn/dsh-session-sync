@@ -35,7 +35,6 @@ const DOCUMENT = {
   listenHost: '127.0.0.1',
   listenPort: 8791,
   syncSessions: { 'session-keep': true, 'session-drop': false },
-  materialize: true,
 }
 
 describe('the plugin config document', () => {
@@ -46,22 +45,19 @@ describe('the plugin config document', () => {
     assert.deepEqual(loaded, { ...DOCUMENT, syncSessions: { 'session-keep': true } })
   })
 
-  it('reads a document written before the materialize option existed as "on"', async () => {
-    // The option arrived after the first deployments. A document without the key
-    // must not read as "off": that would silently leave every mirror unreadable
-    // outside the console, which is the state the option exists to leave behind.
+  it('ignores keys an earlier version wrote', async () => {
+    // The document is user-editable and outlives any one build: a key this
+    // version no longer knows (the retired "write real Sessions" switch) must be
+    // dropped rather than carried, so nothing downstream reads it as a setting.
     const path = await home()
-    const { materialize: _omitted, ...legacy } = DOCUMENT
-    await writeFile(configPath(path), `${JSON.stringify(legacy, null, 2)}\n`, 'utf8')
+    await writeFile(
+      configPath(path),
+      `${JSON.stringify({ ...DOCUMENT, materialize: false }, null, 2)}\n`,
+      'utf8',
+    )
     const loaded = await loadConfig(path, 'fallback')
-    assert.equal(loaded.materialize, true)
-  })
-
-  it('honours an explicit "off"', async () => {
-    const path = await home()
-    await writeFile(configPath(path), `${JSON.stringify({ ...DOCUMENT, materialize: false })}\n`, 'utf8')
-    const loaded = await loadConfig(path, 'fallback')
-    assert.equal(loaded.materialize, false)
+    assert.equal(Object.hasOwn(loaded, 'materialize'), false)
+    assert.equal(loaded.serverUrl, '210.16.120.228:8791')
   })
 
   it('reads a document a Windows editor wrote, mark and all', async () => {

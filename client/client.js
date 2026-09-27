@@ -241,7 +241,6 @@ window.__ModuleLoader__.load({
 				machineName: config.machineName,
 				serverUrl: config.serverUrl,
 				isServer: config.isServer,
-				materialize: config.materialize,
 				password: config.password,
 				listenHost: config.listenHost,
 				listenPort: String(config.listenPort)
@@ -286,7 +285,6 @@ window.__ModuleLoader__.load({
 					machineName: draft.machineName,
 					serverUrl: draft.serverUrl,
 					isServer: draft.isServer,
-					materialize: draft.materialize,
 					password: draft.password,
 					listenHost: draft.listenHost,
 					listenPort: Number.parseInt(draft.listenPort, 10)
@@ -369,25 +367,6 @@ window.__ModuleLoader__.load({
 											label: t("isServer"),
 											onChange: (next) => {
 												edit({ isServer: next });
-											}
-										})]
-									}),
-									/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-										className: sync_module_css_default.fieldRow,
-										children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
-											className: sync_module_css_default.fieldText,
-											children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-												className: sync_module_css_default.label,
-												children: t("materializeLabel")
-											}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-												className: sync_module_css_default.hint,
-												children: t("materializeHint")
-											})]
-										}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Switch, {
-											checked: draft.materialize,
-											label: t("materializeLabel"),
-											onChange: (next) => {
-												edit({ materialize: next });
 											}
 										})]
 									}),
@@ -477,10 +456,6 @@ window.__ModuleLoader__.load({
 						]
 					}),
 					/* @__PURE__ */ (0, react_jsx_runtime.jsx)(StatusBlock, {
-						t,
-						state
-					}),
-					/* @__PURE__ */ (0, react_jsx_runtime.jsx)(MaterializedBlock, {
 						t,
 						state
 					}),
@@ -575,63 +550,7 @@ window.__ModuleLoader__.load({
 			});
 		}
 		/**
-		* The Sessions this Host has written into its own storage.
-		*
-		* Reported next to the switch that produces them, because the two questions an
-		* operator has here are one question: "is it on, and what did it write". A copy
-		* that stopped following says so, with the rebuild sequence in its tooltip —
-		* otherwise a log that no longer matches its Session looks like a working one.
-		*/
-		function MaterializedBlock({ t, state }) {
-			if (state.state.role !== "server") return null;
-			const entries = state.state.materialized ?? [];
-			const mirrored = new Map(state.state.machines.flatMap((machine) => machine.sessions.map((session) => [session.sessionId, session.eventCount])));
-			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-				className: sync_module_css_default.group,
-				children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("h3", {
-					className: sync_module_css_default.groupTitle,
-					children: t("materializedTitle")
-				}), entries.length === 0 ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-					className: sync_module_css_default.empty,
-					children: t("materializedEmpty")
-				}) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
-					className: sync_module_css_default.sessionList,
-					children: entries.map((entry) => {
-						const behind = mirrored.get(entry.sessionId);
-						return /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
-							className: sync_module_css_default.sessionRow,
-							children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
-								className: sync_module_css_default.sessionText,
-								children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-									className: sync_module_css_default.sessionTitle,
-									children: entry.sessionId
-								}), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
-									className: sync_module_css_default.sessionMeta,
-									children: [
-										/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", { children: [
-											String(entry.events),
-											" ",
-											t("materializedEvents"),
-											behind === void 0 || behind <= entry.events ? null : ` · ${t("materializedBehind")} ${String(behind - entry.events)}`
-										] }),
-										entry.stopped !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-											className: sync_module_css_default.failed,
-											title: t("materializedStoppedHint"),
-											children: t("materializedStopped")
-										}),
-										entry.waiting !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-											title: `${t("materializedWaitingHint")}\n${entry.waiting}`,
-											children: t("materializedWaiting")
-										})
-									]
-								})]
-							})
-						}, entry.sessionId);
-					})
-				})]
-			});
-		}
-		/** The per-Session publish switches. */
+		* The per-Session publish switches. */
 		function SessionList({ t, ready, sessions, setSessionSync }) {
 			if (!ready) return /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 				className: sync_module_css_default.empty,
@@ -665,41 +584,6 @@ window.__ModuleLoader__.load({
 			});
 		}
 		//#endregion
-		//#region src/client/CopyStateAction.tsx
-		/**
-		* A chip in DSH's own Session header for a Session this Host has written.
-		*
-		* The console already badges these rows, but the reader who needs this reading
-		* is the one looking at DSH's own page — and that page cannot be annotated from
-		* the log, because a copy is behind *precisely* when someone has it open: the
-		* live Session owns its log, so the plugin's append is refused until it goes
-		* cold. That makes this chip the one place the state can reach the reader who
-		* is waiting for the content it describes.
-		*
-		* It renders nothing at all for a Session this Host has not written, which is
-		* every other Session in every other header.
-		*/
-		/**
-		* Render the chip, or nothing when this Session is not one of ours.
-		* @param props - the Session id, copy, and the snapshot hook.
-		* @returns the chip.
-		*/
-		function CopyStateAction(props) {
-			const snapshot = props.useSync((current) => current);
-			const entry = (snapshot.state.materialized ?? []).find((row) => row.sessionId === props.sessionId);
-			if (entry === void 0) return null;
-			const mirrored = (snapshot.state.machines ?? []).flatMap((machine) => machine.sessions).find((session) => session.sessionId === props.sessionId)?.eventCount;
-			const behind = mirrored === void 0 ? 0 : Math.max(0, mirrored - entry.events);
-			const stopped = entry.stopped !== void 0;
-			const label = stopped ? props.t("materializedStopped") : behind === 0 ? props.t("materializedBadge") : `${props.t("materializedBadge")} · ${props.t("materializedBehind")} ${String(behind)}`;
-			const hint = stopped ? props.t("materializedStoppedHint") : entry.waiting === void 0 ? props.t("materializedHint") : `${props.t("materializedWaitingHint")}\n${entry.waiting}`;
-			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-				className: stopped ? sync_module_css_default.failed : sync_module_css_default.realBadge,
-				title: hint,
-				children: label
-			});
-		}
-		//#endregion
 		//#region src/shared/protocol.ts
 		/**
 		* Wire and persisted shapes shared by the Host half, the sync server, and the
@@ -723,8 +607,7 @@ window.__ModuleLoader__.load({
 				password: "",
 				listenHost: "0.0.0.0",
 				listenPort: DEFAULT_LISTEN_PORT,
-				syncSessions: {},
-				materialize: true
+				syncSessions: {}
 			};
 		}
 		//#endregion
@@ -779,8 +662,7 @@ window.__ModuleLoader__.load({
 				listening: false,
 				linked: false,
 				machines: [],
-				published: 0,
-				materialize: true
+				published: 0
 			};
 		}
 		/** The step number that means "no step is streaming". */
@@ -1330,55 +1212,14 @@ window.__ModuleLoader__.load({
 		//#endregion
 		//#region src/client/routing.ts
 		/**
-		* The browser half's decisions, in a module with no imports.
+		* The browser half's one decision, in a module with no imports.
 		*
-		* Three of them: which Sessions a shell refresh has not been asked about yet,
-		* what a row click means, and whether the build offers the seam the console
-		* draws a foreign Session through. Each is pure, and each was previously inline
-		* in a class or a React component — which is why the browser half had no tests
-		* at all: a test here cannot import `SyncPanel.tsx` (it needs `react` and the
-		* shipped UI packages, neither of which resolves from this package). Naming the
-		* decisions and keeping them dependency-free is what puts them under
-		* `node --test` on both sides of the build, and it leaves the components with
-		* nothing but rendering to get wrong.
+		* A test here cannot import `SyncPanel.tsx` (it needs `react` and the shipped UI
+		* packages, neither of which resolves from this package), so the part that
+		* decides *whether a build can draw a foreign Session at all* is named and kept
+		* dependency-free. That puts it under `node --test` on both sides of the build,
+		* and it leaves the renderer with nothing but rendering to get wrong.
 		*/
-		/**
-		* The Sessions named in the state that have not been announced yet.
-		*
-		* The state frame is rebuilt on every broadcast, so "the list changed" is not a
-		* fact a caller can read off an array identity — and announcing the same Session
-		* twice would re-run a shell refresh for nothing. The caller keeps what it has
-		* announced; this says what is genuinely new, in the order the state named it.
-		* @param announced - the ids already announced; not mutated.
-		* @param ids - the ids the current state names.
-		* @returns the ids to announce, possibly empty.
-		*/
-		function freshIds(announced, ids) {
-			const fresh = [];
-			const seen = /* @__PURE__ */ new Set();
-			for (const id of ids) {
-				if (id === "" || announced.has(id) || seen.has(id)) continue;
-				seen.add(id);
-				fresh.push(id);
-			}
-			return fresh;
-		}
-		/**
-		* What clicking one row in the console's tree should do.
-		*
-		* A Session this Host has written *is* a real Session, so it opens in DSH's own
-		* conversation page — its header, its tabs, its history paging — rather than in
-		* the console's pane. The pane is what a mirror looks like when there is nothing
-		* else to show it with, so it stays the answer for every other row, and for
-		* every row on a build whose shell offers no way to open a Session.
-		* @param materialized - the Sessions the state says are written, by id.
-		* @param sessionId - the row that was clicked.
-		* @param officialAvailable - whether the shell's own open is reachable.
-		* @returns which pane the click means.
-		*/
-		function rowTarget(materialized, sessionId, officialAvailable) {
-			return officialAvailable && materialized.has(sessionId) ? "official" : "mirror";
-		}
 		/**
 		* Whether a client Sessions service offers the seam the console draws through.
 		*
@@ -3887,8 +3728,14 @@ window.__ModuleLoader__.load({
 			if (permissions !== "workspace-write" && permissions !== "danger-full-access") return false;
 			return typeof justification === "string" && justification.trim() !== "";
 		}
-		/** First key in `keys` whose value is a non-empty string. */
+		/**
+		* First key in `keys` whose value is a non-empty string.
+		*
+		* `args` may be absent: a call whose raw arguments did not parse is a call with
+		* nothing to look in, which is the same answer as a call that has no such key.
+		*/
 		function pickString(args, keys) {
+			if (args === void 0) return void 0;
 			for (const key of keys) {
 				const value = args[key];
 				if (typeof value === "string" && value !== "") return value;
@@ -5083,25 +4930,6 @@ window.__ModuleLoader__.load({
 			* then gets the whole width, which is what reading a mirrored Session wants.
 			*/
 			const [listHidden, setListHidden] = react.useState(false);
-			/**
-			* The Sessions this Host has written into its own storage.
-			*
-			* `written` is the same set as one string, so the effect below runs when the
-			* *set* changes rather than on every render: the state frame is rebuilt on
-			* every broadcast, so an array identity would announce the same Sessions
-			* forever.
-			*/
-			const materialized = react.useMemo(() => new Set((state.state.materialized ?? []).map((entry) => entry.sessionId)), [state.state.materialized]);
-			const written = react.useMemo(() => [...materialized].join("\n"), [materialized]);
-			const announced = react.useRef(/* @__PURE__ */ new Set());
-			const announce = props.sessionsWritten;
-			react.useEffect(() => {
-				if (announce === void 0) return;
-				const fresh = freshIds(announced.current, written === "" ? [] : written.split("\n"));
-				if (fresh.length === 0) return;
-				for (const id of fresh) announced.current.add(id);
-				announce(fresh);
-			}, [written, announce]);
 			const machines = state.state.machines;
 			const open = state.open;
 			const groups = react.useMemo(() => buildTree(machines, query), [machines, query]);
@@ -5222,10 +5050,6 @@ window.__ModuleLoader__.load({
 												"aria-label": gap === void 0 ? `${t("openSession")}: ${candidate.title}` : `${t("openSession")}: ${candidate.title} — ${gap}`,
 												title: candidate.title,
 												onClick: () => {
-													if (rowTarget(materialized, candidate.sessionId, props.openAsSession !== void 0) === "official") {
-														props.openAsSession?.(candidate.sessionId);
-														return;
-													}
 													props.openSession(group.machine.machineName, candidate.sessionId);
 												},
 												children: [
@@ -5236,11 +5060,6 @@ window.__ModuleLoader__.load({
 													/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 														className: sync_module_css_default.rowTitle,
 														children: candidate.title
-													}),
-													materialized.has(candidate.sessionId) && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-														className: sync_module_css_default.realBadge,
-														title: t("materializedHint"),
-														children: t("materializedBadge")
 													}),
 													gap !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 														className: sync_module_css_default.gapBadge,
@@ -6388,18 +6207,6 @@ window.__ModuleLoader__.load({
 			paneRoute: "原件 · {route}",
 			paneRouteHint: "这个面板用的是 DSH 自己的会话页（scope 路线：会话以“无宿主读取”的方式保留，历史由同步通道翻页，输入框由接管输入框顶上）",
 			openSession: "打开",
-			materializedBadge: "真会话",
-			materializedHint: "这条会话已经写进本机存储，由 DSH 自己的会话页打开与分页；它是只读的（发言仍走同步通道）",
-			materializeLabel: "写成真会话",
-			materializeHint: "服务器把每条镜像会话写进自己的存储，于是 DSH 自己的列表与页面能读它。只读由插件自己的门禁保证（不是归档——归档会让会话打不开）。关掉只影响之后新写的副本",
-			materializedTitle: "已写成真会话",
-			materializedEmpty: "还没有",
-			materializedEvents: "条事件",
-			materializedStopped: "已停更",
-			materializedBehind: "落后",
-			materializedWaiting: "等待中",
-			materializedWaitingHint: "副本现在追不上：最常见的原因是这条会话正在 DSH 里被打开着——它在服务器上成了 live 会话，日志写句柄被它持有，插件的追加会被拒。关掉那个页面，下一轮就会补齐",
-			materializedStoppedHint: "这份副本长出了自己的事件（有人在里面发过言），它已不再是镜像的那个会话，所以停止跟进。重建请依次：release、停服务、移走日志、起服务",
 			sessionsTitle: "会话",
 			sessionsRunning: "个会话进行中",
 			searchSessions: "搜索会话",
@@ -6653,18 +6460,6 @@ window.__ModuleLoader__.load({
 			paneRoute: "Original · {route}",
 			paneRouteHint: "This pane is DSH's own conversation page (the scope route: the Session is retained with no Host read at all, history is paged over the sync link, and the takeover composer stands in for the shipped one)",
 			openSession: "Open",
-			materializedBadge: "Real Session",
-			materializedHint: "This Session has been written into this Host's own storage: DSH's own page lists, opens and pages it. It is read-only — speaking in it still goes through the sync channel",
-			materializeLabel: "Write real Sessions",
-			materializeHint: "The server writes every mirrored Session into its own storage, so DSH's own lists and pages can read it. Read-only comes from this plugin's gate, not from archiving — an archived Session cannot be opened at all. Turning this off only affects copies written afterwards",
-			materializedTitle: "Written as real Sessions",
-			materializedEmpty: "none yet",
-			materializedEvents: "events",
-			materializedStopped: "stalled",
-			materializedBehind: "behind",
-			materializedWaiting: "waiting",
-			materializedWaitingHint: "The copy cannot advance right now. The usual reason is that this Session is open in DSH: that makes it a live Session on the server, the live machinery owns its log, and the plugin's append is refused. Close the page and the next pass catches up",
-			materializedStoppedHint: "This copy grew events of its own (someone spoke in it), so it is no longer the Session the mirror holds and it has stopped following. To rebuild: release, stop the Host, move the log aside, start the Host",
 			sessionsTitle: "Sessions",
 			sessionsRunning: "running",
 			searchSessions: "Search Sessions",
@@ -6914,58 +6709,6 @@ window.__ModuleLoader__.load({
 				order: 40,
 				label: () => t("panelTitle")
 			}, PanelIcon));
-			const ctxSlots = ctx;
-			/**
-			* Ask the shell to re-read its Session list.
-			*
-			* Feature-detected like every other optional client capability this half reads:
-			* `sessions` is deliberately not in `inject`, because the console has to load
-			* on builds whose Session service has no `refresh`. Without this, a Session the
-			* Host wrote into its own storage stays invisible in the shell's own browser
-			* until the page is reloaded — the client list is pulled, never pushed, for a
-			* raw storage write.
-			* @param sessionIds - the Sessions that just became real on this Host.
-			*/
-			const announceWritten = (sessionIds) => {
-				if (sessionIds.length === 0) return;
-				const service = ctxSlots.get?.("sessions");
-				if (typeof service !== "object" || service === null) return;
-				const refresh = service.refresh;
-				if (typeof refresh !== "function") return;
-				refresh.call(service).catch(() => void 0);
-			};
-			/**
-			* Open one written Session in DSH's own conversation page.
-			*
-			* `uiWorkspace.openSession` is the shipped "select this Session and show its
-			* Conversation as one navigation action": it retains the Session with the
-			* `mainView` source and selects the conversation panel. That is the whole
-			* point of writing the mirror into this Host — the official page, not a copy
-			* of it.
-			*
-			* The retain inside it resolves against the *client's* Session catalog and
-			* throws on an unknown id, and a session written straight through Host storage
-			* is only in that catalog after a refresh. So the refresh comes first, and the
-			* open is attempted after it; a build without either service leaves the click
-			* doing what it did before.
-			* @param sessionId - the Session to open.
-			*/
-			const openAsSession = (sessionId) => {
-				const workspace = ctxSlots.get?.("uiWorkspace");
-				if (typeof workspace !== "object" || workspace === null) return;
-				const open = workspace.openSession;
-				if (typeof open !== "function") return;
-				const call = open;
-				const sessions = ctxSlots.get?.("sessions");
-				const refresh = typeof sessions === "object" && sessions !== null ? sessions.refresh : void 0;
-				if (typeof refresh !== "function") {
-					call.call(workspace, sessionId);
-					return;
-				}
-				refresh.call(sessions).then(() => {
-					call.call(workspace, sessionId);
-				}).catch(() => void 0);
-			};
 			ctx.slots.inject("main", () => ctx.slots.register({
 				name: "main",
 				key: PANEL_ID,
@@ -6982,18 +6725,9 @@ window.__ModuleLoader__.load({
 					},
 					loadOlder: () => client.loadOlder(),
 					sendPrompt: (text) => client.sendPrompt(text),
-					sessionsWritten: announceWritten,
-					openAsSession,
 					official
 				})
 			}, SyncPanel));
-			ctx.slots.inject("conversation.session.header.actions", () => ctx.slots.register({
-				name: "conversation.session.header.actions",
-				id: "session-sync-copy",
-				order: 30,
-				locale: NS,
-				inject: () => ({ hooks: { sync: client.snapshot } })
-			}, CopyStateAction));
 			ctx.slots.inject(OFFICIAL_SLOT, () => ctx.slots.register({ name: OFFICIAL_SLOT }, OfficialConversation));
 		}
 		//#endregion

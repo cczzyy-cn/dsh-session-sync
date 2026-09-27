@@ -778,8 +778,14 @@ function validEscalationFields(args: Record<string, unknown>): boolean {
   return typeof justification === 'string' && justification.trim() !== ''
 }
 
-/** First key in `keys` whose value is a non-empty string. */
-function pickString(args: Record<string, unknown>, keys: readonly string[]): string | undefined {
+/**
+ * First key in `keys` whose value is a non-empty string.
+ *
+ * `args` may be absent: a call whose raw arguments did not parse is a call with
+ * nothing to look in, which is the same answer as a call that has no such key.
+ */
+function pickString(args: Record<string, unknown> | undefined, keys: readonly string[]): string | undefined {
+  if (args === undefined) return undefined
   for (const key of keys) {
     const value = args[key]
     if (typeof value === 'string' && value !== '') return value

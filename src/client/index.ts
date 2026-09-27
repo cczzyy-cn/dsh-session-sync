@@ -11,9 +11,6 @@
  *    reachable in the collapsed rail.
  *  - `main` — the console: a machine → directory → Session tree beside the
  *    opened Session's conversation and the takeover composer.
- *  - `conversation.session.header.actions` — a chip in DSH's own Session header
- *    for a Session this Host has written, saying whether the copy the reader is
- *    looking at is current.
  *
  * The conversation itself is the shipped renderer where the build supports it:
  * when the client context offers `ctx.sessions.retainAgentScope`, the open
@@ -28,7 +25,6 @@
 import type { Context as ClientContext } from '@deepseek-ai/cordis'
 import type { ConfigPatch } from '../shared/protocol.ts'
 import { ConfigSection } from './ConfigSection.tsx'
-import { CopyStateAction } from './CopyStateAction.tsx'
 import { OFFICIAL_SLOT, OfficialConversation, OfficialSessions } from './official-session.tsx'
 import { PanelIcon } from './PanelIcon.tsx'
 import { SyncPanel } from './SyncPanel.tsx'
@@ -106,62 +102,6 @@ export function apply(ctx: ClientContext): void {
     label: () => t('panelTitle'),
   }, PanelIcon))
 
-  const ctxSlots = ctx
-  /**
-   * Ask the shell to re-read its Session list.
-   *
-   * Feature-detected like every other optional client capability this half reads:
-   * `sessions` is deliberately not in `inject`, because the console has to load
-   * on builds whose Session service has no `refresh`. Without this, a Session the
-   * Host wrote into its own storage stays invisible in the shell's own browser
-   * until the page is reloaded — the client list is pulled, never pushed, for a
-   * raw storage write.
-   * @param sessionIds - the Sessions that just became real on this Host.
-   */
-  const announceWritten = (sessionIds: readonly string[]): void => {
-    if (sessionIds.length === 0) return
-    const service = ctxSlots.get?.('sessions')
-    if (typeof service !== 'object' || service === null) return
-    const refresh = (service as { refresh?: unknown }).refresh
-    if (typeof refresh !== 'function') return
-    void (refresh as () => Promise<void>).call(service).catch(() => undefined)
-  }
-
-  /**
-   * Open one written Session in DSH's own conversation page.
-   *
-   * `uiWorkspace.openSession` is the shipped "select this Session and show its
-   * Conversation as one navigation action": it retains the Session with the
-   * `mainView` source and selects the conversation panel. That is the whole
-   * point of writing the mirror into this Host — the official page, not a copy
-   * of it.
-   *
-   * The retain inside it resolves against the *client's* Session catalog and
-   * throws on an unknown id, and a session written straight through Host storage
-   * is only in that catalog after a refresh. So the refresh comes first, and the
-   * open is attempted after it; a build without either service leaves the click
-   * doing what it did before.
-   * @param sessionId - the Session to open.
-   */
-  const openAsSession = (sessionId: string): void => {
-    const workspace = ctxSlots.get?.('uiWorkspace')
-    if (typeof workspace !== 'object' || workspace === null) return
-    const open = (workspace as { openSession?: unknown }).openSession
-    if (typeof open !== 'function') return
-    const call = open as (target: string) => void
-    const sessions = ctxSlots.get?.('sessions')
-    const refresh = typeof sessions === 'object' && sessions !== null
-      ? (sessions as { refresh?: unknown }).refresh
-      : undefined
-    if (typeof refresh !== 'function') {
-      call.call(workspace, sessionId)
-      return
-    }
-    void (refresh as () => Promise<void>).call(sessions)
-      .then(() => { call.call(workspace, sessionId) })
-      .catch(() => undefined)
-  }
-
   ctx.slots.inject('main', () => ctx.slots.register({
     name: 'main',
     key: PANEL_ID,
@@ -177,27 +117,9 @@ export function apply(ctx: ClientContext): void {
       closeSession: () => { client.closeSession() },
       loadOlder: () => client.loadOlder(),
       sendPrompt: (text: string) => client.sendPrompt(text),
-      sessionsWritten: announceWritten,
-      openAsSession,
       official,
     }),
   }, SyncPanel))
-
-  // A chip in DSH's own Session header for a Session this Host has written, so
-  // the page a reader is looking at says whether it is current. This cannot be
-  // done from the log: a copy falls behind precisely when someone has it open —
-  // the live Session owns its log, so the plugin's append is refused until it
-  // goes cold — which makes the header of that very page the only place the
-  // state can reach the person waiting for it. A build that does not declare
-  // this seat simply never renders it.
-  ctx.slots.inject('conversation.session.header.actions', () => ctx.slots.register({
-    name: 'conversation.session.header.actions',
-    id: 'session-sync-copy',
-    // After the background-job list in the header actions band.
-    order: 30,
-    locale: NS,
-    inject: () => ({ hooks: { sync: client.snapshot } }),
-  }, CopyStateAction))
 
   // The pane body itself: the shipped conversation.content Factory occurrence,
   // registered against the child slot the panel declares.

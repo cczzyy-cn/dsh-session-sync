@@ -20,7 +20,6 @@ import {
   type MirroredSession,
   type PublishFramesPayload,
   type PublishIndexPayload,
-  type SessionHeader,
   type StreamDeltaPayload,
   type SyncState,
   type SyncStreamFrame,
@@ -28,17 +27,6 @@ import {
 
 /** Upper bound on the events retained per mirrored Session. */
 const EVENT_LIMIT = 4_000
-
-/**
- * Hard ceiling on the raised retention a caller may ask for.
- *
- * Materializing a long Session has to hold its whole log at once, and a real one
- * on this deployment was 11,836 events. This is the bound that keeps "hold the
- * history" from becoming "let a caller decide how much memory this process uses":
- * a Session that needs more than this is refused by the writer rather than
- * buffered without limit.
- */
-const RETAIN_LIMIT = 40_000
 
 /**
  * Events one transcript page carries by default.
@@ -76,8 +64,8 @@ const RESYNC_RETRY_MS = 30_000
  * fifty-message page delivered under three hundred events. A long Session then
  * needs ten times the requests it should, each one queued behind everything else
  * that machine is publishing. The origin's own page ceiling is five hundred
- * messages, which is what materializing already asks for, so a reader asks the
- * same way and gets ten times as much per click.
+ * messages, so a reader asks for the whole of it and gets ten times as much per
+ * click.
  */
 const OLDER_PAGE_MESSAGES = 500
 
@@ -134,28 +122,6 @@ interface SessionRecord {
    * origin's own opening window knows that.
    */
   originHasOlder: boolean
-  /**
-   * A higher event ceiling for this Session, while a caller needs the history.
-   *
-   * The mirror is a tail by design and trims from the front at
-   * {@link EVENT_LIMIT}. Materializing needs the *beginning*, so walking the
-   * origin back through that cap achieved nothing: each page arrived and was
-   * trimmed away again by the arrivals above it, and the low edge parked at the
-   * cap with the Session looking whole but short. The ceiling is raised only by
-   * an explicit caller, is capped by {@link RETAIN_LIMIT}, and is never lowered
-   * by a later ordinary read.
-   */
-  retain?: number
-  /**
-   * The Session's own header, as the owning machine last stated it.
-   *
-   * Kept on the mirror because the *writer* of a materialized Session is the server,
-   * while the header only exists on the machine that owns the Session. Reading it
-   * from this half's own `follows` found nothing — a server has none — which is how a
-   * real Session's `agentPreset` was dropped from every materialized log while its
-   * 3,478 events came back byte-identical.
-   */
-  header?: SessionHeader
 }
 
 /** The one logger method the mirror needs, so it does not own a logging seam. */
@@ -284,7 +250,6 @@ export class SyncHub {
           maxSeq: -1,
           originSeq: reported(session.lastSeq),
           originHasOlder: session.hasOlder === true,
-          ...(session.header === undefined ? {} : { header: session.header }),
         })
         continue
       }
@@ -293,10 +258,6 @@ export class SyncHub {
       existing.running = session.running
       existing.originSeq = reported(session.lastSeq)
       existing.originHasOlder = session.hasOlder === true
-      // Replaced, never merged: the origin states the whole header, and a field it
-      // stopped naming must not linger from an earlier one.
-      if (session.header === undefined) delete existing.header
-      else existing.header = session.header
       if (session.cwd === undefined) delete existing.cwd
       else existing.cwd = session.cwd
     }
@@ -361,10 +322,6 @@ export class SyncHub {
     const record = this.machine(machineName)
     record.lastSeen = Date.now()
     const session = this.session(record, payload.sessionId)
-    // The header is taken *before* the batch is judged, and kept even when the batch is
-    // a replay that adds nothing: it is the Session's identity, not one of its events,
-    // and the batch carrying it is often exactly such a replay (a resync produces one).
-    if (payload.header !== undefined) session.header = payload.header
     const fresh: MirrorEvent[] = []
     for (const event of payload.events) {
       if (session.seqs.has(event.seq)) continue
@@ -380,7 +337,7 @@ export class SyncHub {
     // A late batch belongs where its sequence says, not at the end: the
     // transcript is rendered in this order.
     session.events.sort((left, right) => left.seq - right.seq)
-    const ceiling = session.retain ?? EVENT_LIMIT
+    const ceiling = EVENT_LIMIT
     if (session.events.length > ceiling) {
       for (const dropped of session.events.splice(0, session.events.length - ceiling)) {
         session.seqs.delete(dropped.seq)
@@ -616,38 +573,17 @@ export class SyncHub {
    * walks older, one page at a time, and `hasMore` says whether it is worth it.
    * @param machineName - owning machine.
    * @param sessionId - published Session.
-   * @param page - page size, the exclusive upper sequence to read below, how much
-   *   history to retain while this caller works, and whether to drop that hold.
+   * @param page - page size and the exclusive upper sequence to read below.
    * @returns the page, or undefined when the mirror holds no such Session.
    */
-  /**
-   * The header the owning machine last stated for one Session, if any.
-   *
-   * The read the writer needs: a materialized log has to state the Session's own
-   * fields, and the machine that writes it is not the machine that has them.
-   * @param machineName - owning machine.
-   * @param sessionId - published Session.
-   * @returns the header, or undefined when the origin has not stated one.
-   */
-  sessionHeader(machineName: string, sessionId: string): SessionHeader | undefined {
-    return this.records.get(machineName)?.sessions.get(sessionId)?.header
-  }
-
   transcript(
     machineName: string,
     sessionId: string,
-    page: { limit: number; before?: number; retain?: number; release?: boolean } = { limit: TRANSCRIPT_WINDOW },
+    page: { limit: number; before?: number } = { limit: TRANSCRIPT_WINDOW },
   ): MirrorTranscript | undefined {
     const record = this.records.get(machineName)
     const session = record?.sessions.get(sessionId)
     if (record === undefined || session === undefined) return undefined
-    // Raise the ceiling before the page is read, so what this caller is about to
-    // ask for is not trimmed away by the time it arrives. Never lowered by
-    // implication: an ordinary read must not shrink what a backfill is holding.
-    if (page.release === true) session.retain = undefined
-    if (page.retain !== undefined) {
-      session.retain = Math.min(Math.max(session.retain ?? EVENT_LIMIT, page.retain), RETAIN_LIMIT)
-    }
     // Held in sequence order, so the window's start is a slice index rather than
     // a search — and a `before` that lands inside the window is where paging
     // overlaps and cannot silently skip a row.
@@ -656,11 +592,7 @@ export class SyncHub {
       ? session.events.length
       : session.events.findIndex(event => event.seq >= before)
     const stop = end < 0 ? session.events.length : end
-    // A page cannot be larger than what this Session is willing to hold: clamping
-    // to the default cap instead of the held ceiling would return the newest
-    // 4,000 of a 12,000-event window and look, from the caller's side, exactly
-    // like a backfill that never advanced.
-    const size = Math.min(Math.max(1, page.limit), session.retain ?? EVENT_LIMIT)
+    const size = Math.min(Math.max(1, page.limit), EVENT_LIMIT)
     const start = Math.max(0, stop - size)
     // Two different reasons older history exists, and a reader deserves both:
     // the mirror holds more below this page, or the Session began before the
@@ -693,8 +625,8 @@ export class SyncHub {
    *
    * {@link SyncHub.transcript} asks as a side effect of a reader reaching the
    * mirror's lower edge, and it is rate-limited because a reader asks once per
-   * scroll. Materializing is not reading: it needs the Session's *beginning*, so
-   * it asks directly and in the largest pages the origin serves.
+   * scroll. A hole is not a scroll: it is a known gap, so the page that covers it
+   * is asked for directly and in the largest pages the origin serves.
    * @param machineName - owning machine.
    * @param sessionId - published Session.
    * @param throughSeq - the lowest sequence the mirror holds; the page ends here.

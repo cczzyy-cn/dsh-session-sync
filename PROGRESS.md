@@ -1,22 +1,22 @@
 # dsh-session-sync 推进记录
 
 > 只写被证据支撑的事实：跑过的命令、测到的数字、看到的现象。每条结论都要能指出它是怎么被验证的。
-> 本文件不参与构建。最近更新：2026-09-27（scope 路线收口：adopt/address 两条死路已删）
+> 本文件不参与构建。最近更新：2026-09-27（v0.8.0：「写成真会话」整条移除）
 
 ## 0. 现状一眼看
 
 | 项 | 值 |
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
-| 版本 | **`0.7.4`**（tag `v0.7.4` → `ef665d9`）· 本地 = 远端 = 已上线（scope 收口，见 §2） |
-| 服务器 | `210.16.120.228` · DSH **`0.1.7-rc.2`**（`npx` 缓存 `4f4f47d9854f3c73`）· 插件 **`0.7.4`**（lock → `tar.gz/ef665d9d…`）· unit `dsh-web.service` · active、**未重启** |
+| 版本 | **`0.8.0`**（tag `v0.8.0`）· 物化整条移除，见 §2 |
+| 服务器 | `210.16.120.228` · DSH **`0.1.7-rc.2`**（`npx` 缓存 `4f4f47d9854f3c73`）· unit `dsh-web.service` |
 | 控制台路线 | **`scope`**：服务器上 `dsh-api-session-controller/lib/client.js` 命中 `retainAgentScope` ⇒ 特性探测确定走它；`adopt` 在任何已发布构建里都不存在（该路线已从代码删除） |
-| 服务器镜像 | `session-e08471af` **4000 条**（窗口上限）、`missingEvents: 0`、标题已投影；`f6ba2b3b` 已取消发布 |
-| 服务器副本 | 台账两条：`e08471af` **5076 条**（与源站事件数齐平、无 `waiting`/`stopped`）；`f6ba2b3b` 3478 条（旧构建遗留、已停更） |
-| 本机（源站） | DSH 源码运行（checkout = `dsh-v0.1.7-rc.1`）· profile 已到 **`0.7.4`**（客户端半边刷新即生效）· **Host 半边仍是 01:13 装载的那份**，要对齐需要一次本机重启（会杀掉正在跑的会话，留给用户） |
+| 服务器镜像 | `session-e08471af` **4000 条**（窗口上限）、`missingEvents: 0`；`f6ba2b3b` 已取消发布 |
+| 服务器上的旧副本 | `e08471af` 5076 条、`f6ba2b3b` 3478 条（旧构建遗留）。插件不再管理，**未删除**；升级后它们是普通会话 |
+| 本机（源站） | DSH 源码运行（checkout = `dsh-v0.1.7-rc.1`）· profile 装的是发布版插件；**Host 半边要等一次本机重启才换**（会杀掉正在跑的会话，留给用户） |
 | 控制台 | `https://dsh.c-zy.cc/?token=<43 位>`（浏览器 cookie 持久） |
 | 同步口 | `210.16.120.228:8791`（源站连它；**不经** Cloudflare） |
-| 测试 | **91 通过 / 0 失败**（26 suites，1.4s） |
+| 测试 | **28 通过 / 0 失败**（9 suites，1.0s） |
 
 **2026-09-25 服务器更新（三次）**：插件 `13b7aa2`（按字节切批 + 具名 413）→ `b2a7811`（回填分页边界）→ `4f3ed9a`/`c3862a2`/`5a80c15`/`32298d1`（保留上限 / 预算 / 跨平台 cwd / 拒写截断）→ **`v0.4.0`（tag）**。每次都用 lock 的 tar.gz + 安装产物的代码标记双向核对（`v0.4.0` 这次 9 个 host 标记 + 2 个 client 标记全中、旧串 `no follow or no page API` 为 0），`systemctl restart dsh-web` 后 active、3080/8791 在听。依赖也从裸 `github:` 改成 **`github:cczzyy-cn/dsh-session-sync#v0.4.0`**（lock → `8eeb0dd`），改前备份 `/root/package.json.bak-<时间戳>`。**本机 origin 跑的是 18:12:58 启动的构建**（`lib` 与仓库哈希一致，即含全部修复）。
 
@@ -116,6 +116,30 @@ cursor 为什么一直是 -1：follow 的开场快照是**一整帧**，源站�
 ---
 
 ## 2. 推进日志（晚 → 早）
+
+### 「写成真会话」（物化）整条移除（v0.8.0，2026-09-27）
+
+**用户的决定**：不要真会话功能。于是这条线**删除**，而不是加个默认关的开关——留一个不再有人读的开关，正是这个项目一直在清理的那种漂移。
+
+**Host 侧删掉的**：
+
+- 三个文件：`src/host/materialize.ts`（把镜像写成 DSH 日志）、`src/host/ledger.ts`（只读台账）、`src/host/logfile.ts`（切 DSH 自己的 `session/end-seed`、清投影缓存）。
+- `service.ts`：`DIVERGED_REASON` 与 `BACKFILL_*` 常量，`ledger`/`materializing`/`waits`/`repairs`/`headerSeen` 字段，以及 `materialize()` / `holdsMirrorOf()` / `clearStaleArchive()` / `copyDiverged()` / `repairCopy()` / `unaccounted()` / `releaseMaterialized()` / `materializeTick()` / `syncMaterialized()` / `backfill()` 一整块（约 500 行）；`view()` 里的 `materialize`/`materialized`、`patch()` 里的开关与即时 tick、`start()` 里的每轮物化。
+- `index.ts`：`agent/pre-step` 门禁与 `/materialize`、`/materialize/release` 两条路由。
+- `protocol.ts`：`MATERIALIZED_FILE_NAME`、`SyncConfig.materialize`、`SyncState.materialize`/`materialized`、`ConfigPatch.materialize`、`SessionHeader` 与两个发布载荷里的 `header`。
+- `dsh.ts`：`HostContext.on('agent/pre-step')`、`PreStepLike`、`PreStepDecisionLike`、`WorkspaceRegistryLike`、`FollowSnapshotFrame.header`。
+- `transport.ts`：`headerOut` 与 `publishFrames` 的 header 参数（header 跨链路的**唯一**消费者就是那个写入器）。
+- `hub.ts`：镜像里的 `header`、`sessionHeader()`，以及只为回填存在的保留上限（`RETAIN_LIMIT`、`transcript({retain,release})`）。
+
+**客户端删掉的**：设置页的「写成真会话」开关与「已写成真会话」列表、会话行上的「真会话」徽标与 `uiWorkspace.openSession` 跳转、`routing.ts` 的 `freshIds`/`rowTarget`、`CopyStateAction.tsx`（DSH 页头那枚状态片）整个文件、`api.ts` 空态里的 `materialize`，以及中英各 12 条文案。
+
+**顺带修掉一条既有类型错**：`tool-cards.ts` 的 `pickString(parseArgs(...))` 把可能为 `undefined` 的值传给了一个不接受的参数——客户端半边在本仓库无法整体 `tsc`，所以它一直是隐形的。这轮给它写了一份最小 stub（react / jsx-runtime / ui-primitives / client-store / css modules），**第一次**把客户端半边整体过了一遍 `tsc`：退出 0。
+
+**效应**：`lib/index.js` 152,841 → **102,073 B**（−33%）；`client/client.js` 324,598 → **310,315 B**。测试 **28 通过 / 0 失败**（删掉的是只为这条线存在的 6 个测试文件与若干用例，另补了一条"文档里的旧键被忽略"）。
+
+**验证边界（诚实）**：Host 半边 `tsc` 0、客户端半边 stub `tsc` 0、构建通过、28 条测试全绿；**线上尚未部署**。
+
+**服务器上留下的东西（等用户定）**：那两份副本（`session-e08471af` 5076 条、`f6ba2b3b` 3478 条）与台账文件。插件不再管理它们——门禁随代码一起消失，所以升级后它们在服务器的 DSH 里变回**普通会话**（能打开，也能被发言）。**没有自动删除**（这个项目从不删别人的日志）；要清掉是三步：停服 → `mv` 走 `<sessions>/…/session-<id>` 与 `storages/session_projcache/sessions/<id>.json` → 起服。升级之前，旧版本的门禁仍然护着它们。
 
 ### scope 路线收口：adopt 与 address 两条死路删掉，官方渲染只剩一条（2026-09-27）
 
