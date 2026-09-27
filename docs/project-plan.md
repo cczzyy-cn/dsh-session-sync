@@ -117,7 +117,7 @@
   判定抽成 `routing.ts` 的 `scopeCapable` 并有测试；README 的三路线表改成一条。**先核实过线上走的就是 scope**：
   服务器 DSH `0.1.7-rc.2` 的 `dsh-api-session-controller/lib/client.js` 命中 `retainAgentScope`，而 `adopt` 在任何已发布构建里都不存在。
   `patches/` 保留为历史（已无代码路径使用）。测试 86 → **91**；产物 `client.js` −4.4 KB。
-  *仍未定*：有副本时**行点击**走的仍是官方页（`rowTarget` 未改），所以 scope 面板只在"没有副本"的会话上出现——与 §4 第 1 条的 B 线粒度是同一个开关。
+  *仍未定*：**B 线的粒度**（§4 第 1 条）。有副本时**行点击**走官方页——用户 2026-09-27 选了"保持现状"，所以 scope 面板只在"没有副本"的会话上出现。
 
 ### 3.4 路线图
 

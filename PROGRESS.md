@@ -8,12 +8,12 @@
 | 项 | 值 |
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
-| 版本 | **`0.7.3`**（tag `v0.7.3` → `634d243`）· 本地 = 远端 · 其上还有一轮**未提交**的客户端改动（scope 收口，见 §2） |
-| 服务器 | `210.16.120.228` · DSH **`0.1.7-rc.2`**（`npx` 缓存 `4f4f47d9854f3c73`）· 插件 **`0.7.3`**（lock → `tar.gz/634d2437…`）· unit `dsh-web.service` · active（13:10:09 UTC 起） |
+| 版本 | **`0.7.4`**（tag `v0.7.4` → `ef665d9`）· 本地 = 远端 = 已上线（scope 收口，见 §2） |
+| 服务器 | `210.16.120.228` · DSH **`0.1.7-rc.2`**（`npx` 缓存 `4f4f47d9854f3c73`）· 插件 **`0.7.4`**（lock → `tar.gz/ef665d9d…`）· unit `dsh-web.service` · active、**未重启** |
 | 控制台路线 | **`scope`**：服务器上 `dsh-api-session-controller/lib/client.js` 命中 `retainAgentScope` ⇒ 特性探测确定走它；`adopt` 在任何已发布构建里都不存在（该路线已从代码删除） |
 | 服务器镜像 | `session-e08471af` **4000 条**（窗口上限）、`missingEvents: 0`、标题已投影；`f6ba2b3b` 已取消发布 |
 | 服务器副本 | 台账两条：`e08471af` **5076 条**（与源站事件数齐平、无 `waiting`/`stopped`）；`f6ba2b3b` 3478 条（旧构建遗留、已停更） |
-| 本机（源站） | DSH 源码运行（checkout = `dsh-v0.1.7-rc.1`）· profile 锁 `b6a87bd` = **v0.7.1**（进程 01:13 装载）⇒ **两端版本倾斜**，等本机重启对齐 |
+| 本机（源站） | DSH 源码运行（checkout = `dsh-v0.1.7-rc.1`）· profile 已到 **`0.7.4`**（客户端半边刷新即生效）· **Host 半边仍是 01:13 装载的那份**，要对齐需要一次本机重启（会杀掉正在跑的会话，留给用户） |
 | 控制台 | `https://dsh.c-zy.cc/?token=<43 位>`（浏览器 cookie 持久） |
 | 同步口 | `210.16.120.228:8791`（源站连它；**不经** Cloudflare） |
 | 测试 | **91 通过 / 0 失败**（26 suites，1.4s） |
@@ -141,7 +141,15 @@ cursor 为什么一直是 -1：follow 的开场快照是**一整帧**，源站�
 - 客户端半边在本仓库**无法直接 `tsc`**（缺 `react` 与 shipped 包，见 §"完成度检查"那条）。本轮用一份一次性配置把 `official-session.tsx` + `api.ts` 拉进程序做类型检查（`%TEMP%\synccheck`，react/jsx-runtime/client-store/ui-slots 用最小声明顶替），**退出 0**；顺带抓出并修掉一条**既有**类型错：`prependOlder` 的入参被声明成整个 `MirrorTranscript`，而调用点只带 `events/hasMore`。
 - `tsdown` 两半产物重建：`client/client.js` 329,057 → **324,598 B**（−4.4 KB，删掉的正是这条路）；`lib/index.js` 未变（Host 半边没碰）。
 
-**没做（需要用户定）**：行点击的目标没动。今天"有副本"的行仍旧打开 DSH 官方会话页（`rowTarget` 语义未改），所以服务器上那条已发布的会话点开看到的还是官方页——**scope 面板只在没有副本的会话上出现**，或者把设置页的 `写成真会话` 关掉。要不要把行点击固定到 scope 面板（官方页挪到一个显式入口），是产品决定，没有替用户定。
+**行点击的目标：用户选了"保持现状"**（2026-09-27）。今天"有副本"的行仍旧打开 DSH 官方会话页（`rowTarget` 语义未改），所以服务器上那条已发布的会话点开看到的还是官方页——**scope 面板只在没有副本的会话上出现**，或者把设置页的 `写成真会话` 关掉。
+
+**上线（`v0.7.4`，只改客户端半边 ⇒ 两个 Host 都没重启）**：
+
+- 本机：commit `ef665d9`、tag `v0.7.4`、push 到 `origin/main` 与 tag。
+  > 踩到一次：凭据管理器里 `gh:github.com:cczzyy-cn` 的 blob 是 **UTF-8**，不是 UTF-16——按 Unicode 解出来是 20 个乱码字，GitHub 直接 401。改成 `[Text.Encoding]::UTF8.GetString()` 后 40 字符的 `gho_…` 一次推成功（先用 `api.github.com/user` 验过 token 有效再推）。
+- 服务器：`#v0.7.3` → `#v0.7.4`，lock → `tar.gz/ef665d9d159715d7e592f9a49993d78645a2a474`；装出的包 `0.7.4`，`client/client.js` 324,598 B（sha256 与本地产物**逐字节相同**：`86a67dfa…`）；`dsh-web` 全程 active。
+- **没有重启，浏览器拿到的确实是新包**（这条不靠推断）：从服务器上带 cookie 取 `/plugins/??dsh-session-sync/client.js&rev=ff41a8771b62` → `200`、324,636 B（= 盘上 324,598 + 38 B 注册表外壳），其中 `scopeCapable` 在、新文案在、`OfficialTransport`/`AdoptSource`/旧的三路线文案**全为 0**。
+- 本机 profile：`pnpm update dsh-session-sync` → `0.7.4`（lock → `ef665d9`）；`lib/` 自 `0.7.3` 起未变，所以本机 Host 半边是同一份代码，只是内存里仍是 01:13 装载的那次加载。
 
 ### ② 的答案：seed 的来源就是"把事件交给 DSH"，所以那条路整条退回（v0.7.3）
 
