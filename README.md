@@ -35,7 +35,7 @@ and may be reverted with `git -C <checkout> checkout -- packages/client/ui-sideb
 
 | Surface | Slot | What it is |
 | --- | --- | --- |
-| Settings page | `settings.section` (id `session-sync`) | Machine name, server domain/IP, the server switch, the connection password, the listen address/port, and the per-Session publish list |
+| Settings page | `settings.section` (id `session-sync`) | Machine name, server domain/IP, the server switch, the connection password, the listen address/port, the per-Session publish list, and the plugin versions both ends report |
 | Sidebar panel row | `sidebar.panellist` (id `session-sync`) | The entry that opens the console, and the one that survives the collapsed rail |
 | Centre panel | `main` (key `session-sync`) | The console: a **machine → directory → Session** tree beside the opened Session's conversation and the takeover composer |
 
@@ -196,16 +196,27 @@ normal way to edit it.
   black-holed by a network blip used to leave the fetch pending forever — the
   outbox stopped draining, nothing reconnected, and the link looked healthy while
   publishing nothing.
-- **The mirror counts what it is missing.** Every Session carries
-  `missingEvents`, the events below the origin's own highest sequence that the
-  mirror does not hold — holes in the middle plus however far it is behind. The
-  origin states its extent in the index (`lastSeq`), so a mirror holding nothing
-  is not mistaken for a Session with nothing to hold.
+- **The mirror counts what it is missing, in the two readings that differ.** Each
+  Session reports `holes` — sequences missing *inside* the range the mirror holds,
+  which is a repair the sweep owes — and `behind`, the events the origin has
+  published above the mirror's top, which is simply what a running Session looks
+  like. The sum is `missingEvents`. The console shows the two apart: a red
+  `缺 N 条` only for holes, a quiet `落后 N` for being behind, because one badge
+  for both made every healthy Session look broken. The origin states its extent in
+  the index (`lastSeq`), so a mirror holding nothing is not mistaken for a Session
+  with nothing to hold.
 - **What is missing is asked for.** The server asks the origin to re-open one
   Session's follow (`{kind:'resync'}`, retried every 30 s while the gap lasts);
   the opening snapshot is replayed into the mirror, and because membership rather
   than a high-water mark decides what is new, that replay fills a hole instead of
-  being discarded as history.
+  being discarded as history. A hole the replay cannot reach — one far below the
+  window — is asked for on its own, as a page aimed at the hole's first sequence.
+- **The two ends state their own versions.** Every index carries the publishing
+  build's plugin version, and `/state` carries this Host's own; the settings page
+  prints them side by side and says so when they differ. Two halves of one
+  deployment are loaded at different times — an origin keeps the Host half it
+  started with, a server keeps what `pnpm install` last put there — and reading
+  both lockfiles by hand was the only way to notice before this.
 - **History below the window is asked for too.** A follow opens on a tail window,
   so a long Session's mirror begins mid-conversation. The origin says whether its
   own log continues below what it published (`hasOlder`, from the opening
@@ -264,7 +275,7 @@ All of them sit under `/dsh-session-sync` and behind the GUI's own gate.
 | --- | --- | --- |
 | `/config` | GET | The plugin's configuration plus the current state |
 | `/config` | POST | Patch the configuration; answers with the fresh config, state, and local Session list |
-| `/state` | GET | The state every surface reads: role, link, mirror, and the per-Session counts |
+| `/state` | GET | The state every surface reads: role, link, mirror, this Host's own `pluginVersion`, and the per-Session counts |
 | `/sessions` | GET | This machine's own Session list, for the publish picker |
 | `/transcript` | GET | A page of one mirrored Session (`machine`, `session`, optional `limit`, `before`); asks the owning machine for history below its window when a reader reaches the mirror's edge |
 | `/command` | POST | One takeover prompt; answers with the `commandId` its status is narrated under |
@@ -373,12 +384,13 @@ pane wherever the build offers `ctx.sessions.retainAgentScope`.
   instant: it is a read of that machine's log, a POST back, and a trip through
   whatever proxy sits in front, which measured at ten to twenty seconds on a
   cross-border link, so the control waits rather than answering at once.
-- **A gap in the middle of a mirror is not yet repaired by the paging path.** The
-  repair ask replays a follow's opening snapshot, which is a tail window: it
-  fills a gap near the top and cannot reach one far below it. Such a Session is
-  reported honestly (the console shows `缺 N 条` on its row and in the header)
-  but stays short until the origin's window grows past the hole or the Session is
-  re-published.
+- **A gap in the middle of a mirror is repaired, but that repair has never been
+  observed happening on a live deployment.** The sweep notices a hole and the
+  server asks the origin for a page aimed at it, which the three test layers pin
+  (`tests/hole-repair*.spec.ts`); on the deployed pair no hole has occurred while
+  anyone was watching, so the honest statement is "implemented and tested, never
+  seen in the wild". A hole that stays is reported truthfully — the console shows
+  `缺 N 条` on its row and in the header.
 - **A mirrored transcript carries no Host-computed panels.** The shipped
   conversation offers its change-review cards, and the official `ui-deliverables`
   plugin fills one by asking *its own Host* for

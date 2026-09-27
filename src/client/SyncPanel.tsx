@@ -57,6 +57,7 @@ import {
 import type { MirroredMachine, MirroredSession } from '../shared/protocol.ts'
 import type { CommandDelivery, SyncClientSnapshot } from './api.ts'
 import type { SessionSyncKey, SessionSyncTranslate } from './locales.ts'
+import { buildTree } from './tree.ts'
 import {
   compactTokens,
   sessionChrome,
@@ -141,18 +142,6 @@ export interface SyncPanelProps {
   renderSlot: RenderSlotLike
   /** The session-scope provider the child slot's declaration seats here. */
   SessionProvider: SessionProviderComponent
-}
-
-/** One directory's Sessions, inside one machine. */
-interface ProjectGroup {
-  cwd: string
-  sessions: MirroredSession[]
-}
-
-/** One machine and its directories. */
-interface MachineGroup {
-  machine: MirroredMachine
-  projects: ProjectGroup[]
 }
 
 /**
@@ -1405,51 +1394,6 @@ function deliveryLine(delivery: CommandDelivery, t: (key: SessionSyncKey) => str
   return delivery.error === undefined
     ? t('deliveryFailed')
     : `${t('deliveryFailed')}: ${delivery.error}`
-}
-
-/**
- * Group the mirror into machines, their directories, and their Sessions.
- * @param machines - every machine the server mirrors, newest activity first.
- * @param query - the current search text.
- * @returns the tree to render; machines and directories with no match are gone.
- */
-function buildTree(machines: readonly MirroredMachine[], query: string): MachineGroup[] {
-  const needle = query.trim().toLowerCase()
-  const groups: MachineGroup[] = []
-  // Ordered by name, not by arrival: the mirror lists machines in whatever order
-  // they last published, so two machines publishing in turn would swap rows and
-  // the list would appear to jump. A name order changes only when membership does.
-  const ordered = [...machines]
-    .sort((left, right) => left.machineName.localeCompare(right.machineName))
-  for (const machine of ordered) {
-    const sessions = machine.sessions
-      .filter(session => needle === '' || matches(session, needle))
-      .sort((left, right) =>
-        Number(right.running) - Number(left.running) || right.updatedAt - left.updatedAt)
-    if (needle !== '' && sessions.length === 0) continue
-    const directories = new Map<string, MirroredSession[]>()
-    for (const session of sessions) {
-      const key = session.cwd ?? ''
-      const bucket = directories.get(key)
-      if (bucket === undefined) directories.set(key, [session])
-      else bucket.push(session)
-    }
-    groups.push({
-      machine,
-      // Directories are ordered by path for the same reason.
-      projects: [...directories]
-        .sort(([left], [right]) => left.localeCompare(right))
-        .map(([cwd, members]) => ({ cwd, sessions: members })),
-    })
-  }
-  return groups
-}
-
-/** Whether one Session matches the search text. */
-function matches(session: MirroredSession, needle: string): boolean {
-  return session.title.toLowerCase().includes(needle)
-    || (session.cwd ?? '').toLowerCase().includes(needle)
-    || session.sessionId.toLowerCase().includes(needle)
 }
 
 /**

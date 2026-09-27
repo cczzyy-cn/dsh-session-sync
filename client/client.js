@@ -1873,6 +1873,55 @@ window.__ModuleLoader__.load({
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconGlobeOutlineRegular, { size: props.size });
 		}
 		//#endregion
+		//#region src/client/tree.ts
+		/**
+		* Group the mirror into machines, their directories, and their Sessions.
+		*
+		* A machine or directory with no match is dropped when a search is being asked:
+		* a search is a question about the whole tree, so a match hidden inside a
+		* collapsed or empty-looking branch is the same as no match at all.
+		* @param machines - every machine the server mirrors, in whatever order it lists them.
+		* @param query - the current search text.
+		* @returns the tree to render.
+		*/
+		function buildTree(machines, query) {
+			const needle = query.trim().toLowerCase();
+			const groups = [];
+			const ordered = [...machines].sort((left, right) => left.machineName.localeCompare(right.machineName));
+			for (const machine of ordered) {
+				const sessions = machine.sessions.filter((session) => needle === "" || matches$1(session, needle)).sort((left, right) => Number(right.running) - Number(left.running) || right.updatedAt - left.updatedAt);
+				if (needle !== "" && sessions.length === 0) continue;
+				const directories = /* @__PURE__ */ new Map();
+				for (const session of sessions) {
+					const key = session.cwd ?? "";
+					const bucket = directories.get(key);
+					if (bucket === void 0) directories.set(key, [session]);
+					else bucket.push(session);
+				}
+				groups.push({
+					machine,
+					projects: [...directories].sort(([left], [right]) => left.localeCompare(right)).map(([cwd, members]) => ({
+						cwd,
+						sessions: members
+					}))
+				});
+			}
+			return groups;
+		}
+		/**
+		* Whether one Session matches the search text.
+		*
+		* The needle is expected lower-cased and trimmed by the caller; the id is
+		* matched as well as the title because an un-published or never-titled Session is
+		* only findable by its id, which is exactly what the panel shows for it.
+		* @param session - the Session to test.
+		* @param needle - the lower-cased search text.
+		* @returns whether the row should stay.
+		*/
+		function matches$1(session, needle) {
+			return session.title.toLowerCase().includes(needle) || (session.cwd ?? "").toLowerCase().includes(needle) || session.sessionId.toLowerCase().includes(needle);
+		}
+		//#endregion
 		//#region src/client/session-chrome.ts
 		/** Longest content excerpt kept for one cell. */
 		const EXCERPT_LIMIT = 400;
@@ -2880,10 +2929,10 @@ window.__ModuleLoader__.load({
 		/** Whether one span's row matches the active search. */
 		function matchSpan(span, cells, query) {
 			const cell = cells[span.index];
-			return cell === void 0 ? true : matches$1(cell, query);
+			return cell === void 0 ? true : matches(cell, query);
 		}
 		/** Whether one row's own text carries the search text. */
-		function matches$1(cell, query) {
+		function matches(cell, query) {
 			const needle = query.trim().toLowerCase();
 			if (needle === "") return true;
 			return cell.title.toLowerCase().includes(needle) || (cell.request ?? "").toLowerCase().includes(needle) || (cell.result ?? "").toLowerCase().includes(needle) || cell.label.toLowerCase().includes(needle);
@@ -2916,7 +2965,7 @@ window.__ModuleLoader__.load({
 						},
 						index,
 						folded: cells.filter((candidate) => candidate.turn === cell.turn).length,
-						match: summary === void 0 ? matches$1(cell, query) : matches$1(summary, query)
+						match: summary === void 0 ? matches(cell, query) : matches(summary, query)
 					});
 					continue;
 				}
@@ -2924,7 +2973,7 @@ window.__ModuleLoader__.load({
 				rows.push({
 					cell,
 					index,
-					match: matches$1(cell, query)
+					match: matches(cell, query)
 				});
 				previousKind = cell.kind;
 			}
@@ -6140,40 +6189,6 @@ window.__ModuleLoader__.load({
 			if (delivery.state === "accepted") return t("deliveryAccepted");
 			if (delivery.state === "expired") return t("deliveryExpired");
 			return delivery.error === void 0 ? t("deliveryFailed") : `${t("deliveryFailed")}: ${delivery.error}`;
-		}
-		/**
-		* Group the mirror into machines, their directories, and their Sessions.
-		* @param machines - every machine the server mirrors, newest activity first.
-		* @param query - the current search text.
-		* @returns the tree to render; machines and directories with no match are gone.
-		*/
-		function buildTree(machines, query) {
-			const needle = query.trim().toLowerCase();
-			const groups = [];
-			const ordered = [...machines].sort((left, right) => left.machineName.localeCompare(right.machineName));
-			for (const machine of ordered) {
-				const sessions = machine.sessions.filter((session) => needle === "" || matches(session, needle)).sort((left, right) => Number(right.running) - Number(left.running) || right.updatedAt - left.updatedAt);
-				if (needle !== "" && sessions.length === 0) continue;
-				const directories = /* @__PURE__ */ new Map();
-				for (const session of sessions) {
-					const key = session.cwd ?? "";
-					const bucket = directories.get(key);
-					if (bucket === void 0) directories.set(key, [session]);
-					else bucket.push(session);
-				}
-				groups.push({
-					machine,
-					projects: [...directories].sort(([left], [right]) => left.localeCompare(right)).map(([cwd, members]) => ({
-						cwd,
-						sessions: members
-					}))
-				});
-			}
-			return groups;
-		}
-		/** Whether one Session matches the search text. */
-		function matches(session, needle) {
-			return session.title.toLowerCase().includes(needle) || (session.cwd ?? "").toLowerCase().includes(needle) || session.sessionId.toLowerCase().includes(needle);
 		}
 		/**
 		* One relative-time label, from the shared bucketing and this plugin's words.
