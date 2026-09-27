@@ -88,28 +88,38 @@ registered `main` keys.
 - **The conversation is the shipped one wherever the build allows it.** The
   console draws the open remote Session with the product's real
   `conversation.content` factory — its transcript, its tool cards, its turn
-  folds — by taking the Session up through whichever of three routes the build
-  offers:
+  folds — through the one route a released DSH offers:
 
   | Route | Needs | What it gives |
   | --- | --- | --- |
-  | `adopt` | `ctx.sessions.adopt` (the patch below) | A Session born open, holding the console's own prompt verb — the shipped composer works |
-  | `scope` | `ctx.sessions.retainAgentScope` + `binding` | The same pane with no Host I/O at all; the console's takeover composer stands in for the shipped one |
-  | `address` | `ctx.sessions.retain` alone, plus one catalogued Session to address | The same, except the reference's own Host read cannot succeed and the pane shows that hint |
+  | `scope` | `ctx.sessions.retainAgentScope` + `binding` | The shipped pane with no Host I/O at all; the console's takeover composer stands in for the shipped one |
 
-  Only when none is available does the console keep the hand-drawn pane
+  Only when the build has no such seam does the console keep the hand-drawn pane
   described above, unchanged — so a stock build loses likeness, never function.
-  The routes are feature-detected in `src/client/official-session.tsx`;
-  `sessions` is deliberately not in this plugin's required `inject` list,
-  because the console has to load on builds that predate all three.
+  The route is feature-detected in `src/client/official-session.tsx`, and the
+  decision itself is a pure function under test (`scopeCapable` in
+  `src/client/routing.ts`); `sessions` is deliberately not in this plugin's
+  required `inject` list, because the console has to load on builds that predate
+  the seam.
 
-  On the two routes that drive the window itself the shipped composer is hidden,
-  because its prompt would go to a Host that has never heard of the Session: its
-  seat is replaced by the console's own takeover composer, which reaches the
-  machine that owns the Session. The composer-block registry
-  (`ctx.conversation.blocks`) is raised alongside so the reason shows wherever
-  that block survives — another plugin publishing its own state for the same
-  Session can clear it, which is why the seat is hidden rather than trusted.
+  Two other routes were built and are gone. `adopt` (`ctx.sessions.adopt`) was a
+  client-only addition to `@deepseek-ai/dsh-api-session-controller`, carried as a
+  source patch in `patches/` against `dsh-v0.1.7-alpha.2`; it was the only route
+  that could hand the shipped composer a prompt that reaches the origin, and the
+  next `dsh` install dropped it — no released build has it, so the code path was
+  dead weight. `address` (`retain` with a catalogued parent identity) needed only
+  released surfaces, but the reference's own Host history read could never
+  succeed, so its only visible effect was a failure line the pane then hid.
+  `patches/` is kept as history: the plugin no longer has an adopt route, so
+  applying it changes nothing.
+
+  On this route the shipped composer is hidden, because its prompt would go to a
+  Host that has never heard of the Session: its seat is replaced by the console's
+  own takeover composer, which reaches the machine that owns the Session. The
+  composer-block registry (`ctx.conversation.blocks`) is raised alongside so the
+  reason shows wherever that block survives — another plugin publishing its own
+  state for the same Session can clear it, which is why the seat is hidden rather
+  than trusted.
 
   Older history is reachable from the pane. A mirror serves a tail window, and
   the shipped conversation's own older-end control would ask the Host that has
@@ -130,15 +140,6 @@ registered `main` keys.
   server's own window does, including a change made while the pane is open. What
   that setting does *not* cover is per-row disclosure: opening one reasoning or
   tool row is local click state, in the console as everywhere else.
-
-  `adopt` exists in no released DSH: it is a client-only addition to
-  `@deepseek-ai/dsh-api-session-controller` (one `adopt` method on the Sessions
-  service, plus the local-only Session generation behind it). `patches/` carries
-  that change as a source patch against `dsh-v0.1.7-alpha.2`, the built client
-  bundle to drop into an installed DSH, and a script that finds the installation,
-  backs the file up, and replaces it. A `dsh` upgrade on a patched host mints a
-  fresh install directory and quietly drops that host to the `scope` route;
-  re-running the script restores the full one.
 
 ## Configuration
 
@@ -413,8 +414,8 @@ What keeps it honest:
   `session/not-found`, and the shipped chat draws its own "history failed to
   load" line for it. That line describes a read this pane neither uses (the
   transcript comes from the mirror) nor can satisfy, so it is hidden inside the
-  pane on every route but `adopt`; the header chip names the route, which is
-  where that fact belongs. Drawing the session View *without* the content shell
+  pane; the header chip names the route, which is where that fact belongs.
+  Drawing the session View *without* the content shell
   was tried as a way to avoid the read altogether and renders an empty pane — the
   shell is what supplies the context that View is written against.
 - **One origin per machine name.** Two origins configured with the same
@@ -442,7 +443,7 @@ What keeps it honest:
   instead of appearing beside them.
 - **The console copies the shipped UI; it does not import it.** A browser plugin
   cannot import another plugin's components, so the tree and the conversation are
-  this package's own markup — unless the build supports the adoption API, in
+  this package's own markup — unless the build offers the retention seam, in
   which case the conversation *is* the shipped renderer (see above) and only the
   tree is this package's own. The chat rows go further than wearing the tokens:
   `ToolRow`, `ReasoningRow`, `MessageIconActions`, `TurnUsagePanel`,
@@ -479,7 +480,7 @@ src/host/service.ts      the engine: config, follow set, publish, takeover
 src/index.ts             Host plugin entry and the browser routes
 src/client/index.ts      browser plugin entry: the slots and their injections
 src/client/api.ts        transport plus the one snapshot every surface reads
-src/client/official-session.tsx  the adopted Session: the shipped renderer's pane
+src/client/official-session.tsx  the retained Session: the shipped renderer's pane
 src/client/transcript.ts mirrored events projected onto readable rows
 src/client/tool-cards.ts  tool-row models: card choice, labels, caps
 src/client/tool-presentation.ts  a wire tool name's glyph and localized title

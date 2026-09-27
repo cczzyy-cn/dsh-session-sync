@@ -1,13 +1,15 @@
 /**
- * The two decisions this half makes about a Session that has been written into
- * the Host's own storage, kept in a module with no imports.
+ * The browser half's decisions, in a module with no imports.
  *
- * Both are pure, and both were previously inline in a React component — which is
- * why the browser half had no tests at all: a test here cannot import
- * `SyncPanel.tsx` (it needs `react` and the shipped UI packages, neither of
- * which resolves from this package). Naming the decisions and keeping them
- * dependency-free is what puts them under `node --test` on both sides of the
- * build, and it leaves the component with nothing but rendering to get wrong.
+ * Three of them: which Sessions a shell refresh has not been asked about yet,
+ * what a row click means, and whether the build offers the seam the console
+ * draws a foreign Session through. Each is pure, and each was previously inline
+ * in a class or a React component — which is why the browser half had no tests
+ * at all: a test here cannot import `SyncPanel.tsx` (it needs `react` and the
+ * shipped UI packages, neither of which resolves from this package). Naming the
+ * decisions and keeping them dependency-free is what puts them under
+ * `node --test` on both sides of the build, and it leaves the components with
+ * nothing but rendering to get wrong.
  */
 
 /**
@@ -51,4 +53,21 @@ export function rowTarget(
   officialAvailable: boolean,
 ): 'official' | 'mirror' {
   return officialAvailable && materialized.has(sessionId) ? 'official' : 'mirror'
+}
+
+/**
+ * Whether a client Sessions service offers the seam the console draws through.
+ *
+ * Both halves are required and neither is enough. `retainAgentScope` is what
+ * makes a Session the Host has never heard of renderable at all; `binding` is
+ * where the window comes from, and a build that retained without one would draw
+ * an empty pane — so a service with only the first is read as "no route", which
+ * keeps the console's own conversation in charge.
+ * @param service - whatever `ctx.get('sessions')` answered, of any shape.
+ * @returns whether the scope route is available.
+ */
+export function scopeCapable(service: unknown): boolean {
+  if (typeof service !== 'object' || service === null) return false
+  const candidate = service as { retainAgentScope?: unknown; binding?: unknown }
+  return typeof candidate.retainAgentScope === 'function' && typeof candidate.binding === 'function'
 }

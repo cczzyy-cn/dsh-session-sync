@@ -1328,21 +1328,90 @@ window.__ModuleLoader__.load({
 			return (state.role === "server" || state.role === "client") && Array.isArray(state.machines) && typeof state.machineName === "string" && typeof state.published === "number";
 		}
 		//#endregion
+		//#region src/client/routing.ts
+		/**
+		* The browser half's decisions, in a module with no imports.
+		*
+		* Three of them: which Sessions a shell refresh has not been asked about yet,
+		* what a row click means, and whether the build offers the seam the console
+		* draws a foreign Session through. Each is pure, and each was previously inline
+		* in a class or a React component — which is why the browser half had no tests
+		* at all: a test here cannot import `SyncPanel.tsx` (it needs `react` and the
+		* shipped UI packages, neither of which resolves from this package). Naming the
+		* decisions and keeping them dependency-free is what puts them under
+		* `node --test` on both sides of the build, and it leaves the components with
+		* nothing but rendering to get wrong.
+		*/
+		/**
+		* The Sessions named in the state that have not been announced yet.
+		*
+		* The state frame is rebuilt on every broadcast, so "the list changed" is not a
+		* fact a caller can read off an array identity — and announcing the same Session
+		* twice would re-run a shell refresh for nothing. The caller keeps what it has
+		* announced; this says what is genuinely new, in the order the state named it.
+		* @param announced - the ids already announced; not mutated.
+		* @param ids - the ids the current state names.
+		* @returns the ids to announce, possibly empty.
+		*/
+		function freshIds(announced, ids) {
+			const fresh = [];
+			const seen = /* @__PURE__ */ new Set();
+			for (const id of ids) {
+				if (id === "" || announced.has(id) || seen.has(id)) continue;
+				seen.add(id);
+				fresh.push(id);
+			}
+			return fresh;
+		}
+		/**
+		* What clicking one row in the console's tree should do.
+		*
+		* A Session this Host has written *is* a real Session, so it opens in DSH's own
+		* conversation page — its header, its tabs, its history paging — rather than in
+		* the console's pane. The pane is what a mirror looks like when there is nothing
+		* else to show it with, so it stays the answer for every other row, and for
+		* every row on a build whose shell offers no way to open a Session.
+		* @param materialized - the Sessions the state says are written, by id.
+		* @param sessionId - the row that was clicked.
+		* @param officialAvailable - whether the shell's own open is reachable.
+		* @returns which pane the click means.
+		*/
+		function rowTarget(materialized, sessionId, officialAvailable) {
+			return officialAvailable && materialized.has(sessionId) ? "official" : "mirror";
+		}
+		/**
+		* Whether a client Sessions service offers the seam the console draws through.
+		*
+		* Both halves are required and neither is enough. `retainAgentScope` is what
+		* makes a Session the Host has never heard of renderable at all; `binding` is
+		* where the window comes from, and a build that retained without one would draw
+		* an empty pane — so a service with only the first is read as "no route", which
+		* keeps the console's own conversation in charge.
+		* @param service - whatever `ctx.get('sessions')` answered, of any shape.
+		* @returns whether the scope route is available.
+		*/
+		function scopeCapable(service) {
+			if (typeof service !== "object" || service === null) return false;
+			const candidate = service;
+			return typeof candidate.retainAgentScope === "function" && typeof candidate.binding === "function";
+		}
+		//#endregion
 		//#region src/client/official-session.tsx
 		/**
 		* The plugin's mirror, projected onto the shipped DSH conversation renderer.
 		*
 		* The console hand-draws a remote Session's conversation because a browser
-		* plugin cannot import another plugin's components. A DSH build that offers
-		* `ctx.sessions.adopt` removes that limit: the plugin adopts the remote Session
-		* under a synthetic local identity, feeds the mirror's own envelopes into it,
-		* and lets the shipped `conversation.content` factory draw it — so the pane is
-		* the product's real conversation rather than a copy of it.
+		* plugin cannot import another plugin's components. A build that offers
+		* `ctx.sessions.retainAgentScope` removes that limit: the plugin retains the
+		* remote Session under a synthetic local identity, drives the window that
+		* retention hands it with the mirror's own envelopes, and lets the shipped
+		* `conversation.content` factory draw it — so the pane is the product's real
+		* conversation rather than a copy of it.
 		*
-		* Everything in this module is feature-detected and structurally typed. The
-		* adoption API is newer than the builds this plugin has to keep working on, so
-		* nothing here may assume it exists: {@link OfficialSessions.supported} is false
-		* without it, and the console then keeps its own pane untouched.
+		* Everything in this module is feature-detected and structurally typed. That
+		* seam is not in every build this plugin has to keep working on, so nothing here
+		* may assume it exists: {@link OfficialSessions.supported} is false without it,
+		* and the console then keeps its own pane untouched.
 		*/
 		/**
 		* The child slot the console's `main` entry declares for the shipped
@@ -1350,45 +1419,21 @@ window.__ModuleLoader__.load({
 		*
 		* A non-root child is what hands the panel its `SessionProvider` and
 		* `renderSlot` seats, and `session` is the scope the shipped content needs: the
-		* occurrence is bound to the adopted Session the panel retains. This is the
+		* occurrence is bound to the retained Session the panel holds. This is the
 		* shape ui-subagent's `SidebarChatTab` uses for its own embedded chat.
 		*/
 		const OFFICIAL_SLOT = "session-sync.conversation";
-		/** Consumer label this plugin registers on every reference it retains. */
-		const OFFICIAL_SOURCE = "sessionSync";
 		/**
-		* Synthetic local identity of one adopted remote Session.
+		* Synthetic local identity of one retained remote Session.
 		*
 		* Local identities are minted as `session-<uuid>`; this prefix cannot come out
-		* of that generator, so an adopted Session can never collide with a local one —
-		* the one rule the adoption API states about the id it is given.
+		* of that generator, so a retained Session can never collide with a local one —
+		* the one rule the retention seam states about the id it is given.
 		* @param open - the remote Session's own address.
 		* @returns the stable synthetic id.
 		*/
 		function officialSessionId(open) {
 			return `dsh-session-sync:${open.machineName}/${open.sessionId}`;
-		}
-		/**
-		* One refused verb, as the client Session face returns refusals.
-		*
-		* The shape is structural on purpose: a `RemoteResult` error branch carrying a
-		* `RemoteError`-like failure, so a consumer that checks `result.ok` or rethrows
-		* `result.error` gets a real error with a stable code.
-		* @param code - the failure code.
-		* @param message - the human diagnostic.
-		* @returns the refused outcome.
-		*/
-		function refused(code, message) {
-			return {
-				ok: false,
-				error: {
-					name: "RemoteError",
-					code,
-					message,
-					details: {},
-					isDSHRemoteError: true
-				}
-			};
 		}
 		/**
 		* One live attempt's identity, from the plugin's own live key.
@@ -1441,7 +1486,7 @@ window.__ModuleLoader__.load({
 			return value;
 		}
 		/**
-		* One adopted remote Session, and the frames fed into it.
+		* One retained remote Session, and the frames fed into it.
 		*
 		* One instance per opened remote Session. Every method is safe to call after
 		* {@link OfficialMirror.release}: a Session switch and the panel closing can
@@ -1450,9 +1495,7 @@ window.__ModuleLoader__.load({
 		var OfficialMirror = class {
 			/** The reference the shipped pane binds this Session with. */
 			reference;
-			/** The adopt handle, on the one route that has verbs to hand it. */
-			handle;
-			/** The window this console drives directly, on the routes without a handle. */
+			/** The window this console drives directly, which is where the events go. */
 			source;
 			/** The Session face, when the binding exposes one that reports running. */
 			face;
@@ -1476,50 +1519,15 @@ window.__ModuleLoader__.load({
 			fed = /* @__PURE__ */ new Set();
 			released = false;
 			/**
-			* Take one remote Session up through whichever route this build offers.
+			* Take one remote Session up through the route this build offers.
 			* @param service - the client Sessions service.
-			* @param route - how this build lets a foreign Session be drawn.
-			* @param parentId - a catalogued identity to address, for the `address` route.
 			* @param open - the remote Session's own address.
-			* @param summary - row facts for the renderer's pre-event chrome.
-			* @param transport - the plugin's transport, for the composer's own verb.
 			*/
-			constructor(service, route, parentId, open, summary, transport) {
+			constructor(service, open) {
 				const sessionId = officialSessionId(open);
-				if (route === "adopt") {
-					const handle = service.adopt({
-						sessionId,
-						summary,
-						verbs: { prompt: async (content, _mode, signal) => {
-							if (signal?.aborted === true) return refused("gateway/cancelled", "the submission was cancelled");
-							if (content.some((part) => part.type !== "text")) return refused("gateway/bad-request", "the sync takeover path carries text prompts only");
-							const text = content.map((part) => part.text ?? "").join("\n");
-							if (text.trim() === "") return refused("gateway/bad-request", "the prompt was empty");
-							if (!await transport.sendPrompt(text)) return refused("gateway/internal", "the sync server refused the prompt");
-							return {
-								ok: true,
-								value: { accepted: true }
-							};
-						} },
-						running: summary.running
-					});
-					this.handle = handle;
-					try {
-						this.reference = service.retain(sessionId, { source: OFFICIAL_SOURCE });
-					} catch (error) {
-						handle.release();
-						throw error;
-					}
-					this.source = service.binding?.(sessionId)?.eventSource;
-					return;
-				}
-				this.handle = void 0;
-				this.reference = route === "scope" ? service.retainAgentScope(sessionId) : service.retain({
-					parentSessionId: parentId ?? "",
-					childSessionId: sessionId
-				}, { source: OFFICIAL_SOURCE });
+				this.reference = service.retainAgentScope(sessionId);
 				this.reference.ready?.catch(() => {});
-				const binding = service.binding?.(sessionId);
+				const binding = service.binding(sessionId);
 				this.source = binding?.eventSource;
 				this.face = binding?.session;
 			}
@@ -1533,11 +1541,6 @@ window.__ModuleLoader__.load({
 				this.liveText.clear();
 				const events = transcript.events.filter((event) => !isPanelOnly(event));
 				this.fed = new Set(events.map((event) => event.seq));
-				if (this.handle !== void 0) {
-					this.handle.replace(events, false);
-					this.handle.setRunning(transcript.running);
-					return;
-				}
 				this.transient = 0;
 				this.lastSeq = -1;
 				for (const event of transcript.events) this.observe(event.seq);
@@ -1580,10 +1583,6 @@ window.__ModuleLoader__.load({
 						continue;
 					}
 					this.fed.add(event.seq);
-					if (this.handle !== void 0) {
-						this.handle.append(event);
-						continue;
-					}
 					this.observe(event.seq);
 					this.source?.append(entryOf(event));
 				}
@@ -1643,16 +1642,6 @@ window.__ModuleLoader__.load({
 					return;
 				}
 				this.liveAttempt = attemptId;
-				if (this.handle !== void 0) {
-					this.handle.live({
-						attemptId,
-						turn: frame.turn,
-						step: frame.step,
-						kind: frame.kind,
-						text: frame.text
-					});
-					return;
-				}
 				this.feedLive(attemptId, frame);
 			}
 			/**
@@ -1661,8 +1650,7 @@ window.__ModuleLoader__.load({
 			*/
 			setRunning(running) {
 				if (this.released) return;
-				if (this.handle !== void 0) this.handle.setRunning(running);
-				else this.face?.handleRunning?.(running);
+				this.face?.handleRunning?.(running);
 			}
 			/**
 			* Release the Session and its reference.
@@ -1679,9 +1667,6 @@ window.__ModuleLoader__.load({
 				this.liveText.clear();
 				if (live !== void 0) try {
 					this.closeLive({ attemptId: live });
-				} catch {}
-				try {
-					this.handle?.release();
 				} catch {}
 				try {
 					this.reference.release();
@@ -1730,12 +1715,7 @@ window.__ModuleLoader__.load({
 			/** Close one live attempt with its durable settlement, or with nothing. */
 			closeLive(o) {
 				this.liveText.delete(o.attemptId);
-				if (this.handle !== void 0) if (o.event === void 0) this.handle.abandon({ attemptId: o.attemptId });
-				else this.handle.settle({
-					attemptId: o.attemptId,
-					event: o.event
-				});
-				else if (o.event === void 0) this.source?.settleAssistant(o.attemptId);
+				if (o.event === void 0) this.source?.settleAssistant(o.attemptId);
 				else {
 					this.observe(o.event.seq);
 					this.source?.settleAssistant(o.attemptId, entryOf(o.event));
@@ -1765,13 +1745,12 @@ window.__ModuleLoader__.load({
 		* The bridge between the console's transport and the shipped renderer.
 		*
 		* It implements the transport observer: the console tells it what the mirror
-		* reported, and it keeps one adopted Session for whichever remote Session is
+		* reported, and it keeps one retained Session for whichever remote Session is
 		* open. The panel binds `referenceFor(...)` around the shipped content, which is
 		* how the pane's Session identity reaches the renderer.
 		*/
 		var OfficialSessions = class {
 			ctx;
-			transport;
 			composerBlockReason;
 			current;
 			/** The running flag already reported, so a poll does not restate it. */
@@ -1781,13 +1760,11 @@ window.__ModuleLoader__.load({
 			/**
 			* @param ctx - the client context, read for the Sessions service and the
 			*   composer-block registry.
-			* @param transport - the plugin's transport client.
 			* @param composerBlockReason - the localized reason shown in a blocked
 			*   composer; read at the moment of blocking so it follows the locale.
 			*/
-			constructor(ctx, transport, composerBlockReason) {
+			constructor(ctx, composerBlockReason) {
 				this.ctx = ctx;
-				this.transport = transport;
 				this.composerBlockReason = composerBlockReason;
 			}
 			/** Whether this build can render a Session through the shipped conversation. */
@@ -1805,12 +1782,11 @@ window.__ModuleLoader__.load({
 			/**
 			* Whether the console must draw the composer itself.
 			*
-			* Every route but `adopt` drives the window directly, so the shipped composer
-			* would carry its prompt to a Host that has never heard of this Session.
+			* The scope route drives the window directly, so the shipped composer would
+			* carry its prompt to a Host that has never heard of this Session.
 			*/
 			get composerOwned() {
-				const route = this.routeOf();
-				return route !== void 0 && route !== "adopt";
+				return this.routeOf() !== void 0;
 			}
 			/**
 			* The reference to bind for one remote Session, for the panel's render.
@@ -1835,11 +1811,11 @@ window.__ModuleLoader__.load({
 				if (this.current?.key === key) return;
 				this.release();
 				const id = officialSessionId(open);
-				if (route !== "adopt") this.blockComposer(id);
+				this.blockComposer(id);
 				this.current = {
 					key,
 					id,
-					mirror: new OfficialMirror(service, route, this.parentId(service), open, this.summaryOf(open), this.transport)
+					mirror: new OfficialMirror(service, open)
 				};
 			}
 			/**
@@ -1925,7 +1901,7 @@ window.__ModuleLoader__.load({
 			* carries the console's own reason while the pane is held — but it is only an
 			* affordance, and another plugin that publishes its own state for the same
 			* Session can clear it, so the pane hides the shipped composer outright on
-			* these routes rather than trusting this write to survive.
+			* this route rather than trusting this write to survive.
 			*/
 			composerBlocks() {
 				const conversation = this.ctx.get?.("conversation");
@@ -1936,74 +1912,31 @@ window.__ModuleLoader__.load({
 				return typeof candidate.set === "function" ? candidate : void 0;
 			}
 			/**
-			* Which route this build offers, in preference order.
+			* The route this build offers.
 			*
-			* `adopt` is the patched capability and the only route that can hand the pane
-			* a prompt. `scope` retains without any catalog or history I/O, so the Session
-			* is born cold rather than erroring. `address` is the last resort: it needs
-			* only released surfaces, but the reference's own Host read cannot succeed,
-			* and the pane shows that hint while the window this console fills still
-			* draws.
+			* One route is all a released DSH has, and {@link service} has already checked
+			* both of its halves, so this is a naming step rather than a search.
 			* @returns the route, or undefined when the build offers none.
 			*/
 			routeOf() {
-				const service = this.service();
-				if (service === void 0) return void 0;
-				if (typeof service.adopt === "function") return "adopt";
-				if (typeof service.binding !== "function") return void 0;
-				if (typeof service.retainAgentScope === "function") return "scope";
-				return this.parentId(service) === void 0 ? void 0 : "address";
-			}
-			/** One catalogued identity to address, for the `address` route. */
-			parentId(service) {
-				const ids = service.list?.getSnapshot().ids;
-				const first = Array.isArray(ids) ? ids[0] : void 0;
-				return typeof first === "string" && first !== "" ? first : void 0;
+				return this.service() === void 0 ? void 0 : "scope";
 			}
 			/**
 			* The Sessions service, feature-detected on the client context.
 			*
 			* `sessions` is deliberately absent from this plugin's `inject` list: the
-			* console has to load on builds that predate any of these routes, and a
+			* console has to load on builds that predate the retention seam, and a
 			* required service the half cannot use would stop the whole half from
 			* applying. The lookup is lazy because the service may be registered after
 			* this plugin applies, and cheap because it runs once per panel render.
 			*/
 			service() {
 				const service = this.ctx.get?.("sessions");
-				if (typeof service !== "object" || service === null) return void 0;
-				const candidate = service;
-				return typeof candidate.retain === "function" ? candidate : void 0;
+				return scopeCapable(service) ? service : void 0;
 			}
 			/** Whether the Session being drawn is the one a frame names. */
 			matches(open) {
 				return this.current?.key === remoteKey(open.machineName, open.sessionId);
-			}
-			/**
-			* The summary the shipped renderer shows before it has read an event.
-			*
-			* The mirror's own row when the Session is still published, and the id as a
-			* placeholder title when it is not — the console's list shows the same
-			* placeholder for a Session that was un-published while it was open.
-			*/
-			summaryOf(open) {
-				const row = this.rowOf(open);
-				const title = row?.title ?? open.sessionId;
-				return {
-					id: officialSessionId(open),
-					sessionId: open.sessionId,
-					title,
-					displayTitle: title,
-					...row?.cwd === void 0 ? {} : { cwd: row.cwd },
-					updatedAt: row?.updatedAt ?? Date.now(),
-					running: row?.running ?? false,
-					blank: row !== void 0 && row.eventCount === 0,
-					retainedBy: {}
-				};
-			}
-			/** The mirror's row for one remote Session, while it is published. */
-			rowOf(open) {
-				return this.transport.snapshot.getSnapshot().state.machines.find((machine) => machine.machineName === open.machineName)?.sessions.find((session) => session.sessionId === open.sessionId);
 			}
 		};
 		/**
@@ -2024,7 +1957,7 @@ window.__ModuleLoader__.load({
 		* `active`: what the mirror holds is a conversation, while the hero belongs to
 		* a local new Session, which a remote one never is.
 		*
-		* The content shell is drawn whole, composer included, even on the routes whose
+		* The content shell is drawn whole, composer included, even though that
 		* composer is then hidden: rendering `conversation.session` directly was tried
 		* and draws an empty pane, because the shell is what supplies the context that
 		* View is written against. So this pane hides the furniture instead of omitting
@@ -2057,56 +1990,6 @@ window.__ModuleLoader__.load({
 		*/
 		function PanelIcon(props) {
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconGlobeOutlineRegular, { size: props.size });
-		}
-		//#endregion
-		//#region src/client/routing.ts
-		/**
-		* The two decisions this half makes about a Session that has been written into
-		* the Host's own storage, kept in a module with no imports.
-		*
-		* Both are pure, and both were previously inline in a React component — which is
-		* why the browser half had no tests at all: a test here cannot import
-		* `SyncPanel.tsx` (it needs `react` and the shipped UI packages, neither of
-		* which resolves from this package). Naming the decisions and keeping them
-		* dependency-free is what puts them under `node --test` on both sides of the
-		* build, and it leaves the component with nothing but rendering to get wrong.
-		*/
-		/**
-		* The Sessions named in the state that have not been announced yet.
-		*
-		* The state frame is rebuilt on every broadcast, so "the list changed" is not a
-		* fact a caller can read off an array identity — and announcing the same Session
-		* twice would re-run a shell refresh for nothing. The caller keeps what it has
-		* announced; this says what is genuinely new, in the order the state named it.
-		* @param announced - the ids already announced; not mutated.
-		* @param ids - the ids the current state names.
-		* @returns the ids to announce, possibly empty.
-		*/
-		function freshIds(announced, ids) {
-			const fresh = [];
-			const seen = /* @__PURE__ */ new Set();
-			for (const id of ids) {
-				if (id === "" || announced.has(id) || seen.has(id)) continue;
-				seen.add(id);
-				fresh.push(id);
-			}
-			return fresh;
-		}
-		/**
-		* What clicking one row in the console's tree should do.
-		*
-		* A Session this Host has written *is* a real Session, so it opens in DSH's own
-		* conversation page — its header, its tabs, its history paging — rather than in
-		* the console's pane. The pane is what a mirror looks like when there is nothing
-		* else to show it with, so it stays the answer for every other row, and for
-		* every row on a build whose shell offers no way to open a Session.
-		* @param materialized - the Sessions the state says are written, by id.
-		* @param sessionId - the row that was clicked.
-		* @param officialAvailable - whether the shell's own open is reachable.
-		* @returns which pane the click means.
-		*/
-		function rowTarget(materialized, sessionId, officialAvailable) {
-			return officialAvailable && materialized.has(sessionId) ? "official" : "mirror";
 		}
 		//#endregion
 		//#region src/client/session-chrome.ts
@@ -6503,7 +6386,7 @@ window.__ModuleLoader__.load({
 			loadingOlder: "正在加载…",
 			composerBlocked: "这个会话运行在另一台机器上，请用下方的接管输入框发言",
 			paneRoute: "原件 · {route}",
-			paneRouteHint: "这个面板用的是 DSH 自己的会话页。adopt＝打了补丁，输入框也能发言；scope＝无宿主读取（推荐）；address＝契约层兜底，会有一次失败的宿主历史读取",
+			paneRouteHint: "这个面板用的是 DSH 自己的会话页（scope 路线：会话以“无宿主读取”的方式保留，历史由同步通道翻页，输入框由接管输入框顶上）",
 			openSession: "打开",
 			materializedBadge: "真会话",
 			materializedHint: "这条会话已经写进本机存储，由 DSH 自己的会话页打开与分页；它是只读的（发言仍走同步通道）",
@@ -6768,7 +6651,7 @@ window.__ModuleLoader__.load({
 			loadingOlder: "Loading…",
 			composerBlocked: "This Session runs on another machine; use the takeover composer below to speak in it",
 			paneRoute: "Original · {route}",
-			paneRouteHint: "This pane is DSH's own conversation page. adopt = patched, so the shipped composer works too; scope = no Host read at all; address = contract-only fallback, which costs one failed Host history read",
+			paneRouteHint: "This pane is DSH's own conversation page (the scope route: the Session is retained with no Host read at all, history is paged over the sync link, and the takeover composer stands in for the shipped one)",
 			openSession: "Open",
 			materializedBadge: "Real Session",
 			materializedHint: "This Session has been written into this Host's own storage: DSH's own page lists, opens and pages it. It is read-only — speaking in it still goes through the sync channel",
@@ -6994,7 +6877,7 @@ window.__ModuleLoader__.load({
 		*/
 		function apply(ctx) {
 			const client = new SyncClient();
-			const official = new OfficialSessions(ctx, client, () => t("composerBlocked"));
+			const official = new OfficialSessions(ctx, () => t("composerBlocked"));
 			ctx.effect(() => {
 				const detach = client.observe(official);
 				return () => {

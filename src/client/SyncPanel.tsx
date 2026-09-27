@@ -134,7 +134,7 @@ export interface SyncPanelProps {
    * The feature-detected bridge to the shipped conversation renderer.
    *
    * Present on every build: it reports `supported === false` where the
-   * adoption API does not exist, which is what keeps the hand-drawn pane below
+   * retention seam does not exist, which is what keeps the hand-drawn pane below
    * in charge there.
    */
   official: OfficialBridgeFace
@@ -583,7 +583,7 @@ function Conversation(props: {
   }
 
   const delivery = state.delivery
-  // The shipped conversation, when this DSH build can adopt the open Session,
+  // The shipped conversation, when this DSH build can retain the open Session,
   // the mirror has something to replace it with, and the renderer gave this
   // panel the seats the child slot's declaration earns it. The reference must
   // exist before the pane renders: the SessionProvider binds it, and an absent

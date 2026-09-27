@@ -16,15 +16,14 @@
  *    looking at is current.
  *
  * The conversation itself is the shipped renderer where the build supports it:
- * when the client context offers `ctx.sessions.adopt`, the open remote Session
- * is adopted and drawn by the product's own `conversation.content` factory
- * (`official-session.tsx`). Every other build — including every build that
- * exists today — keeps the console's own hand-drawn pane.
+ * when the client context offers `ctx.sessions.retainAgentScope`, the open
+ * remote Session is retained under a synthetic identity and drawn by the
+ * product's own `conversation.content` factory (`official-session.tsx`). A build
+ * without that seam keeps the console's own hand-drawn pane.
  *
  * Cross-plugin collaboration is through Cordis services only: `slots` and
- * `locale` are the two this half requires, `sessions` is read optionally when
- * the build offers the adoption API, and `ui-primitives` supplies every control
- * it renders.
+ * `locale` are the two this half requires, `sessions` is read optionally for the
+ * retention seam, and `ui-primitives` supplies every control it renders.
  */
 import type { Context as ClientContext } from '@deepseek-ai/cordis'
 import type { ConfigPatch } from '../shared/protocol.ts'
@@ -56,13 +55,14 @@ const PANEL_ID = 'session-sync'
 export function apply(ctx: ClientContext): void {
   const client = new SyncClient()
 
-  // The shipped-renderer mirror, feature-detected: the bridge picks whichever
-  // route this build offers — a patched `ctx.sessions.adopt`, or a Session
-  // retained and driven through released seams — and reports
-  // `supported === false` only when it has none, where the console keeps its own
-  // hand-drawn conversation untouched. The observer rides this plugin's own
-  // effect lifetime, so unloading the half releases whatever Session it held.
-  const official = new OfficialSessions(ctx, client, () => t('composerBlocked'))
+  // The shipped-renderer mirror, feature-detected: the bridge takes the one
+  // route a released build offers — a Session retained through
+  // `ctx.sessions.retainAgentScope` and driven through the window that hands
+  // back — and reports `supported === false` only when the build has no such
+  // seam, where the console keeps its own hand-drawn conversation untouched. The
+  // observer rides this plugin's own effect lifetime, so unloading the half
+  // releases whatever Session it held.
+  const official = new OfficialSessions(ctx, () => t('composerBlocked'))
   ctx.effect(() => {
     const detach = client.observe(official)
     return () => {
@@ -167,7 +167,7 @@ export function apply(ctx: ClientContext): void {
     key: PANEL_ID,
     locale: NS,
     // The session-scoped child is where the shipped Conversation lives. It
-    // declares nothing on a build without the adoption API to render into it,
+    // declares nothing on a build without the retention seam to render into it,
     // and declaring it is what hands the panel its `SessionProvider` and
     // `renderSlot` seats — the exact shape ui-subagent's chat tab uses.
     children: { [OFFICIAL_SLOT]: { kind: 'single', scope: 'session' } },

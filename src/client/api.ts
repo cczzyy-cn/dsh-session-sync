@@ -370,7 +370,7 @@ export class SyncClient {
   async openSession(machineName: string, sessionId: string): Promise<void> {
     const open: OpenSession = { machineName, sessionId }
     // Told before the store publishes the opening, for the reason `observe`
-    // gives: a Session switch releases the old adoption, and no render may see
+    // gives: a Session switch releases the old retention, and no render may see
     // a reference that has already been released.
     this.reportedRunning = undefined
     this.notify(observer => { observer.opened(open) })

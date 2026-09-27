@@ -1,19 +1,22 @@
 # dsh-session-sync 推进记录
 
 > 只写被证据支撑的事实：跑过的命令、测到的数字、看到的现象。每条结论都要能指出它是怎么被验证的。
-> 本文件不参与构建。最近更新：2026-09-25（长会话回填的根因是"一批装不下"，已修；未上线）
+> 本文件不参与构建。最近更新：2026-09-27（scope 路线收口：adopt/address 两条死路已删）
 
 ## 0. 现状一眼看
 
 | 项 | 值 |
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
-| 版本 | **`0.4.7`**（tag `v0.4.7` → `e50eea3`）· 本地 = 远端 |
-| 服务器 | `210.16.120.228` · Ubuntu 24.04 · **DSH `0.1.7-rc.2`（npm `next` 通道，未打补丁）** · 插件 **`v0.4.7`**（依赖钉 tag，lock → `e50eea3`）· unit `dsh-web.service` · active |
-| 本机 | DSH 源码运行（checkout = `dsh-v0.1.7-rc.1` 标签）· **22:09:17 起装载 `0.4.7`**（含 wire 字段的 header 发布）· `lib` 与仓库哈希一致 |
-| 控制台 | `https://dsh.c-zy.cc/?token=<43 位>` |
-| 镜像 | **内存态**：服务器一重启就没了，靠源站 10 秒 reconcile + follow 快照重建 |
+| 版本 | **`0.7.3`**（tag `v0.7.3` → `634d243`）· 本地 = 远端 · 其上还有一轮**未提交**的客户端改动（scope 收口，见 §2） |
+| 服务器 | `210.16.120.228` · DSH **`0.1.7-rc.2`**（`npx` 缓存 `4f4f47d9854f3c73`）· 插件 **`0.7.3`**（lock → `tar.gz/634d2437…`）· unit `dsh-web.service` · active（13:10:09 UTC 起） |
+| 控制台路线 | **`scope`**：服务器上 `dsh-api-session-controller/lib/client.js` 命中 `retainAgentScope` ⇒ 特性探测确定走它；`adopt` 在任何已发布构建里都不存在（该路线已从代码删除） |
+| 服务器镜像 | `session-e08471af` **4000 条**（窗口上限）、`missingEvents: 0`、标题已投影；`f6ba2b3b` 已取消发布 |
+| 服务器副本 | 台账两条：`e08471af` **5076 条**（与源站事件数齐平、无 `waiting`/`stopped`）；`f6ba2b3b` 3478 条（旧构建遗留、已停更） |
+| 本机（源站） | DSH 源码运行（checkout = `dsh-v0.1.7-rc.1`）· profile 锁 `b6a87bd` = **v0.7.1**（进程 01:13 装载）⇒ **两端版本倾斜**，等本机重启对齐 |
+| 控制台 | `https://dsh.c-zy.cc/?token=<43 位>`（浏览器 cookie 持久） |
 | 同步口 | `210.16.120.228:8791`（源站连它；**不经** Cloudflare） |
+| 测试 | **91 通过 / 0 失败**（26 suites，1.4s） |
 
 **2026-09-25 服务器更新（三次）**：插件 `13b7aa2`（按字节切批 + 具名 413）→ `b2a7811`（回填分页边界）→ `4f3ed9a`/`c3862a2`/`5a80c15`/`32298d1`（保留上限 / 预算 / 跨平台 cwd / 拒写截断）→ **`v0.4.0`（tag）**。每次都用 lock 的 tar.gz + 安装产物的代码标记双向核对（`v0.4.0` 这次 9 个 host 标记 + 2 个 client 标记全中、旧串 `no follow or no page API` 为 0），`systemctl restart dsh-web` 后 active、3080/8791 在听。依赖也从裸 `github:` 改成 **`github:cczzyy-cn/dsh-session-sync#v0.4.0`**（lock → `8eeb0dd`），改前备份 `/root/package.json.bak-<时间戳>`。**本机 origin 跑的是 18:12:58 启动的构建**（`lib` 与仓库哈希一致，即含全部修复）。
 
@@ -113,6 +116,32 @@ cursor 为什么一直是 -1：follow 的开场快照是**一整帧**，源站�
 ---
 
 ## 2. 推进日志（晚 → 早）
+
+### scope 路线收口：adopt 与 address 两条死路删掉，官方渲染只剩一条（2026-09-27）
+
+**决定**：A 线（控制台）走 **`scope`** 路线——用 DSH 自己的会话组件画，不再维护"只有打过补丁的宿主才有"的 `adopt`。
+
+**先核实线上到底走哪条**（否则"执行 scope 路线"没有对象）：
+
+- 服务器单元：`ExecStart=/usr/bin/npx -y @deepseek-ai/dsh@0.1.7-rc.2 web --port 3080 …`；`npx` 缓存里 `4f4f47d9854f3c73` = **0.1.7-rc.2**（另一个 `d460afef2690c19d` = alpha.2，正是当年打补丁的目标）。
+- `grep -rl retainAgentScope /root/.npm/_npx/4f4f47d9854f3c73/node_modules/@deepseek-ai/` → `dsh-api-session-controller/lib/client.js` 命中；`adopt` 在**任何**已发布构建里都没有。
+- 插件侧的判定是确定性的（`routeOf()` 先看 adopt、再看 scope），adopt 不存在 ⇒ **线上控制台走的就是 scope**；这与 README 里 `原件 · scope` 的实测一致。
+- 本机 rc.1 源码同样有这条缝（`packages/api/session-controller/src/client/sessions/service.ts:487`）。
+
+**改了什么**（纯客户端半边 ⇒ 不需要重启任何 Host）：
+
+- `src/client/official-session.tsx`：删掉 `adopt` 与 `address` 两条路线，以及只为它们存在的东西——`AdoptSource` / `AdoptedSessionHandle` / `AdoptVerbs` / `SubagentAddressLike` / `RemoteResultLike` / `RemoteFailureLike` / `SessionSummaryLike` / `OfficialTransport` / `OfficialMirror.handle` / `parentId()` / `summaryOf()` / `rowOf()`；`OfficialRoute` 收敛成 `'scope'`。
+- 判定抽进无依赖的 `routing.ts`：`scopeCapable(service)`——**两半都要**（`retainAgentScope` 负责"能保留"，`binding` 负责"有窗口"），缺一个就继续用手绘面板（保留但没有窗口 = 画个空面板，比手绘更坏）。
+- README：三路线表改成一条；`patches/` 记作历史（插件已无 adopt 路线，打上也无效）；Limitations 里"每条路线但 adopt"之类的措辞一并改掉。
+- `patches/` 文件**保留**（alpha.2 的回滚产物），只是不再被任何代码路径使用。
+
+**验证**：
+
+- `tests/client-routing.spec.ts` 新增 5 条钉住 `scopeCapable`（两半齐全 / 缺窗口 / 缺保留 / 动词不是函数 / 上下文没有）。**91 通过 / 0 失败**（原 86）。
+- 客户端半边在本仓库**无法直接 `tsc`**（缺 `react` 与 shipped 包，见 §"完成度检查"那条）。本轮用一份一次性配置把 `official-session.tsx` + `api.ts` 拉进程序做类型检查（`%TEMP%\synccheck`，react/jsx-runtime/client-store/ui-slots 用最小声明顶替），**退出 0**；顺带抓出并修掉一条**既有**类型错：`prependOlder` 的入参被声明成整个 `MirrorTranscript`，而调用点只带 `events/hasMore`。
+- `tsdown` 两半产物重建：`client/client.js` 329,057 → **324,598 B**（−4.4 KB，删掉的正是这条路）；`lib/index.js` 未变（Host 半边没碰）。
+
+**没做（需要用户定）**：行点击的目标没动。今天"有副本"的行仍旧打开 DSH 官方会话页（`rowTarget` 语义未改），所以服务器上那条已发布的会话点开看到的还是官方页——**scope 面板只在没有副本的会话上出现**，或者把设置页的 `写成真会话` 关掉。要不要把行点击固定到 scope 面板（官方页挪到一个显式入口），是产品决定，没有替用户定。
 
 ### ② 的答案：seed 的来源就是"把事件交给 DSH"，所以那条路整条退回（v0.7.3）
 

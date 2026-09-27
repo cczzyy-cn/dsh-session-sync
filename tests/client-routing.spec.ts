@@ -1,16 +1,17 @@
 /**
- * The browser half's two decisions, under test.
+ * The browser half's decisions, under test.
  *
  * The rest of that half is rendering, which needs `react` and the shipped UI
  * packages — neither resolves from this package, which is why every other test
- * here is Host-side. These two are the parts that decide *what happens* rather
- * than what it looks like, so they live in `routing.ts` with no imports and are
- * pinned here. Before this file they were inline in `SyncPanel` and had been
- * exercised only by hand, in a browser, on the deployed server.
+ * here is Host-side. These are the parts that decide *what happens* rather than
+ * what it looks like, so they live in `routing.ts` with no imports and are
+ * pinned here. Before this file they were inline in `SyncPanel` and in the
+ * renderer bridge, and had been exercised only by hand, in a browser, on the
+ * deployed server.
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { freshIds, rowTarget } from '../src/client/routing.ts'
+import { freshIds, rowTarget, scopeCapable } from '../src/client/routing.ts'
 
 describe('announcing the Sessions a Host has written', () => {
   it('names only the ids that are new', () => {
@@ -57,5 +58,34 @@ describe('what a row click means', () => {
     // A build whose client has no workspace navigation still has to be able to
     // read a mirror: the pane is the fallback, not a leftover.
     assert.equal(rowTarget(written, 'session-written', false), 'mirror')
+  })
+})
+
+describe('whether a build offers the scope route', () => {
+  const retainAgentScope = (): object => ({ release: () => undefined })
+  const binding = (): undefined => undefined
+
+  it('takes a service that has both halves', () => {
+    assert.equal(scopeCapable({ retainAgentScope, binding }), true)
+  })
+
+  it('refuses a service that cannot hand out a window', () => {
+    // Retaining without a binding draws an empty pane, which is worse than the
+    // console's own conversation — so the route needs both, not either.
+    assert.equal(scopeCapable({ retainAgentScope }), false)
+  })
+
+  it('refuses a service that cannot retain', () => {
+    assert.equal(scopeCapable({ binding }), false)
+  })
+
+  it('refuses verbs that are not functions', () => {
+    assert.equal(scopeCapable({ retainAgentScope: true, binding: true }), false)
+  })
+
+  it('refuses whatever the context did not hold', () => {
+    assert.equal(scopeCapable(undefined), false)
+    assert.equal(scopeCapable(null), false)
+    assert.equal(scopeCapable('sessions'), false)
   })
 })
