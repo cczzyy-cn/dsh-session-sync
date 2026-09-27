@@ -493,7 +493,9 @@ window.__ModuleLoader__.load({
 				version: machine.pluginVersion
 			})).filter((peer) => peer.version !== void 0);
 			const skewed = peers.filter((peer) => peer.version !== own);
-			const missing = machines.reduce((total, machine) => total + machine.sessions.reduce((sum, session) => sum + (session.missingEvents ?? 0), 0), 0);
+			const total = (pick) => machines.reduce((sum, machine) => sum + machine.sessions.reduce((inner, session) => inner + pick(session), 0), 0);
+			const holes = total((session) => session.holes ?? 0);
+			const behind = total((session) => session.behind ?? 0);
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 				className: sync_module_css_default.group,
 				children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("h3", {
@@ -534,11 +536,20 @@ window.__ModuleLoader__.load({
 										children: String(machines.length)
 									})]
 								}),
-								role === "server" && missing > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
+								role === "server" && holes > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
 									className: sync_module_css_default.statusItem,
+									title: t("mirrorGapsHint"),
 									children: [t("mirrorGaps"), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 										className: sync_module_css_default.statusBad,
-										children: String(missing)
+										children: String(holes)
+									})]
+								}),
+								role === "server" && behind > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
+									className: sync_module_css_default.statusItem,
+									title: t("sessionBehindHint"),
+									children: [t("mirrorBehind"), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+										className: sync_module_css_default.statusValue,
+										children: String(behind)
 									})]
 								}),
 								/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
@@ -4976,7 +4987,9 @@ window.__ModuleLoader__.load({
 				updatedAt: Date.now(),
 				running: false,
 				eventCount: 0,
-				missingEvents: 0
+				missingEvents: 0,
+				holes: 0,
+				behind: 0
 			});
 			const online = open === void 0 ? false : machines.find((candidate) => candidate.machineName === open.machineName)?.online ?? false;
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
@@ -5069,7 +5082,7 @@ window.__ModuleLoader__.load({
 											onToggleKey: toggle
 										}), projectOpen && project.sessions.map((candidate) => {
 											const selected = open?.sessionId === candidate.sessionId;
-											const gap = candidate.missingEvents > 0 ? t("mirrorGapBadge", { n: candidate.missingEvents }) : void 0;
+											const gap = candidate.holes > 0 ? t("mirrorGapBadge", { n: candidate.holes }) : candidate.behind > 0 ? t("sessionBehind", { n: candidate.behind }) : void 0;
 											return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("button", {
 												type: "button",
 												role: "treeitem",
@@ -5090,10 +5103,15 @@ window.__ModuleLoader__.load({
 														className: sync_module_css_default.rowTitle,
 														children: candidate.title
 													}),
-													gap !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+													candidate.holes > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 														className: sync_module_css_default.gapBadge,
-														title: gap,
-														children: gap
+														title: t("mirrorGaps"),
+														children: t("mirrorGapBadge", { n: candidate.holes })
+													}),
+													candidate.holes === 0 && candidate.behind > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+														className: sync_module_css_default.rowTime,
+														title: t("sessionBehindHint"),
+														children: t("sessionBehind", { n: candidate.behind })
 													}),
 													/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 														className: sync_module_css_default.rowTime,
@@ -5287,10 +5305,15 @@ window.__ModuleLoader__.load({
 								className: sync_module_css_default.viewMachine,
 								children: t("sessionRunning")
 							})] }),
-							session.missingEvents > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+							session.holes > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 								className: sync_module_css_default.gapBadge,
 								title: t("mirrorGaps"),
-								children: t("mirrorGapBadge", { n: session.missingEvents })
+								children: t("mirrorGapBadge", { n: session.holes })
+							}),
+							session.holes === 0 && session.behind > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+								className: sync_module_css_default.routeBadge,
+								title: t("sessionBehindHint"),
+								children: t("sessionBehind", { n: session.behind })
 							}),
 							props.official.supported && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
 								className: sync_module_css_default.routeBadge,
@@ -6230,6 +6253,10 @@ window.__ModuleLoader__.load({
 			machineSessions: "个会话",
 			mirrorGaps: "镜像缺失事件",
 			mirrorGapBadge: "缺 {n} 条",
+			mirrorBehind: "镜像落后事件",
+			mirrorGapsHint: "镜像内部缺的条数（不是落后）：扫描发现后会自动向源站补读，长期不为 0 才需要人工重新发布",
+			sessionBehind: "落后 {n}",
+			sessionBehindHint: "源站已发布、镜像还没拿到的条数。正在跑的会话天然会落后几秒，这不是故障",
 			pluginVersion: "插件版本",
 			pluginVersionHint: "本机 Host 半边正在运行的版本，后面是各源站自己上报的版本。两端版本不同通常意味着有一侧还没重启或还没更新",
 			pluginVersionSkew: "两端版本不一致",
@@ -6486,6 +6513,10 @@ window.__ModuleLoader__.load({
 			machineSessions: "Sessions",
 			mirrorGaps: "missing mirrored events",
 			mirrorGapBadge: "{n} missing",
+			mirrorBehind: "mirrored events behind",
+			mirrorGapsHint: "Sequences missing inside the mirror (this is not lag): the sweep asks the origin for them on its own, and a number that stays non-zero is what a re-publish is owed for",
+			sessionBehind: "{n} behind",
+			sessionBehindHint: "Events the origin has published that the mirror has not taken yet. A running Session is always a few seconds behind; this is not a fault",
 			pluginVersion: "Plugin version",
 			pluginVersionHint: "The version this Host half is running, then what each origin reports for itself. A difference usually means one side has not been restarted or updated yet",
 			pluginVersionSkew: "the two sides differ",

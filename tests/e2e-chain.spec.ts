@@ -177,6 +177,12 @@ describe('the whole chain over the real link', () => {
         : undefined
     }, 'the mirror to hold the window the origin opened with')
     assert.equal(mirrored.title, 'chain')
+    // The two readings a reader is shown, apart. This mirror is not *behind* —
+    // the origin's stated watermark is its own follow's end, and the snapshot it
+    // just sent reaches it — and it holds no *hole* either: what it lacks is the
+    // history below the window, which is `hasOlder` and one page away.
+    assert.equal(mirrored.behind, 0, 'a delivered snapshot is not behind')
+    assert.equal(mirrored.holes, 0, 'a tail window is not a hole')
 
     // 2. The console reads that window, and the page below it is read from the
     //    machine that owns the Session — the road the "load older" control takes.
@@ -208,6 +214,8 @@ describe('the whole chain over the real link', () => {
       return session !== undefined && session.eventCount === EVENTS ? session : undefined
     }, 'the page below the window to reach the mirror')
     assert.equal(whole.missingEvents, 0)
+    assert.equal(whole.behind, 0, 'nothing is left above the mirror once the page arrives')
+    assert.equal(whole.holes, 0)
 
     // 4. Takeover: one prompt typed in the console reaches the owning machine's
     //    Session, and the console hears that it was admitted.

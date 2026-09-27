@@ -138,3 +138,35 @@ describe('a hole in the middle of a mirror', () => {
     assert.equal(asks(), 0, 'inside the floor nothing is asked even by the sweep')
   })
 })
+
+describe('how short a mirror is', () => {
+  it('counts a run missing inside the mirror as a hole', () => {
+    const { hub } = bench()
+    publish(hub, run(100, 199, run(150, 159)))
+    hub.publishIndex({
+      machineName: MACHINE,
+      sessions: [{ sessionId: SESSION, title: 'x', updatedAt: 1, running: false, lastSeq: 199 }],
+    })
+    const session = hub.machines()[0]?.sessions[0]
+    // The repairable kind: a fact about this mirror, and what the sweep asks for.
+    assert.equal(session?.holes, 10)
+    assert.equal(session?.behind, 0, 'nothing is above what the origin reports')
+    assert.equal(session?.missingEvents, 10)
+  })
+
+  it('counts what the origin published above the mirror as being behind, not missing', () => {
+    const { hub } = bench()
+    publish(hub, run(100, 104))
+    hub.publishIndex({
+      machineName: MACHINE,
+      sessions: [{ sessionId: SESSION, title: 'x', updatedAt: 1, running: true, lastSeq: 120 }],
+    })
+    const session = hub.machines()[0]?.sessions[0]
+    // The normal case of a live Session: a few events in flight, nothing broken.
+    // Showing one badge for both readings is what made a working Session look
+    // like a damaged mirror.
+    assert.equal(session?.holes, 0, 'a Session that is merely ahead is not broken')
+    assert.equal(session?.behind, 16)
+    assert.equal(session?.missingEvents, 16)
+  })
+})

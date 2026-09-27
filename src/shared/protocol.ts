@@ -171,6 +171,22 @@ export interface MirroredSession {
    * folded into a log this deployment cannot read.
    */
   missingEvents: number
+  /**
+   * Sequences missing *inside* the range this mirror holds.
+   *
+   * The repairable half of {@link MirroredSession.missingEvents}: a hole is a
+   * fact about the mirror rather than about timing, and the sweep asks the origin
+   * for exactly the page that covers it.
+   */
+  holes: number
+  /**
+   * Events the origin has published above this mirror's top.
+   *
+   * The other half, and *not* a fault: a running Session is always a little
+   * behind, so a reader must not be shown the same "missing" badge for the normal
+   * case of a turn in flight as for a mirror that lost a batch.
+   */
+  behind: number
 }
 
 /** One machine the server knows about, online or not. */

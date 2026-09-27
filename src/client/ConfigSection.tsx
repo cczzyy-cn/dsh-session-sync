@@ -234,15 +234,16 @@ function StatusBlock({ t, state }: {
     .map(machine => ({ name: machine.machineName, version: machine.pluginVersion }))
     .filter((peer): peer is { name: string; version: string } => peer.version !== undefined)
   const skewed = peers.filter(peer => peer.version !== own)
-  // A mirror that is missing events cannot repair itself, so the one number an
-  // operator has to act on is shown only when it is not zero.
-  const missing = machines.reduce(
-    (total, machine) => total + machine.sessions.reduce(
-      (sum, session) => sum + (session.missingEvents ?? 0),
+  // Holes and being behind are counted apart for the same reason the Session rows
+  // show them apart: a hole is a repair the sweep owes, while a live Session is
+  // always a few events behind the machine that owns it.
+  const total = (pick: (session: { holes?: number; behind?: number }) => number): number =>
+    machines.reduce(
+      (sum, machine) => sum + machine.sessions.reduce((inner, session) => inner + pick(session), 0),
       0,
-    ),
-    0,
-  )
+    )
+  const holes = total(session => session.holes ?? 0)
+  const behind = total(session => session.behind ?? 0)
   return (
     <div className={css.group}>
       <h3 className={css.groupTitle}>{t('statusTitle')}</h3>
@@ -266,10 +267,16 @@ function StatusBlock({ t, state }: {
               <span className={css.statusValue}>{String(machines.length)}</span>
             </span>
           )}
-          {role === 'server' && missing > 0 && (
-            <span className={css.statusItem}>
+          {role === 'server' && holes > 0 && (
+            <span className={css.statusItem} title={t('mirrorGapsHint')}>
               {t('mirrorGaps')}
-              <span className={css.statusBad}>{String(missing)}</span>
+              <span className={css.statusBad}>{String(holes)}</span>
+            </span>
+          )}
+          {role === 'server' && behind > 0 && (
+            <span className={css.statusItem} title={t('sessionBehindHint')}>
+              {t('mirrorBehind')}
+              <span className={css.statusValue}>{String(behind)}</span>
             </span>
           )}
           <span className={css.statusItem} title={t('pluginVersionHint')}>

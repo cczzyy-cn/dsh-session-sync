@@ -773,14 +773,15 @@ function summary(session: SessionRecord): MirroredSession {
     ...(session.cwd === undefined ? {} : { cwd: session.cwd }),
     eventCount: session.events.length,
     missingEvents: missingOf(session),
+    ...shortfallOf(session),
   }
 }
 
 /**
- * How many events one mirror is short of what its origin holds.
+ * How short one mirror is, split by what the reader has to act on.
  *
  * Two things can be missing, and they are counted separately because only the
- * first is visible from the events themselves:
+ * first is a fault:
  *
  *  - holes *inside* the held range, which a replacement window or an out-of-order
  *    arrival can leave, and which the retained run's extent reveals; and
@@ -790,16 +791,29 @@ function summary(session: SessionRecord): MirroredSession {
  *    watermark a mirror that lost everything is indistinguishable from one whose
  *    Session has simply done nothing yet.
  *
- * Zero is the healthy answer, and the only one that clears an episode.
+ * Reported apart because they mean opposite things to a reader: a hole is a
+ * repair that is owed, while being behind is what a live Session looks like.
  * @param session - the record to measure.
- * @returns the count of events the origin has and this mirror does not.
+ * @returns the two counts.
  */
-function missingOf(session: SessionRecord): number {
+function shortfallOf(session: SessionRecord): { holes: number; behind: number } {
   const lowest = session.events[0]?.seq
   const holes = lowest === undefined
     ? 0
     : Math.max(0, session.maxSeq - lowest + 1 - session.seqs.size)
-  const behind = Math.max(0, session.originSeq - session.maxSeq)
+  return { holes, behind: Math.max(0, session.originSeq - session.maxSeq) }
+}
+
+/**
+ * How many events one mirror is short of what its origin holds — both kinds.
+ *
+ * The sum is what an episode is cleared by, so it stays the number the sweep and
+ * the repair logic reason about; the split above is what a reader is shown.
+ * @param session - the record to measure.
+ * @returns the count of events the origin has and this mirror does not.
+ */
+function missingOf(session: SessionRecord): number {
+  const { holes, behind } = shortfallOf(session)
   return holes + behind
 }
 

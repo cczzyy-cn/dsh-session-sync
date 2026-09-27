@@ -29,10 +29,11 @@
 #   powershell -ExecutionPolicy Bypass -File scripts/e2e-dsh.ps1 -Keep
 param(
   [switch]$Keep,
+  [switch]$SkipOffline,
   [int]$ServerPort = 3099,
   [int]$OriginPort = 3098,
   [int]$SyncPort = 8793,
-  [int]$TimeoutSec = 180
+  [int]$TimeoutSec = 240
 )
 
 $ErrorActionPreference = 'Stop'
@@ -265,6 +266,35 @@ try {
   Assert-True ($originState.state.linked) 'the origin reports a live link'
   Assert-Equal $originState.state.published 1 'the origin reports one published Session'
   Assert-Equal $originState.state.pluginVersion $manifest.version 'the origin states the staged build version in its own view'
+
+  # Honesty about a machine that is not there. The console dims an offline row and
+  # says so, and both readings come from this one field — so the check is that a
+  # machine which went away reads as offline rather than as a mirror that quietly
+  # stopped changing, and that it recovers when it comes back.
+  if (-not $SkipOffline) {
+    $offlineOrigin = $instances | Where-Object { $_.Name -eq 'origin' }
+    Stop-Instance $offlineOrigin
+    $wentOffline = Wait-For {
+      $raw = & curl.exe -s -b $serverCookie "http://127.0.0.1:$ServerPort/dsh-session-sync/state"
+      if (-not $raw) { return $false }
+      $script:state = $raw | ConvertFrom-Json
+      $machine = $script:state.state.machines | Where-Object { $_.machineName -eq $originName }
+      return ($null -ne $machine -and -not $machine.online)
+    } 'the server to mark the origin offline'
+    Assert-True $wentOffline 'a machine that went away reads as offline'
+
+    $instances = @($instances | Where-Object { $_.Name -ne 'origin' })
+    $instances += Start-Instance 'origin' $originHome $OriginPort
+    $recovered = Wait-For {
+      $raw = & curl.exe -s -b $serverCookie "http://127.0.0.1:$ServerPort/dsh-session-sync/state"
+      if (-not $raw) { return $false }
+      $script:state = $raw | ConvertFrom-Json
+      $machine = $script:state.state.machines | Where-Object { $_.machineName -eq $originName }
+      $session = $machine.sessions | Where-Object { $_.sessionId -eq $sessionId }
+      return ($null -ne $machine -and $machine.online -and $null -ne $session -and $session.eventCount -gt 0)
+    } 'the origin to come back and be mirrored again'
+    Assert-True $recovered 'the mirror recovers when the machine returns'
+  }
 }
 catch {
   Fail $_.Exception.Message

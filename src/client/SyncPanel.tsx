@@ -194,7 +194,8 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
       .find(candidate => candidate.machineName === open.machineName)
       ?.sessions.find(candidate => candidate.sessionId === open.sessionId)
   // A Session that was un-published while it was open has no mirror row left,
-  // but the panel is still showing it: the placeholder keeps the talk column 閳?  // and therefore its back button on a narrow window 閳?reachable.
+  // but the panel is still showing it: the placeholder keeps the talk column —
+  // and therefore its back button on a narrow window — reachable.
   const session: MirroredSession | undefined = mirrored ?? (open === undefined ? undefined : {
     sessionId: open.sessionId,
     title: open.sessionId,
@@ -202,6 +203,8 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
     running: false,
     eventCount: 0,
     missingEvents: 0,
+    holes: 0,
+    behind: 0,
   })
   const online = open === undefined
     ? false
@@ -286,12 +289,17 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
                       />
                       {projectOpen && project.sessions.map(candidate => {
                         const selected = open?.sessionId === candidate.sessionId
-                        // What a re-publish is owed for, said where the Session
-                        // is listed: the transcript's own symptom is that it
-                        // stops, which reads as a rendering problem otherwise.
-                        const gap = candidate.missingEvents > 0
-                          ? t('mirrorGapBadge', { n: candidate.missingEvents })
-                          : undefined
+                        // Two readings that mean opposite things, said apart: a
+                        // hole inside the mirror is a repair that is owed, while
+                        // being behind is what a live Session looks like — a
+                        // running turn is always a few events ahead of the
+                        // mirror. Showing one badge for both made every working
+                        // Session look broken.
+                        const gap = candidate.holes > 0
+                          ? t('mirrorGapBadge', { n: candidate.holes })
+                          : candidate.behind > 0
+                            ? t('sessionBehind', { n: candidate.behind })
+                            : undefined
                         return (
                           <button
                             key={candidate.sessionId}
@@ -314,8 +322,15 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
                               {candidate.running && <StateDot state="ongoing" />}
                             </span>
                             <span className={css.rowTitle}>{candidate.title}</span>
-                            {gap !== undefined && (
-                              <span className={css.gapBadge} title={gap}>{gap}</span>
+                            {candidate.holes > 0 && (
+                              <span className={css.gapBadge} title={t('mirrorGaps')}>
+                                {t('mirrorGapBadge', { n: candidate.holes })}
+                              </span>
+                            )}
+                            {candidate.holes === 0 && candidate.behind > 0 && (
+                              <span className={css.rowTime} title={t('sessionBehindHint')}>
+                                {t('sessionBehind', { n: candidate.behind })}
+                              </span>
                             )}
                             <span className={css.rowTime}>
                               {candidate.running
@@ -562,9 +577,14 @@ function Conversation(props: {
               <span className={css.viewMachine}>{t('sessionRunning')}</span>
             </>
           )}
-          {session.missingEvents > 0 && (
+          {session.holes > 0 && (
             <span className={css.gapBadge} title={t('mirrorGaps')}>
-              {t('mirrorGapBadge', { n: session.missingEvents })}
+              {t('mirrorGapBadge', { n: session.holes })}
+            </span>
+          )}
+          {session.holes === 0 && session.behind > 0 && (
+            <span className={css.routeBadge} title={t('sessionBehindHint')}>
+              {t('sessionBehind', { n: session.behind })}
             </span>
           )}
           {props.official.supported && (
