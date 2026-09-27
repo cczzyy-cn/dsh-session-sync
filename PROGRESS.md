@@ -8,12 +8,12 @@
 | 项 | 值 |
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
-| 版本 | **`0.8.0`**（tag `v0.8.0` → `f2b167a`）· 已推送远端 · **尚未部署**（物化整条移除，见 §2） |
-| 服务器 | `210.16.120.228` · DSH **`0.1.7-rc.2`**（`npx` 缓存 `4f4f47d9854f3c73`）· unit `dsh-web.service` |
+| 版本 | **`0.8.0`**（tag `v0.8.0` → `f2b167a`）· 服务器与本机 profile 都已装 0.8.0（物化整条移除，见 §2） |
+| 服务器 | `210.16.120.228` · DSH **`0.1.7-rc.2`**（`npx` 缓存 `4f4f47d9854f3c73`）· 插件 **`0.8.0`**（lock → `tar.gz/f2b167ae…`）· unit `dsh-web.service` · active、**已重启**（Host 半边变了） |
 | 控制台路线 | **`scope`**：服务器上 `dsh-api-session-controller/lib/client.js` 命中 `retainAgentScope` ⇒ 特性探测确定走它；`adopt` 在任何已发布构建里都不存在（该路线已从代码删除） |
-| 服务器镜像 | `session-e08471af` **4000 条**（窗口上限）、`missingEvents: 0`；`f6ba2b3b` 已取消发布 |
-| 服务器上的旧副本 | `e08471af` 5076 条、`f6ba2b3b` 3478 条（旧构建遗留）。插件不再管理，**未删除**；升级后它们是普通会话 |
-| 本机（源站） | DSH 源码运行（checkout = `dsh-v0.1.7-rc.1`）· profile 装的是发布版插件；**Host 半边要等一次本机重启才换**（会杀掉正在跑的会话，留给用户） |
+| 服务器镜像 | 按需重建：源站 reconcile + follow 快照；此刻本机发布列表为空（`syncSessions: {}`），所以镜像里没有会话 |
+| 旧副本 | 已留档移走（**未删**）到服务器 `/root/legacy-copies-<ts>/`：两个会话目录 + 投影缓存 + 台账 |
+| 本机（源站） | DSH 源码运行（checkout = `dsh-v0.1.7-rc.1`）· profile 装 **0.8.0**（客户端半边刷新即生效）· **Host 半边仍是进程里那份旧的**，要对齐需要一次本机重启（会杀掉正在跑的会话，留给用户） |
 | 控制台 | `https://dsh.c-zy.cc/?token=<43 位>`（浏览器 cookie 持久） |
 | 同步口 | `210.16.120.228:8791`（源站连它；**不经** Cloudflare） |
 | 测试 | **28 通过 / 0 失败**（9 suites，1.0s） |
@@ -139,7 +139,17 @@ cursor 为什么一直是 -1：follow 的开场快照是**一整帧**，源站�
 
 **验证边界（诚实）**：Host 半边 `tsc` 0、客户端半边 stub `tsc` 0、构建通过、28 条测试全绿；**线上尚未部署**。
 
-**服务器上留下的东西（等用户定）**：那两份副本（`session-e08471af` 5076 条、`f6ba2b3b` 3478 条）与台账文件。插件不再管理它们——门禁随代码一起消失，所以升级后它们在服务器的 DSH 里变回**普通会话**（能打开，也能被发言）。**没有自动删除**（这个项目从不删别人的日志）；要清掉是三步：停服 → `mv` 走 `<sessions>/…/session-<id>` 与 `storages/session_projcache/sessions/<id>.json` → 起服。升级之前，旧版本的门禁仍然护着它们。
+**服务器上留下的东西（用户已定：清掉）**：那两份副本（`session-e08471af` 5076 条、`f6ba2b3b` 3478 条）与台账文件已经**留档移走**，没有删除——见下面的上线记录。升级之前，旧版本的门禁仍然护着它们。
+
+**上线（`v0.8.0`，这次**必须**重启服务器：Host 半边变了）**：
+
+- 本机：commit `f2b167a`、tag `v0.8.0`、push 到 `origin/main`（docs 跟着一条 `e7d3fa3`）。
+- 服务器：`#v0.7.4` → `#v0.8.0`，lock → `tar.gz/f2b167ae9097e66a806008e2a76c7651590418fa`；装出的产物与本机构建**逐字节相同**（`lib/index.js` **102,073 B**、`client/client.js` **310,315 B**）；旧功能标记：host `materialize|MirrorLedger|agent/pre-step` = **0**、client `真会话` = **0**。
+- 重启前后：`systemctl stop dsh-web` → 移走旧副本 → `systemctl start`；`active`、`127.0.0.1:3080` 与 `0.0.0.0:8791` 在听。
+- **旧副本的留档位置**：`/root/legacy-copies-<ts>/`，里面是 `session-e08471af-…`、`session-f6ba2b3b-…` 两个目录、`session-e08471af-….json`（投影缓存）与 `dsh-session-sync-materialized.json`（台账）。服务器 `sessions/` 下只剩它自己的三条（`0a8b2f20`/`d7ab13f0`/`cf35e2ac`），`/dsh-session-sync/sessions` 里也不再有那两条。
+- `/state` 的自检：`materialize` / `materialized` 两个键**都不在了**（`grep -o 'materializ[a-z]*' | wc -l` = 0）。`machines[].sessions` 此刻为空，因为本机发布列表是空的（`syncSessions: {}`），不是缺陷。
+- **浏览器拿到的确实是新包**（不重启浏览器那侧）：shell 里 `rev=d43163288038`，取 `/plugins/??dsh-session-sync/client.js&rev=…` → `200`、310,353 B（= 盘上 310,315 + 38 B 注册表外壳），`scopeCapable` 命中、`真会话` 为 0。
+- 本机 profile：`pnpm update dsh-session-sync` → **0.8.0**（产物字节与服务器一致）。**本机 Host 半边仍是进程里那份旧的**（进程 23:24 启动），要对齐需要一次本机重启——那会杀掉正在跑的会话，留给用户。
 
 ### scope 路线收口：adopt 与 address 两条死路删掉，官方渲染只剩一条（2026-09-27）
 
