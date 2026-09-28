@@ -9,12 +9,12 @@
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
 | 版本 | **`0.10.0`**（tag **`v0.10.0` → `113b677`**，已推送 `origin/main`）· 跨机器提问的两边竞速（见 §2） |
-| 服务器 | 仍是 **`0.9.0`**（**本版尚未部署**：装的是 `lib/index.js` 104,766 B / `client/client.js` 314,860 B，即 0.9.0 的字节） |
+| 服务器 | **已上线 `0.10.0`**：profile 依赖从 `#v0.9.0` 改成 `#v0.10.0`，lock → `tar.gz/113b6779…`，装出的产物与本机构建**逐字节相同**（131,694 / 331,741 B）；`/state` 自报 `pluginVersion 0.10.0` |
 | 测试 | **55 通过 / 0 失败**（15 suites，1.1s）· 新增 `tests/interaction-race.spec.ts` 17 条（竞速 10 + hub 7） |
 | 产物 | `lib/index.js` **131,694 B**（sha256 `4593c779…`）· `client/client.js` **331,741 B**（sha256 `ee544ffa…`）；产物自报版本 `0.10.0`（`node -e` 问过产物本人） |
 | 编码门禁 | `node scripts/check-encoding.mjs` **clean**（原先在 HEAD 上就是红的：见 §6） |
 | 类型 | Host 半边 `tsc` 0（9 个文件）；客户端半边用 `%TEMP%\synccheck` 的 stub 配置整体 `tsc` 0 |
-| 服务器 | `210.16.120.228` · DSH **`0.1.7-rc.2`**（`npx` 缓存 `4f4f47d9854f3c73`）· 插件仍是 **`0.9.0`**（lock → `tar.gz/74db5265…`）· unit `dsh-web.service` · active |
+| 服务器 | `210.16.120.228` · DSH **`0.2.0-rc.1`**（`npx` 缓存 `ed2e730009a84a04`，unit 里钉的版本；`latest` 当时仍是 `0.1.7-rc.2`，0.2.0-rc.1 在 `next` 上）· 插件 **`0.10.0`** · unit `dsh-web.service` · active（15:16:10 UTC 重启） |
 | 控制台路线 | **`scope`**：服务器上 `dsh-api-session-controller/lib/client.js` 命中 `retainAgentScope` ⇒ 特性探测确定走它；`adopt` 在任何已发布构建里都不存在（该路线已从代码删除） |
 | 服务器镜像 | 按需重建：源站 reconcile + follow 快照；此刻本机发布列表为空（`syncSessions: {}`），所以镜像里没有会话 |
 | 旧副本 | 已留档移走（**未删**）到服务器 `/root/legacy-copies-<ts>/`：两个会话目录 + 投影缓存 + 台账 |
@@ -61,6 +61,49 @@
 
 > 2026-09-25 及以前的推进日志（从"② 的答案"一路到 0.3.x）已归档到 `docs/history-2026-09.md`。
 > 这一段只留本版（0.8.x/0.9.x/0.10.x）的改动与验证；历史文件是当时的推理记录，不要照它实现。
+
+### v0.10.0 上线：服务器升到 DSH `0.2.0-rc.1` + 插件 `0.10.0`（2026-09-28）
+
+**这一版是用户明确选了跨版本线**：npm 上 `latest` 就是原来装的 `0.1.7-rc.2`，所以"更新 DSH"只有
+`next` 上的 `0.2.0-rc.1` 这一条路。选择由用户作出（问题里写明了预发布与外观回退的风险）。
+
+**插件：`pnpm update` 是不够的。** profile 里钉的是 **tag**（`github:…#v0.9.0`），
+`pnpm update` 只会把同一个 tag 再解析一遍——**必须改 spec**：
+
+```sh
+cd /root/.dsh/profiles/web
+cp package.json /root/package.json.bak-20260928-151248      # 备份先做
+cp pnpm-lock.yaml /root/pnpm-lock.yaml.bak-20260928-151248
+pnpm add "github:cczzyy-cn/dsh-session-sync#v0.10.0" --reporter=append-only
+```
+
+- lock → `version: https://codeload.github.com/…/tar.gz/113b67790cb8bbe7a68c15a95ed344cb4159b362`
+  （= 刚推的 tag `v0.10.0` 的那个 commit）；
+- 装出的产物与本机构建**逐字节相同**：`lib/index.js` **131,694 B**、`client/client.js` **331,741 B**；
+- 产物自报 `0.10.0`；host 标记 `interactions`/`question/open`/`answered-at-origin`/`sweepQuestions` 都在，
+  旧串 `materialize` = 0。
+
+**DSH：先预取，再改 unit**（冷启动时现场下包会让重启变慢，失败还起不来）。
+
+- `npx -y @deepseek-ai/dsh@0.2.0-rc.1 --help` 先跑通（exit 0），缓存目录 `ed2e730009a84a04`；
+- **升级前先验缝**：`grep -rl retainAgentScope …/node_modules/@deepseek-ai/` 在 0.2.0-rc.1 里命中
+  **4 个文件**（含 `dsh-api-session-controller/lib/client.js`），`binding` 14 处 ⇒ **控制台仍走 `scope` 路线，
+  外观不回退**（这一条是升级前唯一真正有风险的地方，PROGRESS §3.4 早写了"缝没了就退回自绘面板，功能不减"）；
+- unit 备份 `/etc/systemd/system/dsh-web.service.bak-20260928-151609` → `sed` 换版本 → `daemon-reload` → `restart`；
+- 重启后：`active`、`ExecMainStartTimestamp` = 15:16:10 UTC、3080 与 8791 都在听；
+  `ps -ef | grep -o '_npx/[a-f0-9]*'` 确认跑的正是 `ed2e730009a84a04`（即 0.2.0-rc.1，不是缓存里另外三个旧版本）。
+
+**上线后的读数**：
+
+| 检查 | 结果 |
+| --- | --- |
+| `/state` | `pluginVersion: "0.10.0"`（服务器自己的 Host 半边）· `questions` 键在 · `materializ*` = 0 |
+| 源站自报 | `machines[].pluginVersion: "0.9.0"` —— **本机仍是 0.9.0**，设置页因此会标红"两端版本不一致"，这是**正确**读数，不是缺陷 |
+| 浏览器拿到的半边 | shell 的 combo（58 个入口、10,665,836 B、http 200）里 `paneWindow`/`questionTitle`/`answerQuestion`/`questionElsewhere`/`QuestionCard` 全在 |
+| 提问竞速的前提 | 同一个 combo 里就有 **`@deepseek-ai/dsh-client-ui-user-questions/client.js`**，即 shipped 应答者确实挂载着——`next()` 下游有它，竞速才成立 |
+
+**还差的**：本机（源站）重启一次才会装上 0.10.0 的 Host 半边（会杀掉正在跑的会话，留给用户）；
+提问竞速仍然只有进程内测试，没有真机端到端（§4 第 7 条）。
 
 ### v0.10.0：跨机器提问的「两边竞速」（2026-09-28，**未提交/未部署**）
 
@@ -417,14 +460,29 @@ git rev-parse main v0.10.0 HEAD
 powershell -ExecutionPolicy Bypass -File scripts/build-and-install.ps1
 ```
 
-**部署到服务器**（`pnpm update` 拿远端 commit；lockfile 里的 tar.gz 哈希就是验证依据）
+**部署到服务器**（profile 里钉的是 **tag**，所以 `pnpm update` 不够——它只会把同一个 tag 再解析一遍）
 
 ```sh
 cd /root/.dsh/profiles/web
-pnpm update dsh-session-sync
-grep -m1 'tar.gz' pnpm-lock.yaml          # 应等于刚推的 commit
-grep -c '<新代码里的某个标记>' node_modules/dsh-session-sync/lib/index.js
-systemctl restart dsh-web && systemctl is-active dsh-web
+TS=$(date -u +%Y%m%d-%H%M%S)
+cp package.json /root/package.json.bak-$TS && cp pnpm-lock.yaml /root/pnpm-lock.yaml.bak-$TS   # 先备份
+pnpm add "github:cczzyy-cn/dsh-session-sync#v<版本>" --reporter=append-only   # 改 spec，这一步才真的换版本
+grep -m1 'tar.gz' pnpm-lock.yaml                     # 应等于刚推的 tag 那个 commit
+wc -c node_modules/dsh-session-sync/lib/index.js node_modules/dsh-session-sync/client/client.js
+                                                     # 应与本机构建逐字节相同（比 grep 标记更强）
+pnpm add 会顺手改 package.json 的 dependencies；装完再 systemctl restart dsh-web
+```
+
+**升服务器 DSH**（unit 里钉着版本；先预取，再改 unit，最后一起重启）
+
+```sh
+npx -y @deepseek-ai/dsh@<版本> --help > /root/dsh-help.txt 2>&1; echo exit=$?   # 预取，失败就别改 unit
+for h in $(ls -1 /root/.npm/_npx); do ... done                                  # 拿到新版本的缓存 hash
+grep -rl retainAgentScope /root/.npm/_npx/<新hash>/node_modules/@deepseek-ai/    # 控制台依赖的缝还在不在
+cp /etc/systemd/system/dsh-web.service /etc/systemd/system/dsh-web.service.bak-$(date -u +%Y%m%d-%H%M%S)
+sed -i 's|@deepseek-ai/dsh@<旧>|@deepseek-ai/dsh@<新>|' /etc/systemd/system/dsh-web.service
+systemctl daemon-reload && systemctl restart dsh-web
+ps -ef | grep -o '_npx/[a-f0-9]*' | sort -u          # 确认跑的是新缓存，而不是缓存里某个旧版本
 ```
 
 **读服务器镜像状态**（先换 cookie，再读 state / transcript）
@@ -499,6 +557,8 @@ ssh -n root@210.16.120.228 "echo <base64> | base64 -d > /tmp/t.sh && bash /tmp/t
 | **`npx`/`npm` 的 `.ps1` 被策略拦** | `npx : File npx.ps1 cannot be loaded because running scripts is disabled` | 走 `cmd /c "npm run build"`，或直接 `node node_modules\typescript\bin\tsc`；TS 6 传文件列表时要加 `--ignoreConfig`（否则 TS5112） |
 | **类型剥离会把打错的标识符留到运行时** | 在 `absorb(handle, frame)` 里写了 `sessionId`（那个作用域只有 `handle.sessionId`）：`node --experimental-transform-types` 不做类型检查，于是它变成一个**运行时 ReferenceError**，被那段的 async IIFE 吞成一条 warn，表现成"镜像永远填不满"——测试在第 1 步空等 30 秒，症状与链路故障一模一样 | 改完 Host 半边先跑一次 `tsc`（本次它立刻就指出了这个名字），再跑测试；`tsc` 抓不到的只有测试里的断言，抓得到的是这类静默失败 |
 | **测试假定了两条独立消息同时到达** | `page-boundary.spec.ts` 在镜像拿到尾部窗口后**立刻**读边缘，而"下面还有历史"这句话是源站**另一次 reconcile** 才发出去的：全量并行跑时两者赛跑，输了就报"源站从没读过一页"（单跑必过、全量偶发失败） | 判据依赖别的消息时，让测试**轮询到那个效果出现**再断言（边缘读本身有 2 秒的限流，所以轮询不会灌爆日志）；别把"两条消息一起到"写进断言 |
+| **浏览器产物的 URL 不能只取一个入口** | `/plugins/dsh-session-sync/client.js` 与 `/plugins/dsh-session-sync/client/client.js` 都是 **404、0 字节**，看着像"浏览器拿不到插件" | 那台机器把 58 个入口打成一个 combo：`/plugins/??<entry1>,<entry2>,…&rev=<hash>`，**整体取**才 200（本次 10,665,836 B）；shell 里那串是 HTML 转义的（`&amp;rev=`），取之前先 `sed 's/&amp;/\&/g'`。拿单个入口试会误判 |
+| **profile 依赖钉的是 tag，`pnpm update` 不会换版本** | `pnpm update dsh-session-sync` 在 `#v0.9.0` 上跑完仍是 0.9.0——它只是把同一个 tag 又解析了一遍，而"更新"看起来像成功了 | 换版本要**改 spec**：`pnpm add "github:…/dsh-session-sync#v<新版本>"`；核对用 **产物字节数**（比 grep 标记强） |
 
 **验证纪律**：能在本地用假控件复现的，先写确定性测试（本轮 9 个测试；其中端到端那条**在修复前的代码上确实失败**——新写的测试要在旧代码上跑一遍，否则不知道它测的是什么）；生产验证要给出**数字**（seq 范围、条数、字节数、耗时），不要只说"好了"。
 
