@@ -824,6 +824,8 @@ ssh -n root@210.16.120.228 "echo <base64> | base64 -d > /tmp/t.sh && bash /tmp/t
 | **点击坐标** | 自己按截图算，偏了 290 像素，于是"按钮点了没反应" | 用 `see(text=true)` 给的 `screen_center`，不要手算 |
 | 日志读不到 | 两端都看不见插件日志 | 把事实写进 state（既有模式），别指望日志 |
 | 结论过头 | "重放既不重复也不丢失" 被后续证据证伪 | 先写症状与证据，再写根因；范围要写清（例如 `drain` 只覆盖一个 flush 周期） |
+| **沙箱收紧后 `git push` 失败** | 凭证助手 `credential.helper=store` 是 shell 脚本，`sh.exe` 在沙箱下连信号管道都建不了（`couldn't create signal pipe, Win32 error 5`）⇒ `could not read Username`；schannel 另报 `SEC_E_NO_CREDENTIALS` | 绕开助手与 schannel：`git -c http.sslBackend=openssl -c "http.https://github.com/.extraHeader=Authorization: Basic <b64(x-access-token:TOKEN)>" push …`（token 仍从凭据管理器读，不进任何文件） |
+| 旧 `$env:TEMP` 下的脚本 | 换档后既"文件消失"（路径变了），想就地改也 `Access denied`（旧 TEMP 在新档下不可写） | 临时脚本写进**本次会话自己的** `$env:TEMP` 或工作区内；别复用会话早期路径 |
 | **两个症状读成一个因果链** | `throughSeq: -1` 和 `linkError: This operation was aborted` 一起出现，于是记成"链路抖动打断快照读、快照因此完不成"，烧掉一轮 | 它们可能都是**第三个原因**的结果（这里是被拒的 12 MB POST 触发 `reconnect()` 才 abort 了流）。先找"谁能解释**两个**症状"，再下结论 |
 | **硬上限最容易被跳过** | 12 MB 一帧撞 4 MB 上限，表现成"分页不可用 / 链路抖动 / 快照完不成"三种像模像样的症状 | 看到"某件事永远完不成"先量**体积/条数**，和两端的限制对一遍；**把实测值写进 state**（`batch`） |
 | **PowerShell 写文件带 BOM** | `Set-Content -Encoding UTF8`（PS 5.1）写出 EF BB BF，`JSON.parse` 直接拒；"配置读不出"被当成"没有配置"⇒ 全部回默认，看起来像插件忘了设置 | 写文件用 `[IO.File]::WriteAllText($p, $s, (New-Object Text.UTF8Encoding($false)))`；读文件容忍 BOM（`e6e00d5` 已修） |
