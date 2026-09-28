@@ -564,19 +564,22 @@ pane wherever the build offers `ctx.sessions.retainAgentScope`.
   *transport* is pinned by `tests/question-relay-link.spec.ts` over a real listener
   and a real link — but no test drives a question from a machine through a deployed
   server and back; that path has only been exercised by hand.
-- **Relayed approvals have been driven end to end, once.** The race, the claim, the
-  refusal of a non-decision, the late-decision refusal and the TTL are pinned by
+- **Relayed approvals have been driven end to end, both ways.** The race, the claim,
+  the refusal of a non-decision, the late-decision refusal and the TTL are pinned by
   `tests/approval-race.spec.ts`, the transport by
   `tests/approval-relay-link.spec.ts`, and what a card can honestly say about a call
-  by `tests/approval-view.spec.ts`. On a live deployment a gated write was offered to
-  the console, decided there, claimed by the machine and acked: the counters recorded
-  `offered: 1` / `decidedRemotely: 1` with an `/ack` and no `/approval/close`, which
-  is the "the console won" signature, and the write then completed. One thing no test
-  in this repository can cover is the `never`-policy precedence, because it is
-  enforced by the upstream approval service before the waterfall — the ordering this
-  feature leans on hardest, cited from upstream's own
-  `docs/subsystems/approval.zh.md` rather than asserted here. A session on that
-  policy produces no request at all, which is exactly what `offered: 0` means.
+  by `tests/approval-view.spec.ts`. On a live deployment a gated operation was offered
+  to the console twice: **allowed** once, and the operation then completed
+  (`offered: 1` / `decidedRemotely: 1`, with an `/ack` and no `/approval/close`);
+  **refused** once, and the operation did not happen — the file it would have deleted
+  is still there (`offered: 2` / `decidedRemotely: 2`). Both directions carry the same
+  signature, because a console's decision is always closed by the server when it
+  accepts the ack, and the origin sends a close only when *it* decided or withdrew.
+  One thing no test in this repository can cover is the `never`-policy precedence,
+  because it is enforced by the upstream approval service before the waterfall — the
+  ordering this feature leans on hardest, cited from upstream's own
+  `docs/subsystems/approval.zh.md` rather than asserted here. A session on that policy
+  produces no request at all, which is exactly what `offered: 0` means.
 - **An approval decided at the console leaves the machine's own dialog up too**,
   for the same structural reason as a question: this plugin has no seat from which
   to close another plugin's UI, and aborting the shared signal would fail the very
