@@ -863,7 +863,7 @@ ssh -n root@210.16.120.228 "echo <base64> | base64 -d > /tmp/t.sh && bash /tmp/t
 | 坑 | 现象 | 正确做法 |
 | --- | --- | --- |
 | `& ssh` / `bash -s < file` | 命令挂死 | `ssh -n … "echo <b64> \| base64 -d > f && bash f"`，输出重定向到文件再取 |
-| **沙箱换档会换掉 `$env:TEMP`** | 权限预设从 `danger-full-access` 切到 `workspace-write` 之后，同一句 `$env:TEMP\cookie.txt` 解析到了**另一个目录**（`…\Temp\dsh-0iDm7z\`），文件"消失"，curl 没带 cookie ⇒ 401，看起来像进程重启或鉴权坏了 | 会话内不要假设 `$env:TEMP` 稳定：**用 token 重新引导 cookie**，或把临时文件放在工作区内；先看 `netstat` 确认进程与监听，别急着下"重启了"的结论 |
+| **沙箱档位决定 `$env:TEMP`** | 切到受约束的档位（`workspace-write`）后 shell 拿到的是**隔离的 TEMP**（`…\Temp\dsh-xxxx\`），于是按 `$env:TEMP\...` 写的 cookie/脚本在下一次调用里"消失"或"不可写"（`Access denied`）⇒ 401 或找不到文件，看着像进程重启/鉴权坏了；切回 `danger-full-access` 又变回普通路径 | 不要把临时文件放在 `$env:TEMP` 上跨调用复用：用 token 重新引导 cookie、把脚本写进**工作区内**，或每次调用重建；判断进程是否重启看 `netstat`/pid，别信"文件不见了" |
 | `curl.exe -o $null` | PowerShell 里 `$null` 被吃掉，URL 成了 `-o` 的参数 ⇒ `curl: no URL specified!` | 写到一个真文件（`-o "$env:TEMP\x.html"`），别用 `$null` |
 | `printf %s` 经 `.cmd` | 输出空、`EXIT=0` | 用 `echo`（`%` 被 cmd 吃掉） |
 | PowerShell 5.1 读文件 | 中文乱码 | `Get-Content -Encoding UTF8`；执行策略 Restricted 时 `iex (Get-Content … -Raw)` |
