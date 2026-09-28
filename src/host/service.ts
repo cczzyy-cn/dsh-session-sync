@@ -19,6 +19,7 @@ import {
   type MirrorEvent,
   type MirrorTranscript,
   type PublishIndexPayload,
+  type RelayedAnswerItem,
   type StreamDeltaPayload,
   type SyncConfig,
   type SyncState,
@@ -26,6 +27,9 @@ import {
 } from '../shared/protocol.ts'
 import { loadConfig, saveConfig } from './config.ts'
 import type {
+  AskUserQuestionAnswerLike,
+  AskUserQuestionItemLike,
+  AskUserQuestionNext,
   FollowFrame,
   HostContext,
   SessionControllerLike,
@@ -33,6 +37,7 @@ import type {
   WireEvent,
 } from './dsh.ts'
 import { SyncHub, type BrowserSink } from './hub.ts'
+import { InteractionRelay } from './interactions.ts'
 import { resolveHome } from './config.ts'
 import { OriginLink, startSyncServer, type SyncServerHandle } from './transport.ts'
 import { pluginVersion } from './version.ts'
@@ -205,6 +210,18 @@ export class SessionSyncService {
   /** When each Session was last asked for an older page of history. */
   private readonly pageAsked = new Map<string, number>()
   /**
+   * Sessions whose log this machine has read back to its beginning.
+   *
+   * Service-scoped rather than per-follow because it is a fact about what has
+   * been *published*, not about one attempt at opening a window — and a follow
+   * handle is replaced by every reconnect and every replay the server asks for.
+   * Kept per Session because the alternative is worse than the bug it fixes: a
+   * handle's opening frame reports `hasMore` for its own tail window, which is
+   * true of every Session longer than that window, so trusting it on each
+   * re-open put the reader's "older" control back on screen forever.
+   */
+  private readonly reachedStart = new Set<string>()
+  /**
    * Owns the signal for the history reads a reader's paging triggers.
    *
    * Service-scoped on purpose: a page read is a read of the Session's log, not a
@@ -225,6 +242,14 @@ export class SessionSyncService {
 
   /** The last publish attempt, as the settings page reports it. */
   private lastPublish: { at: number; ok: boolean; error?: string } | undefined
+  /**
+   * The two-sided race for the questions this machine's Sessions ask.
+   *
+   * Owned here because the link is: the relay's sink reads {@link link} at call
+   * time, so a question asked while the link is down is simply answered locally
+   * rather than queued against a stream that may never come back.
+   */
+  private readonly relay: InteractionRelay
   private disposed = false
 
   private constructor(
@@ -238,6 +263,15 @@ export class SessionSyncService {
     // hub reports an incomplete mirror through the host logger rather than
     // keeping a counter nobody reads.
     this.hub = new SyncHub(frame => { this.broadcast(frame) }, () => this.view(), this.ctx.logger)
+    this.relay = new InteractionRelay({
+      open: (sessionId, questionId, questions, expiresAt) => {
+        this.link?.publishQuestion({ sessionId, questionId, questions, expiresAt })
+      },
+      close: (sessionId, questionId, outcome) => {
+        this.link?.publishQuestionClose({ sessionId, questionId, outcome })
+      },
+      now: () => Date.now(),
+    })
   }
 
   /**
@@ -261,6 +295,10 @@ export class SessionSyncService {
       // batch hears nothing else, so nothing else would ever ask it again.
       this.hub.expireCommands()
       this.hub.sweepGaps()
+      // Same pass, same reason: a relayed question outlives its usefulness when
+      // its TTL passes or the machine that asked stops appearing, and nothing
+      // else would ever revisit the card.
+      this.hub.sweepQuestions()
       void this.reconcile()
     }, RECONCILE_MS)
     this.flushTimer = setInterval(() => { this.flushStream(); this.flush() }, FLUSH_MS)
@@ -270,6 +308,9 @@ export class SessionSyncService {
   /** Stop every timer and connection, and drop every subscriber. */
   async dispose(): Promise<void> {
     this.disposed = true
+    // Tell the console that any question this machine was waiting on is gone:
+    // a card for a process that has exited offers a decision nobody can take.
+    this.relay.withdrawAll('aborted')
     if (this.reconcileTimer !== undefined) clearInterval(this.reconcileTimer)
     if (this.flushTimer !== undefined) clearInterval(this.flushTimer)
     for (const handle of this.follows.values()) handle.abort.abort()
@@ -305,9 +346,15 @@ export class SessionSyncService {
       linked,
       ...(this.linkError === undefined ? {} : { linkError: this.linkError }),
       machines: this.config.isServer ? this.hub.machines() : [],
+      ...(this.config.isServer ? { questions: this.hub.questions() } : {}),
       published: Object.values(this.config.syncSessions).filter(Boolean).length,
       ...(this.lastPublish === undefined ? {} : { publish: this.lastPublish }),
       ...(this.config.isServer ? {} : {
+        // A race has one winner and one invisible loser, so the losing side is
+        // counted: without these numbers "the console never offered it" and "the
+        // console offered it and this machine answered first" are the same
+        // observation, and this deployment's logger writes nowhere readable.
+        interactions: this.relay.counts(),
         follow: {
           frames: [...this.followFrameTypes],
           events: this.followEvents,
@@ -421,6 +468,61 @@ export class SessionSyncService {
   ): { ok: true; commandId: string } | { ok: false; reason: string } {
     if (!this.config.isServer) return { ok: false, reason: 'this instance is not the sync server' }
     return this.hub.submitCommand(machineName, sessionId, text, this.config.machineName)
+  }
+
+  /**
+   * Issue the console's answer to one relayed question.
+   * @param machineName - the machine that asked.
+   * @param questionId - the question being answered.
+   * @param answers - the console's answers.
+   * @returns the accepted command's id, or why it was refused.
+   */
+  submitAnswer(
+    machineName: string,
+    questionId: string,
+    answers: readonly RelayedAnswerItem[],
+  ): { ok: true; commandId: string } | { ok: false; reason: string } {
+    if (!this.config.isServer) return { ok: false, reason: 'this instance is not the sync server' }
+    return this.hub.submitAnswer(machineName, questionId, answers, this.config.machineName)
+  }
+
+  /**
+   * Ask the console and the machine's own UI at once, and take the first answer.
+   *
+   * Registered ahead of the shipped browser answerer so that both are asked: the
+   * local side through `next()`, which is what actually reaches that answerer
+   * (the Remote waterfall bridge), and the console down the sync link. The first
+   * to answer claims the question, and the other is told so.
+   *
+   * Only a published Session is relayed, and only while this machine is a
+   * publisher with a link: for anything else this listener delegates on the first
+   * line and the product behaves exactly as it does without this plugin.
+   * @param ctx - the Host context that owns the registration.
+   */
+  answerQuestions(ctx: HostContext): void {
+    const listener = (
+      request: { questions: readonly AskUserQuestionItemLike[]; agent?: { id: string } },
+      next: AskUserQuestionNext,
+    ): Promise<AskUserQuestionAnswerLike> => {
+      const sessionId = request.agent?.id
+      if (sessionId === undefined || !this.relayable(sessionId)) return next()
+      return this.relay.race(sessionId, request.questions, next)
+    }
+    ctx.effect(
+      () => ctx.on('user-questions/request', listener, { prepend: true }),
+      'dsh-session-sync: question relay',
+    )
+  }
+
+  /**
+   * Whether one Session's questions are worth offering to a console.
+   * @param sessionId - the Session being asked in.
+   * @returns true when this machine publishes it to a server it is linked to.
+   */
+  private relayable(sessionId: string): boolean {
+    if (this.config.isServer) return false
+    if (this.config.syncSessions[sessionId] !== true) return false
+    return this.link !== undefined
   }
 
   /**
@@ -632,8 +734,11 @@ export class SessionSyncService {
       }
       // The page knows where the log begins, so the next index tells the truth
       // about whether anything is still below — which is how the reader's
-      // "older" control finally goes away.
+      // "older" control finally goes away. That fact outlives this handle: a page
+      // read back to the beginning is about the log, and a reconnect that re-opens
+      // the follow must not re-open the question with it.
       const hadOlder = handle.hasOlder
+      if (!page.hasMore) this.reachedStart.add(sessionId)
       handle.hasOlder = page.hasMore
       // ...and the index has to be re-sent for that to reach the mirror: it is
       // published on a reconcile, and `hasOlder` is only ever *named* when true,
@@ -705,6 +810,10 @@ export class SessionSyncService {
       if (desired.has(sessionId)) continue
       handle.abort.abort()
       this.follows.delete(sessionId)
+      // A Session that stopped publishing starts a new episode if it comes back:
+      // what was read back to the beginning belonged to the publish that ended,
+      // and the honest starting point for a fresh one is "unknown" again.
+      this.reachedStart.delete(sessionId)
     }
     for (const sessionId of desired) {
       if (!this.follows.has(sessionId)) this.startFollow(sessionId)
@@ -737,7 +846,7 @@ export class SessionSyncService {
    * Record what became of one publish attempt.
    *
    * The settings page used to call "marked in the config" published, which is
-   * how a client that stopped publishing entirely could still read 宸插悓姝ヤ細璇濇暟 3
+   * how a client that stopped publishing entirely could still read 已同步会话数 3
    * while the server held none. Only `/publish` and `/frames` are watched: an
    * ack or a status read saying nothing about the mirror is not a publish.
    * @param path - the route the link called.
@@ -1026,7 +1135,15 @@ export class SessionSyncService {
     // which is the only statement about history below the window.
     if (frameType === 'snapshot' || frameType === 'opened') {
       if (typeof carrier['cursor'] === 'number') handle.cursor = carrier['cursor']
-      if (typeof carrier['hasMore'] === 'boolean') handle.hasOlder = carrier['hasMore']
+      if (typeof carrier['hasMore'] === 'boolean') {
+        // An opening reports `hasMore` for the tail window it just took, which is
+        // true of every Session longer than that window — so it can raise the
+        // claim only while the log's beginning is still unknown. Once a page read
+        // has walked back to the start, this machine has published everything
+        // there is, and every later opening sits above history it already sent.
+        if (carrier['hasMore'] === false) this.reachedStart.add(handle.sessionId)
+        handle.hasOlder = carrier['hasMore'] === true && !this.reachedStart.has(handle.sessionId)
+      }
       // The opening is the frame a page read depends on, so whether it ever
       // arrived is recorded rather than inferred from the cursor: an empty
       // Session legitimately cuts at -1, and a follow that never opened must not
@@ -1081,11 +1198,26 @@ export class SessionSyncService {
     }
   }
 
-  /** Admit a takeover prompt into the local Session it names. */
+  /** Admit a takeover prompt, or claim a relayed question, into the local Session it names. */
   private async runCommand(command: DownstreamCommand): Promise<void> {
+    const link = this.link
+    // An answer is settled by one question — does this machine still have that
+    // question pending? — and that check *is* the finish line of the race. So a
+    // console that answered a question the machine had already answered itself
+    // gets `failed` carrying exactly that sentence, which is the honest result of
+    // a race already decided rather than an error to retry.
+    if (command.kind === 'answer') {
+      const claimed = this.relay.claim(command.questionId, command.answers, command.commandId)
+      link?.ackCommand(
+        command.commandId,
+        command.sessionId,
+        claimed.ok,
+        claimed.ok ? undefined : claimed.reason,
+      )
+      return
+    }
     const controller = this.controller()
     if (controller === undefined) return
-    const link = this.link
     // A machine must not be able to drive a Session it stopped publishing.
     if (this.config.syncSessions[command.sessionId] !== true) {
       link?.ackCommand(command.commandId, command.sessionId, false, 'this Session is no longer published')

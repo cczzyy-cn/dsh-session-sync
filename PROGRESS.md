@@ -1,24 +1,28 @@
 # dsh-session-sync 推进记录
 
 > 只写被证据支撑的事实：跑过的命令、测到的数字、看到的现象。每条结论都要能指出它是怎么被验证的。
-> 本文件不参与构建。最近更新：2026-09-27（0.9.0：版本握手、洞/落后拆分、两档端到端）
+> 本文件不参与构建。最近更新：2026-09-28（0.10.0：跨机器提问「两边竞速」）
 
 ## 0. 现状一眼看
 
 | 项 | 值 |
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
-| 版本 | **`0.9.0`**（tag `v0.9.0` → `74db526`）· 版本握手 + 洞/落后拆分 + 两档端到端（见 §2） |
-| 服务器 | `210.16.120.228` · DSH **`0.1.7-rc.2`**（`npx` 缓存 `4f4f47d9854f3c73`）· 插件 **`0.9.0`**（lock → `tar.gz/74db5265…`）· unit `dsh-web.service` · active、**已重启** |
+| 版本 | **`0.10.0`**（**未提交、未打 tag、未部署**）· 跨机器提问的两边竞速（见 §2） |
+| 服务器 | 仍是 **`0.9.0`**（本版尚未部署） |
+| 测试 | **55 通过 / 0 失败**（15 suites，1.1s）· 新增 `tests/interaction-race.spec.ts` 17 条（竞速 10 + hub 7） |
+| 产物 | `lib/index.js` **131,694 B**（sha256 `4593c779…`）· `client/client.js` **331,741 B**（sha256 `ee544ffa…`）；产物自报版本 `0.10.0`（`node -e` 问过产物本人） |
+| 编码门禁 | `node scripts/check-encoding.mjs` **clean**（原先在 HEAD 上就是红的：见 §6） |
+| 类型 | Host 半边 `tsc` 0（9 个文件）；客户端半边用 `%TEMP%\synccheck` 的 stub 配置整体 `tsc` 0 |
+| 服务器 | `210.16.120.228` · DSH **`0.1.7-rc.2`**（`npx` 缓存 `4f4f47d9854f3c73`）· 插件仍是 **`0.9.0`**（lock → `tar.gz/74db5265…`）· unit `dsh-web.service` · active |
 | 控制台路线 | **`scope`**：服务器上 `dsh-api-session-controller/lib/client.js` 命中 `retainAgentScope` ⇒ 特性探测确定走它；`adopt` 在任何已发布构建里都不存在（该路线已从代码删除） |
 | 服务器镜像 | 按需重建：源站 reconcile + follow 快照；此刻本机发布列表为空（`syncSessions: {}`），所以镜像里没有会话 |
 | 旧副本 | 已留档移走（**未删**）到服务器 `/root/legacy-copies-<ts>/`：两个会话目录 + 投影缓存 + 台账 |
-| 本机（源站） | DSH 源码运行（checkout = `dsh-v0.1.7-rc.1`）· profile 装 **0.9.0**；Host 半边要等一次本机重启才换（会杀掉正在跑的会话，留给用户） |
+| 本机（源站） | DSH 源码运行（checkout = `dsh-v0.1.7-rc.1`）· profile 装 **0.9.0**；**0.10.0 的 Host 半边要等一次本机重启才生效**（会杀掉正在跑的会话，留给用户） |
 | 控制台 | `https://dsh.c-zy.cc/?token=<43 位>`（浏览器 cookie 持久） |
 | 同步口 | `210.16.120.228:8791`（源站连它；**不经** Cloudflare） |
-| 测试 | **38 通过 / 0 失败**（13 suites，1.0s）· 含整链回归 `tests/e2e-chain.spec.ts`、版本 `tests/version.spec.ts`、客户端树 `tests/client-tree.spec.ts` |
-| 端到端脚本 | `scripts/e2e-dsh.ps1`：构建工作树 → 两个真 `dsh web` 实例（3098/3099）→ 发布真会话 → 断言镜像 222 条 / 零缺口 / 版本握手 / 掉线再恢复，跑完自清理。**实测 all checks passed** |
-| 文档 | `PROGRESS.md` 349 行（现状 + 本版日志 + 手册）；2026-09-25 及以前归档在 `docs/history-2026-09.md`；计划在 `docs/project-plan.md` |
+| 端到端脚本 | `scripts/e2e-dsh.ps1`：构建工作树 → 两个真 `dsh web` 实例（3098/3099）→ 发布真会话 → 断言镜像 222 条 / 零缺口 / 版本握手 / 掉线再恢复，跑完自清理。**实测 all checks passed**；**尚未覆盖提问竞速**（见 §4） |
+| 文档 | `PROGRESS.md` 现状 + 本版日志 + 手册；2026-09-25 及以前归档在 `docs/history-2026-09.md`；计划在 `docs/project-plan.md`；提问那条的设计分析在 `docs/analysis-agent-team-profile.md` |
 | 版本握手 | `state.pluginVersion`（本机）+ `machines[].pluginVersion`（各源站自报）；设置页显示并在不一致时标红；`build-and-install.ps1` 会核对产物自报的版本 |
 
 **2026-09-25 服务器更新（三次）**：插件 `13b7aa2`（按字节切批 + 具名 413）→ `b2a7811`（回填分页边界）→ `4f3ed9a`/`c3862a2`/`5a80c15`/`32298d1`（保留上限 / 预算 / 跨平台 cwd / 拒写截断）→ **`v0.4.0`（tag）**。每次都用 lock 的 tar.gz + 安装产物的代码标记双向核对（`v0.4.0` 这次 9 个 host 标记 + 2 个 client 标记全中、旧串 `no follow or no page API` 为 0），`systemctl restart dsh-web` 后 active、3080/8791 在听。依赖也从裸 `github:` 改成 **`github:cczzyy-cn/dsh-session-sync#v0.4.0`**（lock → `8eeb0dd`），改前备份 `/root/package.json.bak-<时间戳>`。**本机 origin 跑的是 18:12:58 启动的构建**（`lib` 与仓库哈希一致，即含全部修复）。
@@ -56,7 +60,88 @@
 ## 2. 推进日志（晚 → 早）
 
 > 2026-09-25 及以前的推进日志（从"② 的答案"一路到 0.3.x）已归档到 `docs/history-2026-09.md`。
-> 这一段只留本版（0.8.x/0.9.x）的改动与验证；历史文件是当时的推理记录，不要照它实现。
+> 这一段只留本版（0.8.x/0.9.x/0.10.x）的改动与验证；历史文件是当时的推理记录，不要照它实现。
+
+### v0.10.0：跨机器提问的「两边竞速」（2026-09-28，**未提交/未部署**）
+
+**要解决的问题**：一条会话跑在别的机器上，它中途停下来问人（`ask_user`，或一次审批）时，
+**只有那台机器上的人能回答**。控制台能读、能接管发言，却答不了提问——而这恰恰是最需要
+远端参与的一种交互：提问就是 agent 在等人。
+
+**上游的接缝**（读 DSH checkout 核实，不是猜的）：
+
+- `ctx.userQuestions.ask()` 走 `'user-questions/request'` 的 **waterfall**：谁先返回答案谁 **claim**，
+  调 `next()` 则委托给后面的应答者（`interaction/user-questions/src/index.ts:130-142`）。
+- 它是 **agent-scoped** 派发（`scopeTarget(agent, agent)`），只有 **运行时根** 才有人类应答者
+  （owned child 会永远阻塞，同文件 `:93-107`）。
+- shipped 的浏览器应答者是**另一个 listener**（`ctx.remote.$on`，经 `api/remotes` 的 Remote
+  waterfall 桥接，`remote-events.ts:47`）⇒ 它就在 `next()` 的下游，所以「两边同时问、先答者赢」
+  在上游是**可以直接实现的**，不需要改上游。
+
+**做了什么**：
+
+- `src/host/interactions.ts`（新）：竞速与裁决。**不依赖 Cordis / HTTP / 链路**，所以每条决策
+  都能被测试直接调用。三条规矩：唯一赢家（按 commandId 认领，重复投递幂等、第二个决定被拒）、
+  输家要被记账（`answeredLocally`/`answeredRemotely`/`lateAnswers`/`aborted`）、
+  **输家不许变成 unhandled rejection**（两个 promise 都进 `Promise.race`，因此后续 reject 也有人观察）。
+- `src/host/service.ts`：`answerQuestions(ctx)` 用 **`{ prepend: true }`** 注册应答者——排在 shipped
+  应答者前面，然后同时问本地（`next()`）与控制台；`runCommand()` 按 `command.kind` 分流，
+  `answer` 分支只做一件事：`relay.claim(...)`，其结果就是 ack。
+- 协议：新增 `QuestionOpenPayload` / `QuestionClosePayload` / `RelayedQuestionView`，`DownstreamCommand`
+  从单一形状变成 **`prompt | answer` 判别联合**，`CommandStatus` 加 `kind`/`questionId`，
+  `SyncState` 加 `questions`（服务端）与 `interactions`（源站计数），`SyncStreamFrame` 加 `question`。
+- **answer 走 prompt 那条生命周期**（排队/TTL/单次投递/ack）：它要的正是这些，而 ack 里的
+  `ok/failed` 恰好就是"claim 成功没有"的答案。`terminal` 状态挡重复 ack 的规则沿用。
+- 传输：`POST /question/open`、`POST /question/close`（都要求机器 token，都做**逐字段校验**：
+  这是协议里唯一带嵌套数组、并且会被交给浏览器的形状）；`OriginLink.publishQuestion` /
+  `publishQuestionClose` **不入 outbox**——投失败只损失"远端也能答"这个选项，本地仍在竞速。
+- hub：`openQuestion` / `closeQuestion` / `questions()` / `sweepQuestions()`（与命令过期同一个
+  10 s 周期；TTL 到期或机器离线就撤卡）、`submitAnswer`（复用 `enqueue`）、
+  ack 成功即把提问标成 `answered-at-console` 并撤卡（免得第二个控制台还在提供一个已被拿走的选择）。
+- 客户端：`QuestionCard.tsx`（+ 自己的 CSS module）渲染选项/多选/「其他」自由文本，
+  `QuestionElsewhere` 在被看的会话不是提问那个时指路；`api.ts` 维护 `questions`/`answers` 快照。
+- 计数进 `state.interactions`：这是"输家不可见"的解药——没有这几个数，
+  「控制台从没拿到提问」与「控制台拿到了、但机器上的人先答了」在两端都是同一个读数。
+
+**验证**（可复跑）：
+
+| 命令 | 结果 |
+| --- | --- |
+| `node --experimental-transform-types --test "tests/*.spec.ts"` | **55 通过 / 0 失败**（15 suites，1.1s）；其中新增 17 条：竞速 10（无会话不中继 / 本地先答→撤卡且带原因 / 控制台先答→由控制台撤卡 / 迟到答案被拒并计数 / 同命令重试幂等+第二个决定被拒 / 中止传播 / 伪造选项被拒 / 一批问题按序归一化 / 过期被拒 / 离开时撤回）+ hub 7（已发布才上卡 / 未发布不上卡 / 无此提问拒答 / answer 生命周期+认领后撤卡 / prompt 的 ack 不动提问 / TTL 与离线两种退役 / 32 条上限丢最旧） |
+| Host 半边 `tsc`（9 个文件，`--ignoreConfig`） | 退出 **0** |
+| 客户端半边 `tsc`（`%TEMP%\synccheck` stub 配置） | 退出 **0** |
+| `npm run build` | `lib/index.js` 130,809 B、`client/client.js` 331,583 B |
+| `node -e` 问产物本人 | 自报 `0.10.0`，与 `package.json` 一致 |
+| `node scripts/check-encoding.mjs` | **clean**（见 §6：这条门禁在 HEAD 上本来就是红的） |
+| CSS module 类名交叉核对 | 定义 18 / 使用 18，无缺失、无多余 |
+
+**边界（诚实）**：**没有真机端到端**。竞速、认领、迟到拒答、过期退役都由上面 17 条钉着，
+但"一条提问从机器经部署好的服务器再回来"这一整趟还没跑过——与接管续聊在
+`tests/e2e-chain.spec.ts` 之前的状态相同。另外**竞速赢家无法关掉输家的对话框**：
+两个应答者里输的那个仍在机器上挂着 shipped 的 UI，本插件没有关别人 UI 的座位；
+决定已经作出、工具调用已经返回，答它不改变任何事（详见 README「Limitations」）。
+
+### v0.10.0 补：两个显示缺陷（2026-09-28）
+
+用户报的两条，都在控制台上：
+
+1. **标题右侧的 `原件 · scope` 后面跟着一个"小数点"。** 那不是小数点，是同一个徽章里追加的
+   窗口范围（` · 3232–3558`）——`{t('paneRoute')}{' · ' + first + '–' + last}` 直接拼在文案后面，
+   于是路由名后面粘了个点加两个数字。**修法**：徽章只留路由名，窗口范围移进 `title`
+   （它是"翻页有没有到达面板"的唯一外部读数，`official-session.tsx:179-185` 说明了它的用途，
+   所以不能删，只能换个不吵的位置）；同时把渲染条件收紧成 `supported && route !== undefined`
+   ——路由名为空时会渲染出一个悬空的 `·`，这正是同一类毛病。
+2. **`加载更早的消息` 一直显示。** 这是真 bug，根因在**源站**：`handle.hasOlder` 被
+   **每一次 follow 开场覆盖**（`service.ts` 的 opening 分支），而 follow 开的是**尾部窗口**，
+   它的 `hasMore` 对任何比窗口长的会话都是 `true`。于是：控制台翻页翻到日志开头 →
+   `pullOlder` 把 `hasOlder` 置为 `false`（这条路径本来就是对的，注释还写着"这就是读者的
+   旧消息控件终于消失的方式"）→ 但下一次重连或 resync 重开 follow，`hasMore: true` 又把它
+   掀回 `true` → 控件**永远**回来。
+   **修法**：把"这本日志已经被读到开头"记成**服务级、按会话**的事实
+   （`reachedStart` 集合，不是 handle 的字段——handle 每次重连都会被换掉），
+   opening 只能在开头还未知时抬高这个断言；会话取消发布时清掉它（新一集从"未知"开始）。
+   **判据**（`tests/e2e-chain.spec.ts` 3b，实测在旧代码上确实失败）：
+   `assert.equal(reopened.hasOlder, false, 'a re-opened tail window must not resurrect the older control')`。
 
 ### v0.9.0 上线（2026-09-27）
 
@@ -277,6 +362,24 @@
 5. **改 Host 半边要重启用户的本机**（会杀掉正在跑的会话）。这条不会消失，只能用 Phase 1 的两档验证把代价压到最低——两档都已就位。
 6. **`github:` 依赖按 commit 解析**，版本号只是标识：**改完 `src/**` 必须把 `lib/`、`client/` 两个产物一起提交**
    （`scripts/build-and-install.ps1` 会核对产物自报的版本，但不会替你提交）。
+7. **提问竞速没有真机端到端，也没有线上观测。** 17 条单测钉住了每条决策（认领、迟到拒答、过期、上限），
+   但整趟（机器提问 → 服务器上卡 → 控制台作答 → 源站 claim → 工具拿到结果）只在进程内被拆开验过。
+   判据：源站 `/state` 的 `interactions.answeredRemotely` 变成 1，同时 `lateAnswers` 不为它增长；
+   以及 `answeredLocally` 在有人在本机作答时增长。**注意本机 Host 半边要先重启才含这段代码。**
+8. **竞速赢家关不掉输家的对话框。** 控制台先答时，机器上 shipped 的提问 UI 仍挂着（本插件没有关别人 UI 的座位）；
+   决定已作出、工具调用已返回，答它不改变任何事。**故意不 abort 共享 signal**：那个 signal 属于发起提问的工具调用，
+   abort 它会把"答案要来继续的那一步"本身弄失败。要消除这个残留，只能上游给一个"请求已被他人认领"的信号。
+9. **【本轮新发现，未修】命令交给一条正在死掉的流，会被记成"已投递"然后永远不再重发。**
+   加 3b 的重连步骤时撞出来的：控制台在源站重连的窗口里（实测约 300 ms）提交一条 prompt，
+   hub 看到的 `record.origin` 还是那条**旧**流（源站已经 abort、服务器还没来得及注意到），
+   `send()` 写进一个行将结束的响应里什么都没发出去，却 `transition(..., 'delivered')` 了。
+   新流 attached 时 `attachOrigin` 只 drain `pending`——而这条命令从来没进过 `pending`。
+   于是它停在 `delivered`，直到 120 秒 TTL 被扫成 `expired`；人看到的是"发了没反应"。
+   **为什么不顺手修**：唯一安全的修法是"没写成功就留在 pending 里、重连后重发"，
+   而那需要**目标侧按 `requestId` 去重**才敢做——插件现在每次投递都新铸 `requestId`
+   （见 §2 v0.10.0 的取舍表），重发就是把一句话说两遍。所以先记下来，和
+   `docs/analysis-agent-team-profile.md` §2/S5.1 那条（发送方铸造 `commandId` + 源站去重）一起做。
+   `tests/e2e-chain.spec.ts` 的 3b 因此显式等链路回来再测接管，并在注释里指向本条。
 
 ## 5. 操作手册（可复制）
 
@@ -315,8 +418,19 @@ curl.exe -s -b "$env:TEMP\local-cj.txt" http://127.0.0.1:3080/dsh-session-sync/s
 #   page    = { beforeSeq, throughSeq, records, hasMore, reason }
 #   batch   = { bytes, size, batches, waiting }   ← 一批到底多大 / 还排队多少
 #   follows = [{ sessionId, cursor, opened, firstSeq, lastSeq, pending, events, ended }]
+#   interactions = { open, answeredLocally, answeredRemotely, lateAnswers, aborted }  ← 提问竞速的记账
 # 判据：`opened: true` 且 `cursor >= 0` 才意味着这一会话的读页通道是通的；
 #       `page.reason` 直接说被跳过的原因（no-cursor / no-follow / rate-limited …）。
+# 提问的判据：控制台答成功 ⇒ answeredRemotely +1；本机先答 ⇒ answeredLocally +1 且
+#       控制台那侧的答案回来时 lateAnswers +1（它的 ack 是 failed，带"已在源站答过"）。
+```
+
+**读服务器侧的提问**（服务端角色才有）
+
+```sh
+TOKEN=$(grep -o "token=[A-Za-z0-9_-]*" /root/dsh-web.log | tail -1 | cut -d= -f2)
+curl -s -c /tmp/cj -o /dev/null "http://127.0.0.1:3080/?token=$TOKEN"
+curl -s -b /tmp/cj "http://127.0.0.1:3080/dsh-session-sync/state"   # state.questions[] = 仍可作答的提问
 ```
 
 **跑仓库内的确定性测试**（不需要 DSH，不碰任何运行中的实例）
@@ -353,6 +467,10 @@ ssh -n root@210.16.120.228 "echo <base64> | base64 -d > /tmp/t.sh && bash /tmp/t
 | **PowerShell 写文件带 BOM** | `Set-Content -Encoding UTF8`（PS 5.1）写出 EF BB BF，`JSON.parse` 直接拒；"配置读不出"被当成"没有配置"⇒ 全部回默认，看起来像插件忘了设置 | 写文件用 `[IO.File]::WriteAllText($p, $s, (New-Object Text.UTF8Encoding($false)))`；读文件容忍 BOM（`e6e00d5` 已修） |
 | **harness 覆写 `DSH_HOME`** | 在自己命令里设 `$env:DSH_HOME` 没用（被覆写成真实 home），一次性实例于是读真实配置 | 包一层 `.ps1` + `Start-Process -File`（参数传 home）；先用"在实例进程里打印 home"的探针验证一次 |
 | **`profiles\web` 是 junction 时装插件** | `dsh plugin add` 会把真实 profile（连同其它插件）清空 | 顺序反过来：**先**在真实 profile 里 `add`，**再**建 junction；或者不要在 junction 上跑 `add` |
+| **编码门禁会误报合法汉字** | `scripts/check-encoding.mjs` 盯的是"GBK 读出来的 `·`"，而 `·` 的 GBK 读法 `路` 是常用字：`paneRouteHint` 里的"scope 路线"让它**在 HEAD 上就是红的** | 保留门禁的强度，改那个词的措辞（"scope 通道"）；顺带用 node 扫出同一文件里门禁**看不见**的真乱码（`SyncPanel.tsx` 注释里的"涓婁笅鏂囧崰鐢ㄧ巼"= "上下文占用率"，已修）——门禁的字符表只覆盖标点类损坏 |
+| **`npx`/`npm` 的 `.ps1` 被策略拦** | `npx : File npx.ps1 cannot be loaded because running scripts is disabled` | 走 `cmd /c "npm run build"`，或直接 `node node_modules\typescript\bin\tsc`；TS 6 传文件列表时要加 `--ignoreConfig`（否则 TS5112） |
+| **类型剥离会把打错的标识符留到运行时** | 在 `absorb(handle, frame)` 里写了 `sessionId`（那个作用域只有 `handle.sessionId`）：`node --experimental-transform-types` 不做类型检查，于是它变成一个**运行时 ReferenceError**，被那段的 async IIFE 吞成一条 warn，表现成"镜像永远填不满"——测试在第 1 步空等 30 秒，症状与链路故障一模一样 | 改完 Host 半边先跑一次 `tsc`（本次它立刻就指出了这个名字），再跑测试；`tsc` 抓不到的只有测试里的断言，抓得到的是这类静默失败 |
+| **测试假定了两条独立消息同时到达** | `page-boundary.spec.ts` 在镜像拿到尾部窗口后**立刻**读边缘，而"下面还有历史"这句话是源站**另一次 reconcile** 才发出去的：全量并行跑时两者赛跑，输了就报"源站从没读过一页"（单跑必过、全量偶发失败） | 判据依赖别的消息时，让测试**轮询到那个效果出现**再断言（边缘读本身有 2 秒的限流，所以轮询不会灌爆日志）；别把"两条消息一起到"写进断言 |
 
 **验证纪律**：能在本地用假控件复现的，先写确定性测试（本轮 9 个测试；其中端到端那条**在修复前的代码上确实失败**——新写的测试要在旧代码上跑一遍，否则不知道它测的是什么）；生产验证要给出**数字**（seq 范围、条数、字节数、耗时），不要只说"好了"。
 

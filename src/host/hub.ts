@@ -20,6 +20,11 @@ import {
   type MirroredSession,
   type PublishFramesPayload,
   type PublishIndexPayload,
+  type QuestionClosePayload,
+  type QuestionOpenPayload,
+  type QuestionOutcome,
+  type RelayedAnswerItem,
+  type RelayedQuestionView,
   type StreamDeltaPayload,
   type SyncState,
   type SyncStreamFrame,
@@ -43,6 +48,15 @@ const PENDING_LIMIT = 32
 
 /** Upper bound on retained command states per machine, newest kept. */
 const STATUS_LIMIT = 64
+
+/**
+ * Upper bound on questions one machine may have open at the console.
+ *
+ * A question is a *live* ask, so this is a runaway guard and not a retention
+ * policy: a machine that somehow opened a hundred would be a machine nobody is
+ * answering, and the console is the wrong place to find that out.
+ */
+const QUESTION_LIMIT = 32
 
 /**
  * How long the mirror waits before asking an origin to replay again.
@@ -181,6 +195,15 @@ interface MachineRecord {
   readonly pending: DownstreamCommand[]
   /** Every command this machine was sent, by id, so an ack can retire it. */
   readonly commands: Map<string, CommandStatus>
+  /**
+   * Questions this machine relayed and the console may still answer, by id.
+   *
+   * Held only while they are answerable: a question is not mirrored state, and
+   * the origin withdraws it the moment its own human answers. Dropping the entry
+   * is therefore the normal end of one, and the console learns it from the
+   * frame that carried the closure.
+   */
+  readonly questions: Map<string, RelayedQuestionView>
 }
 
 /** The server-role mirror and its subscribers. */
@@ -492,14 +515,67 @@ export class SyncHub {
     if (!record.sessions.has(sessionId)) return { ok: false, reason: 'session is not published' }
     const trimmed = text.trim()
     if (trimmed === '') return { ok: false, reason: 'empty prompt' }
-    const command: DownstreamCommand = {
+    return this.enqueue(record, {
       commandId: mintId(),
       sessionId,
       kind: 'prompt',
       text: trimmed,
       from,
       expiresAt: Date.now() + COMMAND_TTL_MS,
+    })
+  }
+
+  /**
+   * Queue the console's answer to one question a machine relayed.
+   *
+   * An answer rides the prompt lifecycle rather than a channel of its own
+   * because it needs exactly what a prompt needs: held while the machine is
+   * away, one delivery, a TTL, and an ack that says whether the machine
+   * *claimed* it. That last part is the whole feature — the machine claims an
+   * answer only while the question is still pending there, so a console that
+   * answered after the machine's own human did gets `failed` with the reason,
+   * which is the truthful outcome of a race that has already been decided.
+   * @param machineName - the machine that asked.
+   * @param questionId - the question being answered.
+   * @param answers - the console's answers.
+   * @param from - the answering console's display name.
+   * @returns the accepted command's id, or why it was refused.
+   */
+  submitAnswer(
+    machineName: string,
+    questionId: string,
+    answers: readonly RelayedAnswerItem[],
+    from: string,
+  ): { ok: true; commandId: string } | { ok: false; reason: string } {
+    const record = this.records.get(machineName)
+    if (record === undefined) return { ok: false, reason: 'unknown machine' }
+    const question = record.questions.get(questionId)
+    if (question === undefined) {
+      return { ok: false, reason: 'this question is no longer waiting' }
     }
+    if (answers.length === 0) return { ok: false, reason: 'an answer must decide something' }
+    return this.enqueue(record, {
+      commandId: mintId(),
+      sessionId: question.sessionId,
+      kind: 'answer',
+      questionId,
+      answers: answers.map(answer => ({
+        id: answer.id,
+        selected: [...answer.selected],
+        ...(answer.custom === undefined ? {} : { custom: answer.custom }),
+      })),
+      from,
+      expiresAt: Date.now() + COMMAND_TTL_MS,
+    })
+  }
+
+  /**
+   * Hold one command for a machine and say where it stands.
+   * @param record - the owning machine.
+   * @param command - the command to deliver or park.
+   * @returns the accepted command's id.
+   */
+  private enqueue(record: MachineRecord, command: DownstreamCommand): { ok: true; commandId: string } {
     if (record.origin === undefined) {
       record.pending.push(command)
       this.transition(record, command, 'queued')
@@ -518,6 +594,89 @@ export class SyncHub {
   }
 
   /**
+   * Offer one relayed question to the browsers watching this server.
+   * @param machineName - the machine that asked.
+   * @param payload - the question, its Session, and its TTL.
+   */
+  openQuestion(machineName: string, payload: QuestionOpenPayload): void {
+    const record = this.records.get(machineName)
+    if (record === undefined) return
+    record.lastSeen = Date.now()
+    // A question is only answerable while its Session is published here: an
+    // un-published Session has no console surface to answer it from, and the
+    // origin will not accept an answer it no longer offers.
+    if (!record.sessions.has(payload.sessionId)) return
+    const view: RelayedQuestionView = {
+      machineName,
+      sessionId: payload.sessionId,
+      questionId: payload.questionId,
+      questions: payload.questions,
+      openedAt: Date.now(),
+      expiresAt: payload.expiresAt,
+    }
+    record.questions.set(payload.questionId, view)
+    while (record.questions.size > QUESTION_LIMIT) {
+      // Insertion-ordered, so the oldest ask is the one to drop; its card goes
+      // away with it, and the origin is not waiting on this side anyway.
+      const oldest = record.questions.keys().next()
+      if (oldest.done === true || oldest.value === payload.questionId) break
+      this.closeQuestion(machineName, {
+        sessionId: record.questions.get(oldest.value)?.sessionId ?? payload.sessionId,
+        questionId: oldest.value,
+        outcome: 'expired',
+      })
+    }
+    this.broadcast({ type: 'question', question: view })
+  }
+
+  /**
+   * Stop offering one question, and tell every watching browser why.
+   * @param machineName - the machine that asked.
+   * @param payload - the question and the outcome to report.
+   */
+  closeQuestion(machineName: string, payload: QuestionClosePayload): void {
+    const record = this.records.get(machineName)
+    const view = record?.questions.get(payload.questionId)
+    if (record === undefined || view === undefined) return
+    record.questions.delete(payload.questionId)
+    this.broadcast({
+      type: 'question',
+      question: { ...view, closed: payload.outcome },
+    })
+    this.broadcastState()
+  }
+
+  /** Questions the console may still answer, oldest ask first. */
+  questions(): RelayedQuestionView[] {
+    return [...this.records.values()]
+      .flatMap(record => [...record.questions.values()])
+      .sort((left, right) => left.openedAt - right.openedAt)
+  }
+
+  /**
+   * Retire the questions that stopped being answerable while nobody was looking.
+   *
+   * Run on the same periodic pass as the command sweep, and for the same reason:
+   * nothing else would ever revisit them. A question outlives its usefulness two
+   * ways — its TTL passes, or the machine that asked stops appearing at all — and
+   * a card left on screen for either is a card offering a decision that can no
+   * longer be taken.
+   */
+  sweepQuestions(now: number = Date.now()): void {
+    for (const record of this.records.values()) {
+      const offline = record.origin === undefined && now - record.lastSeen >= OFFLINE_AFTER_MS
+      for (const view of [...record.questions.values()]) {
+        if (view.expiresAt > now && !offline) continue
+        this.closeQuestion(record.machineName, {
+          sessionId: view.sessionId,
+          questionId: view.questionId,
+          outcome: offline ? 'offline' : 'expired',
+        })
+      }
+    }
+  }
+
+  /**
    * Retire one command with the owning machine's own outcome.
    * @param machineName - the machine that answered.
    * @param payload - the command id and whether it was admitted.
@@ -530,8 +689,23 @@ export class SyncHub {
     const status = record.commands.get(payload.commandId)
     if (status === undefined) return
     if (TERMINAL_STATES.includes(status.state)) return
-    if (payload.ok) this.transition(record, status, 'accepted')
-    else this.transition(record, status, 'failed', payload.error ?? 'the owning machine refused the prompt')
+    if (payload.ok) {
+      this.transition(record, status, 'accepted')
+      // An accepted answer means the machine still had the question pending and
+      // claimed this decision, so the card is spent. Closing it here — rather
+      // than waiting for the origin to say so — is what makes the console drop a
+      // question the instant it is answered, instead of leaving a second console
+      // offering a decision that has already been taken.
+      if (status.kind === 'answer' && status.questionId !== undefined) {
+        this.closeQuestion(machineName, {
+          sessionId: status.sessionId,
+          questionId: status.questionId,
+          outcome: 'answered-at-console',
+        })
+      }
+      return
+    }
+    this.transition(record, status, 'failed', payload.error ?? 'the owning machine refused the prompt')
   }
 
   /**
@@ -689,6 +863,7 @@ export class SyncHub {
       lastSeen: Date.now(),
       pending: [],
       commands: new Map(),
+      questions: new Map(),
     }
     this.records.set(machineName, created)
     return created
@@ -734,7 +909,7 @@ export class SyncHub {
    */
   private transition(
     record: MachineRecord,
-    seed: { commandId: string; sessionId: string; expiresAt: number },
+    seed: { commandId: string; sessionId: string; expiresAt: number; kind?: 'prompt' | 'answer'; questionId?: string },
     state: CommandState,
     error?: string,
   ): void {
@@ -743,6 +918,8 @@ export class SyncHub {
       machineName: record.machineName,
       sessionId: seed.sessionId,
       state,
+      ...(seed.kind === undefined ? {} : { kind: seed.kind }),
+      ...(seed.questionId === undefined ? {} : { questionId: seed.questionId }),
       expiresAt: seed.expiresAt,
       ...(error === undefined ? {} : { error }),
       time: Date.now(),

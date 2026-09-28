@@ -17,6 +17,8 @@ import {
   type LocalSessionRow,
   type MirrorEvent,
   type MirrorTranscript,
+  type RelayedAnswerItem,
+  type RelayedQuestionView,
   type SyncConfig,
   type SyncState,
   type SyncStreamFrame,
@@ -118,6 +120,23 @@ export interface SyncClientSnapshot {
    * arrives late cannot overwrite a newer one.
    */
   live: { reasoning: string; text: string; turn: number; step: number }
+  /**
+   * Questions this server is offering to this console, oldest ask first.
+   *
+   * Transient by nature: a question is answerable only while the machine that
+   * asked is still waiting, and it disappears the moment either side answers.
+   * Keeping the *view* rather than a count is what lets the card show the
+   * question, its options, and which machine asked.
+   */
+  questions: RelayedQuestionView[]
+  /**
+   * What became of an answer this console sent, per question.
+   *
+   * The ordinary failure is a race already lost — the machine's own human
+   * answered first — and the card is the only place that can say so. `sent` is
+   * the in-flight mark, cleared when the question itself closes.
+   */
+  answers: Record<string, { sent?: boolean; error?: string }>
   /** Last failure text, cleared by the next successful action. */
   error?: string
 }
@@ -236,6 +255,8 @@ export class SyncClient {
       loadingTranscript: false,
       loadingOlder: false,
       live: noLive(),
+      questions: [],
+      answers: {},
       stream: 'connecting',
       mirrorResets: 0,
     })
@@ -514,6 +535,45 @@ export class SyncClient {
     }
   }
 
+  /**
+   * Answer one question this console was offered.
+   *
+   * The answer goes to the machine that asked rather than being applied here: it
+   * is a claim on a decision, and the machine is the only side that can say
+   * whether the question was still open when it arrived. So the ordinary refusal
+   * — a 409 carrying "already answered on the machine that asked it" — is shown on
+   * the card, because the honest story is a race that was lost and not a failure
+   * to retry.
+   * @param machineName - the machine that asked.
+   * @param questionId - the question being answered.
+   * @param answers - the choices, one per question the batch asked.
+   * @returns true when the machine's server accepted the answer for delivery.
+   */
+  async answerQuestion(
+    machineName: string,
+    questionId: string,
+    answers: RelayedAnswerItem[],
+  ): Promise<boolean> {
+    this.setAnswer(questionId, { sent: true })
+    try {
+      const result = await postJson<{ ok: true; commandId: string }>(`${ROUTE_PREFIX}/answer`, {
+        machineName,
+        questionId,
+        answers,
+      })
+      if (result.ok !== true) throw new Error('the server did not accept the answer')
+      return true
+    } catch (error: unknown) {
+      this.setAnswer(questionId, { error: describe(error) })
+      return false
+    }
+  }
+
+  /** Record one question's answer progress without disturbing the others. */
+  private setAnswer(questionId: string, state: { sent?: boolean; error?: string }): void {
+    this.update({ answers: { ...this.store.getSnapshot().answers, [questionId]: state } })
+  }
+
   private openStream(): void {
     if (typeof EventSource === 'undefined') return
     const source = new EventSource(`${ROUTE_PREFIX}/events`)
@@ -555,13 +615,21 @@ export class SyncClient {
       // applied: the snapshot backs all three surfaces, so replacing it with a
       // partial object blanks the role, listener, and link facts they all
       // render. Only the part that actually arrived is taken.
-      const state: SyncState = isCompleteState(frame.state)
+      const complete = isCompleteState(frame.state)
+      const state: SyncState = complete
         ? frame.state
         : {
             ...previous,
             machines: Array.isArray(frame.state.machines) ? frame.state.machines : previous.machines,
           }
-      this.update({ state, ready: true })
+      this.update({
+        state,
+        ready: true,
+        // The complete state frame is authoritative for which questions are open:
+        // it is what a page that just loaded has, and it is how a frame this
+        // browser missed gets repaired.
+        ...(complete ? { questions: frame.state.questions ?? [] } : {}),
+      })
       // A machine or Session appearing or disappearing invalidates the current
       // local list too: the rows carry switch state that may have moved.
       if (previous.published !== state.published) void this.refreshSessions()
@@ -608,6 +676,22 @@ export class SyncClient {
       if (!advanced && frame.text !== '' && frame.text.length < shown.length && shown.startsWith(frame.text)) return
       this.notify(observer => { observer.streamed(open, frame) })
       this.update({ live: frame.kind === 'reasoning' ? { ...base, reasoning: frame.text } : { ...base, text: frame.text } })
+      return
+    }
+    if (frame.type === 'question') {
+      const snapshot = this.store.getSnapshot()
+      const view = frame.question
+      if (view.closed === undefined) {
+        this.update({ questions: upsertQuestion(snapshot.questions, view) })
+        return
+      }
+      // A closed card takes its answer progress with it: that progress existed to
+      // explain this card, and leaving it behind would leak one entry per question
+      // for the life of the page.
+      this.update({
+        questions: snapshot.questions.filter(question => question.questionId !== view.questionId),
+        answers: withoutKey(snapshot.answers, view.questionId),
+      })
       return
     }
     if (frame.type === 'command') {
@@ -757,6 +841,38 @@ function mergeEvents(held: readonly MirrorEvent[], incoming: readonly MirrorEven
   // held, so the order is already right and no sort is needed.
   if (last !== undefined && fresh.every(event => event.seq > last)) return [...held, ...fresh]
   return [...held, ...fresh].sort((left, right) => left.seq - right.seq)
+}
+
+/**
+ * Put one question into the open set, in the order the asks arrived.
+ *
+ * A question already held is replaced rather than duplicated: the server may
+ * re-state an open one (a reconnect replays state), and two cards for one
+ * decision is exactly the confusion this feature exists to avoid.
+ * @param held - the questions already on screen.
+ * @param view - the question that just arrived.
+ * @returns the new set, oldest ask first.
+ */
+function upsertQuestion(
+  held: readonly RelayedQuestionView[],
+  view: RelayedQuestionView,
+): RelayedQuestionView[] {
+  const without = held.filter(question => question.questionId !== view.questionId)
+  return [...without, view].sort((left, right) => left.openedAt - right.openedAt)
+}
+
+/**
+ * One record's entries except a named key.
+ * @param record - the record to copy.
+ * @param key - the key to drop.
+ * @returns a copy without that key.
+ */
+function withoutKey<T>(record: Readonly<Record<string, T>>, key: string): Record<string, T> {
+  const next: Record<string, T> = {}
+  for (const [name, value] of Object.entries(record)) {
+    if (name !== key) next[name] = value
+  }
+  return next
 }
 
 /**

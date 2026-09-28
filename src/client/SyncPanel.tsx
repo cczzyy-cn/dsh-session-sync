@@ -54,9 +54,10 @@ import {
   writeClipboard,
   type MarkdownLabels,
 } from '@deepseek-ai/dsh-client-ui-primitives'
-import type { MirroredMachine, MirroredSession } from '../shared/protocol.ts'
+import type { MirroredMachine, MirroredSession, RelayedAnswerItem } from '../shared/protocol.ts'
 import type { CommandDelivery, SyncClientSnapshot } from './api.ts'
 import type { SessionSyncKey, SessionSyncTranslate } from './locales.ts'
+import { QuestionCard, QuestionElsewhere } from './QuestionCard.tsx'
 import { buildTree } from './tree.ts'
 import {
   compactTokens,
@@ -131,6 +132,15 @@ export interface SyncPanelProps {
   /** Send one takeover prompt to the open Session's machine. */
   sendPrompt: (text: string) => Promise<boolean>
   /**
+   * Answer one question a machine relayed to this console.
+   *
+   * Separate from {@link SyncPanelProps.sendPrompt} because it is a different act:
+   * a prompt says something to the Session, while an answer decides something it
+   * is waiting on, and only the machine that asked can say whether the question
+   * was still open.
+   */
+  answerQuestion: (machineName: string, questionId: string, answers: RelayedAnswerItem[]) => Promise<boolean>
+  /**
    * The feature-detected bridge to the shipped conversation renderer.
    *
    * Present on every build: it reports `supported === false` where the
@@ -198,6 +208,14 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
   const online = open === undefined
     ? false
     : machines.find(candidate => candidate.machineName === open.machineName)?.online ?? false
+
+  // Questions waiting in a Session other than the one on screen. The open
+  // Session's own are rendered as cards inside its pane, next to the composer
+  // they interrupt; these are only ever a pointer to somewhere else to look.
+  const questions = state.questions ?? []
+  const elsewhere = open === undefined
+    ? questions
+    : questions.filter(question => question.machineName !== open.machineName || question.sessionId !== open.sessionId)
 
   return (
     <div className={css.panel} data-open={open === undefined ? 'false' : 'true'} data-list={listHidden ? 'hidden' : 'shown'}>
@@ -339,6 +357,19 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
       </aside>
 
       <section className={css.viewPane} aria-label={t('panelTitle')}>
+        {/* Questions for a Session this reader is *not* looking at. The card
+            itself can only appear in the pane of the Session that asked, so
+            without this line a machine could wait out its whole TTL unseen. */}
+        {elsewhere.length > 0 && (
+          <QuestionElsewhere
+            t={t}
+            count={elsewhere.length}
+            onShow={() => {
+              const first = elsewhere[0]
+              if (first !== undefined) void props.openSession(first.machineName, first.sessionId)
+            }}
+          />
+        )}
         {open === undefined || session === undefined
           ? <HeroPlaceholder t={t} />
           : (
@@ -350,6 +381,7 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
               online={online}
               closeSession={props.closeSession}
               sendPrompt={props.sendPrompt}
+              answerQuestion={props.answerQuestion}
               loadOlder={props.loadOlder}
               official={props.official}
               renderSlot={props.renderSlot}
@@ -422,6 +454,8 @@ function Conversation(props: {
   online: boolean
   closeSession: () => void
   sendPrompt: (text: string) => Promise<boolean>
+  /** Send this console's answer to a question the machine relayed. */
+  answerQuestion: (machineName: string, questionId: string, answers: RelayedAnswerItem[]) => Promise<boolean>
   /** Fetch the page of this Session that sits before the one held. */
   loadOlder: () => Promise<void>
   official: OfficialBridgeFace
@@ -576,10 +610,21 @@ function Conversation(props: {
               {t('sessionBehind', { n: session.behind })}
             </span>
           )}
-          {props.official.supported && (
-            <span className={css.routeBadge} title={t('paneRouteHint')}>
-              {t('paneRoute', { route: props.official.route ?? '' })}
-              {paneRange === undefined ? '' : ` · ${String(paneRange.first)}–${String(paneRange.last)}`}
+          {/* Only when the route is actually named: `原件 · {route}` with no route
+              renders a dangling separator, which reads as a stray dot glued to the
+              badge rather than as "this build has no shipped pane". */}
+          {props.official.supported && props.official.route !== undefined && (
+            <span
+              className={css.routeBadge}
+              // The window's extent is a diagnostic — it is how paging reaching the
+              // pane is visible from outside — so it belongs in the tooltip, not
+              // appended to the label, where it read as a dot and two numbers
+              // stuck onto the route's name.
+              title={paneRange === undefined
+                ? t('paneRouteHint')
+                : `${t('paneRouteHint')} · ${t('paneWindow', { from: paneRange.first, to: paneRange.last })}`}
+            >
+              {t('paneRoute', { route: props.official.route })}
             </span>
           )}
           <span className={css.viewSpacer} />
@@ -699,6 +744,26 @@ function Conversation(props: {
               )}
             </div>
           )}
+      {/* The questions this Session is waiting on, offered to whoever is reading
+          it here as well as to whoever is at the machine. Above the composer
+          because that is what they interrupt: the model is stopped mid-turn until
+          one of the two answers, and the answer this reader gives travels to the
+          machine rather than to this Host. */}
+      {(state.questions ?? [])
+        .filter(question => question.machineName === props.machineName && question.sessionId === session.sessionId)
+        .map(question => (
+          <QuestionCard
+            key={question.questionId}
+            t={t}
+            question={question}
+            {...(state.answers[question.questionId] === undefined
+              ? {}
+              : { answer: state.answers[question.questionId] })}
+            onAnswer={(answers) => {
+              void props.answerQuestion(question.machineName, question.questionId, answers)
+            }}
+          />
+        ))}
       {/* One composer per Session: the shipped one rides inside the shipped
           conversation, so the console's own card stands down on the chat tab —
           except on a route that blocked the shipped composer, where this card is
@@ -752,7 +817,7 @@ function Conversation(props: {
 }
 
 /**
- * The header's right-hand cluster:涓婁笅鏂囧崰鐢ㄧ巼 ring, and the model, preset and
+ * The header's right-hand cluster:上下文占用率 ring, and the model, preset and
  * subagent facts the log reports.
  *
  * Every one of these is a **reading**, not a control: the mirror can see what

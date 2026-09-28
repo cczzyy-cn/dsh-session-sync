@@ -34,6 +34,67 @@ export interface HostContext {
   get(name: string): unknown
   /** Wait for services, then run `callback` inside the scoped fiber. */
   inject(dependencies: readonly string[], callback: (scoped: HostContext) => void): void
+  /**
+   * Register one waterfall listener for the user-questions seam.
+   *
+   * Declared structurally for the single waterfall this plugin answers. The seam
+   * asks every registered answerer in turn: a listener that **returns an answer
+   * claims the request**, and one that calls `next()` delegates to the answerers
+   * behind it — which for this plugin is the shipped browser answerer, reached
+   * through the Remote waterfall bridge (`api/remotes`). `prepend` is what puts
+   * this plugin ahead of it, and being ahead of it is the whole reason a race
+   * between the two is possible at all.
+   *
+   * A listener registered on a context outside every Agent scope receives the
+   * requests of every Agent; one registered on an Agent's own `ctx` receives
+   * only that Agent's (`@deepseek-ai/dsh-scope` filters the dispatch).
+   */
+  on(
+    event: 'user-questions/request',
+    listener: (request: AskUserQuestionRequestLike, next: AskUserQuestionNext) => Promise<AskUserQuestionAnswerLike>,
+    options?: { prepend?: boolean },
+  ): () => void
+}
+
+/** The continuation that delegates to the answerers behind this one. */
+export type AskUserQuestionNext = () => Promise<AskUserQuestionAnswerLike>
+
+/** One selectable answer — `AskUserQuestionOption`. */
+export interface AskUserQuestionOptionLike {
+  readonly label: string
+  readonly description?: string
+}
+
+/** One question to display — `AskUserQuestionItem`. */
+export interface AskUserQuestionItemLike {
+  readonly id: string
+  readonly question: string
+  readonly detail?: string
+  readonly header?: string
+  readonly options?: readonly AskUserQuestionOptionLike[]
+  readonly multiSelect?: boolean
+  readonly intent?: { readonly kind: string; readonly approve: string }
+}
+
+/** One pending question request — `AskUserQuestionRequestEvent`. */
+export interface AskUserQuestionRequestLike {
+  readonly questions: readonly AskUserQuestionItemLike[]
+  /** The asking Agent, projected; `id` is the Session being asked in. */
+  readonly agent?: { readonly id: string }
+  /** Cancellation lifetime of the pending request. */
+  readonly signal?: AbortSignal
+}
+
+/** One answer to one question — `AskUserQuestionAnswerItem`. */
+export interface AskUserQuestionAnswerItemLike {
+  readonly id: string
+  readonly selected: readonly string[]
+  readonly custom?: string
+}
+
+/** The human's answer — `AskUserQuestionAnswer`. */
+export interface AskUserQuestionAnswerLike {
+  readonly answers: readonly AskUserQuestionAnswerItemLike[]
 }
 
 /** One row of `SessionController.list` — `SessionSummary`. */

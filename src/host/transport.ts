@@ -26,6 +26,11 @@ import {
   type HandshakeResponse,
   type MirrorEvent,
   type PublishIndexPayload,
+  type QuestionClosePayload,
+  type QuestionOpenPayload,
+  type QuestionOutcome,
+  type RelayedQuestion,
+  type RelayedQuestionOption,
   type StreamDeltaPayload,
 } from '../shared/protocol.ts'
 import type { SyncHub } from './hub.ts'
@@ -199,6 +204,30 @@ export async function startSyncServer(options: SyncServerOptions): Promise<SyncS
       return
     }
 
+    if (request.method === 'POST' && url.pathname === '/question/open') {
+      const body = await readJson(request)
+      const payload = questionOpenOf(body)
+      if (payload === undefined) {
+        sendJson(response, 400, { error: 'sessionId, questionId, questions, and expiresAt are required' })
+        return
+      }
+      options.hub.openQuestion(machineName, payload)
+      sendJson(response, 200, { ok: true })
+      return
+    }
+
+    if (request.method === 'POST' && url.pathname === '/question/close') {
+      const body = await readJson(request)
+      const payload = questionCloseOf(body)
+      if (payload === undefined) {
+        sendJson(response, 400, { error: 'sessionId, questionId, and a known outcome are required' })
+        return
+      }
+      options.hub.closeQuestion(machineName, payload)
+      sendJson(response, 200, { ok: true })
+      return
+    }
+
     if (request.method === 'POST' && url.pathname === '/ack') {
       const body = await readJson(request)
       const commandId = typeof body?.['commandId'] === 'string' ? body['commandId'] : ''
@@ -324,6 +353,98 @@ async function readJson(request: IncomingMessage): Promise<Record<string, unknow
   } catch {
     return undefined
   }
+}
+
+/**
+ * Read one relayed question, or nothing when the body is not one.
+ *
+ * Validated rather than cast: this is the only shape in the protocol with nested
+ * arrays the server then hands to a browser, so a malformed one would become a
+ * broken card rather than a refused request. A question may legitimately carry no
+ * options — a free-text question is one the human answers with `custom` — but
+ * every question needs the id its answer will be routed by.
+ * @param body - the parsed request body.
+ * @returns the payload, or undefined when it is not a complete question.
+ */
+function questionOpenOf(body: Record<string, unknown> | undefined): QuestionOpenPayload | undefined {
+  if (body === undefined) return undefined
+  const sessionId = nonEmptyString(body['sessionId'])
+  const questionId = nonEmptyString(body['questionId'])
+  const expiresAt = body['expiresAt']
+  const raw = body['questions']
+  if (sessionId === undefined || questionId === undefined) return undefined
+  if (typeof expiresAt !== 'number' || !Number.isFinite(expiresAt)) return undefined
+  if (!Array.isArray(raw) || raw.length === 0) return undefined
+  const questions: RelayedQuestion[] = []
+  for (const entry of raw) {
+    const question = relayedQuestionOf(entry)
+    if (question === undefined) return undefined
+    questions.push(question)
+  }
+  return { sessionId, questionId, questions, expiresAt }
+}
+
+/**
+ * Read one relayed question, or nothing when it is not one.
+ * @param value - one entry of the request's `questions` array.
+ * @returns the question, or undefined when a required field is missing.
+ */
+function relayedQuestionOf(value: unknown): RelayedQuestion | undefined {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return undefined
+  const record = value as Record<string, unknown>
+  const id = nonEmptyString(record['id'])
+  const question = nonEmptyString(record['question'])
+  if (id === undefined || question === undefined) return undefined
+  const options = record['options']
+  let relayedOptions: RelayedQuestionOption[] | undefined
+  if (options !== undefined) {
+    if (!Array.isArray(options)) return undefined
+    relayedOptions = []
+    for (const entry of options) {
+      if (typeof entry !== 'object' || entry === null || Array.isArray(entry)) return undefined
+      const option = entry as Record<string, unknown>
+      const label = nonEmptyString(option['label'])
+      if (label === undefined) return undefined
+      const description = nonEmptyString(option['description'])
+      relayedOptions.push({ label, ...(description === undefined ? {} : { description }) })
+    }
+  }
+  const header = nonEmptyString(record['header'])
+  const detail = nonEmptyString(record['detail'])
+  return {
+    id,
+    question,
+    ...(header === undefined ? {} : { header }),
+    ...(detail === undefined ? {} : { detail }),
+    ...(relayedOptions === undefined ? {} : { options: relayedOptions }),
+    ...(record['multiSelect'] === true ? { multiSelect: true } : {}),
+  }
+}
+
+/**
+ * Read one question closure, or nothing when the body is not one.
+ * @param body - the parsed request body.
+ * @returns the payload, or undefined when the outcome is not one this protocol knows.
+ */
+function questionCloseOf(body: Record<string, unknown> | undefined): QuestionClosePayload | undefined {
+  if (body === undefined) return undefined
+  const sessionId = nonEmptyString(body['sessionId'])
+  const questionId = nonEmptyString(body['questionId'])
+  const outcome = body['outcome']
+  if (sessionId === undefined || questionId === undefined) return undefined
+  if (!isQuestionOutcome(outcome)) return undefined
+  return { sessionId, questionId, outcome }
+}
+
+/** Whether one value names an outcome this protocol defines. */
+function isQuestionOutcome(value: unknown): value is QuestionOutcome {
+  return value === 'answered-at-origin' || value === 'answered-at-console'
+    || value === 'aborted' || value === 'expired' || value === 'offline'
+}
+
+/** One non-empty, trimmed string field, or undefined. */
+function nonEmptyString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim().length > 0 ? value : undefined
 }
 
 /** Write one JSON response. */
@@ -573,6 +694,28 @@ export class OriginLink {
    */
   publishStream(payload: StreamDeltaPayload): void {
     void this.post('/stream-delta', { ...payload, machineName: this.options.machineName() })
+  }
+
+  /**
+   * Offer one question this machine's Session is waiting on to the server.
+   *
+   * Not queued, unlike a durable batch: a question is only useful while it is
+   * still open, and one that failed to post is not lost work — the local UI is
+   * still in the race and will answer it. So a drop costs the *remote* option
+   * and nothing else, which is why the failure is reported (`onPost`) rather than
+   * retried against a situation that has moved on.
+   * @param payload - the question, its Session, and its TTL.
+   */
+  publishQuestion(payload: QuestionOpenPayload): void {
+    void this.post('/question/open', { ...payload })
+  }
+
+  /**
+   * Withdraw one question, or report that this machine answered it itself.
+   * @param payload - the question and the outcome.
+   */
+  publishQuestionClose(payload: QuestionClosePayload): void {
+    void this.post('/question/close', { ...payload })
   }
 
   /**

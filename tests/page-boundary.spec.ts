@@ -133,8 +133,18 @@ describe('the page bound', () => {
 
     // A reader reaching the mirror's lower edge names that edge; the origin must
     // read the page that *ends* there, which means asking its log for one past it.
-    hub.transcript(MACHINE, SESSION_ID, { limit: 1, before: 1_100 })
-    const call = await until(() => calls[0], 'the origin to read a page')
+    //
+    // The ask is gated on the machine's *stated* claim that history exists below
+    // its window, and that claim travels in the index the origin publishes on its
+    // own reconcile — a separate message from the window itself. So this polls a
+    // reader's edge read until the ask happens instead of assuming the two arrived
+    // together: under parallel load they race, and losing the race used to read as
+    // "the origin never read a page" even though the page bound was fine. The ask
+    // is rate-limited to one per two seconds, so polling cannot flood the log.
+    const call = await until(() => {
+      hub.transcript(MACHINE, SESSION_ID, { limit: 1, before: 1_100 })
+      return calls[0]
+    }, 'the origin to read a page')
     assert.equal(call.throughSeq, SESSION_EVENTS - 1)
     assert.equal(call.beforeSeq, 1_101, 'the boundary event must be inside the page')
 

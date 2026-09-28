@@ -23,7 +23,7 @@
  * retention seam, and `ui-primitives` supplies every control it renders.
  */
 import type { Context as ClientContext } from '@deepseek-ai/cordis'
-import type { ConfigPatch } from '../shared/protocol.ts'
+import type { ConfigPatch, RelayedAnswerItem } from '../shared/protocol.ts'
 import { ConfigSection } from './ConfigSection.tsx'
 import { OFFICIAL_SLOT, OfficialConversation, OfficialSessions } from './official-session.tsx'
 import { PanelIcon } from './PanelIcon.tsx'
@@ -117,6 +117,8 @@ export function apply(ctx: ClientContext): void {
       closeSession: () => { client.closeSession() },
       loadOlder: () => client.loadOlder(),
       sendPrompt: (text: string) => client.sendPrompt(text),
+      answerQuestion: (machineName: string, questionId: string, answers: RelayedAnswerItem[]) =>
+        client.answerQuestion(machineName, questionId, answers),
       official,
     }),
   }, SyncPanel))

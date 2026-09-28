@@ -121,6 +121,17 @@ export function batchEvents<T>(
  */
 export const COMMAND_TTL_MS = 120_000
 
+/**
+ * How long the console keeps offering an open question.
+ *
+ * This is the *card's* lifetime, not the asker's. The origin is never waiting on
+ * the console alone: the local answerer is still in the race (the whole point of
+ * the two-sided design), so dropping a card late costs nothing but the chance to
+ * answer it — while keeping it forever would let a console left open overnight
+ * accumulate questions whose asker finished hours ago.
+ */
+export const QUESTION_TTL_MS = 10 * 60_000
+
 /** Persisted plugin configuration — the five settings the user asked for, plus the listener. */
 export interface SyncConfig {
   /** This machine's display name, shown to every peer. */
@@ -228,6 +239,35 @@ export interface SyncState {
   linkError?: string
   /** Server role: every connected and remembered machine. Client role: empty. */
   machines: MirroredMachine[]
+  /**
+   * Server role: the questions relayed to this console and still answerable.
+   *
+   * A question is *not* mirrored state: it lives only as long as the asker is
+   * waiting, and the origin withdraws it the moment its own human answers. So
+   * this is the one part of the view that is deliberately transient — a restart
+   * of this server loses it, and the origin's next question re-opens a fresh one.
+   */
+  questions?: RelayedQuestionView[]
+  /**
+   * Client role: what this machine's relayed questions did.
+   *
+   * Counted because a race has exactly one winner and the loser is invisible:
+   * without these numbers, "the console never offered the question" and "the
+   * console offered it and the machine answered first" look the same from both
+   * ends, and this deployment's logger writes nowhere anyone can read.
+   */
+  interactions?: {
+    /** Questions currently waiting on either side. */
+    open: number
+    /** Answered by the local UI before the console did. */
+    answeredLocally: number
+    /** Answered by the console, and claimed by this machine. */
+    answeredRemotely: number
+    /** Answers that arrived too late to claim, with the local answer already taken. */
+    lateAnswers: number
+    /** Questions withdrawn because the asking turn was aborted. */
+    aborted: number
+  }
   /** Client role: the Sessions this machine is publishing. */
   published: number
   /**
@@ -349,8 +389,92 @@ export interface MirrorTranscript {
   hasMore: boolean
 }
 
+/** One selectable answer on a relayed question — `AskUserQuestionOption` cut to JSON. */
+export interface RelayedQuestionOption {
+  label: string
+  /** Extra context a capable UI renders under the label. */
+  description?: string
+}
+
+/**
+ * One question relayed to the server's console — `AskUserQuestionItem` cut to JSON.
+ *
+ * A live `AbortSignal`, an `Agent`, and a `plan-review` intent are all
+ * deliberately dropped: the first two cannot cross a wire, and the third's
+ * `callId` points into a log the console's readers do not hold. What survives is
+ * what a human needs in order to choose.
+ */
+export interface RelayedQuestion {
+  /** The asker's stable id, echoed back so a batch stays routable. */
+  id: string
+  question: string
+  header?: string
+  detail?: string
+  options?: RelayedQuestionOption[]
+  /** Whether more than one option may be selected; single-select when absent. */
+  multiSelect?: boolean
+}
+
+/** One answer a console chose for one relayed question. */
+export interface RelayedAnswerItem {
+  id: string
+  selected: string[]
+  /** Free-text "Other" answer, which overrides `selected` on a single-select. */
+  custom?: string
+}
+
+/** Origin → server: one question is waiting for a human, here or there. */
+export interface QuestionOpenPayload {
+  sessionId: string
+  /** Origin-minted identity of this asking episode. */
+  questionId: string
+  questions: RelayedQuestion[]
+  /** Epoch ms after which the console should stop offering it. */
+  expiresAt: number
+}
+
+/** Origin → server: this question is no longer pending, and why. */
+export interface QuestionClosePayload {
+  sessionId: string
+  questionId: string
+  outcome: QuestionOutcome
+}
+
+/**
+ * Why an open question stopped being answerable.
+ *
+ * Named from the whole deployment's point of view rather than from either end's,
+ * because the two ends mean opposite things by "local": the machine's own human
+ * answering first is the ordinary outcome of the race and is *not* a failure, and
+ * so is the console answering first. Which side produced which value is stated
+ * per member — a reader that had to guess would report a lost race as a fault.
+ */
+export type QuestionOutcome =
+  /** The machine's own human answered first. Sent by the origin. */
+  | 'answered-at-origin'
+  /** The console answered first and the machine claimed it. Raised by the server. */
+  | 'answered-at-console'
+  /** The asking turn was aborted, so nobody can answer it any more. */
+  | 'aborted'
+  /** The TTL passed with the question unanswered at the console. */
+  | 'expired'
+  /** The machine that asked stopped appearing. */
+  | 'offline'
+
+/** Server → browser: one question this server is offering, or the news that it closed. */
+export interface RelayedQuestionView {
+  machineName: string
+  sessionId: string
+  questionId: string
+  questions: RelayedQuestion[]
+  openedAt: number
+  expiresAt: number
+  /** Present once the question stopped being answerable; the console drops the card. */
+  closed?: QuestionOutcome
+}
+
 /** Server → origin: one instruction to act on a published Session. */
-export interface DownstreamCommand {
+export interface DownstreamPrompt {
   /** Server-minted identity, echoed back in the origin's ack. */
   commandId: string
   sessionId: string
@@ -361,6 +485,32 @@ export interface DownstreamCommand {
   /** Epoch ms after which the origin must refuse this prompt. */
   expiresAt: number
 }
+
+/**
+ * Server → origin: the console's answer to one question the origin relayed.
+ *
+ * It travels as a command rather than as its own frame because it needs exactly
+ * what a prompt needs: a queue for a machine that is away, a TTL, one at-most-once
+ * delivery, and an ack that says whether the origin *claimed* it. The origin
+ * claims it only while that question is still pending — so the ack is where the
+ * two-sided race is decided, and `failed` with the reason is the honest answer to
+ * a console that answered a question the machine had already answered itself.
+ */
+export interface DownstreamAnswer {
+  commandId: string
+  sessionId: string
+  kind: 'answer'
+  /** The question this answers, as the origin named it. */
+  questionId: string
+  answers: RelayedAnswerItem[]
+  /** Which console asked, for the origin's own presentation. */
+  from: string
+  /** Epoch ms after which the origin must refuse this answer. */
+  expiresAt: number
+}
+
+/** Anything the server asks one origin to do about a published Session. */
+export type DownstreamCommand = DownstreamPrompt | DownstreamAnswer
 
 /**
  * Server → origin: re-open one Session's follow so its snapshot replays.
@@ -419,6 +569,17 @@ export interface CommandStatus {
   machineName: string
   sessionId: string
   state: CommandState
+  /**
+   * What this command asked the origin to do.
+   *
+   * A prompt and an answer travel the same lifecycle but mean different things
+   * to a reader — one said something, the other decided something — so the
+   * console needs the discriminator to narrate them apart. Absent only for a
+   * status minted before this field existed.
+   */
+  kind?: 'prompt' | 'answer'
+  /** For an answer: the question it decided. */
+  questionId?: string
   /** Epoch ms after which this command is no longer deliverable. */
   expiresAt: number
   /** Human-readable reason, present for `failed` (and `expired` when explained). */
@@ -528,6 +689,8 @@ export type SyncStreamFrame =
   | { type: 'state'; state: SyncState }
   | { type: 'events'; machineName: string; sessionId: string; events: MirrorEvent[] }
   | { type: 'command'; command: CommandStatus }
+  /** One relayed question opened or closed; the console renders the current set. */
+  | { type: 'question'; question: RelayedQuestionView }
   /** Transient streaming text for the open Session; never mirrored. */
   | { type: 'stream'; machineName: string; sessionId: string; turn: number; step: number; kind: 'reasoning' | 'text'; text: string }
   | { type: 'error'; message: string }

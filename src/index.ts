@@ -15,6 +15,7 @@ import {
   KEEPALIVE_MS,
   ROUTE_PREFIX,
   type ConfigPatch,
+  type RelayedAnswerItem,
   type SyncStreamFrame,
 } from './shared/protocol.ts'
 import { configPath, resolveHome } from './host/config.ts'
@@ -57,6 +58,10 @@ async function initialize(ctx: HostContext): Promise<void> {
     const service = await SessionSyncService.create(ctx, resolveHome())
     ctx.logger.info(`dsh-session-sync: engine ready (config ${configPath(resolveHome())})`)
     ctx.effect(() => () => { void service.dispose() }, 'dsh-session-sync: engine')
+    // Registered here rather than inside the engine because it is a listener on
+    // the composition's own waterfall: the engine decides *what* happens when a
+    // question arrives, and this decides that it is asked at all.
+    service.answerQuestions(ctx)
     ctx.inject(['webServer'], (webCtx) => {
       const webServer = webCtx.get('webServer') as WebServerLike | undefined
       if (webServer === undefined) return
@@ -180,6 +185,31 @@ async function dispatch(
     return
   }
 
+  if (method === 'POST' && route === '/answer') {
+    const body = await readJsonBody(request)
+    if (body === undefined) {
+      sendJson(response, 400, { error: 'malformed JSON body' })
+      return
+    }
+    const machineName = typeof body['machineName'] === 'string' ? body['machineName'] : ''
+    const questionId = typeof body['questionId'] === 'string' ? body['questionId'] : ''
+    const answers = answerItemsOf(body['answers'])
+    if (questionId === '' || answers === undefined) {
+      sendJson(response, 400, { error: 'questionId and answers are required' })
+      return
+    }
+    const outcome = service.submitAnswer(machineName, questionId, answers)
+    if (!outcome.ok) {
+      // A question the server no longer holds — answered at the machine, or
+      // withdrawn when it went offline — is a conflict rather than a bad request:
+      // the request was well formed and the *state* moved on.
+      sendJson(response, 409, { ok: false, reason: outcome.reason })
+      return
+    }
+    sendJson(response, 200, { ok: true, commandId: outcome.commandId })
+    return
+  }
+
   if (method === 'GET' && route === '/events') {
     openStream(service, response)
     return
@@ -293,6 +323,36 @@ function sendJson(response: NodeResponseLike, status: number, body: unknown): vo
 /** Human-readable one-line failure text. */
 function describe(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
+}
+
+/**
+ * Read one console answer, or nothing when it is not one.
+ *
+ * The question id and the selection are both required, and a selection may be
+ * empty: a skipped question stays in the batch as an empty choice, which is the
+ * same shape the local UI produces. Free text is the "Other" answer and is
+ * allowed on its own, because a question with no options is answered that way.
+ * @param value - the request's `answers` field.
+ * @returns the answers, or undefined when the body is not a complete answer.
+ */
+function answerItemsOf(value: unknown): RelayedAnswerItem[] | undefined {
+  if (!Array.isArray(value) || value.length === 0) return undefined
+  const items: RelayedAnswerItem[] = []
+  for (const entry of value) {
+    if (typeof entry !== 'object' || entry === null || Array.isArray(entry)) return undefined
+    const record = entry as Record<string, unknown>
+    const id = typeof record['id'] === 'string' && record['id'].trim().length > 0 ? record['id'] : undefined
+    const selected = record['selected']
+    if (id === undefined || !Array.isArray(selected)) return undefined
+    const labels: string[] = []
+    for (const label of selected) {
+      if (typeof label !== 'string') return undefined
+      labels.push(label)
+    }
+    const custom = typeof record['custom'] === 'string' ? record['custom'] : undefined
+    items.push({ id, selected: labels, ...(custom === undefined ? {} : { custom }) })
+  }
+  return items
 }
 
 /**

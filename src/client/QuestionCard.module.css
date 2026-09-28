@@ -1,0 +1,175 @@
+/*
+ * The card that asks the reader to decide something a remote Session is waiting
+ * on. It sits directly above the takeover composer, in the same reading column,
+ * because it belongs to the open Session's conversation: the model is stopped
+ * mid-turn until somebody answers.
+ *
+ * Drawn with the shipped tokens and the composer card's own elevation pattern
+ * (stroke as a hairline rather than a border, so it costs no layout).
+ */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: calc(min(920px, 100%) + 32px);
+  box-sizing: border-box;
+  margin-bottom: 8px;
+  padding: 12px 16px 10px;
+  border: 0;
+  --dsw-elevation-stroke-color: var(--dsw-alias-border-l3);
+  border-radius: 16px;
+  background: var(--dsw-alias-bg-layer-1);
+  box-shadow: var(--dsw-elevation-soft);
+  font: var(--dsw-font-s-14);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.title {
+  color: var(--dsw-alias-label-primary);
+  font: var(--dsw-font-xs-strong-13);
+}
+
+.origin {
+  color: var(--dsw-alias-label-tertiary);
+  font: var(--dsw-font-xxxs-11);
+}
+
+.question {
+  color: var(--dsw-alias-label-primary);
+  font: var(--dsw-font-s-14);
+}
+
+.detail {
+  margin: 0;
+  color: var(--dsw-alias-label-secondary);
+  font: var(--dsw-font-xxs-12);
+  white-space: pre-wrap;
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.option {
+  box-sizing: border-box;
+  padding: 5px 12px;
+  border: 0.5px solid var(--dsw-alias-border-l3);
+  border-radius: 999px;
+  background: var(--dsw-alias-bg-layer-1);
+  color: var(--dsw-alias-label-secondary);
+  font: var(--dsw-font-xxs-12);
+  cursor: pointer;
+  transition: background-color var(--ds-transition-duration-fast) var(--ds-ease-in-out);
+}
+
+.option:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.option[aria-pressed='true'] {
+  border-color: var(--dsw-alias-state-business-primary);
+  background: var(--dsw-alias-state-business-tertiary);
+  color: var(--dsw-alias-label-primary-bluish);
+}
+
+.optionDescription {
+  color: var(--dsw-alias-label-caption);
+  font: var(--dsw-font-xxxs-11);
+}
+
+.other {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 6px 10px;
+  border: 0.5px solid var(--dsw-alias-border-l2);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+}
+
+.other::placeholder {
+  color: var(--dsw-alias-placeholder);
+}
+
+.other:focus-visible {
+  outline: 1px solid var(--dsw-alias-state-business-primary);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.hint,
+.sent {
+  color: var(--dsw-alias-label-tertiary);
+  font: var(--dsw-font-xxxs-11);
+}
+
+.error {
+  color: var(--dsw-alias-state-error-primary);
+  font: var(--dsw-font-xxxs-11);
+}
+
+.submit {
+  flex: none;
+  padding: 5px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--dsw-alias-button-info-fill);
+  color: #fff;
+  font: var(--dsw-font-xxs-12);
+  cursor: pointer;
+}
+
+.submit:disabled {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-tertiary);
+  cursor: default;
+}
+
+/*
+ * The line that says questions are waiting in a Session this reader is *not*
+ * looking at. Without it a question could expire unread, because the card only
+ * ever appears in the pane of the Session that asked it.
+ */
+.elsewhere {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: calc(min(920px, 100%) + 32px);
+  box-sizing: border-box;
+  margin-bottom: 8px;
+  padding: 6px 12px;
+  border: 0.5px solid var(--dsw-alias-border-l2);
+  border-radius: 10px;
+  background: var(--dsw-alias-state-warn-tertiary);
+  color: var(--dsw-alias-label-secondary);
+  font: var(--dsw-font-xxxs-11);
+}
+
+.elsewhereGo {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--dsw-alias-label-primary-bluish);
+  font: var(--dsw-font-xxxs-11);
+  text-decoration: underline;
+  cursor: pointer;
+}

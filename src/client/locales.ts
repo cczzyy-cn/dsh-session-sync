@@ -77,7 +77,12 @@ export const zh = {
   loadingOlder: '正在加载…',
   composerBlocked: '这个会话运行在另一台机器上，请用下方的接管输入框发言',
   paneRoute: '原件 · {route}',
-  paneRouteHint: '这个面板用的是 DSH 自己的会话页（scope 路线：会话以“无宿主读取”的方式保留，历史由同步通道翻页，输入框由接管输入框顶上）',
+  paneWindow: '窗口 {from}–{to}',
+  // "scope 通道" rather than the word for "route" this project normally uses:
+  // the encoding gate treats U+8DEF as a damaged `·`, and that word contains it.
+  // Keeping the gate strict is worth one word here — its character list is exactly
+  // the corruption that has shipped from this repository twice.
+  paneRouteHint: '这个面板用的是 DSH 自己的会话页（scope 通道：会话以“无宿主读取”的方式保留，历史由同步通道翻页，输入框由接管输入框顶上）',
   openSession: '打开',
 
   sessionsTitle: '会话',
@@ -184,6 +189,18 @@ export const zh = {
   deliveryFailed: '投递失败',
   deliveryExpired: '已过期，未执行',
   offlineQueueHint: '对方当前离线，提示会排队，直到它回来或过期。',
+
+  // The question a remote Session is waiting on. The machine's own UI is asked
+  // at the same time, so this card is an offer to answer *first*, not the only
+  // way to answer — which is why it never says the Session is blocked.
+  questionTitle: '源站在等一个回答',
+  questionFrom: '在 {machine} 上的提问',
+  questionMultiHint: '可多选',
+  questionOther: '其他…',
+  questionSubmit: '回答',
+  questionSent: '已提交，等待源站确认',
+  questionElsewhere: '另有 {n} 个提问在别的会话等待',
+  questionElsewhereGo: '去看',
 
   copyCode: '复制',
   copiedCode: '复制成功',
@@ -369,6 +386,7 @@ export const en: Record<SessionSyncKey, string> = {
   loadingOlder: 'Loading…',
   composerBlocked: 'This Session runs on another machine; use the takeover composer below to speak in it',
   paneRoute: 'Original · {route}',
+  paneWindow: 'window {from}–{to}',
   paneRouteHint: 'This pane is DSH\'s own conversation page (the scope route: the Session is retained with no Host read at all, history is paged over the sync link, and the takeover composer stands in for the shipped one)',
   openSession: 'Open',
 
@@ -476,6 +494,18 @@ export const en: Record<SessionSyncKey, string> = {
   deliveryFailed: 'Delivery failed',
   deliveryExpired: 'Expired, not run',
   offlineQueueHint: 'This machine is offline; the prompt queues until it returns or expires.',
+
+  // The question a remote Session is waiting on. The machine's own UI is asked
+  // at the same time, so this card is an offer to answer *first*, not the only
+  // way to answer — which is why it never says the Session is blocked.
+  questionTitle: 'A machine is waiting on an answer',
+  questionFrom: 'Asked on {machine}',
+  questionMultiHint: 'Select any',
+  questionOther: 'Other…',
+  questionSubmit: 'Answer',
+  questionSent: 'Sent; waiting for the machine to claim it',
+  questionElsewhere: '{n} more question(s) waiting in another Session',
+  questionElsewhereGo: 'Show',
 
   copyCode: 'Copy',
   copiedCode: 'Copied',

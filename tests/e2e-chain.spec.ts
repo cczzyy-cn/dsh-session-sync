@@ -217,6 +217,42 @@ describe('the whole chain over the real link', () => {
     assert.equal(whole.behind, 0, 'nothing is left above the mirror once the page arrives')
     assert.equal(whole.holes, 0)
 
+    // 3b. Once a page read has walked back to the beginning of the log, the
+    //     reader's "older" control is finished — and a reconnect must not bring it
+    //     back. A follow opens on a *tail* window, and that window's own `hasMore`
+    //     is true of every Session longer than the window, so trusting each
+    //     re-opened window over what the page read already learned left the control
+    //     on screen forever: the reader pages to the start, and the next resync or
+    //     blip turns it back on.
+    assert.equal(
+      server.transcript(ORIGIN, SESSION_ID, { limit: 1_000 })?.hasMore,
+      false,
+      'reading back to the start leaves nothing older to offer',
+    )
+    const settled = origin.view().follows?.find(item => item.sessionId === SESSION_ID)
+    assert.equal(settled?.hasOlder, false, 'and the machine stops claiming history below its window')
+    // A reconnect is what a network blip does, and it re-opens every follow on a
+    // fresh tail window. Asserted on the machine's own reading, which flips the
+    // instant that window arrives, rather than on the mirror's copy — that one
+    // follows on the next index, up to a reconcile away.
+    await origin.patch({ listenPort: CLIENT_PORT + 11 })
+    const reopened = await until(() => {
+      const handle = origin.view().follows?.find(item => item.sessionId === SESSION_ID)
+      return handle !== undefined && handle.opened ? handle : undefined
+    }, 'the re-opened follow to deliver its window')
+    assert.equal(reopened.hasOlder, false, 'a re-opened tail window must not resurrect the older control')
+    assert.equal(
+      server.transcript(ORIGIN, SESSION_ID, { limit: 1_000 })?.hasMore,
+      false,
+      'and the mirror must not start offering older history again',
+    )
+    // The link itself has to be back before the next step. A command handed to a
+    // stream that is already dying is written nowhere and marked delivered anyway
+    // (nothing re-sends a command that was "sent"), so asserting takeover *inside*
+    // the reconnect window asserts a different, currently broken property — see
+    // PROGRESS §4. Waiting here keeps this test about takeover.
+    await until(() => (origin.view().linked ? true : undefined), 'the origin link to come back')
+
     // 4. Takeover: one prompt typed in the console reaches the owning machine's
     //    Session, and the console hears that it was admitted.
     const submitted = server.submitCommand(ORIGIN, SESSION_ID, '  hello from the console  ')

@@ -279,7 +279,63 @@ All of them sit under `/dsh-session-sync` and behind the GUI's own gate.
 | `/sessions` | GET | This machine's own Session list, for the publish picker |
 | `/transcript` | GET | A page of one mirrored Session (`machine`, `session`, optional `limit`, `before`); asks the owning machine for history below its window when a reader reaches the mirror's edge |
 | `/command` | POST | One takeover prompt; answers with the `commandId` its status is narrated under |
-| `/events` | GET | The SSE stream: state frames, per-Session event frames, and transient live text |
+| `/answer` | POST | This console's answer to one question a machine relayed (`machineName`, `questionId`, `answers`); answers with the `commandId` that carries it, or 409 with the reason the question is no longer open |
+| `/events` | GET | The SSE stream: state frames, per-Session event frames, relayed questions, and transient live text |
+
+### A question is asked on both sides
+
+A Session that runs on another machine can stop mid-turn and ask its human
+something — `ask_user`, or an approval. Upstream hands that request to a
+**waterfall**: the first answerer to return an answer claims it, and `next()`
+delegates to the answerers behind. The shipped browser UI is one such answerer,
+reached through the Remote waterfall bridge, and it is the only one a stock
+install has.
+
+This plugin registers itself **ahead** of that answerer on the published
+Session's behalf, and then asks both sides at once: the machine's own UI through
+`next()`, and this console down the sync link. **Whichever answers first wins**,
+and the other is told so rather than left guessing.
+
+```
+   machine (the asker)                       sync server / console
+   ───────────────────                       ─────────────────────
+   agent calls ask_user
+     │ waterfall: user-questions/request
+     ├─▶ plugin, registered prepend
+     │     ├─ next() ──▶ shipped browser UI on that machine   ─┐
+     │     └─ POST /question/open ──▶ hub ──▶ card in console  │  race
+     │                                                        │
+     │   first answer claims the question ◀───────────────────┘
+     ├─▶ local answer  ⇒ POST /question/close (answered-at-origin)
+     └─▶ console answer ⇒ DownstreamCommand {kind:'answer'} ⇒ claimed, or
+                          refused with the reason it was already answered
+```
+
+- **Nothing is mirrored.** A question exists only while the machine is waiting
+  for it, and the origin withdraws it the moment its own human answers — so a
+  question never becomes part of the transcript, and a server restart loses only
+  the offer to answer, never the ask.
+- **The console's answer rides the prompt lifecycle**, for the reason that
+  lifecycle exists: held while the machine is away, one delivery, a TTL, and an
+  ack that says whether the machine **claimed** it. The claim is the race's
+  finish line, and it is decided on the machine — the side that can still see
+  whether the question is open.
+- **A lost race is reported, not retried.** A console that answers after the
+  machine's own human did gets `failed` carrying *"this question was already
+  answered on the machine that asked it"*, and the card says so. That is the
+  ordinary outcome of a two-sided race, not an error.
+- **Only a published Session is relayed.** Anything else delegates on the first
+  line, so a Session you have not marked for sync behaves exactly as it does
+  without this plugin.
+- **The losing side is counted.** `state.interactions` reports `open`,
+  `answeredLocally`, `answeredRemotely`, `lateAnswers` and `aborted`: without
+  them, "the console never offered the question" and "the console offered it and
+  the machine answered first" are the same observation from both ends.
+- **Questions are not the takeover prompt.** A prompt says something to a
+  Session; an answer decides something it is waiting on. The answer travels to
+  the machine that asked, never to this Host, and the model sees it as the tool
+  result it was waiting for rather than as a message from a user.
+
 
 ### A mirrored Session is read here, never written into DSH
 
@@ -421,6 +477,33 @@ pane wherever the build offers `ctx.sessions.retainAgentScope`.
 - **A takeover prompt expires after two minutes**, and at most 32 may wait for
   one machine at a time. Both limits are deliberate; a queued prompt that
   outlives them is reported as `expired` rather than delivered late.
+- **A question answered at the console leaves the machine's own dialog up.** The
+  two sides are raced, and a race cannot cancel its loser: the shipped answerer
+  still holds a dialog on the machine that asked, and this plugin has no seat
+  from which to close another plugin's UI. The decision is already made and the
+  tool call has already returned, so answering the stale dialog changes nothing —
+  its own `next()` chain simply ends. Aborting the shared signal to dismiss it was
+  rejected: that signal belongs to the asking tool call, so aborting it would fail
+  the very step the answer was meant to continue.
+- **A relayed question is only offered where a reader is looking.** The card
+  appears above the composer of the Session that asked, with a pointer line when
+  the reader is viewing a different Session. A console nobody is watching simply
+  never answers, and the machine's own UI wins by default — which is why the
+  question's ten-minute TTL only ever costs the remote option.
+- **Relayed questions are not covered by a real-deployment test.** The race, the
+  claim, the refusal of a late answer and the expiry sweep are pinned by
+  `tests/interaction-race.spec.ts` against the real hub and the real relay, but no
+  test yet drives a question from a machine through a deployed server and back —
+  the same gap the takeover prompt had before `tests/e2e-chain.spec.ts`.
+- **A takeover prompt typed inside a reconnect window is lost.** The server hands
+  a command to the stream it believes belongs to that machine; if the machine has
+  just dropped the link and the server has not noticed yet, the write goes nowhere
+  and the command is still recorded as `delivered` — nothing re-sends a command
+  that was "sent", so it sits there until its two-minute TTL retires it. The window
+  is short (measured at about 300 ms) and the fix needs target-side dedup first:
+  re-sending is only safe once a repeated `requestId` is refused by the machine
+  that already admitted it. `tests/e2e-chain.spec.ts` waits for the link to return
+  before it asserts takeover, for this reason.
 - **Assistant text is rendered as Markdown and each tool call is one folded row**
   that opens into the card its tool calls for — terminal transcript, diff with its
   totals, line-capped read, search hits, fetched page — with the generic IN/OUT
@@ -473,12 +556,14 @@ src/shared/protocol.ts   wire and persisted shapes, shared by both halves
 src/host/dsh.ts          structural declarations of the Host capabilities used
 src/host/config.ts       atomic JSON configuration document
 src/host/hub.ts          server-side mirror, fan-out, and the command lifecycle
+src/host/interactions.ts the two-sided race for one question, and its claim
 src/host/transport.ts    the sync listener and the origin link
 src/host/service.ts      the engine: config, follow set, publish, takeover
 src/index.ts             Host plugin entry and the browser routes
 src/client/index.ts      browser plugin entry: the slots and their injections
 src/client/api.ts        transport plus the one snapshot every surface reads
 src/client/official-session.tsx  the retained Session: the shipped renderer's pane
+src/client/QuestionCard.tsx  one relayed question, offered to this reader
 src/client/transcript.ts mirrored events projected onto readable rows
 src/client/tool-cards.ts  tool-row models: card choice, labels, caps
 src/client/tool-presentation.ts  a wire tool name's glyph and localized title
