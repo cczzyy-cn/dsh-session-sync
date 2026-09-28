@@ -12,6 +12,7 @@
 | 服务器（远端） | **已上线 `0.10.5`**：profile 依赖 `#v0.10.5`、`/state` 自报 `0.10.5`；**这一版 Host 半边变了**（hub 持审批卡片、ack 按 `allowed/rejected-at-console` 或 `refused` 收口），所以重启过 |
 | 本机（源站） | 包已升到 `0.10.5`；**Host 半边要等一次本机重启才生效**（会杀掉正在跑的会话，只能由用户做）。0.10.4 已重启验证过：提问竞速在真机上跑通（见 §2） |
 | 测试 | **89 通过 / 0 失败**（21 suites，1.2s）· `interaction-race` 17、`approval-race` 12、`paging-anchor` 7、`envelope-placement` 5、`approval-view` 4、`approval-relay-link` 3、`question-relay-link` 2 |
+| 真机验证 | 提问竞速（0.10.4）与控制台**放行审批**（0.10.5）都已在部署上跑通，账本签名见 §2 |
 | 产物 | `lib/index.js` **156,986 B**（sha256 `28963a28…`）· `client/client.js` **353,117 B**（sha256 `b9533c64…`）；产物自报版本 `0.10.5` |
 | 编码门禁 | `node scripts/check-encoding.mjs` **clean**（原先在 HEAD 上就是红的：见 §6） |
 | 类型 | Host 半边 `tsc` 0（9 个文件）；客户端半边用 `%TEMP%\synccheck` 的 stub 配置整体 `tsc` 0 |
@@ -62,6 +63,33 @@
 
 > 2026-09-25 及以前的推进日志（从"② 的答案"一路到 0.3.x）已归档到 `docs/history-2026-09.md`。
 > 这一段只留本版（0.8.x/0.9.x/0.10.x）的改动与验证；历史文件是当时的推理记录，不要照它实现。
+
+### v0.10.5 验证：控制台**放行**了一次真实的审批（2026-09-29）
+
+本机重启到 0.10.5（用 `approvalCounts` 字段是否存在来判定，比版本号可靠）之后，用户把**权限预设**
+切到 `workspace-write`（approval=ask）——这一步是必需的，因为原先那档策略是"自动拒绝"，
+上游**在 waterfall 分发之前**就把它执行掉了，插件根本收不到请求（`offered: 0` 正是设计使然）。
+随后：
+
+1. 我（agent）对**工作区外**的文件做一次写入 ⇒ 沙箱先拒（`file access denied under workspace-write mode`）；
+2. 用 `sandbox_permissions: danger-full-access` + 理由**重试同一次操作** ⇒ 这一次进入 `approval/request`；
+3. 插件把审批中继到控制台（`/approval/open`），**用户在控制台点「放行一次」**；
+4. 决定作为 `DownstreamCommand{kind:'approval'}` 下行 ⇒ 源站 `claim` 成功 ⇒ `ack` ⇒ 写入完成。
+
+**两端账本**（"控制台赢"的签名，与提问那次的形状完全一致）：
+
+| 读数 | 值 |
+| --- | --- |
+| 源站 `approvalCounts` | `offered: 1`、**`decidedRemotely: 1`**、`decidedLocally: 0`、`lateDecisions: 0`、`aborted: 0` |
+| 源站 `posts` | `/approval/open:1`、**`/ack:1`**、**无 `/approval/close`** |
+| 服务器 `approvals` | `[]`（卡片已按 `allowed-at-console` 收口） |
+| 工具结果 | 工作区外的文件**确实被创建** ⇒ 放行生效、调用继续 |
+
+⇒ **README 里"审批没有真机端到端"那条改成已验证**（`never` 优先顺序仍是引上游契约、本仓库测不到）。
+
+**顺带记一个把我也骗了几分钟的坑**：切到 `workspace-write` 之后 shell 拿到了**每会话私有的 TEMP**，
+于是我按 `$env:TEMP\...` 写的 cookie 在下一次调用里解析到另一个目录，curl 没带 cookie ⇒ 401。
+一度看起来像"本机进程重启/鉴权失效"，`netstat` 一看 pid 根本没变。已记入 §6。
 
 ### v0.10.5：审批（approval）也做成两边竞速——同一场竞速，不同的赌注（2026-09-29）
 
@@ -786,6 +814,8 @@ ssh -n root@210.16.120.228 "echo <base64> | base64 -d > /tmp/t.sh && bash /tmp/t
 | 坑 | 现象 | 正确做法 |
 | --- | --- | --- |
 | `& ssh` / `bash -s < file` | 命令挂死 | `ssh -n … "echo <b64> \| base64 -d > f && bash f"`，输出重定向到文件再取 |
+| **沙箱换档会换掉 `$env:TEMP`** | 权限预设从 `danger-full-access` 切到 `workspace-write` 之后，同一句 `$env:TEMP\cookie.txt` 解析到了**另一个目录**（`…\Temp\dsh-0iDm7z\`），文件"消失"，curl 没带 cookie ⇒ 401，看起来像进程重启或鉴权坏了 | 会话内不要假设 `$env:TEMP` 稳定：**用 token 重新引导 cookie**，或把临时文件放在工作区内；先看 `netstat` 确认进程与监听，别急着下"重启了"的结论 |
+| `curl.exe -o $null` | PowerShell 里 `$null` 被吃掉，URL 成了 `-o` 的参数 ⇒ `curl: no URL specified!` | 写到一个真文件（`-o "$env:TEMP\x.html"`），别用 `$null` |
 | `printf %s` 经 `.cmd` | 输出空、`EXIT=0` | 用 `echo`（`%` 被 cmd 吃掉） |
 | PowerShell 5.1 读文件 | 中文乱码 | `Get-Content -Encoding UTF8`；执行策略 Restricted 时 `iex (Get-Content … -Raw)` |
 | 等待判据 | 曾空等 900 秒 | 判据必须是**真的会出现**的字符串 |
