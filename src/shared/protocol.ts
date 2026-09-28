@@ -759,6 +759,15 @@ export interface CommandStatus {
    * opposite facts a reader must be told apart.
    */
   decision?: RelayedApprovalDecision
+  /**
+   * How many times this command had been handed to the machine before this status.
+   *
+   * Absent for the first attempt. It exists because "sent once and waiting" and
+   * "sent four times and still nothing" are different faults — a reader that is slow
+   * to answer versus a machine that is up but not answering — and only the count
+   * tells them apart.
+   */
+  retries?: number
   /** Epoch ms after which this command is no longer deliverable. */
   expiresAt: number
   /** Human-readable reason, present for `failed` (and `expired` when explained). */

@@ -314,6 +314,10 @@ export class SessionSyncService {
       // gap sweep needs the same pass for the same reason: a mirror that lost a
       // batch hears nothing else, so nothing else would ever ask it again.
       this.hub.expireCommands()
+      // And the half of the delivery rule a write cannot give: a command accepted by
+      // a stream that was closing has to be handed over again. Safe only because the
+      // origin refuses a command id it has already admitted.
+      this.hub.retryCommands()
       this.hub.sweepGaps()
       // Same pass, same reason: a relayed question outlives its usefulness when
       // its TTL passes or the machine that asked stops appearing, and nothing

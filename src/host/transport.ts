@@ -76,6 +76,42 @@ export const COMMAND_KINDS: Record<DownstreamCommand['kind'], true> = {
 }
 
 /**
+ * The command ids one link has already admitted, oldest evicted first.
+ *
+ * This is the target half of the delivery rule, and it is what makes the server's
+ * retry legal. A command written into a stream that is closing is accepted locally
+ * and arrives nowhere, with no error on either side, so the server has to hand over
+ * anything it has not seen acked — and a re-delivered *prompt* would otherwise be a
+ * second prompt in the same Session, which is worse than the loss it repairs.
+ *
+ * Bounded like every other memory here: a retry follows its original within seconds,
+ * so a few hundred ids cover every window a live link can have.
+ */
+export class RecentCommands {
+  private readonly seen = new Set<string>()
+  private readonly order: string[] = []
+
+  /** @param limit - how many ids to remember before evicting the oldest. */
+  constructor(private readonly limit: number = 256) {}
+
+  /**
+   * Take one command id, and say whether the engine should act on it.
+   * @param commandId - the id of the command just received.
+   * @returns true on first sight, false when this is a re-delivery.
+   */
+  admit(commandId: string): boolean {
+    if (this.seen.has(commandId)) return false
+    this.seen.add(commandId)
+    this.order.push(commandId)
+    if (this.order.length > this.limit) {
+      const oldest = this.order.shift()
+      if (oldest !== undefined) this.seen.delete(oldest)
+    }
+    return true
+  }
+}
+
+/**
  * How long one post may take before it counts as failed.
  *
  * Without this, a connection black-holed by a network blip leaves `fetch`
@@ -639,6 +675,14 @@ export class OriginLink {
   private outboxWarned = false
   /** What the last published batch looked like, as the wire will see it. */
   private lastBatch: OriginBatchReport | undefined
+  /**
+   * Command ids this link has already handed to the engine.
+   *
+   * Owned by the link rather than the engine because the link is where a frame
+   * arrives: a duplicate that reached `runCommand` would already be a second prompt,
+   * and the whole point of admitting it here is that it never gets that far.
+   */
+  private readonly admitted = new RecentCommands()
 
   /** @param options - address, credentials, and the command callback. */
   constructor(private readonly options: OriginLinkOptions) {}
@@ -1034,6 +1078,15 @@ export class OriginLink {
         // Everything left is a command kind this build knows — and only those, so
         // a frame from a newer server is ignored rather than misread as one it does.
         if (!Object.hasOwn(COMMAND_KINDS, frame.kind)) continue
+        // A command this link has already admitted is acknowledged again and *not*
+        // acted on twice. That is what makes the server's retry safe: a write into a
+        // stream that was already closing is lost without any error, so the server
+        // hands over what it has not seen acked — and without this, every retry of a
+        // prompt would be a second prompt in the same Session.
+        if (!this.admitted.admit(frame.commandId)) {
+          this.ackCommand(frame.commandId, frame.sessionId, true)
+          continue
+        }
         this.options.onCommand(frame)
       } catch {
         // A malformed frame is dropped; the server re-sends nothing it cannot

@@ -51,6 +51,34 @@ const TRANSCRIPT_WINDOW = 400
 /** Upper bound on commands held for a machine whose origin stream is down. */
 const PENDING_LIMIT = 32
 
+/**
+ * How long an unacknowledged command waits before it is handed over again.
+ *
+ * Short, because the window this covers is the one where a write vanished into a
+ * stream that was already closing — measured at roughly 300 ms — and because a
+ * prompt a reader typed is worth re-offering quickly. The command's own two-minute
+ * TTL is the outer bound; this is the retry cadence inside it.
+ */
+const RETRY_AFTER_MS = 5_000
+
+/**
+ * How many times one command may be re-sent before the hub stops trying.
+ *
+ * Bounded so a machine that is up but never acks cannot make the server talk to it
+ * forever: after this many attempts the TTL is what ends it, and `expired` is
+ * reported rather than an endless `delivered`.
+ */
+const MAX_RETRIES = 4
+
+/** One command owed to a machine until it acknowledges it. */
+interface PendingCommand {
+  readonly command: DownstreamCommand
+  /** When the machine was last handed this command; 0 while it has never been sent. */
+  sentAt: number
+  /** How many times it has been handed over already. */
+  retries: number
+}
+
 /** Upper bound on retained command states per machine, newest kept. */
 const STATUS_LIMIT = 64
 
@@ -206,8 +234,16 @@ interface MachineRecord {
    */
   pluginVersion?: string
   origin?: OriginSink
-  /** Commands issued while no origin stream was attached. */
-  readonly pending: DownstreamCommand[]
+  /**
+   * Commands this machine is owed until it acknowledges them.
+   *
+   * *Owed*, not merely "queued while away": a write to a stream that is already
+   * dying succeeds locally and arrives nowhere, so a command handed over and never
+   * acked has to stay here. That is what {@link SyncHub.retryCommands} re-sends, and
+   * re-sending is only safe because the origin refuses a command id it has already
+   * admitted (`RecentCommands`) — without that, a retry would prompt a Session twice.
+   */
+  readonly pending: PendingCommand[]
   /** Every command this machine was sent, by id, so an ack can retire it. */
   readonly commands: Map<string, CommandStatus>
   /**
@@ -501,16 +537,17 @@ export class SyncHub {
     this.flushPendingOlder(machineName)
     const now = Date.now()
     const queued = record.pending.splice(0, record.pending.length)
-    for (const command of queued) {
+    for (const owed of queued) {
       // A command that outlived its TTL while the machine was away is reported
       // as expired rather than delivered late: the human who typed it has long
       // stopped watching for it, and the Session has moved on.
-      if (command.expiresAt <= now) {
-        this.transition(record, command, 'expired')
+      if (owed.command.expiresAt <= now) {
+        this.transition(record, owed.command, 'expired')
         continue
       }
-      sink.send(command)
-      this.transition(record, command, 'delivered')
+      // Re-sent even if a previous stream was handed it: that stream may have died
+      // with the write inside it, and the origin dedups by command id.
+      this.handOver(record, owed)
     }
     this.broadcastState()
     return () => {
@@ -600,21 +637,64 @@ export class SyncHub {
    * @returns the accepted command's id.
    */
   private enqueue(record: MachineRecord, command: DownstreamCommand): { ok: true; commandId: string } {
+    const owed: PendingCommand = { command, sentAt: 0, retries: 0 }
+    // Queued in both branches: the entry is what the machine is *owed*, and only an
+    // ack retires it. A command that was written into a dying stream and never
+    // arrived therefore stays owed, and `retryCommands` hands it over again.
+    record.pending.push(owed)
     if (record.origin === undefined) {
-      record.pending.push(command)
       this.transition(record, command, 'queued')
-      if (record.pending.length > PENDING_LIMIT) {
-        // Bounded so a machine that never comes back cannot grow the server's
-        // memory, and honest about what it dropped.
-        for (const dropped of record.pending.splice(0, record.pending.length - PENDING_LIMIT)) {
-          this.transition(record, dropped, 'expired', 'the queue for this machine was full')
-        }
-      }
     } else {
-      record.origin.send(command)
-      this.transition(record, command, 'delivered')
+      this.handOver(record, owed)
+    }
+    if (record.pending.length > PENDING_LIMIT) {
+      // Bounded so a machine that never comes back cannot grow the server's
+      // memory, and honest about what it dropped.
+      for (const dropped of record.pending.splice(0, record.pending.length - PENDING_LIMIT)) {
+        this.transition(record, dropped.command, 'expired', 'the queue for this machine was full')
+      }
     }
     return { ok: true, commandId: command.commandId }
+  }
+
+  /**
+   * Hand one owed command to the machine's stream and record that it went.
+   *
+   * The write is not proof of arrival — a stream that is closing accepts it locally
+   * — so this only marks the attempt. What makes the attempt safe to repeat is the
+   * origin's `RecentCommands`: it acks a command id it has already admitted without
+   * acting on it twice.
+   * @param record - the machine that is owed the command.
+   * @param owed - the command and its delivery bookkeeping.
+   */
+  private handOver(record: MachineRecord, owed: PendingCommand): void {
+    const origin = record.origin
+    if (origin === undefined) return
+    origin.send(owed.command)
+    owed.sentAt = Date.now()
+    owed.retries += 1
+    this.transition(record, owed.command, 'delivered', undefined, owed.retries - 1)
+  }
+
+  /**
+   * Hand over again every command a machine has not acknowledged.
+   *
+   * This is the half of the delivery rule a write cannot provide. The other half is
+   * {@link SyncHub.ackCommand}: a command is owed until the machine says it acted on
+   * it, so a write lost inside a closing stream is repaired on the next pass instead
+   * of being recorded as delivered and forgotten.
+   * @param now - the clock, injectable so a test can age a command without waiting.
+   */
+  retryCommands(now: number = Date.now()): void {
+    for (const record of this.records.values()) {
+      if (record.origin === undefined) continue
+      for (const owed of [...record.pending]) {
+        if (owed.sentAt === 0) continue
+        if (owed.retries > MAX_RETRIES) continue
+        if (now - owed.sentAt < RETRY_AFTER_MS) continue
+        this.handOver(record, owed)
+      }
+    }
   }
 
   /**
@@ -820,6 +900,20 @@ export class SyncHub {
   }
 
   /**
+   * Every command one machine has been sent, oldest first.
+   *
+   * A browser reads these as they are broadcast; this accessor exists for the two
+   * readers that cannot — the reconcile pass deciding what to retry, and a test
+   * asking whether a retry was recorded. Nothing here is private state: a status is
+   * what the console already sees.
+   * @param machineName - the machine whose commands to read.
+   * @returns the statuses, in the order they were last changed.
+   */
+  commands(machineName: string): CommandStatus[] {
+    return [...(this.records.get(machineName)?.commands.values() ?? [])]
+  }
+
+  /**
    * Retire one command with the owning machine's own outcome.
    * @param machineName - the machine that answered.
    * @param payload - the command id and whether it was admitted.
@@ -829,6 +923,12 @@ export class SyncHub {
     if (record === undefined) return
     // An ack is proof of life, so the machine stops looking offline at once.
     record.lastSeen = Date.now()
+    // And it is what retires the debt: a command the machine has answered is no
+    // longer owed, so `retryCommands` stops offering it. Done here rather than in
+    // the terminal-state branch below, because a machine that answered `failed`
+    // answered — re-sending it would only ask the same question again.
+    const owed = record.pending.findIndex(entry => entry.command.commandId === payload.commandId)
+    if (owed >= 0) record.pending.splice(owed, 1)
     const status = record.commands.get(payload.commandId)
     if (status === undefined) return
     if (TERMINAL_STATES.includes(status.state)) return
@@ -892,15 +992,16 @@ export class SyncHub {
    * `delivered`. The origin refuses an expired prompt on its own, so this is the
    * server's half of the same rule, and the half that tells the browser.
    */
-  expireCommands(): void {
-    const now = Date.now()
+  expireCommands(now: number = Date.now()): void {
     for (const record of this.records.values()) {
       for (const status of [...record.commands.values()]) {
         if (TERMINAL_STATES.includes(status.state)) continue
         if (status.expiresAt > now) continue
         this.transition(record, status, 'expired')
       }
-      const kept = record.pending.filter(command => command.expiresAt > now)
+      // A command whose TTL passed is no longer owed: dropping it here is also what
+      // stops `retryCommands` from re-offering it to a machine that is not answering.
+      const kept = record.pending.filter(owed => owed.command.expiresAt > now)
       if (kept.length !== record.pending.length) {
         record.pending.length = 0
         record.pending.push(...kept)
@@ -1097,6 +1198,7 @@ export class SyncHub {
     },
     state: CommandState,
     error?: string,
+    retries?: number,
   ): void {
     const status: CommandStatus = {
       commandId: seed.commandId,
@@ -1107,6 +1209,10 @@ export class SyncHub {
       ...(seed.questionId === undefined ? {} : { questionId: seed.questionId }),
       ...(seed.approvalId === undefined ? {} : { approvalId: seed.approvalId }),
       ...(seed.decision === undefined ? {} : { decision: seed.decision }),
+      // Reported so a reader can tell "sent once, waiting" from "sent four times and
+      // still nothing": the second is a machine that is up but not answering, which
+      // is a different problem from a link that is down.
+      ...(retries === undefined ? {} : { retries }),
       expiresAt: seed.expiresAt,
       ...(error === undefined ? {} : { error }),
       time: Date.now(),

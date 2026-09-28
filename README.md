@@ -584,15 +584,20 @@ pane wherever the build offers `ctx.sessions.retainAgentScope`.
   for the same structural reason as a question: this plugin has no seat from which
   to close another plugin's UI, and aborting the shared signal would fail the very
   tool call the decision was about.
-- **A takeover prompt typed inside a reconnect window is lost.** The server hands
-  a command to the stream it believes belongs to that machine; if the machine has
-  just dropped the link and the server has not noticed yet, the write goes nowhere
-  and the command is still recorded as `delivered` — nothing re-sends a command
-  that was "sent", so it sits there until its two-minute TTL retires it. The window
-  is short (measured at about 300 ms) and the fix needs target-side dedup first:
-  re-sending is only safe once a repeated `requestId` is refused by the machine
-  that already admitted it. `tests/e2e-chain.spec.ts` waits for the link to return
-  before it asserts takeover, for this reason.
+- **A takeover prompt typed inside a reconnect window used to be lost, and is now
+  retried.** The server handed a command to the stream it believed belonged to that
+  machine; if the machine had just dropped the link and the server had not noticed,
+  the write went nowhere while the command was still recorded as `delivered` — and
+  nothing re-sends a command that was "sent". The window is short (measured at about
+  300 ms). It is repaired in two halves that only work together: the machine refuses
+  a command id it has already admitted (`RecentCommands`, acknowledging the repeat
+  instead of acting on it), and the server keeps a command **owed until it is
+  acknowledged**, handing it over again every five seconds up to four retries, with
+  the two-minute TTL still ending it and the retry count reported on the status.
+  Without the first half a retried prompt would be a second prompt in the same
+  Session, which is worse than the loss. `tests/command-redelivery.spec.ts` pins
+  both halves, including a real link where the re-sent command is not acted on
+  twice.
 - **Assistant text is rendered as Markdown and each tool call is one folded row**
   that opens into the card its tool calls for — terminal transcript, diff with its
   totals, line-capped read, search hits, fetched page — with the generic IN/OUT
