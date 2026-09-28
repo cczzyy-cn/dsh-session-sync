@@ -58,6 +58,7 @@ import type { MirroredMachine, MirroredSession, RelayedAnswerItem } from '../sha
 import type { CommandDelivery, SyncClientSnapshot } from './api.ts'
 import type { SessionSyncKey, SessionSyncTranslate } from './locales.ts'
 import { QuestionCard, QuestionElsewhere } from './QuestionCard.tsx'
+import { pagingScrollTop, type PagingMetrics } from './paging-anchor.ts'
 import { buildTree } from './tree.ts'
 import {
   compactTokens,
@@ -513,6 +514,16 @@ function Conversation(props: {
    * lives — visible at the top, gone once the reader is reading.
    */
   const [atPaneTop, setAtPaneTop] = React.useState(true)
+  /** The shipped pane's own scroller, once found: read every commit, never re-searched. */
+  const paneScroller = React.useRef<HTMLElement | null>(null)
+  /**
+   * The window and scroller as they stood at the previous commit.
+   *
+   * Read on every commit and written back after it, so a page arriving below the
+   * window can be told apart from growth at the tail — and compensated for before
+   * the browser paints.
+   */
+  const paneMetrics = React.useRef<PagingMetrics>({ first: undefined, top: 0, height: 0 })
   const scrollToBottom = React.useCallback((smooth = true): void => {
     const el = body.current
     if (el === null) return
@@ -553,6 +564,7 @@ function Conversation(props: {
     const host = pane.current
     if (host === null) return
     const scroller = findScroller(host)
+    paneScroller.current = scroller
     if (scroller !== null) setAtPaneTop(scroller.scrollTop <= FOLLOW_THRESHOLD)
     // The pane's own content may not be laid out at the first commit, in which
     // case its scroller still looks like one whose content fits. One frame later
@@ -562,6 +574,7 @@ function Conversation(props: {
     const frame = typeof requestAnimationFrame === 'function'
       ? requestAnimationFrame(() => {
         const settled = findScroller(host)
+        paneScroller.current = settled
         if (settled !== null) setAtPaneTop(settled.scrollTop <= FOLLOW_THRESHOLD)
       })
       : undefined
@@ -647,6 +660,32 @@ function Conversation(props: {
   // Read on every render of an open pane: the low end is what moves when older
   // history is paged in, and a frame arriving is what re-renders this panel.
   const paneRange = shipped === undefined ? undefined : props.official.windowRange()
+  // Keep the reader's place when this console pages older history into the pane.
+  //
+  // The shipped chat arms its own paging anchor before it asks for a page
+  // (`use-chat-navigation.ts` — `beginPaging()` + `pauseFollowing()` + `loadOlder()`),
+  // and its viewport restores that anchor once the page commits. This console
+  // pages through its own channel, so nothing arms it: the inserted page moves the
+  // content down while the scroller stays put, and the reader is shown the top of
+  // the newly inserted range. Laid out here so the correction lands before the
+  // browser paints. `pagingScrollTop` holds the conditions, because compensating
+  // at the wrong moment would be a new bug rather than a fix.
+  React.useLayoutEffect(() => {
+    const scroller = paneScroller.current
+    const before = paneMetrics.current
+    const first = paneRange?.first
+    if (scroller === null) {
+      paneMetrics.current = { first, top: 0, height: 0 }
+      return
+    }
+    const target = pagingScrollTop(
+      before,
+      { first, top: scroller.scrollTop, height: scroller.scrollHeight, clientHeight: scroller.clientHeight },
+      FOLLOW_THRESHOLD,
+    )
+    if (target !== undefined) scroller.scrollTop = target
+    paneMetrics.current = { first, top: scroller.scrollTop, height: scroller.scrollHeight }
+  })
   return (
     <>
       <header className={css.viewHeader}>

@@ -8,13 +8,13 @@
 | 项 | 值 |
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
-| 版本 | **`0.10.2`**（tag **`v0.10.2`**）· 修「加载更早」的 `received non-appended Match`（见 §2）；`0.10.1` 修那行永久横幅，`0.10.0` → `113b677` 是提问竞速 |
-| 服务器 | **已上线 `0.10.2`**（纯客户端改动）：profile 依赖 `#v0.10.2`，`/state` 自报 `0.10.2`；Host 半边字节自 0.10.0 起未变，**全程没有重启 Host** |
-| 测试 | **60 通过 / 0 失败**（16 suites，1.0s）· 新增 `tests/interaction-race.spec.ts` 17 条、`tests/envelope-placement.spec.ts` 5 条 |
-| 产物 | `lib/index.js` **131,694 B**（sha256 `4593c779…`，自 0.10.0 起逐字节未变）· `client/client.js` **335,583 B**（sha256 `f3460ecc…`）；产物自报版本 `0.10.2` |
+| 版本 | **`0.10.3`**（tag **`v0.10.3`**）· 翻页的滚动锚定自己补（见 §2）；`0.10.2` 修 `non-appended Match`，`0.10.1` 修那行永久横幅，`0.10.0` → `113b677` 是提问竞速 |
+| 服务器 | **已上线 `0.10.3`**（纯客户端改动）：profile 依赖 `#v0.10.3`，`/state` 自报 `0.10.3`；Host 半边字节自 0.10.0 起未变，**全程没有重启 Host** |
+| 测试 | **67 通过 / 0 失败**（17 suites，1.1s）· `interaction-race` 17 条、`envelope-placement` 5 条、`paging-anchor` 7 条 |
+| 产物 | `lib/index.js` **131,694 B**（sha256 `4593c779…`，自 0.10.0 起逐字节未变）· `client/client.js` **337,651 B**（sha256 `5d09bab8…`）；产物自报版本 `0.10.3` |
 | 编码门禁 | `node scripts/check-encoding.mjs` **clean**（原先在 HEAD 上就是红的：见 §6） |
 | 类型 | Host 半边 `tsc` 0（9 个文件）；客户端半边用 `%TEMP%\synccheck` 的 stub 配置整体 `tsc` 0 |
-| 服务器 | `210.16.120.228` · DSH **`0.2.0-rc.1`**（`npx` 缓存 `ed2e730009a84a04`，unit 里钉的版本；`latest` 当时仍是 `0.1.7-rc.2`，0.2.0-rc.1 在 `next` 上）· 插件 **`0.10.2`** · unit `dsh-web.service` · active（Host 进程 15:16:10 UTC 启动，0.10.1/0.10.2 都只换了客户端半边） |
+| 服务器 | `210.16.120.228` · DSH **`0.2.0-rc.1`**（`npx` 缓存 `ed2e730009a84a04`，unit 里钉的版本；`latest` 当时仍是 `0.1.7-rc.2`，0.2.0-rc.1 在 `next` 上）· 插件 **`0.10.3`** · unit `dsh-web.service` · active（Host 进程 15:16:10 UTC 启动，0.10.1 起都只换客户端半边） |
 | 控制台路线 | **`scope`**：服务器上 `dsh-api-session-controller/lib/client.js` 命中 `retainAgentScope` ⇒ 特性探测确定走它；`adopt` 在任何已发布构建里都不存在（该路线已从代码删除） |
 | 服务器镜像 | 按需重建：源站 reconcile + follow 快照；此刻本机发布列表为空（`syncSessions: {}`），所以镜像里没有会话 |
 | 旧副本 | 已留档移走（**未删**）到服务器 `/root/legacy-copies-<ts>/`：两个会话目录 + 投影缓存 + 台账 |
@@ -61,6 +61,48 @@
 
 > 2026-09-25 及以前的推进日志（从"② 的答案"一路到 0.3.x）已归档到 `docs/history-2026-09.md`。
 > 这一段只留本版（0.8.x/0.9.x/0.10.x）的改动与验证；历史文件是当时的推理记录，不要照它实现。
+
+### v0.10.3：翻页的滚动锚定得自己补（shipped 的锚是它自己的按钮上的）（2026-09-28）
+
+0.10.2 消掉了抛错，但用户回报**还是**会跳到顶部。这说明"跳顶是抛错的连带后果"这个推断
+**只对了一半**——抛错确实被打掉了，可跳顶还有第二个、独立的原因。继续读上游：
+
+`ui-chat/.../use-chat-navigation.ts:94-99`：
+
+```ts
+readonly loadEarlier = (): void => {
+  this.cancel()
+  this.viewport.beginPaging()      // ← 给滚动锚定"上锚"
+  this.reading.pauseFollowing()    // ← 停止跟随尾部
+  this.input.loadOlder()
+}
+```
+
+**锚是 shipped 那个按钮在请求之前挂上的。** 本插件的 `olderRow` 直接调 `props.loadOlder()`
+（走插件自己的通道：shipped 控件会去问一个不认识这条会话的 Host），于是 `beginPaging()` 与
+`pauseFollowing()` 都没发生：内容在下方插入、滚动条不动 ⇒ 读者被顶到新内容的顶部。
+`readerSettled()`（同文件 `:123-128`）也救不了——它只在 `input.loadingOlder`（**shipped 会话自己的**
+加载标志）为真时才补锚，而我们翻页时那个标志始终是 false。
+
+**修法**：自己补，且在**布局阶段**（`useLayoutEffect`，浏览器绘制之前），否则补偿本身会闪一下。
+算术是一行，值得钉住的是**条件**——抽成无依赖模块 `src/client/paging-anchor.ts`：
+
+| 条件 | 行为 |
+| --- | --- |
+| 窗口首 seq **上移**且内容确实变高 | 写入 `旧 scrollTop + 插入高度` |
+| 首 seq 没动 / 反而下移（替换窗口） | 不动手（跟它抢会把读者放到谁都没要求的位置） |
+| 没有插入高度 | 不动手 |
+| **读者本来就在底部**（跟随尾部） | 不动手——shipped 面板自己会把跟随者移到新底部，我们写进去会把他拖回去 |
+
+`tests/paging-anchor.spec.ts` **7 条**把上面四条连同"从中间位置补偿""没有窗口时不动手"一起钉住。
+测试总数 60 → **67**。
+
+**验证**：客户端半边 `tsc` 0；`lib/index.js` 仍是 `4593c779…`（自 0.10.0 起逐字节未变，纯客户端改动）；
+`client/client.js` **337,651 B**（`5d09bab8…`）含 `pagingScrollTop`；编码门禁 clean。
+
+**这一轮的教训**：同一个症状（跳顶）需要**两层**不同的修复。抛错那层是从报错栈直接读出来的，
+锚定这层只能从"上游为什么能做到"反推——**"我修掉了我能解释的那个原因"不等于症状会消失**，
+用户复述症状才是判据。
 
 ### v0.10.2：点「加载更早」会跳顶并打断事件流（`received non-appended Match`）（2026-09-28）
 

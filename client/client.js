@@ -2191,6 +2191,23 @@ window.__ModuleLoader__.load({
 			});
 		}
 		//#endregion
+		//#region src/client/paging-anchor.ts
+		/**
+		* The scroll position that keeps the reader's content where it was.
+		* @param before - the window and scroller as they stood before this commit.
+		* @param after - the same readings now, plus the scroller's visible height.
+		* @param threshold - distance from the floor that still counts as following the tail.
+		* @returns the `scrollTop` to write, or undefined when nothing should move.
+		*/
+		function pagingScrollTop(before, after, threshold) {
+			if (before.first === void 0 || after.first === void 0) return void 0;
+			if (after.first >= before.first) return void 0;
+			const inserted = after.height - before.height;
+			if (inserted <= 0) return void 0;
+			if (before.height - before.top - after.clientHeight <= threshold) return void 0;
+			return before.top + inserted;
+		}
+		//#endregion
 		//#region src/client/tree.ts
 		/**
 		* Group the mirror into machines, their directories, and their Sessions.
@@ -5622,6 +5639,20 @@ window.__ModuleLoader__.load({
 			* lives — visible at the top, gone once the reader is reading.
 			*/
 			const [atPaneTop, setAtPaneTop] = react.useState(true);
+			/** The shipped pane's own scroller, once found: read every commit, never re-searched. */
+			const paneScroller = react.useRef(null);
+			/**
+			* The window and scroller as they stood at the previous commit.
+			*
+			* Read on every commit and written back after it, so a page arriving below the
+			* window can be told apart from growth at the tail — and compensated for before
+			* the browser paints.
+			*/
+			const paneMetrics = react.useRef({
+				first: void 0,
+				top: 0,
+				height: 0
+			});
 			const scrollToBottom = react.useCallback((smooth = true) => {
 				const el = body.current;
 				if (el === null) return;
@@ -5663,9 +5694,11 @@ window.__ModuleLoader__.load({
 				const host = pane.current;
 				if (host === null) return;
 				const scroller = findScroller(host);
+				paneScroller.current = scroller;
 				if (scroller !== null) setAtPaneTop(scroller.scrollTop <= FOLLOW_THRESHOLD);
 				const frame = typeof requestAnimationFrame === "function" ? requestAnimationFrame(() => {
 					const settled = findScroller(host);
+					paneScroller.current = settled;
 					if (settled !== null) setAtPaneTop(settled.scrollTop <= FOLLOW_THRESHOLD);
 				}) : void 0;
 				const onScroll = (event) => {
@@ -5714,6 +5747,31 @@ window.__ModuleLoader__.load({
 			const delivery = state.delivery;
 			const shipped = props.official.supported && props.renderSlot !== void 0 && props.SessionProvider !== void 0 && state.transcript !== void 0 ? props.official.referenceFor(props.machineName, session.sessionId) : void 0;
 			const paneRange = shipped === void 0 ? void 0 : props.official.windowRange();
+			react.useLayoutEffect(() => {
+				const scroller = paneScroller.current;
+				const before = paneMetrics.current;
+				const first = paneRange?.first;
+				if (scroller === null) {
+					paneMetrics.current = {
+						first,
+						top: 0,
+						height: 0
+					};
+					return;
+				}
+				const target = pagingScrollTop(before, {
+					first,
+					top: scroller.scrollTop,
+					height: scroller.scrollHeight,
+					clientHeight: scroller.clientHeight
+				}, FOLLOW_THRESHOLD);
+				if (target !== void 0) scroller.scrollTop = target;
+				paneMetrics.current = {
+					first,
+					top: scroller.scrollTop,
+					height: scroller.scrollHeight
+				};
+			});
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [
 				/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("header", {
 					className: sync_module_css_default.viewHeader,

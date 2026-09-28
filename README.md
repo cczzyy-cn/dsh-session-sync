@@ -85,7 +85,10 @@ registered `main` keys.
   its top: the shipped conversation brings its own scroll body, so a row drawn
   beside it would sit above the conversation forever — offering history to a
   reader who is nowhere near the end it belongs to — instead of marking where the
-  fetched range begins.
+  fetched range begins. That route also has to keep the reader's place itself: the
+  shipped chat arms its paging anchor in its own control's handler, and this
+  console pages through its own channel, so the compensation is written here, in a
+  layout effect, and never while the reader is following the tail.
 - **Nothing user-visible is invented.** Both panes reuse `ui-primitives`
   (`DisclosureRow`, `MarkdownText`, `Input`, `StateDot`, `Button`) and the shipped
   tokens, so the console follows a theme change, a font-size preference, and a
