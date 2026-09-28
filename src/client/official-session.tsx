@@ -23,6 +23,7 @@ import {
   type SyncLiveDelta,
   type SyncTransportObserver,
 } from './api.ts'
+import { envelopePlacement } from './envelope-placement.ts'
 import { scopeCapable } from './routing.ts'
 
 /**
@@ -344,13 +345,17 @@ export class OfficialMirror {
    *   both as the page it read and as the origin's ordinary replay frames;
    * - one below the window, which is that replay: it is history, and the shipped
    *   conversation's assembler requires each node's matches in sequence order, so
-   *   appending it breaks the pane instead of merely duplicating a row.
+   *   appending it breaks the pane instead of merely duplicating a row. The test
+   *   for this is "not newer than everything the window holds" rather than "below
+   *   its first sequence", because a page this console prepended moves that first
+   *   sequence down and the replay then sits *inside* the range.
    *
    * @param events - the frame's envelopes.
    */
   appendEvents(events: readonly MirrorEvent[]): void {
     if (this.released) return
-    const first = this.source?.getSnapshot().entries[0]?.event.seq
+    const held = this.source?.getSnapshot().entries ?? []
+    const newest = held[held.length - 1]?.event.seq
     const history: MirrorEvent[] = []
     for (const event of events) {
       if (isPanelOnly(event)) {
@@ -358,7 +363,16 @@ export class OfficialMirror {
         continue
       }
       if (this.fed.has(event.seq)) continue
-      if (first !== undefined && event.seq < first) {
+      // Where this belongs is decided by `envelopePlacement`, which exists as its
+      // own module because getting it wrong is what broke "load older": see the
+      // note there. Only `newer` may be appended — everything else is merged in
+      // below, because the shipped assembler requires each Context's matches in
+      // increasing sequence order, and a throw from it fails the whole feed.
+      //
+      // So anything not newer than the window goes through the merge path, which
+      // takes entries in sequence order and replays what they touch. That covers
+      // both an older page and an event inside a range a page just extended.
+      if (envelopePlacement(event.seq, newest, this.fed) === 'history') {
         history.push(event)
         continue
       }

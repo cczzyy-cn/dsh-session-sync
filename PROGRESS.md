@@ -8,13 +8,13 @@
 | 项 | 值 |
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
-| 版本 | **`0.10.1`**（tag **`v0.10.1`**）· 修「加载更早的消息」在 shared-pane 路线上永久的横幅（见 §2）；上一版 `0.10.0` → `113b677` |
-| 服务器 | **已上线 `0.10.1`**（纯客户端改动）：profile 依赖 `#v0.10.1`，`/state` 自报 `0.10.1`；Host 半边字节与 0.10.0 相同，**没有重启 Host** |
-| 测试 | **55 通过 / 0 失败**（15 suites，1.1s）· 新增 `tests/interaction-race.spec.ts` 17 条（竞速 10 + hub 7） |
-| 产物 | `lib/index.js` **131,694 B**（sha256 `4593c779…`，与 0.10.0 逐字节相同）· `client/client.js` **334,698 B**（sha256 `fc5d9e7e…`）；产物自报版本 `0.10.1` |
+| 版本 | **`0.10.2`**（tag **`v0.10.2`**）· 修「加载更早」的 `received non-appended Match`（见 §2）；`0.10.1` 修那行永久横幅，`0.10.0` → `113b677` 是提问竞速 |
+| 服务器 | **已上线 `0.10.2`**（纯客户端改动）：profile 依赖 `#v0.10.2`，`/state` 自报 `0.10.2`；Host 半边字节自 0.10.0 起未变，**全程没有重启 Host** |
+| 测试 | **60 通过 / 0 失败**（16 suites，1.0s）· 新增 `tests/interaction-race.spec.ts` 17 条、`tests/envelope-placement.spec.ts` 5 条 |
+| 产物 | `lib/index.js` **131,694 B**（sha256 `4593c779…`，自 0.10.0 起逐字节未变）· `client/client.js` **335,583 B**（sha256 `f3460ecc…`）；产物自报版本 `0.10.2` |
 | 编码门禁 | `node scripts/check-encoding.mjs` **clean**（原先在 HEAD 上就是红的：见 §6） |
 | 类型 | Host 半边 `tsc` 0（9 个文件）；客户端半边用 `%TEMP%\synccheck` 的 stub 配置整体 `tsc` 0 |
-| 服务器 | `210.16.120.228` · DSH **`0.2.0-rc.1`**（`npx` 缓存 `ed2e730009a84a04`，unit 里钉的版本；`latest` 当时仍是 `0.1.7-rc.2`，0.2.0-rc.1 在 `next` 上）· 插件 **`0.10.1`** · unit `dsh-web.service` · active（Host 进程 15:16:10 UTC 启动，插件 0.10.1 只换了客户端半边） |
+| 服务器 | `210.16.120.228` · DSH **`0.2.0-rc.1`**（`npx` 缓存 `ed2e730009a84a04`，unit 里钉的版本；`latest` 当时仍是 `0.1.7-rc.2`，0.2.0-rc.1 在 `next` 上）· 插件 **`0.10.2`** · unit `dsh-web.service` · active（Host 进程 15:16:10 UTC 启动，0.10.1/0.10.2 都只换了客户端半边） |
 | 控制台路线 | **`scope`**：服务器上 `dsh-api-session-controller/lib/client.js` 命中 `retainAgentScope` ⇒ 特性探测确定走它；`adopt` 在任何已发布构建里都不存在（该路线已从代码删除） |
 | 服务器镜像 | 按需重建：源站 reconcile + follow 快照；此刻本机发布列表为空（`syncSessions: {}`），所以镜像里没有会话 |
 | 旧副本 | 已留档移走（**未删**）到服务器 `/root/legacy-copies-<ts>/`：两个会话目录 + 投影缓存 + 台账 |
@@ -61,6 +61,52 @@
 
 > 2026-09-25 及以前的推进日志（从"② 的答案"一路到 0.3.x）已归档到 `docs/history-2026-09.md`。
 > 这一段只留本版（0.8.x/0.9.x/0.10.x）的改动与验证；历史文件是当时的推理记录，不要照它实现。
+
+### v0.10.2：点「加载更早」会跳顶并打断事件流（`received non-appended Match`）（2026-09-28）
+
+用户报"点击加载自动跳到顶部"，并贴了控制台报错：
+
+```
+[session-controller] event feed subscriber failed: Error: conversation Context
+25:trajectory-assistant-step7:41 received non-appended Match 1705
+  at ConversationNodeAssembler.acceptMatch (client.js:2188)
+  … MutableSessionEventSource.append
+```
+
+**先读上游，不猜**：
+
+- 断言在 `ui-conversation/.../conversation/assembler.ts:548-551`：**每个 Context 的 match 必须严格递增**
+  （`previous.event.seq >= input.event.seq` 就抛）；
+- 抛出的路径是 `assembler.append`（不是 `prepend`）——`prepend` 走的是 `mergeMatches` 合并路径，
+  本来就能收更早的事件（同文件 `:323-348`）；
+- 而且这一抛**不是局部的**：它打掉整条 event-feed 订阅（我们自己的注释就写着
+  "the pane stops updating until it is reopened"）；
+- shipped 面板**自己实现了 prepend 锚定**（`ui-chat/.../conversation-nodes/README.md:98-100`：
+  "Paging adds older content above the retained anchor **without jumping to the new top**"）
+  ⇒ **"跳到顶部"是这次抛错的连带后果**：锚定根本没机会跑。
+
+**根因**：`appendEvents` 用"是否低于窗口的**首个** seq"来判断是不是历史。翻页之后窗口的首个 seq
+**下移**了，于是源站对同一页的重放（它以普通帧到达——正是本插件翻页的另一条路）落进了窗口
+**区间之内**：`>= first` ⇒ 被当成新事件 `append` ⇒ 撞上递增断言。`fed` 之所以没挡住它，是因为
+帧里带的是本控制台那一页**没覆盖**的 seq（两条路各自读页，覆盖范围并不相同）。
+
+**修法**：把判断换成"**是否比窗口最新的 seq 更新**"，并且把这条决策**抽成无依赖模块**
+`src/client/envelope-placement.ts`（本仓库的既定做法：决策抽出来才能测）：
+`drop`（窗口已有）/ `history`（不比窗口新 ⇒ 走合并路径）/ `newer`（只有它可以 append）。
+
+**判据**（`tests/envelope-placement.spec.ts` 5 条）：核心那条是"窗口持有 1308..2105 时，
+1705 必须判为 `history`"。**实测在旧规则上确实失败**（旧规则按 `first=1308` 比，1705 判成
+`newer`）。测试总数 55 → **60**。
+
+**验证**：客户端半边 `tsc` 0；`lib/index.js` 与 0.10.0/0.10.1 **逐字节相同**（`4593c779…`）
+⇒ 又是纯客户端改动；`client/client.js` **335,583 B**（`f3460ecc…`）。
+
+**仍未做的**：没有浏览器级验证（本仓库没有 DOM 测试台），所以"跳顶"是否随这次修复一起消失，
+要靠刷新页面后再点一次「加载更早」确认：预期是**不报错、且读者位置保持在原处**。
+
+> 顺带撞了一次自己记过的坑：用 `Set-Content -Encoding UTF8` 改 `package.json` 写出了 BOM
+> （§6 第一条），`JSON.parse` 直接拒 ⇒ 产物自报 `unknown`、构建失败。改用
+> `[IO.File]::WriteAllText` + `UTF8Encoding($false)` 立刻恢复。
 
 ### v0.10.1：「加载更早的消息」在 shared-pane 路线上是个永久横幅（2026-09-28）
 

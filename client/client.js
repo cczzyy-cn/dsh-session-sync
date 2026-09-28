@@ -1326,6 +1326,20 @@ window.__ModuleLoader__.load({
 			return (state.role === "server" || state.role === "client") && Array.isArray(state.machines) && typeof state.machineName === "string" && typeof state.published === "number";
 		}
 		//#endregion
+		//#region src/client/envelope-placement.ts
+		/**
+		* Decide where one envelope belongs.
+		* @param seq - the envelope's sequence.
+		* @param newestHeld - highest sequence the drawn window holds, or undefined when it holds none.
+		* @param fed - sequences the drawn window has already taken.
+		* @returns the placement; `newer` is the only one the caller may append.
+		*/
+		function envelopePlacement(seq, newestHeld, fed) {
+			if (fed.has(seq)) return "drop";
+			if (newestHeld === void 0) return "newer";
+			return seq > newestHeld ? "newer" : "history";
+		}
+		//#endregion
 		//#region src/client/routing.ts
 		/**
 		* The browser half's one decision, in a module with no imports.
@@ -1517,13 +1531,17 @@ window.__ModuleLoader__.load({
 			*   both as the page it read and as the origin's ordinary replay frames;
 			* - one below the window, which is that replay: it is history, and the shipped
 			*   conversation's assembler requires each node's matches in sequence order, so
-			*   appending it breaks the pane instead of merely duplicating a row.
+			*   appending it breaks the pane instead of merely duplicating a row. The test
+			*   for this is "not newer than everything the window holds" rather than "below
+			*   its first sequence", because a page this console prepended moves that first
+			*   sequence down and the replay then sits *inside* the range.
 			*
 			* @param events - the frame's envelopes.
 			*/
 			appendEvents(events) {
 				if (this.released) return;
-				const first = this.source?.getSnapshot().entries[0]?.event.seq;
+				const held = this.source?.getSnapshot().entries ?? [];
+				const newest = held[held.length - 1]?.event.seq;
 				const history = [];
 				for (const event of events) {
 					if (isPanelOnly(event)) {
@@ -1531,7 +1549,7 @@ window.__ModuleLoader__.load({
 						continue;
 					}
 					if (this.fed.has(event.seq)) continue;
-					if (first !== void 0 && event.seq < first) {
+					if (envelopePlacement(event.seq, newest, this.fed) === "history") {
 						history.push(event);
 						continue;
 					}
