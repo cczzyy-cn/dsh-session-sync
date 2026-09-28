@@ -5300,6 +5300,31 @@ window.__ModuleLoader__.load({
 		*/
 		const FOLLOW_THRESHOLD = 24;
 		/**
+		* The element inside the shipped pane that actually scrolls.
+		*
+		* The pane is another plugin's markup, so this is a search rather than a
+		* reference: the deepest, largest-scrolling element that carries a scroll
+		* overflow. It is read once per pane to learn where the pane opened — the
+		* shipped conversation opens at its newest message, which is its floor, not its
+		* top — and after that the capture-phase listener on the wrapper keeps the
+		* reading current without walking this subtree again.
+		* @param host - the seat the shipped conversation was rendered into.
+		* @returns the scroller, or null when the pane's content fits without scrolling.
+		*/
+		function findScroller(host) {
+			let best = null;
+			let bestOverflow = 4;
+			for (const node of host.querySelectorAll("*")) {
+				const overflowY = getComputedStyle(node).overflowY;
+				if (overflowY !== "auto" && overflowY !== "scroll") continue;
+				const overflow = node.scrollHeight - node.clientHeight;
+				if (overflow <= bestOverflow) continue;
+				best = node;
+				bestOverflow = overflow;
+			}
+			return best;
+		}
+		/**
 		* Render the sync panel.
 		* @param props - copy, the snapshot hook, and the actions.
 		* @returns the panel.
@@ -5563,8 +5588,22 @@ window.__ModuleLoader__.load({
 			const body = react.useRef(null);
 			/** The reading column, whose height is what growth moves. */
 			const column = react.useRef(null);
+			/** The seat the shipped conversation draws itself in, on the route that uses it. */
+			const pane = react.useRef(null);
 			/** Whether the reader is at the floor of the transcript. */
 			const [atBottom, setAtBottom] = react.useState(true);
+			/**
+			* Whether the shipped pane's own scroller is at *its* top.
+			*
+			* The console's "older" row marks the top of a transcript page, and on the
+			* hand-drawn route it lives inside this console's scroller so it travels with
+			* the conversation. The shipped pane brings its own scroll body instead, so the
+			* row cannot live in it: drawn beside the pane it would sit above the
+			* conversation forever, offering history to a reader who is nowhere near the
+			* end it belongs to. This is what puts it back where the row it stands in for
+			* lives — visible at the top, gone once the reader is reading.
+			*/
+			const [atPaneTop, setAtPaneTop] = react.useState(true);
 			const scrollToBottom = react.useCallback((smooth = true) => {
 				const el = body.current;
 				if (el === null) return;
@@ -5601,6 +5640,34 @@ window.__ModuleLoader__.load({
 				scrollToBottom,
 				tab,
 				state.open?.sessionId
+			]);
+			react.useEffect(() => {
+				const host = pane.current;
+				if (host === null) return;
+				const scroller = findScroller(host);
+				if (scroller !== null) setAtPaneTop(scroller.scrollTop <= FOLLOW_THRESHOLD);
+				const frame = typeof requestAnimationFrame === "function" ? requestAnimationFrame(() => {
+					const settled = findScroller(host);
+					if (settled !== null) setAtPaneTop(settled.scrollTop <= FOLLOW_THRESHOLD);
+				}) : void 0;
+				const onScroll = (event) => {
+					const target = event.target;
+					if (!(target instanceof HTMLElement)) return;
+					if (target.scrollHeight <= target.clientHeight) return;
+					setAtPaneTop(target.scrollTop <= FOLLOW_THRESHOLD);
+				};
+				host.addEventListener("scroll", onScroll, {
+					capture: true,
+					passive: true
+				});
+				return () => {
+					if (frame !== void 0) cancelAnimationFrame(frame);
+					host.removeEventListener("scroll", onScroll, { capture: true });
+				};
+			}, [
+				tab,
+				state.open?.sessionId,
+				state.transcript !== void 0
 			]);
 			react.useEffect(() => {
 				setAtBottom(true);
@@ -5718,7 +5785,7 @@ window.__ModuleLoader__.load({
 					cells,
 					stats: chrome.stats,
 					labels
-				}) : shipped !== void 0 ? /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [state.transcript?.hasMore === true && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+				}) : shipped !== void 0 ? /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [state.transcript?.hasMore === true && atPaneTop && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
 					className: sync_module_css_default.olderRow,
 					children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
 						type: "button",
@@ -5730,6 +5797,7 @@ window.__ModuleLoader__.load({
 						children: state.loadingOlder ? t("loadingOlder") : t("loadOlder")
 					})
 				}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+					ref: pane,
 					className: props.official.composerOwned ? `${sync_module_css_default.officialPane} ${sync_module_css_default.drivesWindow}` : sync_module_css_default.officialPane,
 					children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(props.SessionProvider, {
 						session: shipped,

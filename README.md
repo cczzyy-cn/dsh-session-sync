@@ -80,7 +80,12 @@ registered `main` keys.
   missing without saying which Session to re-publish. The top of an opened
   transcript carries a quiet `加载更早的消息` row for the same reason: it appears
   only when the mirror is not the whole conversation, and it reads the page
-  behind its window from the machine that owns the Session.
+  behind its window from the machine that owns the Session. On the route that
+  draws the shipped pane, the row is shown only while that pane is scrolled to
+  its top: the shipped conversation brings its own scroll body, so a row drawn
+  beside it would sit above the conversation forever — offering history to a
+  reader who is nowhere near the end it belongs to — instead of marking where the
+  fetched range begins.
 - **Nothing user-visible is invented.** Both panes reuse `ui-primitives`
   (`DisclosureRow`, `MarkdownText`, `Input`, `StateDot`, `Button`) and the shipped
   tokens, so the console follows a theme change, a font-size preference, and a

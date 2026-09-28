@@ -117,6 +117,32 @@ import { TurnTimePill, TurnUsagePill } from './stat-panels.tsx'
  */
 const FOLLOW_THRESHOLD = 24
 
+/**
+ * The element inside the shipped pane that actually scrolls.
+ *
+ * The pane is another plugin's markup, so this is a search rather than a
+ * reference: the deepest, largest-scrolling element that carries a scroll
+ * overflow. It is read once per pane to learn where the pane opened — the
+ * shipped conversation opens at its newest message, which is its floor, not its
+ * top — and after that the capture-phase listener on the wrapper keeps the
+ * reading current without walking this subtree again.
+ * @param host - the seat the shipped conversation was rendered into.
+ * @returns the scroller, or null when the pane's content fits without scrolling.
+ */
+function findScroller(host: HTMLElement): HTMLElement | null {
+  let best: HTMLElement | null = null
+  let bestOverflow = 4
+  for (const node of host.querySelectorAll<HTMLElement>('*')) {
+    const overflowY = getComputedStyle(node).overflowY
+    if (overflowY !== 'auto' && overflowY !== 'scroll') continue
+    const overflow = node.scrollHeight - node.clientHeight
+    if (overflow <= bestOverflow) continue
+    best = node
+    bestOverflow = overflow
+  }
+  return best
+}
+
 /** Props the renderer binds for the `main` cell. */
 export interface SyncPanelProps {
   /** Localized copy, from the registration's `locale` namespace. */
@@ -471,8 +497,22 @@ function Conversation(props: {
   const body = React.useRef<HTMLDivElement | null>(null)
   /** The reading column, whose height is what growth moves. */
   const column = React.useRef<HTMLDivElement | null>(null)
+  /** The seat the shipped conversation draws itself in, on the route that uses it. */
+  const pane = React.useRef<HTMLDivElement | null>(null)
   /** Whether the reader is at the floor of the transcript. */
   const [atBottom, setAtBottom] = React.useState(true)
+  /**
+   * Whether the shipped pane's own scroller is at *its* top.
+   *
+   * The console's "older" row marks the top of a transcript page, and on the
+   * hand-drawn route it lives inside this console's scroller so it travels with
+   * the conversation. The shipped pane brings its own scroll body instead, so the
+   * row cannot live in it: drawn beside the pane it would sit above the
+   * conversation forever, offering history to a reader who is nowhere near the
+   * end it belongs to. This is what puts it back where the row it stands in for
+   * lives — visible at the top, gone once the reader is reading.
+   */
+  const [atPaneTop, setAtPaneTop] = React.useState(true)
   const scrollToBottom = React.useCallback((smooth = true): void => {
     const el = body.current
     if (el === null) return
@@ -503,6 +543,43 @@ function Conversation(props: {
     observer.observe(node)
     return () => { observer.disconnect() }
   }, [atBottom, scrollToBottom, tab, state.open?.sessionId])
+  // Where the shipped pane's scroller is, tracked on the wrapper rather than on
+  // its own handlers in the capture phase: a scroll event does not bubble, but it
+  // does descend, so one listener here hears every scrollable inside the pane
+  // without this console reaching into markup it does not own. Finding the
+  // scroller is done once per pane (a fresh pane opens at its newest message, so
+  // the answer is usually "not at the top") instead of on every frame.
+  React.useEffect(() => {
+    const host = pane.current
+    if (host === null) return
+    const scroller = findScroller(host)
+    if (scroller !== null) setAtPaneTop(scroller.scrollTop <= FOLLOW_THRESHOLD)
+    // The pane's own content may not be laid out at the first commit, in which
+    // case its scroller still looks like one whose content fits. One frame later
+    // it is the real thing — and because the shipped conversation opens at its
+    // newest message, learning that is the difference between a boundary row and
+    // a permanent banner.
+    const frame = typeof requestAnimationFrame === 'function'
+      ? requestAnimationFrame(() => {
+        const settled = findScroller(host)
+        if (settled !== null) setAtPaneTop(settled.scrollTop <= FOLLOW_THRESHOLD)
+      })
+      : undefined
+    const onScroll = (event: Event): void => {
+      const target = event.target
+      if (!(target instanceof HTMLElement)) return
+      if (target.scrollHeight <= target.clientHeight) return
+      setAtPaneTop(target.scrollTop <= FOLLOW_THRESHOLD)
+    }
+    host.addEventListener('scroll', onScroll, { capture: true, passive: true })
+    return () => {
+      if (frame !== undefined) cancelAnimationFrame(frame)
+      host.removeEventListener('scroll', onScroll, { capture: true })
+    }
+    // `state.transcript` rather than the rendered pane: this effect is declared
+    // before the pane's own reference resolves, and the transcript is what its
+    // existence depends on. A null ref simply means there is no pane to watch.
+  }, [tab, state.open?.sessionId, state.transcript !== undefined])
   // Opening a Session is a fresh read: it starts at the floor whatever the reader
   // was doing in the previous one.
   React.useEffect(() => {
@@ -669,8 +746,11 @@ function Conversation(props: {
                   which has never heard of this Session, so the window it is given
                   never claims more. Paging is this console's own road — it reads
                   the older page over the sync link and hands it to the same
-                  window — and this is its control. */}
-              {state.transcript?.hasMore === true && (
+                  window — and this is its control. Shown only while the reader is
+                  at the top of that window: it marks where the fetched range
+                  begins, so beside the pane it would sit above the conversation
+                  forever instead of at the end it belongs to. */}
+              {state.transcript?.hasMore === true && atPaneTop && (
                 <div className={css.olderRow}>
                   <button
                     type="button"
@@ -682,7 +762,10 @@ function Conversation(props: {
                   </button>
                 </div>
               )}
-              <div className={props.official.composerOwned ? `${css.officialPane} ${css.drivesWindow}` : css.officialPane}>
+              <div
+                ref={pane}
+                className={props.official.composerOwned ? `${css.officialPane} ${css.drivesWindow}` : css.officialPane}
+              >
                 <props.SessionProvider session={shipped}>
                   {props.renderSlot(OFFICIAL_SLOT, {})}
                 </props.SessionProvider>
