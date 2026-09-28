@@ -1,0 +1,161 @@
+/*
+ * The card that asks the reader to allow or refuse one operation on another
+ * machine. Same reading column and elevation pattern as the question card, with
+ * one difference that is the point of the design: it shows *what would run* — the
+ * call's gist and its arguments — before it shows a button, because a permission
+ * granted over a bare tool name is not a decision anybody can make.
+ *
+ * Refusal is drawn as a real button rather than as "not clicking allow": it is a
+ * decision, and a card whose only affordance is a grant is not offering a choice.
+ * The grant button stays the filled one, because it is the action a reader most
+ * often came to take — the weight is in the arguments above it, not in hiding the
+ * other button.
+ */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: calc(min(920px, 100%) + 32px);
+  box-sizing: border-box;
+  margin-bottom: 8px;
+  padding: 12px 16px 10px;
+  border: 0;
+  --dsw-elevation-stroke-color: var(--dsw-alias-state-warn-primary);
+  border-radius: 16px;
+  background: var(--dsw-alias-bg-layer-1);
+  box-shadow: var(--dsw-elevation-soft);
+  font: var(--dsw-font-s-14);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.title {
+  color: var(--dsw-alias-label-primary);
+  font: var(--dsw-font-xs-strong-13);
+}
+
+.origin {
+  color: var(--dsw-alias-label-tertiary);
+  font: var(--dsw-font-xxxs-11);
+}
+
+.summary {
+  color: var(--dsw-alias-label-primary);
+  font: var(--dsw-font-s-14);
+}
+
+/*
+ * The call is not in the mirrored window. Drawn as a warning rather than as empty
+ * space: the reader is being asked to allow something this console cannot show
+ * them, and that has to be visible before the buttons, not after them.
+ */
+.missing {
+  color: var(--dsw-alias-state-warn-primary);
+  font: var(--dsw-font-xxs-12);
+}
+
+.arguments {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-layer-2);
+  color: var(--dsw-alias-label-secondary);
+  font: var(--dsw-font-xxxs-11);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.reason {
+  margin: 0;
+  color: var(--dsw-alias-label-secondary);
+  font: var(--dsw-font-xxs-12);
+  white-space: pre-wrap;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.hint,
+.sent {
+  color: var(--dsw-alias-label-tertiary);
+  font: var(--dsw-font-xxxs-11);
+}
+
+.error {
+  color: var(--dsw-alias-state-error-primary);
+  font: var(--dsw-font-xxxs-11);
+}
+
+.allow,
+.reject {
+  flex: none;
+  padding: 5px 14px;
+  border-radius: 999px;
+  font: var(--dsw-font-xxs-12);
+  cursor: pointer;
+}
+
+.allow {
+  border: 0;
+  background: var(--dsw-alias-button-info-fill);
+  color: #fff;
+}
+
+.reject {
+  border: 0.5px solid var(--dsw-alias-border-l2);
+  background: transparent;
+  color: var(--dsw-alias-label-primary);
+}
+
+.allow:disabled,
+.reject:disabled {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-tertiary);
+  cursor: default;
+}
+
+/*
+ * The line that says an operation is waiting on a decision in a Session this
+ * reader is *not* looking at. Without it a blocked tool call stays blocked and
+ * nobody learns of it: the card only ever appears in the pane of the Session
+ * whose machine is waiting.
+ */
+.elsewhere {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: calc(min(920px, 100%) + 32px);
+  box-sizing: border-box;
+  margin-bottom: 8px;
+  padding: 6px 12px;
+  border: 0.5px solid var(--dsw-alias-border-l2);
+  border-radius: 10px;
+  background: var(--dsw-alias-state-warn-tertiary);
+  color: var(--dsw-alias-label-secondary);
+  font: var(--dsw-font-xxxs-11);
+}
+
+.elsewhereGo {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--dsw-alias-label-primary-bluish);
+  font: var(--dsw-font-xxxs-11);
+  text-decoration: underline;
+  cursor: pointer;
+}

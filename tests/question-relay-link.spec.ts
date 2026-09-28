@@ -106,7 +106,8 @@ describe('a relayed question over the real link', () => {
   it('routes every command kind the protocol defines', () => {
     // Pinned on purpose: this map is a total map over `DownstreamCommand['kind']`,
     // so adding a kind without routing it is a compile error, and this list makes
-    // that edit conscious.
-    assert.deepEqual(COMMAND_KINDS, { prompt: true, answer: true })
+    // that edit conscious. It grew by `approval` when the approval relay landed —
+    // which is the edit this assertion exists to force.
+    assert.deepEqual(COMMAND_KINDS, { prompt: true, answer: true, approval: true })
   })
 })

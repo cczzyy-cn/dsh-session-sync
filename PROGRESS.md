@@ -8,14 +8,14 @@
 | 项 | 值 |
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
-| 版本 | **`0.10.4`**（tag **`v0.10.4`**）· 修控制台答案在源站被静默丢弃（见 §2）；`0.10.3` 补翻页锚定，`0.10.2` 修 `non-appended Match`，`0.10.1` 修那行永久横幅，`0.10.0` → `113b677` 是提问竞速 |
-| 服务器 | **已上线 `0.10.4`**：profile 依赖 `#v0.10.4`、`/state` 自报 `0.10.4`；17:06:13 UTC 重启过（这一版 Host 半边变了：hub 的 refused 收口） |
-| 本机（源站） | **已上线 `0.10.4` 并重启过**（进程 pid 13776 启动于 09-29 01:08:44，晚于新字节落盘 01:06:38 ⇒ 确为新代码）；提问竞速已在真机上验通（见 §2） |
-| 测试 | **69 通过 / 0 失败**（18 suites，1.1s）· `interaction-race` 17 条、`paging-anchor` 7 条、`envelope-placement` 5 条、`question-relay-link` 2 条 |
-| 产物 | `lib/index.js` **133,005 B**（sha256 `9f55ccb0…`，自 0.10.0 起第一次变——Host 侧修复）· `client/client.js` **337,651 B**（sha256 `5d09bab8…`，与 0.10.3 相同）；产物自报版本 `0.10.4` |
+| 版本 | **`0.10.5`**（tag **`v0.10.5`**）· 审批也做成两边竞速（见 §2；抽出共享的 `handoff.ts`）；`0.10.4` 修控制台答案被静默丢弃，`0.10.3` 补翻页锚定，`0.10.2` 修 `non-appended Match` |
+| 服务器（远端） | **已上线 `0.10.5`**：profile 依赖 `#v0.10.5`、`/state` 自报 `0.10.5`；**这一版 Host 半边变了**（hub 持审批卡片、ack 按 `allowed/rejected-at-console` 或 `refused` 收口），所以重启过 |
+| 本机（源站） | 包已升到 `0.10.5`；**Host 半边要等一次本机重启才生效**（会杀掉正在跑的会话，只能由用户做）。0.10.4 已重启验证过：提问竞速在真机上跑通（见 §2） |
+| 测试 | **89 通过 / 0 失败**（21 suites，1.2s）· `interaction-race` 17、`approval-race` 12、`paging-anchor` 7、`envelope-placement` 5、`approval-view` 4、`approval-relay-link` 3、`question-relay-link` 2 |
+| 产物 | `lib/index.js` **156,986 B**（sha256 `28963a28…`）· `client/client.js` **353,117 B**（sha256 `b9533c64…`）；产物自报版本 `0.10.5` |
 | 编码门禁 | `node scripts/check-encoding.mjs` **clean**（原先在 HEAD 上就是红的：见 §6） |
 | 类型 | Host 半边 `tsc` 0（9 个文件）；客户端半边用 `%TEMP%\synccheck` 的 stub 配置整体 `tsc` 0 |
-| 服务器 | `210.16.120.228` · DSH **`0.2.0-rc.1`**（`npx` 缓存 `ed2e730009a84a04`，unit 里钉的版本；`latest` 当时仍是 `0.1.7-rc.2`，0.2.0-rc.1 在 `next` 上）· 插件 **`0.10.3`** · unit `dsh-web.service` · active（Host 进程 15:16:10 UTC 启动，0.10.1 起都只换客户端半边） |
+| 服务器 | `210.16.120.228` · DSH **`0.2.0-rc.1`**（`npx` 缓存 `ed2e730009a84a04`，unit 里钉的版本；`latest` 当时仍是 `0.1.7-rc.2`，0.2.0-rc.1 在 `next` 上）· 插件 **`0.10.5`** · unit `dsh-web.service` · active |
 | 控制台路线 | **`scope`**：服务器上 `dsh-api-session-controller/lib/client.js` 命中 `retainAgentScope` ⇒ 特性探测确定走它；`adopt` 在任何已发布构建里都不存在（该路线已从代码删除） |
 | 服务器镜像 | 按需重建：源站 reconcile + follow 快照；此刻本机发布列表为空（`syncSessions: {}`），所以镜像里没有会话 |
 | 旧副本 | 已留档移走（**未删**）到服务器 `/root/legacy-copies-<ts>/`：两个会话目录 + 投影缓存 + 台账 |
@@ -62,6 +62,50 @@
 
 > 2026-09-25 及以前的推进日志（从"② 的答案"一路到 0.3.x）已归档到 `docs/history-2026-09.md`。
 > 这一段只留本版（0.8.x/0.9.x/0.10.x）的改动与验证；历史文件是当时的推理记录，不要照它实现。
+
+### v0.10.5：审批（approval）也做成两边竞速——同一场竞速，不同的赌注（2026-09-29）
+
+用户选了"把审批 approval 也做成两边竞速"，并同意了本文给出的授权边界。上游的形状与提问**同构**
+（waterfall、第一个应答者认领、shipped 浏览器应答者在后面），但认领的**含义**不同：提问的答案
+是**信息**，审批的结果是**权限**——`allowed-once` 放行的是本机权限预设正在拦的工具调用。
+
+**先把"共享的那一半"抽出来。** 认领顺序、迟到拒答、TTL、计数、abort 收口这些微妙逻辑，
+如果给审批再抄一份，等于把最危险的那半做成两份拷贝：
+
+- 新增 `src/host/handoff.ts`：`HandoffRelay<Offer, Answer, Close>`——一场竞速的全部规则，
+  不知道自己在竞速什么；拒绝措辞由领域通过 `HandoffWording` 提供（"已作答"vs"已裁定"）；
+- `src/host/interactions.ts` 改成薄壳（**17 条既有测试原样通过**，这就是重构的安全网）；
+- 新增 `src/host/approvals.ts`：审批领域（`relayedApproval` / `invalidDecisionReason` /
+  `localApprovalOutcome` / `ApprovalRelay`）。
+
+**四条设计决定**（都写进了代码注释与 README）：
+
+| 决定 | 理由 |
+| --- | --- |
+| **按会话单独开启**（`config.approveSessions`，默认空，**不从 `syncSessions` 推导**） | 发布会话是"读"，批准审批是"授予权限"。配置里没有这个键的老文档必须读成"全关"——靠升级顺手把权限打开正是这个开关要防的事 |
+| **卡片必须显示要放行的是什么** | 上游 seam **不发参数**，只给 `toolName` + `callId`；控制台按 `callId` 从**已镜像的 transcript** 解析（`approval-view.ts`）。窗口里没有这条调用时，卡片**明说"参数已不在镜像窗口里"**，而不是只显示一个工具名 |
+| **只允许两个值**：`allowed-once` / `rejected` | 上游词汇里还有 `cancelled`/`unavailable`，那是**应答者的状态**而非人的决定，其中 `unavailable` 是调用方必须从自己那侧收到的 fail-closed 值。路由与认领处**各拦一次**，被拦下的请求保持打开、仍可被正常裁定 |
+| **除放行外一切都 fail closed** | TTL、轮次中止、迟到被拒、机器离线 ⇒ 该操作都**没有**被放行 |
+
+**`never` 策略仍然最高**：它在上游 approval 服务内部、waterfall 分发**之前**强制执行，
+所以我们注册的应答者**不可能**把被拒的操作变成放行——这条是引上游
+`docs/subsystems/approval.zh.md` 的结论，本仓库测不到它，README 里如实标明。
+
+**判据**（新增 19 条，总数 69 → **89**）：
+
+- `tests/approval-race.spec.ts` 12 条：本机放行/拒绝/取消分别以 `allowed-at-origin`/
+  `rejected-at-origin`/`aborted` 收口；本机失败会 rethrow 且计数；控制台赢时不发 close；
+  迟到裁定被拒且 `lateDecisions` +1；重复命令成功、不同命令被拒；**`unavailable`/`cancelled`/
+  伪造值一律被拒且请求保持打开**；`withdrawAll`；
+- `tests/approval-relay-link.spec.ts` 3 条：**真链路**——`openApproval` → `submitApproval` →
+  源站 `onCommand` 收到 `kind:'approval'` 且**方向不变**（`allowed-once` 不会被投递成拒绝）→
+  ack 后卡片以 `allowed-at-console` 关闭；未发布会话的审批**不上卡**；未知机器的裁定被拒；
+- `tests/approval-view.spec.ts` 4 条：卡片在窗口里有/没有该调用时分别说什么（含"镜像名优先"）；
+- `tests/config-document.spec.ts` +1：**老文档（没有 `approveSessions`）读出来必须是全关**。
+
+**产物**：客户端半边 `353,117 B`（`b9533c64…`）；Host 半边 `156,986 B`（`28963a28…`）——
+**这一版两侧 Host 都变了**（源站要注册新应答者并路由新命令，服务器要持有审批卡片），
+所以**两端都要重启**才生效；源站那次会杀掉正在跑的会话。
 
 ### v0.10.4 验证：控制台答赢了一次**真实**的竞速（2026-09-28）
 

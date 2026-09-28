@@ -28,6 +28,8 @@ export interface ConfigSectionProps {
   configure: (patch: ConfigPatch) => Promise<boolean>
   /** Flip one Session's publish switch. */
   setSessionSync: (sessionId: string, synced: boolean) => Promise<boolean>
+  /** Open or close one Session to approvals decided from a console. */
+  setSessionApprovals: (sessionId: string, approved: boolean) => Promise<boolean>
 }
 
 /** The text fields this page stages. */
@@ -200,11 +202,13 @@ export function ConfigSection(props: ConfigSectionProps): React.ReactElement {
       <div className={css.group}>
         <h3 className={css.groupTitle}>{t('sessions')}</h3>
         <span className={css.hint}>{t('sessionsHint')}</span>
+        <span className={css.hint}>{t('sessionApprovalsHint')}</span>
         <SessionList
           t={t}
           ready={state.ready}
           sessions={state.sessions}
           setSessionSync={props.setSessionSync}
+          setSessionApprovals={props.setSessionApprovals}
         />
       </div>
     </section>
@@ -303,12 +307,21 @@ function StatusBlock({ t, state }: {
 }
 
 /**
- * The per-Session publish switches. */
-function SessionList({ t, ready, sessions, setSessionSync }: {
+ * The per-Session publish switches, and — where a Session is published — the
+ * separate approval switch.
+ *
+ * The second switch is drawn only for a published Session, and that is a statement
+ * rather than a layout choice: an approval card resolves what is being allowed from
+ * the mirrored conversation, so opening a Session to remote approvals without
+ * publishing it would offer a reader a permission over something they cannot see.
+ * The engine refuses that combination, and the page does not pretend otherwise.
+ */
+function SessionList({ t, ready, sessions, setSessionSync, setSessionApprovals }: {
   t: (key: SessionSyncKey) => string
   ready: boolean
   sessions: readonly LocalSessionRow[]
   setSessionSync: (sessionId: string, synced: boolean) => Promise<boolean>
+  setSessionApprovals: (sessionId: string, approved: boolean) => Promise<boolean>
 }): React.ReactElement {
   if (!ready) return <span className={css.empty}>{t('sessionsLoading')}</span>
   if (sessions.length === 0) return <span className={css.empty}>{t('sessionsEmpty')}</span>
@@ -328,6 +341,13 @@ function SessionList({ t, ready, sessions, setSessionSync }: {
               {session.cwd !== undefined && <span>{session.cwd}</span>}
             </span>
           </span>
+          {session.synced && (
+            <Switch
+              checked={session.approved}
+              label={`${t('sessionApprovalsLabel')}: ${session.title}`}
+              onChange={(next) => { void setSessionApprovals(session.sessionId, next) }}
+            />
+          )}
           <Switch
             checked={session.synced}
             label={`${t('sessionSyncLabel')}: ${session.title}`}

@@ -37,6 +37,8 @@ export const zh = {
   sessionsLoading: '读取中…',
   sessionRunning: '进行中',
   sessionSyncLabel: '同步该会话',
+  sessionApprovalsLabel: '允许控制台批准该会话的审批',
+  sessionApprovalsHint: '打开上面「同步该会话」之后才会出现这个开关。它授予的是另一种权限：让读到这个控制台的人替本机放行被权限预设拦下的工具调用。默认关闭，且只对该会话有效。',
 
   statusTitle: '状态',
   roleServer: '服务器',
@@ -202,6 +204,21 @@ export const zh = {
   questionElsewhere: '另有 {n} 个提问在别的会话等待',
   questionElsewhereGo: '去看',
 
+  // The approval a remote Session is blocked on. Wording deliberately unlike the
+  // question card's: this is not "someone wants to know something", it is "someone
+  // wants you to release a gated operation", and the reader is told which machine
+  // and which tool before they are offered a button. Refusal is named as an action,
+  // because it is one.
+  approvalTitle: '源站有一个操作等你放行',
+  approvalFrom: '{machine} 想运行 {tool}',
+  approvalCallMissing: '这条调用的参数已不在镜像窗口里——批准的是一个你此刻看不到内容的操作。',
+  approvalReason: '理由：{reason}',
+  approvalHint: '放行只对这一次调用有效；也可以拒绝。',
+  approvalSent: '已提交，等待源站确认',
+  approvalAllow: '放行一次',
+  approvalReject: '拒绝',
+  approvalElsewhere: '另有 {n} 个待放行的操作在别的会话',
+
   copyCode: '复制',
   copiedCode: '复制成功',
   footnotes: '脚注',
@@ -346,6 +363,8 @@ export const en: Record<SessionSyncKey, string> = {
   sessionsLoading: 'Loading…',
   sessionRunning: 'Running',
   sessionSyncLabel: 'Sync this Session',
+  sessionApprovalsLabel: 'Let the console decide this Session\u2019s approvals',
+  sessionApprovalsHint: 'This switch appears only after "Sync this Session" is on. It grants something different: whoever reads that console may release a tool call this machine\u2019s own permission preset was gating. Off by default, and per Session.',
 
   statusTitle: 'Status',
   roleServer: 'Server',
@@ -506,6 +525,19 @@ export const en: Record<SessionSyncKey, string> = {
   questionSent: 'Sent; waiting for the machine to claim it',
   questionElsewhere: '{n} more question(s) waiting in another Session',
   questionElsewhereGo: 'Show',
+
+  // The approval a remote Session is blocked on. See the Chinese set's note: the
+  // wording says *release a gated operation*, not "answer a question", and the
+  // machine and tool are named before any button is offered.
+  approvalTitle: 'A machine is waiting to be allowed to run something',
+  approvalFrom: '{machine} wants to run {tool}',
+  approvalCallMissing: 'The arguments are no longer in the mirrored window — you would be allowing a call whose contents you cannot see right now.',
+  approvalReason: 'Reason: {reason}',
+  approvalHint: 'A grant covers this one call; refusing is equally a decision.',
+  approvalSent: 'Sent; waiting for the machine to claim it',
+  approvalAllow: 'Allow once',
+  approvalReject: 'Refuse',
+  approvalElsewhere: '{n} more operation(s) waiting to be allowed in another Session',
 
   copyCode: 'Copy',
   copiedCode: 'Copied',

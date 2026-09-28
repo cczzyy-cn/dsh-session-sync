@@ -288,6 +288,7 @@ All of them sit under `/dsh-session-sync` and behind the GUI's own gate.
 | `/transcript` | GET | A page of one mirrored Session (`machine`, `session`, optional `limit`, `before`); asks the owning machine for history below its window when a reader reaches the mirror's edge |
 | `/command` | POST | One takeover prompt; answers with the `commandId` its status is narrated under |
 | `/answer` | POST | This console's answer to one question a machine relayed (`machineName`, `questionId`, `answers`); answers with the `commandId` that carries it, or 409 with the reason the question is no longer open |
+| `/approval` | POST | This console's decision on one approval a machine is blocked on (`machineName`, `approvalId`, `decision` of `allowed-once` or `rejected`); answers with the `commandId` that carries it, or 409 with the reason the approval is no longer waiting. Any other decision value is a 400: `cancelled` and `unavailable` describe an answerer, not a decision a console may make |
 | `/events` | GET | The SSE stream: state frames, per-Session event frames, relayed questions, and transient live text |
 
 ### A question is asked on both sides
@@ -343,6 +344,65 @@ and the other is told so rather than left guessing.
   Session; an answer decides something it is waiting on. The answer travels to
   the machine that asked, never to this Host, and the model sees it as the tool
   result it was waiting for rather than as a message from a user.
+
+### An approval is the same race, with a different stake
+
+The other seam this plugin answers is `approval/request`, and it is shaped exactly
+like the question seam: a waterfall, a first answerer that claims the request, and
+the shipped browser UI sitting behind this plugin. What differs is what the claim
+*means*. An answer to a question is information. An outcome here is **permission**:
+`allowed-once` releases a tool call this machine's own permission preset was
+gating. So the race is the same and the terms are not, and the difference shows up
+in four places:
+
+- **It is a separate, per-Session opt-in.** Publishing a conversation is a read;
+  deciding an approval is not. `state.config.approveSessions` names the Sessions
+  whose approvals may be decided from a console — empty by default, never inferred
+  from `syncSessions`, and the settings page draws the switch only for a Session
+  that is also published (the console resolves a card's arguments from the mirror,
+  so an un-published Session would offer a reader a permission over something they
+  cannot see).
+- **The machine's permission preset still wins.** A `never` policy is enforced by
+  the upstream approval service *before* it dispatches `approval/request`, so no
+  listener — this plugin's included — can turn a denied operation into an allowed
+  one. What can be decided here is only what the policy left open.
+- **Two decisions travel, and only two.** The upstream vocabulary also has
+  `cancelled` and `unavailable`, which describe an *answerer* rather than a
+  decision, and `unavailable` is the fail-closed value a caller must receive from
+  its own side. A console may produce `allowed-once` or `rejected`, and a frame
+  claiming anything else is refused at the route *and* at the claim, so the
+  request stays open and can still be decided properly.
+- **Every ending but a grant fails closed.** A TTL, an aborted turn, a decision
+  refused as late, a machine that went offline: all of them leave the operation
+  ungranted, because the caller treats anything but `allowed-once` as a refusal.
+
+The card shows **what would actually run**, resolved from the mirrored transcript
+by the `callId` the offer names — the seam does not hand out arguments, and the
+console already holds the call. When the window no longer carries it, the card says
+so instead of showing a bare tool name: "allow bash" and "allow a bash call this
+window can no longer show you" are different questions to answer. Refusal is a real
+button, because it is a real decision.
+
+```
+   machine (blocked on a tool call)          sync server / console
+   ────────────────────────────────          ─────────────────────
+   agent wants a gated call
+     │ (a `never` preset already refused it — this is never dispatched)
+     │ waterfall: approval/request
+     ├─▶ plugin, registered prepend, only for an opted-in Session
+     │     ├─ next() ──▶ shipped browser UI on that machine   ─┐
+     │     └─ POST /approval/open ──▶ hub ──▶ card in console  │  race
+     │                                                        │
+     │   first decision claims the approval ◀─────────────────┘
+     ├─▶ local decision ⇒ POST /approval/close (allowed-|rejected-at-origin)
+     └─▶ console decision ⇒ DownstreamCommand {kind:'approval'} ⇒ claimed,
+                            or refused with the reason it was already decided
+```
+
+`state.approvalCounts` counts the same way `state.interactions` does, plus
+`offered`: an approval that was never relayed at all (its Session is not opted in)
+must not look like one that was offered and lost the race, because the first is a
+configuration fact and the second is a race outcome.
 
 
 ### A mirrored Session is read here, never written into DSH
@@ -500,9 +560,24 @@ pane wherever the build offers `ctx.sessions.retainAgentScope`.
   question's ten-minute TTL only ever costs the remote option.
 - **Relayed questions are not covered by a real-deployment test.** The race, the
   claim, the refusal of a late answer and the expiry sweep are pinned by
-  `tests/interaction-race.spec.ts` against the real hub and the real relay, but no
-  test yet drives a question from a machine through a deployed server and back —
-  the same gap the takeover prompt had before `tests/e2e-chain.spec.ts`.
+  `tests/interaction-race.spec.ts` against the real hub and the real relay, and the
+  *transport* is pinned by `tests/question-relay-link.spec.ts` over a real listener
+  and a real link — but no test drives a question from a machine through a deployed
+  server and back; that path has only been exercised by hand.
+- **Relayed approvals are newer and less proven than relayed questions.** The race,
+  the claim, the refusal of a non-decision, the late-decision refusal and the TTL
+  are pinned by `tests/approval-race.spec.ts`, the transport by
+  `tests/approval-relay-link.spec.ts`, and what a card can honestly say about a call
+  by `tests/approval-view.spec.ts`. What is *not* proven is the end-to-end path on a
+  live deployment, and one thing that cannot be tested from this repository at all:
+  the `never`-policy precedence, because it is enforced by the upstream approval
+  service before the waterfall. That ordering is the safety property this feature
+  leans on hardest, and it is cited from upstream's own
+  `docs/subsystems/approval.zh.md` rather than asserted here.
+- **An approval decided at the console leaves the machine's own dialog up too**,
+  for the same structural reason as a question: this plugin has no seat from which
+  to close another plugin's UI, and aborting the shared signal would fail the very
+  tool call the decision was about.
 - **A takeover prompt typed inside a reconnect window is lost.** The server hands
   a command to the stream it believes belongs to that machine; if the machine has
   just dropped the link and the server has not noticed yet, the write goes nowhere

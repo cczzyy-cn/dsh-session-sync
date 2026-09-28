@@ -132,6 +132,19 @@ export const COMMAND_TTL_MS = 120_000
  */
 export const QUESTION_TTL_MS = 10 * 60_000
 
+/**
+ * How long the console may decide one relayed approval.
+ *
+ * Much shorter than a question's, because an approval is not a request for
+ * information: the machine's tool call is *blocked* on it, and the upstream
+ * service fails closed when the answerer gives up. A card that outlived the call by
+ * ten minutes would offer a decision that can no longer be taken — and, worse,
+ * invite a reader to grant an operation whose context has moved on. Five minutes is
+ * long enough for a human to read a card and short enough that a stale one dies
+ * while the caller is still waiting.
+ */
+export const APPROVAL_TTL_MS = 5 * 60_000
+
 /** Persisted plugin configuration — the five settings the user asked for, plus the listener. */
 export interface SyncConfig {
   /** This machine's display name, shown to every peer. */
@@ -148,6 +161,17 @@ export interface SyncConfig {
   listenPort: number
   /** Per-Session publish switch, keyed by Session id. */
   syncSessions: Record<string, boolean>
+  /**
+   * Per-Session switch allowing the console to decide this machine's approvals.
+   *
+   * Off unless a Session is named here, and that default is the whole point: an
+   * approval is a *permission* decision, and relaying it hands a reader on another
+   * machine the authority this machine's own human would have exercised — to
+   * release a tool call the local permission preset was gating. Publishing a
+   * conversation is a read; deciding an approval is not, so it is a separate
+   * opt-in per Session rather than something `syncSessions` implies.
+   */
+  approveSessions: Record<string, boolean>
 }
 
 /** One locally listed Session, as the configuration page renders it. */
@@ -161,6 +185,14 @@ export interface LocalSessionRow {
   cwd?: string
   /** Whether this Session is currently published to the server. */
   synced: boolean
+  /**
+   * Whether this Session's approvals may be decided from a console.
+   *
+   * Always false for a Session that is not also published: the console resolves a
+   * card's arguments from the mirror, so an approval for a Session it cannot see
+   * would ask a reader to release something they cannot read.
+   */
+  approved: boolean
 }
 
 /** One Session the server holds a mirror of. */
@@ -249,6 +281,15 @@ export interface SyncState {
    */
   questions?: RelayedQuestionView[]
   /**
+   * Server role: the approvals relayed to this console and still decidable.
+   *
+   * Transient for the same reason questions are: an approval exists only while the
+   * machine is blocked on it. A restart of this server loses the cards, and the
+   * machine's own answerer still decides — which is the fail-closed direction,
+   * because losing an approval means the operation is *not* granted here.
+   */
+  approvals?: RelayedApprovalView[]
+  /**
    * Client role: what this machine's relayed questions did.
    *
    * Counted because a race has exactly one winner and the loser is invisible:
@@ -266,6 +307,33 @@ export interface SyncState {
     /** Answers that arrived too late to claim, with the local answer already taken. */
     lateAnswers: number
     /** Questions withdrawn because the asking turn was aborted. */
+    aborted: number
+  }
+  /**
+   * Client role: what this machine's relayed approvals did.
+   *
+   * The same reasoning as `interactions`, and the same need: an approval has one
+   * winner, the loser is silent, and "the console never saw it" is otherwise
+   * indistinguishable from "the machine's own human decided first". `offered` is
+   * counted separately from `open` because an approval that was never relayed at
+   * all (the session is not opted in) must not look like one that was offered.
+   *
+   * Named apart from the server's `approvals` list on purpose — that one is a list
+   * of cards, this one is a set of counters — and apart from `interactions`, which
+   * keeps its name because builds already in the field read it for questions.
+   */
+  approvalCounts?: {
+    /** Approvals this machine relayed to the console. */
+    offered: number
+    /** Approvals currently waiting on either side. */
+    open: number
+    /** Decided by the local UI before the console did. */
+    decidedLocally: number
+    /** Decided by the console, and claimed by this machine. */
+    decidedRemotely: number
+    /** Decisions that arrived too late to claim, with the local one already taken. */
+    lateDecisions: number
+    /** Approvals withdrawn because the asking turn was aborted. */
     aborted: number
   }
   /** Client role: the Sessions this machine is publishing. */
@@ -423,6 +491,98 @@ export interface RelayedAnswerItem {
   custom?: string
 }
 
+/**
+ * One approval relayed to the server's console — `ApprovalRequestEvent` cut to JSON.
+ *
+ * The request carries no arguments: an approval names the *tool* and the exact
+ * `callId`, and the console already holds the call itself in the mirrored
+ * transcript, so the card resolves what is being approved from the window it is
+ * showing rather than from a second copy on the wire.
+ */
+export interface RelayedApproval {
+  /** The tool whose operation needs a decision. */
+  toolName: string
+  /** The exact tool call, when the asker had one — the console's key to its arguments. */
+  callId?: string
+  /** The asker's human-readable explanation. */
+  reason?: string
+}
+
+/**
+ * What one console decided about a relayed approval.
+ *
+ * The server's own vocabulary is the upstream one (`allowed-once`/`rejected`), and
+ * only those two: a console grants one operation or declines it. `cancelled` and
+ * `unavailable` are states of an *answerer*, not decisions a human makes.
+ */
+export type RelayedApprovalDecision = 'allowed-once' | 'rejected'
+
+/**
+ * Why a relayed approval stopped being answerable.
+ *
+ * Named from the whole deployment's point of view, like `QuestionOutcome`: the
+ * machine's own answer and the console's are both legitimate, and a reader must be
+ * able to tell which one decided — and which way.
+ */
+export type ApprovalOutcome =
+  | 'allowed-at-origin'
+  | 'rejected-at-origin'
+  | 'allowed-at-console'
+  | 'rejected-at-console'
+  /** The machine's answerer cancelled, or the asking turn was aborted. */
+  | 'aborted'
+  /** No answerer on the machine could take it; the caller fails closed. */
+  | 'unavailable'
+  /** The TTL passed with the approval unanswered at the console. */
+  | 'expired'
+  /** The machine that asked stopped appearing. */
+  | 'offline'
+  /** The machine refused the console's decision, and said why. */
+  | 'refused'
+
+/** Origin → server: one approval is waiting for a decision, here or there. */
+export interface ApprovalOpenPayload {
+  sessionId: string
+  /** Origin-minted identity of this asking episode. */
+  approvalId: string
+  approval: RelayedApproval
+  /** Epoch ms after which the console should stop offering it. */
+  expiresAt: number
+}
+
+/** Origin → server: this approval is no longer pending, and why. */
+export interface ApprovalClosePayload {
+  sessionId: string
+  approvalId: string
+  outcome: ApprovalOutcome
+}
+
+/** Server → browser: one approval this server is offering, or the news that it closed. */
+export interface RelayedApprovalView {
+  machineName: string
+  sessionId: string
+  approvalId: string
+  approval: RelayedApproval
+  openedAt: number
+  expiresAt: number
+  /** Present once the approval stopped being answerable; the console drops the card. */
+  closed?: ApprovalOutcome
+}
+
+/** Server → origin: the console's decision on one approval the origin relayed. */
+export interface DownstreamApproval {
+  commandId: string
+  sessionId: string
+  kind: 'approval'
+  /** The approval this decides, as the origin named it. */
+  approvalId: string
+  decision: RelayedApprovalDecision
+  /** Which console decided, for the origin's own presentation. */
+  from: string
+  /** Epoch ms after which the origin must refuse this decision. */
+  expiresAt: number
+}
+
 /** Origin → server: one question is waiting for a human, here or there. */
 export interface QuestionOpenPayload {
   sessionId: string
@@ -519,7 +679,7 @@ export interface DownstreamAnswer {
 }
 
 /** Anything the server asks one origin to do about a published Session. */
-export type DownstreamCommand = DownstreamPrompt | DownstreamAnswer
+export type DownstreamCommand = DownstreamPrompt | DownstreamAnswer | DownstreamApproval
 
 /**
  * Server → origin: re-open one Session's follow so its snapshot replays.
@@ -581,14 +741,24 @@ export interface CommandStatus {
   /**
    * What this command asked the origin to do.
    *
-   * A prompt and an answer travel the same lifecycle but mean different things
-   * to a reader — one said something, the other decided something — so the
-   * console needs the discriminator to narrate them apart. Absent only for a
-   * status minted before this field existed.
+   * A prompt, an answer and an approval travel the same lifecycle but mean
+   * different things to a reader — one said something, one decided a question, one
+   * granted or refused an operation — so the console needs the discriminator to
+   * narrate them apart. Absent only for a status minted before this field existed.
    */
-  kind?: 'prompt' | 'answer'
+  kind?: 'prompt' | 'answer' | 'approval'
   /** For an answer: the question it decided. */
   questionId?: string
+  /** For an approval: the approval it decided. */
+  approvalId?: string
+  /**
+   * For an approval: what the console decided.
+   *
+   * Carried on the status because the ack that closes the card says only *that*
+   * the machine took the decision, not which way — and "allowed" and "rejected" are
+   * opposite facts a reader must be told apart.
+   */
+  decision?: RelayedApprovalDecision
   /** Epoch ms after which this command is no longer deliverable. */
   expiresAt: number
   /** Human-readable reason, present for `failed` (and `expired` when explained). */
@@ -691,6 +861,16 @@ export interface ConfigPatch {
   listenPort?: number
   /** One Session's publish switch. */
   sessionSync?: { sessionId: string; synced: boolean }
+  /**
+   * One Session's approval switch.
+   *
+   * Separate from {@link ConfigPatch.sessionSync} because it grants something a
+   * publish does not: the authority for a reader elsewhere to *allow* a gated tool
+   * call on this machine. Turning it on for a Session that is not published is
+   * refused (see the engine's `approveable`), since the console could not show what
+   * it was approving.
+   */
+  sessionApprovals?: { sessionId: string; approved: boolean }
 }
 
 /** One browser-facing SSE frame. */
@@ -700,6 +880,8 @@ export type SyncStreamFrame =
   | { type: 'command'; command: CommandStatus }
   /** One relayed question opened or closed; the console renders the current set. */
   | { type: 'question'; question: RelayedQuestionView }
+  /** One relayed approval opened, updated, or closed on the server this console reads. */
+  | { type: 'approval'; approval: RelayedApprovalView }
   /** Transient streaming text for the open Session; never mirrored. */
   | { type: 'stream'; machineName: string; sessionId: string; turn: number; step: number; kind: 'reasoning' | 'text'; text: string }
   | { type: 'error'; message: string }
@@ -714,6 +896,7 @@ export function defaultConfig(machineName: string): SyncConfig {
     listenHost: '0.0.0.0',
     listenPort: DEFAULT_LISTEN_PORT,
     syncSessions: {},
+    approveSessions: {},
   }
 }
 
@@ -734,6 +917,17 @@ export function normalizeConfig(raw: unknown, fallbackMachineName: string): Sync
       if (value === true) syncSessions[sessionId] = true
     }
   }
+  // Read the same way, and *not* derived from `syncSessions`: a config written by a
+  // build that predates this field must come out with no Session opted in, which is
+  // exactly what an absent key means. Anything else would opt Sessions in by the act
+  // of upgrading — the one outcome this switch exists to prevent.
+  const approveSessions: Record<string, boolean> = {}
+  const rawApprove = source['approveSessions']
+  if (typeof rawApprove === 'object' && rawApprove !== null && !Array.isArray(rawApprove)) {
+    for (const [sessionId, value] of Object.entries(rawApprove as Record<string, unknown>)) {
+      if (value === true) approveSessions[sessionId] = true
+    }
+  }
   const port = source['listenPort']
   return {
     machineName: text(source['machineName']) ?? base.machineName,
@@ -745,6 +939,7 @@ export function normalizeConfig(raw: unknown, fallbackMachineName: string): Sync
       ? port
       : base.listenPort,
     syncSessions,
+    approveSessions,
   }
 }
 

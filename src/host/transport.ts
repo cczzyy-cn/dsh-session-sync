@@ -19,6 +19,9 @@ import {
   FRAMES_BODY_BYTES,
   KEEPALIVE_MS,
   MAX_BODY_BYTES,
+  type ApprovalClosePayload,
+  type ApprovalOpenPayload,
+  type ApprovalOutcome,
   type DownstreamCommand,
   type DownstreamFrame,
   type DownstreamOlder,
@@ -29,6 +32,7 @@ import {
   type QuestionClosePayload,
   type QuestionOpenPayload,
   type QuestionOutcome,
+  type RelayedApproval,
   type RelayedQuestion,
   type RelayedQuestionOption,
   type StreamDeltaPayload,
@@ -68,6 +72,7 @@ const FRAME_OUTBOX_WARN = 2_000
 export const COMMAND_KINDS: Record<DownstreamCommand['kind'], true> = {
   prompt: true,
   answer: true,
+  approval: true,
 }
 
 /**
@@ -237,6 +242,30 @@ export async function startSyncServer(options: SyncServerOptions): Promise<SyncS
         return
       }
       options.hub.closeQuestion(machineName, payload)
+      sendJson(response, 200, { ok: true })
+      return
+    }
+
+    if (request.method === 'POST' && url.pathname === '/approval/open') {
+      const body = await readJson(request)
+      const payload = approvalOpenOf(body)
+      if (payload === undefined) {
+        sendJson(response, 400, { error: 'sessionId, approvalId, approval, and expiresAt are required' })
+        return
+      }
+      options.hub.openApproval(machineName, payload)
+      sendJson(response, 200, { ok: true })
+      return
+    }
+
+    if (request.method === 'POST' && url.pathname === '/approval/close') {
+      const body = await readJson(request)
+      const payload = approvalCloseOf(body)
+      if (payload === undefined) {
+        sendJson(response, 400, { error: 'sessionId, approvalId, and a known outcome are required' })
+        return
+      }
+      options.hub.closeApproval(machineName, payload)
       sendJson(response, 200, { ok: true })
       return
     }
@@ -453,6 +482,78 @@ function questionCloseOf(body: Record<string, unknown> | undefined): QuestionClo
 function isQuestionOutcome(value: unknown): value is QuestionOutcome {
   return value === 'answered-at-origin' || value === 'answered-at-console'
     || value === 'refused' || value === 'aborted' || value === 'expired' || value === 'offline'
+}
+
+/**
+ * Read one relayed approval, or nothing when the body is not one.
+ *
+ * The tool name is the only required field beyond the ids: an approval is *about*
+ * a tool, and a card that could not say which one would be asking a reader to
+ * grant something unnamed. `callId` and `reason` are optional because the seam
+ * makes them optional — a hook-driven ask has no call, and an asker need not
+ * explain itself.
+ * @param body - the parsed request body.
+ * @returns the payload, or undefined when it is not a complete approval.
+ */
+function approvalOpenOf(body: Record<string, unknown> | undefined): ApprovalOpenPayload | undefined {
+  if (body === undefined) return undefined
+  const sessionId = nonEmptyString(body['sessionId'])
+  const approvalId = nonEmptyString(body['approvalId'])
+  const expiresAt = body['expiresAt']
+  const approval = relayedApprovalOf(body['approval'])
+  if (sessionId === undefined || approvalId === undefined || approval === undefined) return undefined
+  if (typeof expiresAt !== 'number' || !Number.isFinite(expiresAt)) return undefined
+  return { sessionId, approvalId, approval, expiresAt }
+}
+
+/**
+ * Read one relayed approval's own fields, or nothing when they are not enough.
+ * @param value - the request's `approval` member.
+ * @returns the approval, or undefined when the tool is unnamed.
+ */
+function relayedApprovalOf(value: unknown): RelayedApproval | undefined {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return undefined
+  const record = value as Record<string, unknown>
+  const toolName = nonEmptyString(record['toolName'])
+  if (toolName === undefined) return undefined
+  const callId = nonEmptyString(record['callId'])
+  const reason = nonEmptyString(record['reason'])
+  return {
+    toolName,
+    ...(callId === undefined ? {} : { callId }),
+    ...(reason === undefined ? {} : { reason }),
+  }
+}
+
+/**
+ * Read one approval closure, or nothing when the body is not one.
+ * @param body - the parsed request body.
+ * @returns the payload, or undefined when the outcome is not one this protocol knows.
+ */
+function approvalCloseOf(body: Record<string, unknown> | undefined): ApprovalClosePayload | undefined {
+  if (body === undefined) return undefined
+  const sessionId = nonEmptyString(body['sessionId'])
+  const approvalId = nonEmptyString(body['approvalId'])
+  const outcome = body['outcome']
+  if (sessionId === undefined || approvalId === undefined) return undefined
+  if (!isApprovalOutcome(outcome)) return undefined
+  return { sessionId, approvalId, outcome }
+}
+
+/**
+ * Whether one value names an approval outcome this protocol defines.
+ *
+ * The console-side decisions are included because the *server* closes cards with
+ * them, while an origin may only ever close with the ones that describe its own
+ * side — the asymmetry is real and is enforced where it matters, in
+ * `ApprovalRelay`'s validator, rather than by making this reader narrower than the
+ * field it parses.
+ */
+function isApprovalOutcome(value: unknown): value is ApprovalOutcome {
+  return value === 'allowed-at-origin' || value === 'rejected-at-origin'
+    || value === 'allowed-at-console' || value === 'rejected-at-console'
+    || value === 'aborted' || value === 'unavailable'
+    || value === 'refused' || value === 'expired' || value === 'offline'
 }
 
 /** One non-empty, trimmed string field, or undefined. */
@@ -729,6 +830,28 @@ export class OriginLink {
    */
   publishQuestionClose(payload: QuestionClosePayload): void {
     void this.post('/question/close', { ...payload })
+  }
+
+  /**
+   * Offer one approval this machine is blocked on to the server.
+   *
+   * Unqueued for the same reason a question is: it is only useful while the
+   * machine is still waiting, the local answerer is still in the race, and a drop
+   * costs the remote option rather than any work. A retry against a decided
+   * approval would be worse than the drop — it would ask a reader to grant an
+   * operation whose call has already failed closed.
+   * @param payload - the approval, its Session, and its TTL.
+   */
+  publishApproval(payload: ApprovalOpenPayload): void {
+    void this.post('/approval/open', { ...payload })
+  }
+
+  /**
+   * Withdraw one approval, or report that this machine decided it itself.
+   * @param payload - the approval and the outcome.
+   */
+  publishApprovalClose(payload: ApprovalClosePayload): void {
+    void this.post('/approval/close', { ...payload })
   }
 
   /**

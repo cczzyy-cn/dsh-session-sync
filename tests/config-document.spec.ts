@@ -35,6 +35,7 @@ const DOCUMENT = {
   listenHost: '127.0.0.1',
   listenPort: 8791,
   syncSessions: { 'session-keep': true, 'session-drop': false },
+  approveSessions: { 'session-keep': true, 'session-no': false },
 }
 
 describe('the plugin config document', () => {
@@ -42,7 +43,28 @@ describe('the plugin config document', () => {
     const path = await home()
     await saveConfig(path, DOCUMENT)
     const loaded = await loadConfig(path, 'fallback')
-    assert.deepEqual(loaded, { ...DOCUMENT, syncSessions: { 'session-keep': true } })
+    assert.deepEqual(loaded, {
+      ...DOCUMENT,
+      syncSessions: { 'session-keep': true },
+      // Read the same way as the publish map, and *not* inferred from it: a Session
+      // whose approvals were never opted in must come back opted out, whatever it
+      // says about publishing.
+      approveSessions: { 'session-keep': true },
+    })
+  })
+
+  it('does not opt a Session in just because it is published', async () => {
+    // The upgrade path that matters most: a config written before this switch
+    // existed names published Sessions and no approvals at all. Reading it must
+    // leave every approval switch off — granting that authority as a side effect of
+    // upgrading is the one outcome this field exists to prevent.
+    const path = await home()
+    const { approveSessions, ...before } = DOCUMENT
+    await writeFile(configPath(path), `${JSON.stringify(before, null, 2)}\n`, 'utf8')
+    const loaded = await loadConfig(path, 'fallback')
+    assert.deepEqual(loaded.approveSessions, {})
+    assert.deepEqual(loaded.syncSessions, { 'session-keep': true })
+    assert.equal(approveSessions !== undefined, true)
   })
 
   it('ignores keys an earlier version wrote', async () => {

@@ -10,6 +10,9 @@
 import {
   COMMAND_TTL_MS,
   OFFLINE_AFTER_MS,
+  type ApprovalClosePayload,
+  type ApprovalOpenPayload,
+  type ApprovalOutcome,
   type CommandAckPayload,
   type CommandState,
   type CommandStatus,
@@ -24,6 +27,8 @@ import {
   type QuestionOpenPayload,
   type QuestionOutcome,
   type RelayedAnswerItem,
+  type RelayedApprovalDecision,
+  type RelayedApprovalView,
   type RelayedQuestionView,
   type StreamDeltaPayload,
   type SyncState,
@@ -57,6 +62,16 @@ const STATUS_LIMIT = 64
  * answering, and the console is the wrong place to find that out.
  */
 const QUESTION_LIMIT = 32
+
+/**
+ * Upper bound on approvals one machine may have open at the console.
+ *
+ * Lower than a question's would be if approvals were as cheap to forget: each one
+ * holds a *blocked tool call* on the machine, so a machine with thirty-two of them
+ * pending is a machine in trouble, and a console showing a wall of permission cards
+ * is a console whose reader will start approving without reading.
+ */
+const APPROVAL_LIMIT = 16
 
 /**
  * How long the mirror waits before asking an origin to replay again.
@@ -204,6 +219,15 @@ interface MachineRecord {
    * frame that carried the closure.
    */
   readonly questions: Map<string, RelayedQuestionView>
+  /**
+   * Approvals this machine relayed and the console may still decide, by id.
+   *
+   * Transient like the questions above, and for a sharper reason: an approval lives
+   * only while the machine is *blocked* on it. Dropping one is the normal end, and
+   * losing the map (a restart) fails closed — the operation is simply not granted
+   * from here.
+   */
+  readonly approvals: Map<string, RelayedApprovalView>
 }
 
 /** The server-role mirror and its subscribers. */
@@ -677,6 +701,125 @@ export class SyncHub {
   }
 
   /**
+   * Decide one relayed approval as the console, and hand the decision to the machine.
+   *
+   * The mirror image of {@link submitAnswer}, with one difference that matters: a
+   * decision here is a *permission*. The hub does not judge it — the machine that
+   * owns the call does, in `ApprovalRelay.claim`, against a request it is still
+   * waiting on — so what this method guarantees is only that the console decided
+   * something the server was actually offering, and that the machine's own refusal
+   * comes back as a closed card rather than a stuck one.
+   * @param machineName - the machine whose approval it is.
+   * @param approvalId - the approval the console decided.
+   * @param decision - allow once, or reject.
+   * @param from - the deciding console's display name.
+   * @returns the accepted command's id, or why it was refused.
+   */
+  submitApproval(
+    machineName: string,
+    approvalId: string,
+    decision: RelayedApprovalDecision,
+    from: string,
+  ): { ok: true; commandId: string } | { ok: false; reason: string } {
+    const record = this.records.get(machineName)
+    if (record === undefined) return { ok: false, reason: 'unknown machine' }
+    const approval = record.approvals.get(approvalId)
+    if (approval === undefined) {
+      return { ok: false, reason: 'this approval is no longer waiting' }
+    }
+    return this.enqueue(record, {
+      commandId: mintId(),
+      sessionId: approval.sessionId,
+      kind: 'approval',
+      approvalId,
+      decision,
+      from,
+      expiresAt: Date.now() + COMMAND_TTL_MS,
+    })
+  }
+
+  /**
+   * Offer one relayed approval to the browsers watching this server.
+   * @param machineName - the machine that is blocked on it.
+   * @param payload - the approval, its Session, and its TTL.
+   */
+  openApproval(machineName: string, payload: ApprovalOpenPayload): void {
+    const record = this.records.get(machineName)
+    if (record === undefined) return
+    record.lastSeen = Date.now()
+    // Same rule as a question: the console can only decide an approval for a
+    // Session it can see. Here it matters more — the card names a tool and resolves
+    // its arguments out of the mirrored transcript, so an un-published Session would
+    // offer a reader an unnamed permission over a conversation they cannot read.
+    if (!record.sessions.has(payload.sessionId)) return
+    const view: RelayedApprovalView = {
+      machineName,
+      sessionId: payload.sessionId,
+      approvalId: payload.approvalId,
+      approval: payload.approval,
+      openedAt: Date.now(),
+      expiresAt: payload.expiresAt,
+    }
+    record.approvals.set(payload.approvalId, view)
+    while (record.approvals.size > APPROVAL_LIMIT) {
+      const oldest = record.approvals.keys().next()
+      if (oldest.done === true || oldest.value === payload.approvalId) break
+      this.closeApproval(machineName, {
+        sessionId: record.approvals.get(oldest.value)?.sessionId ?? payload.sessionId,
+        approvalId: oldest.value,
+        outcome: 'expired',
+      })
+    }
+    this.broadcast({ type: 'approval', approval: view })
+  }
+
+  /**
+   * Stop offering one approval, and tell every watching browser why.
+   * @param machineName - the machine that asked.
+   * @param payload - the approval and the outcome to report.
+   */
+  closeApproval(machineName: string, payload: ApprovalClosePayload): void {
+    const record = this.records.get(machineName)
+    const view = record?.approvals.get(payload.approvalId)
+    if (record === undefined || view === undefined) return
+    record.approvals.delete(payload.approvalId)
+    this.broadcast({
+      type: 'approval',
+      approval: { ...view, closed: payload.outcome },
+    })
+    this.broadcastState()
+  }
+
+  /** Approvals the console may still decide, oldest offer first. */
+  approvals(): RelayedApprovalView[] {
+    return [...this.records.values()]
+      .flatMap(record => [...record.approvals.values()])
+      .sort((left, right) => left.openedAt - right.openedAt)
+  }
+
+  /**
+   * Retire the approvals that stopped being decidable while nobody was looking.
+   *
+   * Its own sweep rather than a share of the question one, because the two expire
+   * on different clocks (an approval's TTL is shorter, and the tool call behind it
+   * is blocked), and because a stale approval is the more dangerous of the two: it
+   * is an offer to grant an operation whose context has moved on.
+   */
+  sweepApprovals(now: number = Date.now()): void {
+    for (const record of this.records.values()) {
+      const offline = record.origin === undefined && now - record.lastSeen >= OFFLINE_AFTER_MS
+      for (const view of [...record.approvals.values()]) {
+        if (view.expiresAt > now && !offline) continue
+        this.closeApproval(record.machineName, {
+          sessionId: view.sessionId,
+          approvalId: view.approvalId,
+          outcome: offline ? 'offline' : 'expired',
+        })
+      }
+    }
+  }
+
+  /**
    * Retire one command with the owning machine's own outcome.
    * @param machineName - the machine that answered.
    * @param payload - the command id and whether it was admitted.
@@ -703,6 +846,18 @@ export class SyncHub {
           outcome: 'answered-at-console',
         })
       }
+      // An accepted approval is spent the same way, and the direction has to be
+      // carried through: "the console allowed this" and "the console rejected this"
+      // are opposite facts about a permission, and the ack says only that the machine
+      // took the decision. Every approval status carries its decision, because the
+      // only command that mints one is `submitApproval`.
+      if (status.kind === 'approval' && status.approvalId !== undefined) {
+        this.closeApproval(machineName, {
+          sessionId: status.sessionId,
+          approvalId: status.approvalId,
+          outcome: status.decision === 'rejected' ? 'rejected-at-console' : 'allowed-at-console',
+        })
+      }
       return
     }
     this.transition(record, status, 'failed', payload.error ?? 'the owning machine refused the prompt')
@@ -714,6 +869,16 @@ export class SyncHub {
       this.closeQuestion(machineName, {
         sessionId: status.sessionId,
         questionId: status.questionId,
+        outcome: 'refused',
+      })
+    }
+    // A refused approval especially: the machine said no to the console's decision,
+    // and a card that stayed up would invite a second attempt at the same permission
+    // — or, worse, look like it had already been granted.
+    if (status.kind === 'approval' && status.approvalId !== undefined) {
+      this.closeApproval(machineName, {
+        sessionId: status.sessionId,
+        approvalId: status.approvalId,
         outcome: 'refused',
       })
     }
@@ -875,6 +1040,7 @@ export class SyncHub {
       pending: [],
       commands: new Map(),
       questions: new Map(),
+      approvals: new Map(),
     }
     this.records.set(machineName, created)
     return created
@@ -920,7 +1086,15 @@ export class SyncHub {
    */
   private transition(
     record: MachineRecord,
-    seed: { commandId: string; sessionId: string; expiresAt: number; kind?: 'prompt' | 'answer'; questionId?: string },
+    seed: {
+      commandId: string
+      sessionId: string
+      expiresAt: number
+      kind?: 'prompt' | 'answer' | 'approval'
+      questionId?: string
+      approvalId?: string
+      decision?: RelayedApprovalDecision
+    },
     state: CommandState,
     error?: string,
   ): void {
@@ -931,6 +1105,8 @@ export class SyncHub {
       state,
       ...(seed.kind === undefined ? {} : { kind: seed.kind }),
       ...(seed.questionId === undefined ? {} : { questionId: seed.questionId }),
+      ...(seed.approvalId === undefined ? {} : { approvalId: seed.approvalId }),
+      ...(seed.decision === undefined ? {} : { decision: seed.decision }),
       expiresAt: seed.expiresAt,
       ...(error === undefined ? {} : { error }),
       time: Date.now(),

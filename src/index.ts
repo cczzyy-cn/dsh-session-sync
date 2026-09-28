@@ -16,6 +16,7 @@ import {
   ROUTE_PREFIX,
   type ConfigPatch,
   type RelayedAnswerItem,
+  type RelayedApprovalDecision,
   type SyncStreamFrame,
 } from './shared/protocol.ts'
 import { configPath, resolveHome } from './host/config.ts'
@@ -62,6 +63,11 @@ async function initialize(ctx: HostContext): Promise<void> {
     // the composition's own waterfall: the engine decides *what* happens when a
     // question arrives, and this decides that it is asked at all.
     service.answerQuestions(ctx)
+    // The same arrangement for the approval seam, and a separate registration
+    // because it is gated separately: relaying a question is a read of a published
+    // conversation, while relaying an approval hands another machine's reader the
+    // authority to *allow* a gated tool call here.
+    service.answerApprovals(ctx)
     ctx.inject(['webServer'], (webCtx) => {
       const webServer = webCtx.get('webServer') as WebServerLike | undefined
       if (webServer === undefined) return
@@ -210,6 +216,32 @@ async function dispatch(
     return
   }
 
+  if (method === 'POST' && route === '/approval') {
+    const body = await readJsonBody(request)
+    if (body === undefined) {
+      sendJson(response, 400, { error: 'malformed JSON body' })
+      return
+    }
+    const machineName = typeof body['machineName'] === 'string' ? body['machineName'] : ''
+    const approvalId = typeof body['approvalId'] === 'string' ? body['approvalId'] : ''
+    const decision = approvalDecisionOf(body['decision'])
+    if (approvalId === '' || decision === undefined) {
+      sendJson(response, 400, { error: 'approvalId and a decision of allowed-once or rejected are required' })
+      return
+    }
+    const outcome = service.submitApproval(machineName, approvalId, decision)
+    if (!outcome.ok) {
+      // Same shape as `/answer`, and for the same reason: the request was well
+      // formed and the state moved on — the machine's own human decided, the call
+      // was aborted, or the TTL passed. A conflict explains that to the console
+      // instead of inviting a retry against a permission nobody is waiting for.
+      sendJson(response, 409, { ok: false, reason: outcome.reason })
+      return
+    }
+    sendJson(response, 200, { ok: true, commandId: outcome.commandId })
+    return
+  }
+
   if (method === 'GET' && route === '/events') {
     openStream(service, response)
     return
@@ -323,6 +355,23 @@ function sendJson(response: NodeResponseLike, status: number, body: unknown): vo
 /** Human-readable one-line failure text. */
 function describe(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
+}
+
+/**
+ * Read one console decision on an approval, or nothing when it is not one.
+ *
+ * Exactly two values are acceptable, and they are the two a *human* can mean. The
+ * upstream vocabulary also has `cancelled` and `unavailable`, which describe an
+ * answerer rather than a decision — and `unavailable` in particular is the
+ * fail-closed value a caller must receive from its own side, never something a
+ * remote console can hand it. Refusing them here is the first of the two places
+ * that rule is enforced; `ApprovalRelay`'s validator is the second.
+ * @param value - the request's `decision` field.
+ * @returns the decision, or undefined when it is not one a console may make.
+ */
+function approvalDecisionOf(value: unknown): RelayedApprovalDecision | undefined {
+  if (value === 'allowed-once' || value === 'rejected') return value
+  return undefined
 }
 
 /**

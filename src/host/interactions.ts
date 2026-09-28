@@ -1,33 +1,14 @@
 /**
- * The two-sided race for one user question.
+ * The two-sided race for one user question — the question domain of
+ * {@link HandoffRelay}.
  *
- * A question is the one interactive event a Session produces, and both people
- * who could answer it are legitimately "the user": whoever is sitting at the
- * machine that owns the Session, and whoever is watching that Session in the
- * sync console. The upstream seam is a waterfall — the first answerer to return
- * an answer claims the request, and `next()` delegates to the answerers behind
- * — so *racing* the two is a matter of asking the local side through `next()`
- * while asking the console down the sync link, and letting whichever settles
- * first be the answer.
- *
- * Three rules this module exists to hold:
- *
- *  - **Exactly one winner.** The console's answer is claimed by id and only
- *    while the question is still pending, so a console that answers after the
- *    machine's own human did is refused with a reason rather than silently
- *    changing a decision that was already made.
- *  - **A refusal is not a failure.** In a race somebody always loses, and the
- *    ordinary loser is the console. The counters distinguish "the machine
- *    answered first" from "the console answered first" from "the ask was
- *    aborted", because from both ends those look identical otherwise.
- *  - **No dangling rejections.** The losing side of a race is never awaited, so
- *    every promise put into it must stay observed — a rejected loser escaping as
- *    an unhandled rejection would take the process down over a question nobody
- *    asked any more.
- *
- * It is deliberately free of Cordis, HTTP, and the link: the wiring lives in the
- * engine and the transport, and everything decided here is decided by a plain
- * function call a test can make.
+ * A question is the one interactive event a Session produces whose answer is
+ * *information*: which option, or a typed answer. Both people who could answer it
+ * are legitimately "the user" — whoever is at the machine that owns the Session
+ * and whoever is watching it in the sync console — so the race, the claim and the
+ * counters all come from the shared handoff core, and this module holds only what
+ * is specific to a question: how to cut one down to a wire shape, how to check an
+ * answer against what was actually asked, and how the two answer shapes convert.
  */
 
 import {
@@ -37,22 +18,10 @@ import {
   type RelayedQuestion,
 } from '../shared/protocol.ts'
 import type { AskUserQuestionAnswerLike, AskUserQuestionItemLike } from './dsh.ts'
+import { HandoffRelay, type HandoffSink } from './handoff.ts'
 
 /** Where the relay reaches the console. Absent when this machine is a server itself. */
-export interface InteractionSink {
-  /** Offer one question to the server's console. */
-  open(sessionId: string, questionId: string, questions: RelayedQuestion[], expiresAt: number): void
-  /**
-   * Withdraw one question this machine no longer needs answered elsewhere.
-   *
-   * Never sent for the console's own answer: the server closes that card the
-   * moment it accepts the answer, and telling it again would be telling the
-   * server what it just did.
-   */
-  close(sessionId: string, questionId: string, outcome: QuestionOutcome): void
-  /** The clock, injectable so a test can age a question without waiting. */
-  now(): number
-}
+export type InteractionSink = HandoffSink<RelayedQuestion[], QuestionOutcome>
 
 /** What this machine's relayed questions did, for the state view. */
 export interface InteractionCounts {
@@ -66,38 +35,7 @@ export interface InteractionCounts {
 /** Whether one console answer claimed the question, or why it did not. */
 export type ClaimResult = { ok: true } | { ok: false; reason: string }
 
-/** One question this machine relayed and is still waiting on. */
-interface Pending {
-  readonly sessionId: string
-  readonly questionId: string
-  readonly asked: readonly RelayedQuestion[]
-  readonly expiresAt: number
-  readonly settle: (answers: RelayedAnswerItem[]) => void
-  /**
-   * The command that claimed this question, for the retry case.
-   *
-   * A duplicated answer command must acknowledge as success — the console is
-   * asking about a decision it already made — while a *different* command must
-   * be refused. Identity, not a boolean, is what tells those apart.
-   */
-  claimedBy?: string
-}
-
-/**
- * Questions already settled, kept only long enough to answer a late console.
- *
- * Bounded like the step-settlement marks in the engine: the ids exist to name a
- * refusal, so a few hundred remembered ones say everything a refusal can say.
- */
-const SETTLED_LIMIT = 256
-
-let sequence = 0
-
-/** One identity per asking episode, unique within this process. */
-export function mintQuestionId(): string {
-  sequence += 1
-  return `${Date.now().toString(36)}-${sequence.toString(36)}`
-}
+export { mintHandoffId as mintQuestionId } from './handoff.ts'
 
 /**
  * Cut one live question down to what crosses a wire.
@@ -183,30 +121,28 @@ export function invalidAnswerReason(
   return undefined
 }
 
-/** The relay: what this machine asked the console, and who won each race. */
+/** The question relay: what this machine asked the console, and who won each race. */
 export class InteractionRelay {
-  private readonly pending = new Map<string, Pending>()
-  private readonly settled: string[] = []
-  private answeredLocally = 0
-  private answeredRemotely = 0
-  private lateAnswers = 0
-  private aborted = 0
+  private readonly core: HandoffRelay<RelayedQuestion[], RelayedAnswerItem[], QuestionOutcome>
 
   /**
    * @param sink - how this relay reaches the console.
    * @param ttlMs - how long a relayed question stays answerable.
    */
   constructor(
-    private readonly sink: InteractionSink,
+    sink: InteractionSink,
     private readonly ttlMs: number = QUESTION_TTL_MS,
-  ) {}
+  ) {
+    this.core = new HandoffRelay(sink, {
+      settled: 'this question was already answered on the machine that asked it',
+      claimed: 'this question was already answered from the console',
+      unknown: 'no such question is waiting on this machine',
+      expired: 'the question expired before the answer arrived',
+    })
+  }
 
   /**
    * Offer one question to the console and race it against the local answerer.
-   *
-   * The caller passes `next` as `local`: calling it starts the answerers behind
-   * this one — which is the shipped browser UI, reached through the Remote
-   * waterfall bridge. Both sides are asked, and the first answer wins.
    * @param sessionId - the Session being asked in; absent means "not relayable".
    * @param questions - the questions the agent asked.
    * @param local - the delegated local answerer.
@@ -218,100 +154,40 @@ export class InteractionRelay {
     local: () => Promise<AskUserQuestionAnswerLike>,
   ): Promise<AskUserQuestionAnswerLike> {
     const asked = relayedQuestions(questions)
-    if (sessionId === undefined || asked.length === 0) return local()
-    const questionId = mintQuestionId()
-    const deferred = Promise.withResolvers<RelayedAnswerItem[]>()
-    const expiresAt = this.sink.now() + this.ttlMs
-    this.pending.set(questionId, {
+    return this.core.race<AskUserQuestionAnswerLike>({
       sessionId,
-      questionId,
-      asked,
-      expiresAt,
-      settle: deferred.resolve,
+      offer: asked.length === 0 ? undefined : asked,
+      ttlMs: this.ttlMs,
+      local,
+      remote: answers => relayedAnswer(asked, answers),
+      validate: answers => invalidAnswerReason(asked, answers),
+      // The machine's own human answered first: that is the ordinary outcome of a
+      // race, not a failure, so the console is told which way it lost.
+      closeOnLocal: () => 'answered-at-origin',
+      closeOnAbort: 'aborted',
     })
-    this.sink.open(sessionId, questionId, asked, expiresAt)
-
-    // Both promises go into the race, which subscribes to each of them: a side
-    // that loses and then rejects is therefore still *observed*, so the loser
-    // can never surface as an unhandled rejection.
-    const localAnswer = local()
-    let outcome: { side: 'local'; answer: AskUserQuestionAnswerLike } | { side: 'remote'; answers: RelayedAnswerItem[] }
-    try {
-      outcome = await Promise.race([
-        localAnswer.then(answer => ({ side: 'local' as const, answer })),
-        deferred.promise.then(answers => ({ side: 'remote' as const, answers })),
-      ])
-    } catch (error: unknown) {
-      this.aborted += 1
-      this.remember(questionId)
-      this.sink.close(sessionId, questionId, 'aborted')
-      throw error
-    } finally {
-      this.pending.delete(questionId)
-    }
-    this.remember(questionId)
-    if (outcome.side === 'local') {
-      // The machine's own human answered first, which is the ordinary outcome of
-      // a race rather than a failure — say so, so the console can drop the card
-      // instead of showing a question whose decision is already made.
-      this.answeredLocally += 1
-      this.sink.close(sessionId, questionId, 'answered-at-origin')
-      return outcome.answer
-    }
-    this.answeredRemotely += 1
-    return relayedAnswer(asked, outcome.answers)
   }
 
   /**
    * Claim one pending question for the console's answer.
-   *
-   * The single decision point of the whole feature: this is where "the console
-   * answered first" is either accepted or refused, and it is decided by whether
-   * *this* question is still pending here — not by anything the server believes.
    * @param questionId - the question the console answered.
    * @param answers - the console's answers.
    * @param commandId - the command carrying them, so a retry is recognisable.
    * @returns whether the answer was claimed.
    */
-  claim(
-    questionId: string,
-    answers: readonly RelayedAnswerItem[],
-    commandId: string,
-  ): ClaimResult {
-    const pending = this.pending.get(questionId)
-    if (pending === undefined) {
-      if (this.settled.includes(questionId)) {
-        this.lateAnswers += 1
-        return { ok: false, reason: 'this question was already answered on the machine that asked it' }
-      }
-      return { ok: false, reason: 'no such question is waiting on this machine' }
-    }
-    // A duplicated delivery of the same command is the same decision, so it
-    // succeeds; a different command for a claimed question is a second decision
-    // and must not overwrite the first.
-    if (pending.claimedBy !== undefined) {
-      return pending.claimedBy === commandId
-        ? { ok: true }
-        : { ok: false, reason: 'this question was already answered from the console' }
-    }
-    if (this.sink.now() > pending.expiresAt) {
-      return { ok: false, reason: 'the question expired before the answer arrived' }
-    }
-    const invalid = invalidAnswerReason(pending.asked, answers)
-    if (invalid !== undefined) return { ok: false, reason: invalid }
-    pending.claimedBy = commandId
-    pending.settle([...answers])
-    return { ok: true }
+  claim(questionId: string, answers: readonly RelayedAnswerItem[], commandId: string): ClaimResult {
+    return this.core.claim(questionId, [...answers], commandId)
   }
 
   /** What this machine's relayed questions did. */
   counts(): InteractionCounts {
+    const counts = this.core.counts()
     return {
-      open: this.pending.size,
-      answeredLocally: this.answeredLocally,
-      answeredRemotely: this.answeredRemotely,
-      lateAnswers: this.lateAnswers,
-      aborted: this.aborted,
+      open: counts.open,
+      answeredLocally: counts.decidedLocally,
+      answeredRemotely: counts.decidedRemotely,
+      lateAnswers: counts.lateAnswers,
+      aborted: counts.aborted,
     }
   }
 
@@ -320,16 +196,6 @@ export class InteractionRelay {
    * @param outcome - what to tell the console; `aborted` for a shutdown.
    */
   withdrawAll(outcome: QuestionOutcome = 'aborted'): void {
-    for (const pending of [...this.pending.values()]) {
-      this.pending.delete(pending.questionId)
-      this.remember(pending.questionId)
-      this.sink.close(pending.sessionId, pending.questionId, outcome)
-    }
-  }
-
-  /** Remember one settled question id, oldest dropped first. */
-  private remember(questionId: string): void {
-    this.settled.push(questionId)
-    if (this.settled.length > SETTLED_LIMIT) this.settled.splice(0, this.settled.length - SETTLED_LIMIT)
+    this.core.withdrawAll(outcome)
   }
 }

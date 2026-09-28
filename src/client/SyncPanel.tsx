@@ -54,9 +54,10 @@ import {
   writeClipboard,
   type MarkdownLabels,
 } from '@deepseek-ai/dsh-client-ui-primitives'
-import type { MirroredMachine, MirroredSession, RelayedAnswerItem } from '../shared/protocol.ts'
+import type { MirroredMachine, MirroredSession, RelayedAnswerItem, RelayedApprovalDecision } from '../shared/protocol.ts'
 import type { CommandDelivery, SyncClientSnapshot } from './api.ts'
 import type { SessionSyncKey, SessionSyncTranslate } from './locales.ts'
+import { ApprovalCard } from './ApprovalCard.tsx'
 import { QuestionCard, QuestionElsewhere } from './QuestionCard.tsx'
 import { pagingScrollTop, type PagingMetrics } from './paging-anchor.ts'
 import { buildTree } from './tree.ts'
@@ -167,6 +168,20 @@ export interface SyncPanelProps {
    * was still open.
    */
   answerQuestion: (machineName: string, questionId: string, answers: RelayedAnswerItem[]) => Promise<boolean>
+  /**
+   * Send this console's decision on one relayed approval.
+   *
+   * Its own prop rather than a flag on {@link SyncPanelProps.answerQuestion},
+   * because it is a different *kind* of act: an answer supplies information, while
+   * this releases a tool call on another machine. The two also fail differently —
+   * a lost race is the ordinary outcome of both, but a *refused* approval is a
+   * decision the reader has to be told about.
+   */
+  decideApproval: (
+    machineName: string,
+    approvalId: string,
+    decision: RelayedApprovalDecision,
+  ) => Promise<boolean>
   /**
    * The feature-detected bridge to the shipped conversation renderer.
    *
@@ -409,6 +424,7 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
               closeSession={props.closeSession}
               sendPrompt={props.sendPrompt}
               answerQuestion={props.answerQuestion}
+              decideApproval={props.decideApproval}
               loadOlder={props.loadOlder}
               official={props.official}
               renderSlot={props.renderSlot}
@@ -483,6 +499,12 @@ function Conversation(props: {
   sendPrompt: (text: string) => Promise<boolean>
   /** Send this console's answer to a question the machine relayed. */
   answerQuestion: (machineName: string, questionId: string, answers: RelayedAnswerItem[]) => Promise<boolean>
+  /** Send this console's decision on an approval the machine is blocked on. */
+  decideApproval: (
+    machineName: string,
+    approvalId: string,
+    decision: RelayedApprovalDecision,
+  ) => Promise<boolean>
   /** Fetch the page of this Session that sits before the one held. */
   loadOlder: () => Promise<void>
   official: OfficialBridgeFace
@@ -883,6 +905,27 @@ function Conversation(props: {
               : { answer: state.answers[question.questionId] })}
             onAnswer={(answers) => {
               void props.answerQuestion(question.machineName, question.questionId, answers)
+            }}
+          />
+        ))}
+      {/* The approvals this Session's machine is blocked on. Drawn next to the
+          questions and for the same reason, but a reader should know what is
+          different about them: a question is asking *them* something, while this is
+          asking them to release something the machine's own preset was gating. So
+          the card shows the call itself and where to refuse. */}
+      {(state.approvals ?? [])
+        .filter(approval => approval.machineName === props.machineName && approval.sessionId === session.sessionId)
+        .map(approval => (
+          <ApprovalCard
+            key={approval.approvalId}
+            t={t}
+            approval={approval}
+            rows={rows}
+            {...(state.decisions[approval.approvalId] === undefined
+              ? {}
+              : { decision: state.decisions[approval.approvalId] })}
+            onDecide={(decision) => {
+              void props.decideApproval(approval.machineName, approval.approvalId, decision)
             }}
           />
         ))}

@@ -18,6 +18,8 @@ import {
   type MirrorEvent,
   type MirrorTranscript,
   type RelayedAnswerItem,
+  type RelayedApprovalDecision,
+  type RelayedApprovalView,
   type RelayedQuestionView,
   type SyncConfig,
   type SyncState,
@@ -137,6 +139,24 @@ export interface SyncClientSnapshot {
    * the in-flight mark, cleared when the question itself closes.
    */
   answers: Record<string, { sent?: boolean; error?: string }>
+  /**
+   * Approvals this server is offering to this console, oldest offer first.
+   *
+   * Transient like the questions above, and for a harder reason: each of these is a
+   * tool call *blocked* on this console's reader. The card resolves what is being
+   * approved from the mirrored transcript by `callId`, which is why the offer
+   * carries no arguments of its own.
+   */
+  approvals: RelayedApprovalView[]
+  /**
+   * What became of a decision this console sent, per approval.
+   *
+   * Two ordinary failures, and the card must tell them apart: the machine's own
+   * human decided first (a lost race, nothing to retry) and the machine *refused*
+   * the decision (which is a real answer, and a refusal). `sent` is the in-flight
+   * mark, cleared when the approval itself closes.
+   */
+  decisions: Record<string, { sent?: boolean; error?: string }>
   /** Last failure text, cleared by the next successful action. */
   error?: string
 }
@@ -257,6 +277,8 @@ export class SyncClient {
       live: noLive(),
       questions: [],
       answers: {},
+      approvals: [],
+      decisions: {},
       stream: 'connecting',
       mirrorResets: 0,
     })
@@ -381,6 +403,22 @@ export class SyncClient {
    */
   async setSessionSync(sessionId: string, synced: boolean): Promise<boolean> {
     return await this.configure({ sessionSync: { sessionId, synced } })
+  }
+
+  /**
+   * Flip one Session's approval switch.
+   *
+   * Separate from {@link setSessionSync} on the page and here, because it grants
+   * something publishing does not: the authority, for whoever reads this console, to
+   * *allow* a tool call the machine's own permission preset was gating. The Host
+   * refuses the write for a Session that is not published, since the console could
+   * not show what it was approving.
+   * @param sessionId - the Session to open or close to remote approvals.
+   * @param approved - the requested state.
+   * @returns true when the Host accepted the write.
+   */
+  async setSessionApprovals(sessionId: string, approved: boolean): Promise<boolean> {
+    return await this.configure({ sessionApprovals: { sessionId, approved } })
   }
 
   /**
@@ -574,6 +612,43 @@ export class SyncClient {
     this.update({ answers: { ...this.store.getSnapshot().answers, [questionId]: state } })
   }
 
+  /**
+   * Send the console's decision on one relayed approval.
+   *
+   * The ordinary failure is a race already lost — the machine's own human decided —
+   * and the server answers 409 with that sentence. It is *not* an error to retry:
+   * it is the race's honest result, and the approval is gone either way, so the card
+   * is the only place that can say so.
+   * @param machineName - the machine that is blocked.
+   * @param approvalId - the approval being decided.
+   * @param decision - allow once, or reject.
+   * @returns true when the machine's server accepted the decision for delivery.
+   */
+  async decideApproval(
+    machineName: string,
+    approvalId: string,
+    decision: RelayedApprovalDecision,
+  ): Promise<boolean> {
+    this.setDecision(approvalId, { sent: true })
+    try {
+      const result = await postJson<{ ok: true; commandId: string }>(`${ROUTE_PREFIX}/approval`, {
+        machineName,
+        approvalId,
+        decision,
+      })
+      if (result.ok !== true) throw new Error('the server did not accept the decision')
+      return true
+    } catch (error: unknown) {
+      this.setDecision(approvalId, { error: describe(error) })
+      return false
+    }
+  }
+
+  /** Record one approval's decision progress without disturbing the others. */
+  private setDecision(approvalId: string, state: { sent?: boolean; error?: string }): void {
+    this.update({ decisions: { ...this.store.getSnapshot().decisions, [approvalId]: state } })
+  }
+
   private openStream(): void {
     if (typeof EventSource === 'undefined') return
     const source = new EventSource(`${ROUTE_PREFIX}/events`)
@@ -629,6 +704,9 @@ export class SyncClient {
         // it is what a page that just loaded has, and it is how a frame this
         // browser missed gets repaired.
         ...(complete ? { questions: frame.state.questions ?? [] } : {}),
+        // Same rule for the approvals: a complete frame is the whole set, so a card
+        // this browser never saw open is still removed by it.
+        ...(complete ? { approvals: frame.state.approvals ?? [] } : {}),
       })
       // A machine or Session appearing or disappearing invalidates the current
       // local list too: the rows carry switch state that may have moved.
@@ -691,6 +769,21 @@ export class SyncClient {
       this.update({
         questions: snapshot.questions.filter(question => question.questionId !== view.questionId),
         answers: withoutKey(snapshot.answers, view.questionId),
+      })
+      return
+    }
+    if (frame.type === 'approval') {
+      const snapshot = this.store.getSnapshot()
+      const view = frame.approval
+      if (view.closed === undefined) {
+        this.update({ approvals: upsertApproval(snapshot.approvals, view) })
+        return
+      }
+      // A closed approval takes its decision progress with it, like a question's
+      // answer: one entry per card, for the life of the page, is a leak.
+      this.update({
+        approvals: snapshot.approvals.filter(approval => approval.approvalId !== view.approvalId),
+        decisions: withoutKey(snapshot.decisions, view.approvalId),
       })
       return
     }
@@ -858,6 +951,24 @@ function upsertQuestion(
   view: RelayedQuestionView,
 ): RelayedQuestionView[] {
   const without = held.filter(question => question.questionId !== view.questionId)
+  return [...without, view].sort((left, right) => left.openedAt - right.openedAt)
+}
+
+/**
+ * Put one approval into the open set, in the order the offers arrived.
+ *
+ * The same rule as a question's: one card per approval, replaced rather than
+ * duplicated, because two cards for one permission is the confusion this feature
+ * exists to avoid — and here a reader cannot tell which of the two is live.
+ * @param held - the approvals already on screen.
+ * @param view - the approval that just arrived.
+ * @returns the new set, oldest offer first.
+ */
+function upsertApproval(
+  held: readonly RelayedApprovalView[],
+  view: RelayedApprovalView,
+): RelayedApprovalView[] {
+  const without = held.filter(approval => approval.approvalId !== view.approvalId)
   return [...without, view].sort((left, right) => left.openedAt - right.openedAt)
 }
 

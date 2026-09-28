@@ -20,6 +20,7 @@ import {
   type MirrorTranscript,
   type PublishIndexPayload,
   type RelayedAnswerItem,
+  type RelayedApprovalDecision,
   type StreamDeltaPayload,
   type SyncConfig,
   type SyncState,
@@ -27,6 +28,9 @@ import {
 } from '../shared/protocol.ts'
 import { loadConfig, saveConfig } from './config.ts'
 import type {
+  ApprovalNext,
+  ApprovalOutcomeLike,
+  ApprovalRequestLike,
   AskUserQuestionAnswerLike,
   AskUserQuestionItemLike,
   AskUserQuestionNext,
@@ -37,6 +41,7 @@ import type {
   WireEvent,
 } from './dsh.ts'
 import { SyncHub, type BrowserSink } from './hub.ts'
+import { ApprovalRelay } from './approvals.ts'
 import { InteractionRelay } from './interactions.ts'
 import { resolveHome } from './config.ts'
 import { OriginLink, startSyncServer, type SyncServerHandle } from './transport.ts'
@@ -250,6 +255,12 @@ export class SessionSyncService {
    * rather than queued against a stream that may never come back.
    */
   private readonly relay: InteractionRelay
+  /**
+   * The approval half of the same idea, and the reason it is a separate object:
+   * an approval's outcome is *permission*, so it is offered only for Sessions a
+   * user opted in by name (see {@link approveable}) and its TTL is shorter.
+   */
+  private readonly approvals: ApprovalRelay
   private disposed = false
 
   private constructor(
@@ -269,6 +280,15 @@ export class SessionSyncService {
       },
       close: (sessionId, questionId, outcome) => {
         this.link?.publishQuestionClose({ sessionId, questionId, outcome })
+      },
+      now: () => Date.now(),
+    })
+    this.approvals = new ApprovalRelay({
+      open: (sessionId, approvalId, approval, expiresAt) => {
+        this.link?.publishApproval({ sessionId, approvalId, approval, expiresAt })
+      },
+      close: (sessionId, approvalId, outcome) => {
+        this.link?.publishApprovalClose({ sessionId, approvalId, outcome })
       },
       now: () => Date.now(),
     })
@@ -299,6 +319,10 @@ export class SessionSyncService {
       // its TTL passes or the machine that asked stops appearing, and nothing
       // else would ever revisit the card.
       this.hub.sweepQuestions()
+      // And an approval, which outlives its usefulness sooner: the machine's tool
+      // call is blocked on it, so a card that stayed past its TTL would offer a
+      // permission whose call has already failed closed.
+      this.hub.sweepApprovals()
       void this.reconcile()
     }, RECONCILE_MS)
     this.flushTimer = setInterval(() => { this.flushStream(); this.flush() }, FLUSH_MS)
@@ -311,6 +335,10 @@ export class SessionSyncService {
     // Tell the console that any question this machine was waiting on is gone:
     // a card for a process that has exited offers a decision nobody can take.
     this.relay.withdrawAll('aborted')
+    // An approval matters more, not less: a card for an exited process would offer
+    // a *permission* over a call that no longer exists, and the reader would have no
+    // way to tell that approving it decides nothing.
+    this.approvals.withdrawAll('aborted')
     if (this.reconcileTimer !== undefined) clearInterval(this.reconcileTimer)
     if (this.flushTimer !== undefined) clearInterval(this.flushTimer)
     for (const handle of this.follows.values()) handle.abort.abort()
@@ -326,6 +354,10 @@ export class SessionSyncService {
     return {
       ...this.config,
       syncSessions: { ...this.config.syncSessions },
+      // Copied for the same reason, and one more: this is the map that decides
+      // whether another machine may grant permissions here, so a caller must not be
+      // able to mutate the engine's copy by holding on to the view.
+      approveSessions: { ...this.config.approveSessions },
     }
   }
 
@@ -347,6 +379,7 @@ export class SessionSyncService {
       ...(this.linkError === undefined ? {} : { linkError: this.linkError }),
       machines: this.config.isServer ? this.hub.machines() : [],
       ...(this.config.isServer ? { questions: this.hub.questions() } : {}),
+      ...(this.config.isServer ? { approvals: this.hub.approvals() } : {}),
       published: Object.values(this.config.syncSessions).filter(Boolean).length,
       ...(this.lastPublish === undefined ? {} : { publish: this.lastPublish }),
       ...(this.config.isServer ? {} : {
@@ -355,6 +388,11 @@ export class SessionSyncService {
         // console offered it and this machine answered first" are the same
         // observation, and this deployment's logger writes nowhere readable.
         interactions: this.relay.counts(),
+        // Counted the same way and for the same reason, with one addition: an
+        // approval that was never *offered* (its Session is not opted in) must be
+        // distinguishable from one that was offered and lost the race, because the
+        // first is a configuration fact and the second is a race outcome.
+        approvalCounts: this.approvals.counts(),
         follow: {
           frames: [...this.followFrameTypes],
           events: this.followEvents,
@@ -418,10 +456,22 @@ export class SessionSyncService {
       listenHost: nonEmpty(patch.listenHost) ?? previous.listenHost,
       listenPort: validPort(patch.listenPort) ?? previous.listenPort,
       syncSessions: { ...previous.syncSessions },
+      approveSessions: { ...previous.approveSessions },
     }
     if (patch.sessionSync !== undefined) {
       if (patch.sessionSync.synced) next.syncSessions[patch.sessionSync.sessionId] = true
       else delete next.syncSessions[patch.sessionSync.sessionId]
+    }
+    if (patch.sessionApprovals !== undefined) {
+      // Un-publishing a Session drops its approval opt-in in the same write: the
+      // console cannot decide an approval for a Session it cannot see, so leaving
+      // the grant behind would be a switch that reads "on" while doing nothing —
+      // and would silently arm itself again if the Session were published later.
+      if (patch.sessionApprovals.approved && next.syncSessions[patch.sessionApprovals.sessionId] === true) {
+        next.approveSessions[patch.sessionApprovals.sessionId] = true
+      } else {
+        delete next.approveSessions[patch.sessionApprovals.sessionId]
+      }
     }
     this.config = next
     await saveConfig(this.home, next)
@@ -487,6 +537,30 @@ export class SessionSyncService {
   }
 
   /**
+   * Issue the console's decision on one relayed approval.
+   *
+   * Server role only, like {@link submitAnswer}: the decision exists to be handed
+   * to the machine that is blocked, and only a server holds those links. The
+   * machine still has the last word — it claims the decision only while it is
+   * still waiting — so what this method's caller gets back is a *delivery*
+   * acknowledgement, not a grant.
+   * @param machineName - the machine that is blocked.
+   * @param approvalId - the approval being decided.
+   * @param decision - allow once, or reject.
+   * @returns the accepted command's id, or why it was refused.
+   */
+  submitApproval(
+    machineName: string,
+    approvalId: string,
+    decision: RelayedApprovalDecision,
+  ): { ok: true; commandId: string } | { ok: false; reason: string } {
+    if (!this.config.isServer) return { ok: false, reason: 'this instance is not the sync server' }
+    // The console's own identity, not the origin's: the status a browser reads says
+    // who decided, and a machine relaying its own decision is never this path.
+    return this.hub.submitApproval(machineName, approvalId, decision, this.config.machineName)
+  }
+
+  /**
    * Ask the console and the machine's own UI at once, and take the first answer.
    *
    * Registered ahead of the shipped browser answerer so that both are asked: the
@@ -523,6 +597,51 @@ export class SessionSyncService {
     if (this.config.isServer) return false
     if (this.config.syncSessions[sessionId] !== true) return false
     return this.link !== undefined
+  }
+
+  /**
+   * Ask the console and the machine's own UI at once, and take the first decision.
+   *
+   * Registered ahead of the shipped browser answerer, exactly like the question
+   * relay, and gated one notch tighter. A question may be relayed for any published
+   * Session; an approval only for a Session the user opted in by name, because the
+   * outcome is permission rather than information: `allowed-once` releases a tool
+   * call this machine's own preset was gating, and that authority must not follow
+   * from the act of publishing a conversation.
+   *
+   * What this listener cannot do is *widen* a denial. A `never` policy is enforced by
+   * the upstream service before it dispatches this event, so a Session whose policy
+   * refuses an operation never reaches an answerer at all — the console is offered
+   * only what the machine left open.
+   * @param ctx - the Host context that owns the registration.
+   */
+  answerApprovals(ctx: HostContext): void {
+    const listener = (
+      request: ApprovalRequestLike,
+      next: ApprovalNext,
+    ): Promise<ApprovalOutcomeLike> => {
+      const sessionId = request.agent?.id
+      if (sessionId === undefined || !this.approveable(sessionId)) return next()
+      return this.approvals.race(sessionId, request, next)
+    }
+    ctx.effect(
+      () => ctx.on('approval/request', listener, { prepend: true }),
+      'dsh-session-sync: approval relay',
+    )
+  }
+
+  /**
+   * Whether one Session's approvals may be decided from a console.
+   *
+   * Two switches, not one, and the published one is required as well: the console
+   * resolves what is being approved from the mirrored transcript, so an approval for
+   * an un-published Session would ask a reader to grant something they cannot see.
+   * @param sessionId - the Session the approval belongs to.
+   * @returns true when this Session's approvals are offered to the console.
+   */
+  private approveable(sessionId: string): boolean {
+    if (!this.relayable(sessionId)) return false
+    return this.config.approveSessions[sessionId] === true
   }
 
   /**
@@ -1198,7 +1317,7 @@ export class SessionSyncService {
     }
   }
 
-  /** Admit a takeover prompt, or claim a relayed question, into the local Session it names. */
+  /** Admit a takeover prompt, or claim a relayed question or approval, into the local Session it names. */
   private async runCommand(command: DownstreamCommand): Promise<void> {
     const link = this.link
     // An answer is settled by one question — does this machine still have that
@@ -1208,6 +1327,22 @@ export class SessionSyncService {
     // a race already decided rather than an error to retry.
     if (command.kind === 'answer') {
       const claimed = this.relay.claim(command.questionId, command.answers, command.commandId)
+      link?.ackCommand(
+        command.commandId,
+        command.sessionId,
+        claimed.ok,
+        claimed.ok ? undefined : claimed.reason,
+      )
+      return
+    }
+    // An approval is the same shape of decision with a different stake, and the
+    // claim is the same question: is this machine still blocked on it? If it is not
+    // — because its own human decided, because the call was aborted, because the TTL
+    // passed — the console's decision must be *refused*, not applied late. That
+    // refusal is the safety property of this whole feature: a permission granted
+    // after the fact is not a permission anybody is waiting for.
+    if (command.kind === 'approval') {
+      const claimed = this.approvals.claim(command.approvalId, command.decision, command.commandId)
       link?.ackCommand(
         command.commandId,
         command.sessionId,
@@ -1263,6 +1398,11 @@ export class SessionSyncService {
       blank: item.blank,
       ...(item.cwd === undefined ? {} : { cwd: item.cwd }),
       synced: this.config.syncSessions[item.sessionId] === true,
+      // Reported next to the publish switch because the two are related and
+      // deliberately separate: publishing shares the conversation, and this grants
+      // the authority to release a gated operation inside it. The page shows the
+      // second switch only where the first is on, which is also the engine's rule.
+      approved: this.config.approveSessions[item.sessionId] === true,
     }
   }
 

@@ -54,10 +54,66 @@ export interface HostContext {
     listener: (request: AskUserQuestionRequestLike, next: AskUserQuestionNext) => Promise<AskUserQuestionAnswerLike>,
     options?: { prepend?: boolean },
   ): () => void
+  /**
+   * Register one waterfall listener for the approval seam.
+   *
+   * Same shape as the question seam above, and the same reason for `prepend`: the
+   * shipped browser answerer sits behind this listener, so a decision taken at the
+   * console and one taken on the machine are racing for a single slot.
+   *
+   * The difference that matters is what the slot *means*. An answer to a question
+   * is information; an outcome here is permission — `allowed-once` releases a tool
+   * call this machine's own preset was gating. The upstream service enforces a
+   * `never` policy **before** it dispatches this event, so no listener registered
+   * here can turn a denied operation into an allowed one; what it can do is decide
+   * the ones the policy left open, which is why this plugin relays only for
+   * Sessions a user opted in by name.
+   */
+  on(
+    event: 'approval/request',
+    listener: (request: ApprovalRequestLike, next: ApprovalNext) => Promise<ApprovalOutcomeLike>,
+    options?: { prepend?: boolean },
+  ): () => void
 }
 
 /** The continuation that delegates to the answerers behind this one. */
 export type AskUserQuestionNext = () => Promise<AskUserQuestionAnswerLike>
+
+/**
+ * The approval outcome vocabulary — `ApprovalOutcome`.
+ *
+ * Closed, and the caller of the seam fails closed on `'unavailable'`. Two of these
+ * are decisions a human makes (`allowed-once`, `rejected`); the other two describe
+ * an *answerer* rather than a decision, and a console is never allowed to produce
+ * them.
+ */
+export type ApprovalOutcomeLike = 'allowed-once' | 'rejected' | 'cancelled' | 'unavailable'
+
+/** The continuation that delegates to the answerers behind this one. */
+export type ApprovalNext = () => Promise<ApprovalOutcomeLike>
+
+/**
+ * One pending approval — `ApprovalRequestEvent`.
+ *
+ * Note what is *absent*: the arguments of the tool call. The seam names the tool
+ * and the exact `callId`, and the console reads the call itself out of the
+ * transcript it is already mirroring — so a card can say what is being approved
+ * without a second copy of the log crossing the wire.
+ */
+export interface ApprovalRequestLike {
+  /** The asking Agent, projected; `id` is the Session being asked in. */
+  readonly agent?: { readonly id: string }
+  /** Tool whose operation requires a decision. */
+  readonly toolName: string
+  /** Exact tool call being decided, when available. */
+  readonly callId?: string
+  /** Human-readable reason supplied by the asker. */
+  readonly reason?: string
+  /** Localized presentation only; never persisted in approval audit events. */
+  readonly displayReason?: { readonly en: string; readonly [locale: string]: string }
+  /** Cancellation lifetime of the pending request. */
+  readonly signal?: AbortSignal
+}
 
 /** One selectable answer — `AskUserQuestionOption`. */
 export interface AskUserQuestionOptionLike {
