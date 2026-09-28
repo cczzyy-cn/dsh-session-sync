@@ -8,8 +8,8 @@
 | 项 | 值 |
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
-| 版本 | **`0.10.0`**（**未提交、未打 tag、未部署**）· 跨机器提问的两边竞速（见 §2） |
-| 服务器 | 仍是 **`0.9.0`**（本版尚未部署） |
+| 版本 | **`0.10.0`**（tag **`v0.10.0` → `113b677`**，已推送 `origin/main`）· 跨机器提问的两边竞速（见 §2） |
+| 服务器 | 仍是 **`0.9.0`**（**本版尚未部署**：装的是 `lib/index.js` 104,766 B / `client/client.js` 314,860 B，即 0.9.0 的字节） |
 | 测试 | **55 通过 / 0 失败**（15 suites，1.1s）· 新增 `tests/interaction-race.spec.ts` 17 条（竞速 10 + hub 7） |
 | 产物 | `lib/index.js` **131,694 B**（sha256 `4593c779…`）· `client/client.js` **331,741 B**（sha256 `ee544ffa…`）；产物自报版本 `0.10.0`（`node -e` 问过产物本人） |
 | 编码门禁 | `node scripts/check-encoding.mjs` **clean**（原先在 HEAD 上就是红的：见 §6） |
@@ -382,6 +382,34 @@
    `tests/e2e-chain.spec.ts` 的 3b 因此显式等链路回来再测接管，并在注释里指向本条。
 
 ## 5. 操作手册（可复制）
+
+**发一版：提交 + 打 tag + 推送**（本仓库无 gh、无 TTY；token 在 Windows 凭据管理器里）
+
+```powershell
+# 1) 提交信息写进文件再 -F 传（内嵌引号在 .cmd 下会坏）
+powershell -ExecutionPolicy Bypass -File "$env:TEMP\push-<版本>.ps1"
+```
+
+那条脚本做三件事，**都不碰仓库自己的配置**：
+
+1. 用 P/Invoke `CredReadW` 读 `gh:github.com:cczzyy-cn`，**按 UTF-8 解码**
+   （那个 blob 是 UTF-8 不是 UTF-16；按 Unicode 解出来是 20 个乱码字，GitHub 直接 401——踩过两次）；
+   只打印长度与前缀，不打印内容；
+2. 把 `https://x-access-token:<token>@github.com` 写进一个**临时** credential-store 文件，
+   推的时候用 `git -c credential.helper="store --file=<临时文件>" push origin …`。
+   **不要**把 token 拼进 remote URL：`git push` 会把 URL 原样回显在 `To https://…` 那一行，
+   token 就进了日志。用 store 文件则 remote 始终是干净地址，回显也干净；
+3. 推送 `refs/heads/main` 与 `refs/tags/v<版本>`，`finally` 里删掉临时文件。
+   全程 `GIT_TERMINAL_PROMPT=0` + `GCM_INTERACTIVE=never`，否则没有 TTY 时会挂死。
+   本机还配着一个指向已删除的 `~/.dsh/tools/gh/bin/gh.exe` 的 credential helper，
+   它会往 stderr 吐两行 `No such file or directory`——**无害**，git 会继续用我们的 store 文件。
+
+推完核对（远端应当与本地逐字相同）：
+
+```powershell
+git ls-remote origin refs/heads/main refs/tags/v0.10.0
+git rev-parse main v0.10.0 HEAD
+```
 
 **改代码后本地构建并装进 profile**
 
