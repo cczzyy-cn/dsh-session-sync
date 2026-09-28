@@ -58,6 +58,19 @@ const FRAME_OUTBOX_LIMIT = 8_000
 const FRAME_OUTBOX_WARN = 2_000
 
 /**
+ * Every kind the downstream stream may carry *as a command*, and nothing else.
+ *
+ * A total map over {@link DownstreamCommand}'s union on purpose: adding a kind
+ * there without adding it here is a compile error. That is the guard the origin's
+ * dispatcher lacked — it compared against `'prompt'` alone, so the first new kind
+ * (`answer`, the console's reply to a relayed question) was dropped in silence.
+ */
+export const COMMAND_KINDS: Record<DownstreamCommand['kind'], true> = {
+  prompt: true,
+  answer: true,
+}
+
+/**
  * How long one post may take before it counts as failed.
  *
  * Without this, a connection black-holed by a network blip leaves `fetch`
@@ -439,7 +452,7 @@ function questionCloseOf(body: Record<string, unknown> | undefined): QuestionClo
 /** Whether one value names an outcome this protocol defines. */
 function isQuestionOutcome(value: unknown): value is QuestionOutcome {
   return value === 'answered-at-origin' || value === 'answered-at-console'
-    || value === 'aborted' || value === 'expired' || value === 'offline'
+    || value === 'refused' || value === 'aborted' || value === 'expired' || value === 'offline'
 }
 
 /** One non-empty, trimmed string field, or undefined. */
@@ -860,9 +873,18 @@ export class OriginLink {
   /**
    * Dispatch one downstream frame.
    *
-   * Discrimination is by `kind`, and an unrecognised one is ignored: a server
-   * that learns a new frame must not be able to break an origin that does not,
-   * which is also why the resync carries no ack to wait for.
+   * The two frames that are *not* commands are named here; everything in
+   * {@link COMMAND_KINDS} is one. Listing the command kinds in this comparison
+   * instead is what silently swallowed the console's answers at the origin: the
+   * `DownstreamCommand` union grew a second kind, the runtime test did not, and a
+   * dropped command is invisible from every side — no ack, no error, no state —
+   * while the reader watches a card that never resolves. {@link COMMAND_KINDS} is
+   * typed as a total map over that union, so the next kind cannot be forgotten
+   * here without failing to compile.
+   *
+   * A kind this build does not know is still ignored, on purpose: a server that
+   * learns a new frame must not be able to make an origin misread it as one it
+   * does know.
    */
   private consume(block: string): void {
     for (const line of block.split('\n')) {
@@ -872,15 +894,24 @@ export class OriginLink {
       try {
         const frame = JSON.parse(text) as DownstreamFrame
         if (typeof frame.sessionId !== 'string') continue
-        if (frame.kind === 'prompt') this.options.onCommand(frame)
-        else if (frame.kind === 'resync') this.options.onResync(frame.sessionId)
-        else if (frame.kind === 'older' && typeof frame.beforeSeq === 'number') {
-          this.options.onOlder(
-            frame.sessionId,
-            frame.beforeSeq,
-            typeof frame.maxMessages === 'number' ? frame.maxMessages : 0,
-          )
+        if (frame.kind === 'resync') {
+          this.options.onResync(frame.sessionId)
+          continue
         }
+        if (frame.kind === 'older') {
+          if (typeof frame.beforeSeq === 'number') {
+            this.options.onOlder(
+              frame.sessionId,
+              frame.beforeSeq,
+              typeof frame.maxMessages === 'number' ? frame.maxMessages : 0,
+            )
+          }
+          continue
+        }
+        // Everything left is a command kind this build knows — and only those, so
+        // a frame from a newer server is ignored rather than misread as one it does.
+        if (!Object.hasOwn(COMMAND_KINDS, frame.kind)) continue
+        this.options.onCommand(frame)
       } catch {
         // A malformed frame is dropped; the server re-sends nothing it cannot
         // confirm, and one bad line must not kill the stream.

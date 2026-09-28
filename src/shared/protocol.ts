@@ -454,6 +454,15 @@ export type QuestionOutcome =
   | 'answered-at-origin'
   /** The console answered first and the machine claimed it. Raised by the server. */
   | 'answered-at-console'
+  /**
+   * The machine refused the console's answer and said why. Raised by the server.
+   *
+   * A refusal has to close the card like any other outcome: the answer was
+   * delivered and refused, so leaving the card up would show a reader "waiting for
+   * the machine to confirm" forever, for a decision the machine has already
+   * declined.
+   */
+  | 'refused'
   /** The asking turn was aborted, so nobody can answer it any more. */
   | 'aborted'
   /** The TTL passed with the question unanswered at the console. */

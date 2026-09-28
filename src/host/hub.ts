@@ -706,6 +706,17 @@ export class SyncHub {
       return
     }
     this.transition(record, status, 'failed', payload.error ?? 'the owning machine refused the prompt')
+    // A *refused* answer closes the card too, for the same reason an accepted one
+    // does: the decision came back with an outcome. Leaving it up would tell the
+    // reader "waiting for the machine to confirm" about an answer the machine has
+    // already declined, which is the same stuck card a dropped command produced.
+    if (status.kind === 'answer' && status.questionId !== undefined) {
+      this.closeQuestion(machineName, {
+        sessionId: status.sessionId,
+        questionId: status.questionId,
+        outcome: 'refused',
+      })
+    }
   }
 
   /**

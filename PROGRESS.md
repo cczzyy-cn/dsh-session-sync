@@ -8,10 +8,10 @@
 | 项 | 值 |
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
-| 版本 | **`0.10.3`**（tag **`v0.10.3`**）· 翻页的滚动锚定自己补（见 §2）；`0.10.2` 修 `non-appended Match`，`0.10.1` 修那行永久横幅，`0.10.0` → `113b677` 是提问竞速 |
-| 服务器 | **已上线 `0.10.3`**（纯客户端改动）：profile 依赖 `#v0.10.3`，`/state` 自报 `0.10.3`；Host 半边字节自 0.10.0 起未变，**全程没有重启 Host** |
-| 测试 | **67 通过 / 0 失败**（17 suites，1.1s）· `interaction-race` 17 条、`envelope-placement` 5 条、`paging-anchor` 7 条 |
-| 产物 | `lib/index.js` **131,694 B**（sha256 `4593c779…`，自 0.10.0 起逐字节未变）· `client/client.js` **337,651 B**（sha256 `5d09bab8…`）；产物自报版本 `0.10.3` |
+| 版本 | **`0.10.4`**（tag **`v0.10.4`**）· 修控制台答案在源站被静默丢弃（见 §2）；`0.10.3` 补翻页锚定，`0.10.2` 修 `non-appended Match`，`0.10.1` 修那行永久横幅，`0.10.0` → `113b677` 是提问竞速 |
+| 服务器 | **已上线 `0.10.4`**：profile 依赖 `#v0.10.4`、`/state` 自报 `0.10.4`；**这一版 Host 半边变了（hub 的 refused 收口），所以服务器重启过** |
+| 测试 | **69 通过 / 0 失败**（18 suites，1.1s）· `interaction-race` 17 条、`paging-anchor` 7 条、`envelope-placement` 5 条、`question-relay-link` 2 条 |
+| 产物 | `lib/index.js` **133,005 B**（sha256 `9f55ccb0…`，自 0.10.0 起第一次变——Host 侧修复）· `client/client.js` **337,651 B**（sha256 `5d09bab8…`，与 0.10.3 相同）；产物自报版本 `0.10.4` |
 | 编码门禁 | `node scripts/check-encoding.mjs` **clean**（原先在 HEAD 上就是红的：见 §6） |
 | 类型 | Host 半边 `tsc` 0（9 个文件）；客户端半边用 `%TEMP%\synccheck` 的 stub 配置整体 `tsc` 0 |
 | 服务器 | `210.16.120.228` · DSH **`0.2.0-rc.1`**（`npx` 缓存 `ed2e730009a84a04`，unit 里钉的版本；`latest` 当时仍是 `0.1.7-rc.2`，0.2.0-rc.1 在 `next` 上）· 插件 **`0.10.3`** · unit `dsh-web.service` · active（Host 进程 15:16:10 UTC 启动，0.10.1 起都只换客户端半边） |
@@ -61,6 +61,52 @@
 
 > 2026-09-25 及以前的推进日志（从"② 的答案"一路到 0.3.x）已归档到 `docs/history-2026-09.md`。
 > 这一段只留本版（0.8.x/0.9.x/0.10.x）的改动与验证；历史文件是当时的推理记录，不要照它实现。
+
+### v0.10.4：控制台的答案在源站被静默丢掉（`kind` 分派只认 `prompt`）（2026-09-28）
+
+用户按提示在**控制台**卡片里选了选项、点了回答，卡片却一直停在"已提交，等待源站确认"。
+这次的证据链是**两端账本对不上**：
+
+| 读数 | 值 | 说明 |
+| --- | --- | --- |
+| 源站 `posts` | `/question/open:3`、`/question/close:3` | 提问中继了、撤卡也发了 ✓ |
+| 源站 `/ack` | **1**（没增长） | 源站**从没给这条答案发过 ack**——既没认领也没拒绝（两者都会 ack） |
+| `answeredRemotely` | 0 | 控制台的答案没有被认领 |
+| `answeredLocally` | 2 | 本机那侧又赢了一次（用户后来在本机弹窗用「其他」把现象打回来） |
+| 服务器 `questions` | `[]` | 服务器侧以为已经收口 |
+
+**根因**（`transport.ts` 的 `consume()`）：下行帧分派写的是
+
+```ts
+if (frame.kind === 'prompt') this.options.onCommand(frame)
+else if (frame.kind === 'resync') …
+```
+
+——**只认 `prompt`**。0.10.0 把 `DownstreamCommand` 从单一形状加宽成 `prompt | answer` 判别联合，
+类型系统全绿，但这个**运行期字符串比较**没跟着改，于是每条 `answer` 命令在源站被**静默丢弃**：
+没有 ack、没有错误、state 里也没有任何痕迹，只有读者看着一张永远不结算的卡片。
+`/ack` 不增长正是"命令根本没到 `runCommand`"的判据（到了就一定会 ack）。
+
+**修法**：把分派表做成**对联合全集的映射**，让"加了 kind 忘了路由"变成**编译错误**：
+
+```ts
+export const COMMAND_KINDS: Record<DownstreamCommand['kind'], true> = { prompt: true, answer: true }
+```
+
+`consume()` 只显式列出**两个非命令**帧（`resync`/`older`），其余按 `COMMAND_KINDS` 放行；
+**本 build 不认识的 kind 仍然忽略**（新服务器不能把老源站误导成一个它认识的命令）。
+
+顺带补掉同一症状的另一半：**被拒的答案也要收口**。原来只有 `ok:true` 才 `closeQuestion`
+（`answered-at-console`），`ok:false` 只把命令标成 `failed`、卡片留着 ⇒ 失败路径上同样是"永远已提交"。
+现在失败也撤卡，并新增 outcome **`'refused'`**（服务器侧产生；源站不会发它）。
+
+**判据**：新增 `tests/question-relay-link.spec.ts`——**真链路**（真 listener + 真 `OriginLink`）：
+服务器开一个提问 → `submitAnswer` → 源站的 `onCommand` 必须收到 `kind:'answer'` → ack 后卡片关闭。
+**实测在旧分派上确实失败**：`timed out waiting for the console answer to reach the machine`（20 s）。
+另一条把 `COMMAND_KINDS` 的运行期内容钉住，让下次加 kind 必须是有意识的改动。测试 67 → **69**。
+
+**注意**：这一版是**两侧 Host 半边**的修复（源站的 `transport.ts`、服务器的 `hub.ts`），
+所以**两端都要重启**才生效——源站那次会杀掉正在跑的会话。
 
 ### v0.10.3：翻页的滚动锚定得自己补（shipped 的锚是它自己的按钮上的）（2026-09-28）
 
