@@ -189,9 +189,22 @@ describe('a long Session\u2019s opening snapshot', () => {
     // shipped route from "the mirror is short" to "ask the origin".
     const reached = hub.transcript(MACHINE, SESSION_ID, { limit: 1, before: 1 })
     assert.notEqual(reached, undefined)
-    await until(() => (pages.length > 0 ? pages[0] : undefined), 'the origin to read a page')
-    assert.equal(pages[0]?.throughSeq, SNAPSHOT_EVENTS - 1)
-    assert.ok((pages[0]?.records ?? 0) > 0, 'the page must carry the events below the edge')
+    // The page asked for at the reader's edge, picked out by that bound: the engine
+    // may read again on its own (the sweep notices a mirror whose floor is above 0),
+    // and what this test is about is the bound the *reader's* ask carried.
+    const page = await until(
+      () => pages.find(item => item.beforeSeq === 2),
+      'the origin to read the page below the edge',
+    )
+    // The bound the reader named travels through one translation: the hub's `before`
+    // is "the sequence the page sits below", the controller's is exclusive, so a
+    // reader asking for what is below seq 1 is answered by a page ending at seq 2.
+    // What matters here is *which* bound won — the reader's `2`, not the follow's cut
+    // at the top of the log. The controller cuts at `min(throughSeq + 1, beforeSeq)`,
+    // so naming the follow's cut made this read return the whole log instead of the
+    // page below the edge, and the backfill frontier never moved.
+    assert.equal(page.throughSeq, 1, 'the page is cut at the edge the reader named')
+    assert.ok(page.records > 0, 'the page must carry the events below the edge')
   })
 
   it('refuses a page read only when the opening really never happened', async () => {

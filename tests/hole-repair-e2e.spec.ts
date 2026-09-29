@@ -133,9 +133,12 @@ describe('a hole reported by a live mirror', () => {
 
     const read = await until(() => pages[0], 'the origin to read a page for the hole')
     // The hub names the hole's first sequence; the origin's page API is exclusive,
-    // so one past it is the bound that puts the missing event inside the page.
-    assert.equal(read.throughSeq, SESSION_EVENTS - 1)
+    // so one past it is the bound that puts the missing event inside the page. And
+    // the page is *cut* at that bound rather than at the follow's cut: the
+    // controller takes `min(throughSeq + 1, beforeSeq)`, so passing the follow's cut
+    // here made a read asked for at the hole return everything from the log's start.
     assert.equal(read.beforeSeq, MISSING + 1)
+    assert.equal(read.throughSeq, MISSING, 'the page ends at the hole, not at the follow cut')
     assert.equal(read.withMissing, true, 'the page must carry the event the mirror lacks')
 
     // And the page really closes the hole: it is delivered as ordinary frames, and

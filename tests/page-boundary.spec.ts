@@ -145,8 +145,12 @@ describe('the page bound', () => {
       hub.transcript(MACHINE, SESSION_ID, { limit: 1, before: 1_100 })
       return calls[0]
     }, 'the origin to read a page')
-    assert.equal(call.throughSeq, SESSION_EVENTS - 1)
     assert.equal(call.beforeSeq, 1_101, 'the boundary event must be inside the page')
+    // And the page is cut at that same bound. Passing the follow's cut here instead
+    // let the controller's `min(throughSeq + 1, beforeSeq)` pick the cut, so a read
+    // asked for at the mirror's floor returned everything from the log's start —
+    // the page the backfill needed, never the page it asked for.
+    assert.equal(call.throughSeq, call.beforeSeq - 1, 'the page ends where the reader asked, not at the follow cut')
 
     // And the event named by the reader really is delivered, which is what the
     // off-by-one used to lose.

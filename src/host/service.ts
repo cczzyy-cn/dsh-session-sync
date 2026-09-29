@@ -828,14 +828,19 @@ export class SessionSyncService {
     const controller = this.controller()
     // The reader's bound is inclusive; the page API's is not.
     const beforeSeq = throughSeq + 1
-    // What the controller is asked to read against. It is the follow's log cut,
-    // not the reader's bound: the controller requires the cut the window was taken
-    // at, and it clamps the page inside it. Both halves matter — `beforeSeq` is
-    // what makes the page end exactly where the reader asked, and `throughSeq` is
-    // what keeps the controller's own disagreement check satisfied. A page that
-    // ends up *above* the log's beginning because of that clamp is not evidence of
-    // anything, which is the next decision down.
-    const pageThrough = handle.cursor
+    // What the controller is asked to read against: the reader's own bound, so the
+    // page ends exactly where the reader asked. The controller cuts a page at
+    // `min(throughSeq + 1, beforeSeq)`, and passing the follow's cut here instead
+    // let that cut win — a follow sits at the top of the log, so every read
+    // returned everything from the log's start up to that cut. The mirror then
+    // trims to its retention limit, keeping the oldest and newest of what arrived
+    // and dropping the middle, so the *next* read produced the same page again and
+    // the backfill frontier never moved: measured as a mirror pinned at
+    // `[0, 2283] ∪ [5975, 6257]` with `missing: 3691` that no sweep could close.
+    //
+    // The handle's cut is still what a *follow* opens on; it is simply not the
+    // bound of a backwards page.
+    const pageThrough = beforeSeq - 1
     // Named rather than merged: every one of these has a different repair, and
     // the merged text they used to share ("no follow or no page API") could not
     // tell an unopened follow from a missing service. That ambiguity is what
