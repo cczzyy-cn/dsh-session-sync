@@ -24,7 +24,7 @@ import {
   type SyncTransportObserver,
 } from './api.ts'
 import { envelopePlacement } from './envelope-placement.ts'
-import { LiveText } from './live-text.ts'
+import { LiveText, liveChunkOf } from './live-text.ts'
 import { scopeCapable } from './routing.ts'
 
 /**
@@ -544,13 +544,11 @@ export class OfficialMirror {
           attemptId,
           turn: frame.turn,
           step: frame.step,
-          chunk: {
-            type: frame.kind === 'reasoning' ? 'reasoning-chunks' : 'text-chunks',
-            time0: time,
-            index: 0,
-            dt: [0],
-            texts: [delta],
-          },
+          // The live vocabulary, not the durable one: see `liveChunkOf`. The durable
+          // run shape (`text-chunks`/`reasoning-chunks`) is consumed by no shipped
+          // renderer, so sending it made every synthesized live row invisible — which
+          // is why thinking only ever arrived with its settlement.
+          chunk: liveChunkOf(frame.kind, delta),
         },
       },
     })

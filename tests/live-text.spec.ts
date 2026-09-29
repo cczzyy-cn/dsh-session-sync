@@ -14,9 +14,36 @@
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { LiveText } from '../src/client/live-text.ts'
+import { LiveText, liveChunkOf } from '../src/client/live-text.ts'
 
 const ATTEMPT = 'attempt-1'
+
+describe('the chunk one live delta becomes', () => {
+  it('uses the live vocabulary the shipped renderer reads', () => {
+    // The durable run shape — `text-chunks` / `reasoning-chunks` with time0/dt/texts
+    // — appears nowhere in `packages/client`: sending it made every synthesized live
+    // row invisible, which is exactly why live thinking never showed up.
+    assert.deepEqual(liveChunkOf('reasoning', 'thinking'), {
+      type: 'reasoning-delta',
+      index: 0,
+      text: 'thinking',
+    })
+    assert.deepEqual(liveChunkOf('text', 'answer'), {
+      type: 'text-delta',
+      index: 0,
+      text: 'answer',
+    })
+  })
+
+  it('carries the delta, not the whole text so far', () => {
+    // The shipped fold appends what the chunk says, so a chunk carrying the whole
+    // text would duplicate everything already on screen.
+    const live = new LiveText()
+    live.take(ATTEMPT, 'text', 'Hello')
+    const step = live.take(ATTEMPT, 'text', 'Hello world')
+    assert.deepEqual(liveChunkOf('text', step.delta), { type: 'text-delta', index: 0, text: ' world' })
+  })
+})
 
 describe('the live text one attempt is showing', () => {
   it('reports only the new part of a growing text', () => {

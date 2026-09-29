@@ -1445,6 +1445,24 @@ window.__ModuleLoader__.load({
 		}
 		//#endregion
 		//#region src/client/live-text.ts
+		/**
+		* The chunk one live delta becomes, in the vocabulary the shipped renderer reads.
+		*
+		* This is the shape the shipped client itself puts in an `assistant/live-chunk`
+		* event: `api/session-controller/src/client/sessions/assistant-stream.ts` wraps the
+		* stream's own `chunk` unchanged, and the live stream's chunks are the singular
+		* `-delta` forms from `llm`'s `StreamChunk`.
+		* @param kind - which of the step's two texts this delta continues.
+		* @param delta - the text to append.
+		* @returns the chunk to put in the live-chunk event.
+		*/
+		function liveChunkOf(kind, delta) {
+			return {
+				type: kind === "reasoning" ? "reasoning-delta" : "text-delta",
+				index: 0,
+				text: delta
+			};
+		}
 		/** The accumulator one mirrored Session keeps for its live text. */
 		var LiveText = class {
 			shown = /* @__PURE__ */ new Map();
@@ -1828,13 +1846,7 @@ window.__ModuleLoader__.load({
 							attemptId,
 							turn: frame.turn,
 							step: frame.step,
-							chunk: {
-								type: frame.kind === "reasoning" ? "reasoning-chunks" : "text-chunks",
-								time0: time,
-								index: 0,
-								dt: [0],
-								texts: [delta]
-							}
+							chunk: liveChunkOf(frame.kind, delta)
 						}
 					}
 				});
