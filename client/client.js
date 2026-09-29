@@ -977,11 +977,15 @@ window.__ModuleLoader__.load({
 			*/
 			async loadAllOlder() {
 				for (let page = 0; page < 500; page += 1) {
-					const snapshot = this.store.getSnapshot();
-					const transcript = snapshot.transcript;
+					for (let wait = 0; wait < 200 && this.store.getSnapshot().loadingOlder; wait += 1) await new Promise((resolve) => {
+						setTimeout(resolve, 50);
+					});
+					const transcript = this.store.getSnapshot().transcript;
 					if (transcript === void 0 || !transcript.hasMore) return;
-					if (snapshot.loadingOlder) return;
 					await this.loadOlder();
+					await new Promise((resolve) => {
+						setTimeout(resolve, 350);
+					});
 				}
 			}
 			async loadOlder() {

@@ -477,13 +477,22 @@ export class SyncClient {
   async loadAllOlder(): Promise<void> {
     // Bounded, so a server that keeps claiming more cannot spin here forever.
     for (let page = 0; page < 500; page += 1) {
+      // A page still in flight is waited for, not treated as the end. Returning on
+      // it was this control's worst failure: the button is disabled while loading,
+      // so a reader saw nothing happen, pressed again, and the count settled at
+      // whatever the first page happened to hold — a footer that says "3 turns, 65
+      // steps" for a Session whose machine log holds 392.
+      for (let wait = 0; wait < 200 && this.store.getSnapshot().loadingOlder; wait += 1) {
+        await new Promise<void>(resolve => { setTimeout(resolve, 50) })
+      }
       const snapshot = this.store.getSnapshot()
       const transcript = snapshot.transcript
       if (transcript === undefined || !transcript.hasMore) return
-      // A page already in flight: let it land rather than queueing behind it. The
-      // reader can press again, and the button stays disabled while it loads.
-      if (snapshot.loadingOlder) return
       await this.loadOlder()
+      // The mirror only reads a page from the owning machine once its own ask floor
+      // has passed; a burst of requests inside that window is answered empty and
+      // would leave this loop walking nowhere. Paced just past the floor.
+      await new Promise<void>(resolve => { setTimeout(resolve, 350) })
     }
   }
   async loadOlder(): Promise<void> {
