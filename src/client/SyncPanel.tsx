@@ -1088,14 +1088,17 @@ function StatusRow({ t, stats }: {
   stats: SessionStats
 }): React.ReactElement | null {
   if (stats.turns === 0 && stats.steps === 0) return null
-  const parts: string[] = [`${String(stats.turns)} ${t('statusTurns')}`, `${String(stats.steps)} ${t('statusSteps')}`]
+  // `statusLoaded` says which scope these are: the events this console has fetched,
+  // not the machine's whole log. Without it the two footers read as the same
+  // measurement disagreeing, which is how this was reported.
+  const parts: string[] = [`${t('statusLoaded')} ${String(stats.turns)} ${t('statusTurns')}`, `${String(stats.steps)} ${t('statusSteps')}`]
   if (stats.outputPerSecond !== undefined) parts.push(`${String(stats.outputPerSecond)} ${t('statusTokens')}/s`)
   const total = stats.usage.inputTokens + stats.usage.cacheReadTokens + stats.usage.outputTokens
   const tail: string[] = []
   if (total > 0) tail.push(`${compactTokens(total)} ${t('statusTokens')}`)
   if (stats.cacheHitPercent !== undefined) tail.push(`${t('statusCacheHit')} ${String(stats.cacheHitPercent)}%`)
   return (
-    <div className={css.statusRow}>
+    <div className={css.statusRow} title={t('statusScopeHint')}>
       <span>{parts.join(' · ')}</span>
       {tail.length > 0 && <span>{tail.join(' · ')}</span>}
     </div>

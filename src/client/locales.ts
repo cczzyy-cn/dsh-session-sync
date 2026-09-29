@@ -316,6 +316,10 @@ export const zh = {
   turnUsageCacheWrite: '缓存写入',
   turnUsageOutput: '输出',
   turnUsageReasoning: '（其中推理 {tokens}）',
+  // 底部这批数字只统计本控制台**已加载**的事件：源站那页算的是整份日志，所以两边
+  // 天然不同。标签把口径写出来，别让读者以为它们是同一个量。
+  statusLoaded: '已加载',
+  statusScopeHint: '只统计本控制台已加载的事件；源站本机那页算的是整份日志，所以数字会不同（在控制台多翻几页，这里的数会变大）。',
   turnTimeTitle: '本轮用时和速度',
   turnTimeDuration: '本轮总用时',
   turnTimeSpeed: '输出速度（TPS）',
@@ -631,6 +635,10 @@ export const en: Record<SessionSyncKey, string> = {
   turnUsageCacheWrite: 'Cache write',
   turnUsageOutput: 'Output',
   turnUsageReasoning: ' ({tokens} reasoning)',
+  // This footer counts only the events this console has *loaded*; the machine's own
+  // page counts the whole log, so the two differ by construction.
+  statusLoaded: 'Loaded',
+  statusScopeHint: 'Counts only the events this console has loaded. The origin page counts the whole log, so the numbers differ (paging more in makes these grow).',
   turnTimeTitle: 'Turn time and speed',
   turnTimeDuration: 'Total run time',
   turnTimeSpeed: 'Tokens per second (TPS)',
