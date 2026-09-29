@@ -6506,10 +6506,10 @@ window.__ModuleLoader__.load({
 		function StatusRow({ t, stats }) {
 			if (stats.turns === 0 && stats.steps === 0) return null;
 			const parts = [`${t("statusLoaded")} ${String(stats.turns)} ${t("statusTurns")}`, `${String(stats.steps)} ${t("statusSteps")}`];
-			if (stats.outputPerSecond !== void 0) parts.push(`${String(stats.outputPerSecond)} ${t("statusTokens")}/s`);
+			if (stats.outputPerSecond !== void 0) parts.push(t("statusOutputRate", { tps: String(stats.outputPerSecond) }));
 			const total = stats.usage.inputTokens + stats.usage.cacheReadTokens + stats.usage.outputTokens;
 			const tail = [];
-			if (total > 0) tail.push(`${compactTokens(total)} ${t("statusTokens")}`);
+			if (total > 0) tail.push(t("statusTotalTokens", { total: compactTokens(total) }));
 			if (stats.cacheHitPercent !== void 0) tail.push(`${t("statusCacheHit")} ${String(stats.cacheHitPercent)}%`);
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 				className: sync_module_css_default.statusRow,
@@ -7336,6 +7336,8 @@ window.__ModuleLoader__.load({
 			turnUsageReasoning: "（其中推理 {tokens}）",
 			statusLoaded: "已加载",
 			statusScopeHint: "只统计本控制台已加载的事件；源站本机那页算的是整份日志，所以数字会不同（在控制台多翻几页，这里的数会变大）。",
+			statusOutputRate: "输出 {tps} tok/s",
+			statusTotalTokens: "共 {total} tok",
 			turnTimeTitle: "本轮用时和速度",
 			turnTimeDuration: "本轮总用时",
 			turnTimeSpeed: "输出速度（TPS）",
@@ -7618,6 +7620,8 @@ window.__ModuleLoader__.load({
 			turnUsageReasoning: " ({tokens} reasoning)",
 			statusLoaded: "Loaded",
 			statusScopeHint: "Counts only the events this console has loaded. The origin page counts the whole log, so the numbers differ (paging more in makes these grow).",
+			statusOutputRate: "output {tps} tok/s",
+			statusTotalTokens: "total {total} tok",
 			turnTimeTitle: "Turn time and speed",
 			turnTimeDuration: "Total run time",
 			turnTimeSpeed: "Tokens per second (TPS)",

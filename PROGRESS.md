@@ -8,12 +8,12 @@
 | 项 | 值 |
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
-| 版本 | **`0.10.7`**（tag **`v0.10.7`**）· 实时思考不再在答案开始时被拆掉（见 §2）；`0.10.6` 版本号加载时冻结 + 命令"欠到被 ack"，`0.10.5` 审批竞速，`0.10.4` 修控制台答案被静默丢弃 |
-| 服务器（远端） | **已上线 `0.10.7`**：profile 依赖 `#v0.10.7`、`/state` 自报 `0.10.7`；**纯客户端改动（`lib` 与 0.10.6 逐字节相同）⇒ 没有重启**，只换了 served bundle（combo 10,687,212 → 10,689,410） |
-| 本机（源站） | 0.10.6 已装并**已重启**（pid 2228 启动于 09-29 01:53:24，晚于 0.10.6 字节 01:51:57）；0.10.7 也已装（纯客户端，刷新控制台页面即生效） |
-| 测试 | **100 通过 / 0 失败**（24 suites，1.4s）· `interaction-race` 17、`approval-race` 12、`command-redelivery` 6、`paging-anchor` 7、`live-text` 5、`envelope-placement` 5、`approval-view` 4、`approval-relay-link` 3、`question-relay-link` 2 |
+| 版本 | **`0.10.12`**（tag **`v0.10.12`**）· 底部数字的口径与标签（见 §2）；0.10.9 实时思考的 chunk 词汇、0.10.10 子代理计数的共享定义 |
+| 服务器（远端） | **已上线 `0.10.12`**：profile 依赖 `#v0.10.12`；0.10.9 起全是纯客户端改动（`lib` 自 0.10.6 起逐字节未变）⇒ 期间**没有重启**，只换 served bundle |
+| 本机（源站） | profile 已装 `0.10.12`；Host 半边自 0.10.6 起未变 ⇒ **不需要重启**；最近一次重启是 09-29 20:47 |
+| 测试 | **105 通过 / 0 失败**（25 suites）· 新增 `delegation` 3、`live-text` 7（含 0.10.7/0.10.9 的回归） |
 | 真机验证 | 提问竞速（0.10.4）、控制台**放行**与**拒绝**审批（0.10.5）都已在部署上跑通，账本签名见 §2 |
-| 产物 | `lib/index.js` **162,567 B**（sha256 `a7700833…`）· `client/client.js` **355,315 B**（sha256 `28e66888…`）；产物自报版本 `0.10.7` |
+| 产物 | `lib/index.js` **162,567 B**（sha256 `a7700833…`）· `client/client.js` **359,313 B**（sha256 `edfec49a…`）；产物自报版本 `0.10.12` |
 | 编码门禁 | `node scripts/check-encoding.mjs` **clean**（原先在 HEAD 上就是红的：见 §6） |
 | 类型 | Host 半边 `tsc` 0（9 个文件）；客户端半边用 `%TEMP%\synccheck` 的 stub 配置整体 `tsc` 0 |
 | 服务器 | `210.16.120.228` · DSH **`0.2.0-rc.1`**（`npx` 缓存 `ed2e730009a84a04`，unit 里钉的版本；`latest` 当时仍是 `0.1.7-rc.2`，0.2.0-rc.1 在 `next` 上）· 插件 **`0.10.5`** · unit `dsh-web.service` · active |
@@ -63,6 +63,45 @@
 
 > 2026-09-25 及以前的推进日志（从"② 的答案"一路到 0.3.x）已归档到 `docs/history-2026-09.md`。
 > 这一段只留本版（0.8.x/0.9.x/0.10.x）的改动与验证；历史文件是当时的推理记录，不要照它实现。
+
+### v0.10.11 → v0.10.12：底部数字的口径与标签（2026-09-29）
+
+用户同时报了两件：**实时思考已修好**（0.10.9），以及"底部数据和源站不一样"。后者是两回事：
+
+- **口径**（0.10.11）：`SyncPanel.tsx:631` 是 `sessionChrome(state.transcript?.events ?? [])`
+  ——控制台只统计**已加载**的事件，源站本机那页统计**整份日志** ⇒ 天然偏小，且在控制台多翻几页
+  就会变大（窗口口径的指纹）。修法最小：第一行加 `已加载` 前缀，整行挂 `title` 明说口径。
+- **标签**（0.10.12）：`100 tok/s` 是**输出**速率（`session-chrome.ts:272`），`29.9M tok` 是
+  **输入 + 缓存读取 + 输出**的累计（`SyncPanel.tsx:1093`）；共用一个 `statusTokens` 就变成
+  "29.9M ÷ 100 ≈ 83 小时"这种自相矛盾。拆成 `statusOutputRate` 与 `statusTotalTokens`。
+
+**仍未做，下一件的头号**：让源站把**按整份日志算好的权威统计**随索引发过来，控制台优先显示——
+那才是让两边**真正相等**的那半；要动源站 Host 半边，**需要一次本机重启**才生效。
+
+### v0.10.10：表头「子代理 0」——同一个集合被定义了两遍（2026-09-29）
+
+| 位置 | 它认为什么算委派 |
+| --- | --- |
+| 账本呈现 `tool-presentation.ts` | `/^(subagent\|workflow\|task)/` —— 三族 |
+| 表头计数器 `session-chrome.ts:249` | `name !== 'subagent' && name !== 'subagent_fork'` —— 两个名字 |
+
+所以走 `workflow`（一次扇出很多子代理的那个工具）或 `task` 的委派，账本照常画出委派行、计数器
+**一个都不算**。修法：抽成 `src/client/delegation.ts`（呈现层用 `DELEGATION_TOOL_MATCH`、
+计数器用 `isDelegationTool()`），两处不可能再漂移。前缀匹配刻意继承呈现层语义，代价是"仅以族名
+开头的假工具"也会被算——测试里**明写**。语义按用户确认不变："累计委派过几次"。
+判据 `tests/delegation.spec.ts` 3 条（与 0.10.9 一样无法在旧代码上跑，只能从现在起钉住一处定义）。
+
+### v0.10.9：实时思考用的是 shipped 渲染器不认的 chunk 类型名（2026-09-29）
+
+0.10.7 修的是渲染端累积器，用户复测**仍无实时思考**；随后给出决定性对照：**源站自己的 UI 能把
+思考流式滚动出来** ⇒ 增量与渲染器都没问题，差别只在我合成的 transient 路。权威依据：shipped 把
+live 帧转成 transient 事件处（`api/session-controller/src/client/sessions/assistant-stream.ts:84-97`）
+是 `data: { attemptId, turn, step, chunk: member.chunk }` —— chunk **原样取自 live 流**，即**单数**
+`{type:'text-delta'|'reasoning-delta', index, text}`（上游 `llm/src/types.ts:455`）；我却塞了**复数**
+的 durable 跑形状（`text-chunks`/`reasoning-chunks` + `time0`/`dt`/`texts`）。穷举：`reasoning-chunks`
+在整个 `packages/client` 里只出现在一个性能测试文件，`ui-chat/src` 里两个复数字串一个都没有 ⇒
+我合成的行等于没发。修法：新增纯函数 `liveChunkOf(kind, delta)`，`feedLive` 改用它。
+判据 `tests/live-text.spec.ts` 7 条。**用户复测确认：实时思考出现了。**
 
 ### v0.10.7：实时"思考"在答案开始时被拆掉（2026-09-29）
 
@@ -917,6 +956,9 @@ ssh -n root@210.16.120.228 "echo <base64> | base64 -d > /tmp/t.sh && bash /tmp/t
 | **profile 依赖钉的是 tag，`pnpm update` 不会换版本** | `pnpm update dsh-session-sync` 在 `#v0.9.0` 上跑完仍是 0.9.0——它只是把同一个 tag 又解析了一遍，而"更新"看起来像成功了 | 换版本要**改 spec**：`pnpm add "github:…/dsh-session-sync#v<新版本>"`；核对用 **产物字节数**（比 grep 标记强） |
 | **`git add -A` + 会话内的探针文件** | 我用 `$env:TEMP` 不稳，就把 `/state` 探针写进了工作区（`.tmp-n1.json`），随后 `git add -A` 把它**提交进了一个公开仓库**（不带 token 也能读）。内容核对过：机器名 + 会话 id + 计数器 + POST 统计，**不含凭据**（存 cookie 的文件先删了） | 探针一律写 `.tmp-*` 并**先加进 `.gitignore` 再开始用**；提交前看一眼 `git show --stat`；动作前先确认仓库是公开还是私有（`curl -s -o NUL -w '%{http_code}' https://api.github.com/repos/<owner>/<repo>`）。要彻底清除就得重写 tag，而部署是按 tag 装的——代价不对称，所以**预防比补救便宜得多** |
 | 本机 token 会跨重启保持 | 用户重启后 token 不变（`2kstaxlv…` 两次出现），但我按它引导的 cookie 却 401 —— 真因是 `$env:TEMP` 变了、cookie 文件没被带上 | 401 先怀疑**我自己的 cookie 文件路径**，不要先怀疑"进程重启了"；用 `netstat`/pid 与启动时间对照 |
+| **PowerShell 双引号里包 TS 源码当锚点** | 锚点字符串里的 ${...} 会被 PowerShell 先插值 ⇒ 永远匹配不上，替换**静默无操作**（本会话两次） | 锚点一律用单引号 here-string；写完立刻用 Select-String 或 Contains 验证，别信"没报错就是成功" |
+| **TS 单引号串里连续两个单引号不是转义** | 英文文案 machine 后接两个单引号会把字符串截断，而报错落在**另一行**（expected 分隔符），看着像别处坏了 | 用反斜杠转义或改成无撇号措辞；报错行与可疑行不一致时先找未闭合引号 |
+| **PowerShell 的反向切片** | 若表尾正好是文件末尾，$lines[last+1..(n-1)] 会退化成倒序范围，把文件尾部写乱（本会话把 PROGRESS 写坏过一次，回退重做） | 拼接尾部前显式判断范围是否为空，或统一用 List.AddRange + GetRange |
 
 **验证纪律**：能在本地用假控件复现的，先写确定性测试（本轮 9 个测试；其中端到端那条**在修复前的代码上确实失败**——新写的测试要在旧代码上跑一遍，否则不知道它测的是什么）；生产验证要给出**数字**（seq 范围、条数、字节数、耗时），不要只说"好了"。
 

@@ -1092,10 +1092,10 @@ function StatusRow({ t, stats }: {
   // not the machine's whole log. Without it the two footers read as the same
   // measurement disagreeing, which is how this was reported.
   const parts: string[] = [`${t('statusLoaded')} ${String(stats.turns)} ${t('statusTurns')}`, `${String(stats.steps)} ${t('statusSteps')}`]
-  if (stats.outputPerSecond !== undefined) parts.push(`${String(stats.outputPerSecond)} ${t('statusTokens')}/s`)
+  if (stats.outputPerSecond !== undefined) parts.push(t('statusOutputRate', { tps: String(stats.outputPerSecond) }))
   const total = stats.usage.inputTokens + stats.usage.cacheReadTokens + stats.usage.outputTokens
   const tail: string[] = []
-  if (total > 0) tail.push(`${compactTokens(total)} ${t('statusTokens')}`)
+  if (total > 0) tail.push(t('statusTotalTokens', { total: compactTokens(total) }))
   if (stats.cacheHitPercent !== undefined) tail.push(`${t('statusCacheHit')} ${String(stats.cacheHitPercent)}%`)
   return (
     <div className={css.statusRow} title={t('statusScopeHint')}>
