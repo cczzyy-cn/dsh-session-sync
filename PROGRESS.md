@@ -8,12 +8,12 @@
 | 项 | 值 |
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
-| 版本 | **`0.10.6`**（tag **`v0.10.6`**）· 版本号加载时冻结 + 命令"欠到被 ack"（见 §2）；`0.10.5` 审批竞速，`0.10.4` 修控制台答案被静默丢弃，`0.10.3` 补翻页锚定，`0.10.2` 修 `non-appended Match` |
-| 服务器（远端） | **已上线 `0.10.6`**：profile 依赖 `#v0.10.6`、`/state` 自报 `0.10.6`；Host 半边变了（重发 / 退休欠账 / `commands()` 访问器），所以重启过 |
-| 本机（源站） | 包已升到 `0.10.6`；**Host 半边要等一次本机重启才生效**（会杀掉正在跑的会话，只能由用户做）。0.10.4/0.10.5 已重启验证过（提问竞速、审批放行与拒绝，见 §2） |
-| 测试 | **95 通过 / 0 失败**（23 suites，1.4s）· `interaction-race` 17、`approval-race` 12、`command-redelivery` 6、`paging-anchor` 7、`envelope-placement` 5、`approval-view` 4、`approval-relay-link` 3、`question-relay-link` 2 |
+| 版本 | **`0.10.7`**（tag **`v0.10.7`**）· 实时思考不再在答案开始时被拆掉（见 §2）；`0.10.6` 版本号加载时冻结 + 命令"欠到被 ack"，`0.10.5` 审批竞速，`0.10.4` 修控制台答案被静默丢弃 |
+| 服务器（远端） | **已上线 `0.10.7`**：profile 依赖 `#v0.10.7`、`/state` 自报 `0.10.7`；**纯客户端改动（`lib` 与 0.10.6 逐字节相同）⇒ 没有重启**，只换了 served bundle（combo 10,687,212 → 10,689,410） |
+| 本机（源站） | 0.10.6 已装并**已重启**（pid 2228 启动于 09-29 01:53:24，晚于 0.10.6 字节 01:51:57）；0.10.7 也已装（纯客户端，刷新控制台页面即生效） |
+| 测试 | **100 通过 / 0 失败**（24 suites，1.4s）· `interaction-race` 17、`approval-race` 12、`command-redelivery` 6、`paging-anchor` 7、`live-text` 5、`envelope-placement` 5、`approval-view` 4、`approval-relay-link` 3、`question-relay-link` 2 |
 | 真机验证 | 提问竞速（0.10.4）、控制台**放行**与**拒绝**审批（0.10.5）都已在部署上跑通，账本签名见 §2 |
-| 产物 | `lib/index.js` **162,567 B**（sha256 `a7700833…`）· `client/client.js` **353,117 B**（sha256 `b9533c64…`，与 0.10.5 逐字节相同）；产物自报版本 `0.10.6` |
+| 产物 | `lib/index.js` **162,567 B**（sha256 `a7700833…`）· `client/client.js` **355,315 B**（sha256 `28e66888…`）；产物自报版本 `0.10.7` |
 | 编码门禁 | `node scripts/check-encoding.mjs` **clean**（原先在 HEAD 上就是红的：见 §6） |
 | 类型 | Host 半边 `tsc` 0（9 个文件）；客户端半边用 `%TEMP%\synccheck` 的 stub 配置整体 `tsc` 0 |
 | 服务器 | `210.16.120.228` · DSH **`0.2.0-rc.1`**（`npx` 缓存 `ed2e730009a84a04`，unit 里钉的版本；`latest` 当时仍是 `0.1.7-rc.2`，0.2.0-rc.1 在 `next` 上）· 插件 **`0.10.5`** · unit `dsh-web.service` · active |
@@ -63,6 +63,35 @@
 
 > 2026-09-25 及以前的推进日志（从"② 的答案"一路到 0.3.x）已归档到 `docs/history-2026-09.md`。
 > 这一段只留本版（0.8.x/0.9.x/0.10.x）的改动与验证；历史文件是当时的推理记录，不要照它实现。
+
+### v0.10.7：实时"思考"在答案开始时被拆掉（2026-09-29）
+
+用户报「源站思考结束他才出现」。**先量，再改**——这次测量把范围一刀切开：
+
+| 读数 | 值 | 结论 |
+| --- | --- | --- |
+| 源站 `follow.frames` | `["snapshot","event","assistant-stream"]` | live 增量**确实到达源站** |
+| 源站 `/stream-delta` | **674 次**已发出 | 源站**确实在中继** live 文本 |
+| 上游 `api/session-controller/src/history.ts:165` | `request.assistantStream !== true ? undefined : ctx.on('agent/assistant-stream', …)` | live 增量只在 follow 请求带 `assistantStream: true` 时下发——本插件正是这么请求的（`service.ts:1015`） |
+
+⇒ 上行与中继都是好的，问题在**灌进面板那一步**。
+
+**根因**：shipped 路线的 live 累积器**只按 `attemptId` 作键**。一步先流 reasoning、再流 text，
+**共用同一个 attempt id**，而中继发的是"到目前为止的全文"，读者要的增量靠相减算出来 ⇒
+第一个正文增量**必然不是**思考文本的延续 ⇒ 看起来正是那个唯一需要"重启"的情形（文本被替换而非延长）
+⇒ 重启路径调用 `settleAssistant()`，**把读者正在看的那条思考 transient 行拆掉** ⇒ 只剩结算事件里
+那块 durable 的 reasoning。这就是"思考结束才出现"。
+
+**修法**：累积器按 `(attemptId, kind)` 分开，抽成无依赖模块 `src/client/live-text.ts`
+（`take()` 返回 `{delta, restarted}`；`forget(attemptId)` 清该 attempt 的**两种** kind；`clear()`）。
+同一 kind 内真正的文本替换**仍然**算重启（旧保护不动，注释说明为什么）。键用 `\u0000` 分隔，
+所以 `forget` 的前缀匹配不会把 `attempt-1` 与 `attempt-10` 混起来。
+
+**判据**：`tests/live-text.spec.ts` 5 条，核心是"同一 attempt 上先思考后正文必须 `restarted: false`"。
+**实测在旧键法上确实失败**（✖ 2 条：核心那条、以及 forget 的前缀撞车那条），恢复后全绿。测试 95 → **100**。
+
+**产物**：`lib/index.js` **162,567 B 与 0.10.6 逐字节相同** ⇒ **纯客户端改动，两端都不用重启**；
+`client/client.js` **355,315 B**（`28e66888…`）。部署后 served combo 10,687,212 → **10,689,410**（正好 +2,198 字节）。
 
 ### v0.10.6：版本号不再说谎，丢掉的命令不再被当成已投递（2026-09-29）
 
@@ -886,6 +915,8 @@ ssh -n root@210.16.120.228 "echo <base64> | base64 -d > /tmp/t.sh && bash /tmp/t
 | **测试假定了两条独立消息同时到达** | `page-boundary.spec.ts` 在镜像拿到尾部窗口后**立刻**读边缘，而"下面还有历史"这句话是源站**另一次 reconcile** 才发出去的：全量并行跑时两者赛跑，输了就报"源站从没读过一页"（单跑必过、全量偶发失败） | 判据依赖别的消息时，让测试**轮询到那个效果出现**再断言（边缘读本身有 2 秒的限流，所以轮询不会灌爆日志）；别把"两条消息一起到"写进断言 |
 | **浏览器产物的 URL 不能只取一个入口** | `/plugins/dsh-session-sync/client.js` 与 `/plugins/dsh-session-sync/client/client.js` 都是 **404、0 字节**，看着像"浏览器拿不到插件" | 那台机器把 58 个入口打成一个 combo：`/plugins/??<entry1>,<entry2>,…&rev=<hash>`，**整体取**才 200（本次 10,665,836 B）；shell 里那串是 HTML 转义的（`&amp;rev=`），取之前先 `sed 's/&amp;/\&/g'`。拿单个入口试会误判 |
 | **profile 依赖钉的是 tag，`pnpm update` 不会换版本** | `pnpm update dsh-session-sync` 在 `#v0.9.0` 上跑完仍是 0.9.0——它只是把同一个 tag 又解析了一遍，而"更新"看起来像成功了 | 换版本要**改 spec**：`pnpm add "github:…/dsh-session-sync#v<新版本>"`；核对用 **产物字节数**（比 grep 标记强） |
+| **`git add -A` + 会话内的探针文件** | 我用 `$env:TEMP` 不稳，就把 `/state` 探针写进了工作区（`.tmp-n1.json`），随后 `git add -A` 把它**提交进了一个公开仓库**（不带 token 也能读）。内容核对过：机器名 + 会话 id + 计数器 + POST 统计，**不含凭据**（存 cookie 的文件先删了） | 探针一律写 `.tmp-*` 并**先加进 `.gitignore` 再开始用**；提交前看一眼 `git show --stat`；动作前先确认仓库是公开还是私有（`curl -s -o NUL -w '%{http_code}' https://api.github.com/repos/<owner>/<repo>`）。要彻底清除就得重写 tag，而部署是按 tag 装的——代价不对称，所以**预防比补救便宜得多** |
+| 本机 token 会跨重启保持 | 用户重启后 token 不变（`2kstaxlv…` 两次出现），但我按它引导的 cookie 却 401 —— 真因是 `$env:TEMP` 变了、cookie 文件没被带上 | 401 先怀疑**我自己的 cookie 文件路径**，不要先怀疑"进程重启了"；用 `netstat`/pid 与启动时间对照 |
 
 **验证纪律**：能在本地用假控件复现的，先写确定性测试（本轮 9 个测试；其中端到端那条**在修复前的代码上确实失败**——新写的测试要在旧代码上跑一遍，否则不知道它测的是什么）；生产验证要给出**数字**（seq 范围、条数、字节数、耗时），不要只说"好了"。
 

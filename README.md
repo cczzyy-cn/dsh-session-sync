@@ -500,7 +500,12 @@ pane wherever the build offers `ctx.sessions.retainAgentScope`.
   `assistant/message` that ends the step, or the `assistant/attempt` a failed or
   aborted request leaves behind — is what retires it. None of it is stored, so
   the mirror and a console opened mid-step fill from the next relay rather than
-  from a replay.
+  from a replay. **A step's thinking and its answer accumulate separately**, on
+  both sides of the wire: they are two streams through one attempt id, and the
+  relay carries each one's whole text so far, so anything that compares the two
+  against each other sees the answer as a replacement of the thinking — which is
+  what "the thinking only appears once it has finished" turned out to be
+  (`src/client/live-text.ts`, and `tests/live-text.spec.ts` for the regression).
 - **A mirror shows the last 4,000 events** of a Session; older history is trimmed
   from the mirror itself. The console reads what the mirror holds a page at a
   time — 400 events, newest first — and a page the mirror is missing is read from
