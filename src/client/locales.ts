@@ -326,6 +326,8 @@ export const zh = {
   statusWholeLog: '整份日志',
   statusCount: '按整份日志重算',
   statusCountHint: '让控制台把日志翻到开头再统计：数字会与源站本机页面一致；长会话要翻几页，稍等。',
+  // 「整份日志」不是链条的说法，而是本地数出来的事实：这里报出缺口。
+  statusGaps: '缺 {n} 条',
   turnTimeTitle: '本轮用时和速度',
   turnTimeDuration: '本轮总用时',
   turnTimeSpeed: '输出速度（TPS）',
@@ -652,6 +654,7 @@ export const en: Record<SessionSyncKey, string> = {
   statusWholeLog: 'whole log',
   statusCount: 'count the whole log',
   statusCountHint: 'Pages this console back to the start of the log before counting, so the numbers match the machine page. A long session takes a few pages.',
+  statusGaps: '{n} missing',
   turnTimeTitle: 'Turn time and speed',
   turnTimeDuration: 'Total run time',
   turnTimeSpeed: 'Tokens per second (TPS)',

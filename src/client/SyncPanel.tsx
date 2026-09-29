@@ -60,6 +60,7 @@ import type { SessionSyncKey, SessionSyncTranslate } from './locales.ts'
 import { ApprovalCard } from './ApprovalCard.tsx'
 import { QuestionCard, QuestionElsewhere } from './QuestionCard.tsx'
 import { pagingScrollTop, type PagingMetrics } from './paging-anchor.ts'
+import { logCoverage } from './log-coverage.ts'
 import { buildTree } from './tree.ts'
 import {
   compactTokens,
@@ -991,7 +992,16 @@ function Conversation(props: {
               </button>
             </div>
           </form>
-          <StatusRow t={t} stats={chrome.stats} all={state.transcript?.hasMore === false} onCount={() => { void props.loadAllOlder() }} />
+          {/* `all` needs both halves: the chain offering nothing older, and the held
+    sequences being contiguous. The chain alone claimed "the whole log" while
+    holding 849 of the machine's 956 steps. */}
+      <StatusRow
+        t={t}
+        stats={chrome.stats}
+        all={state.transcript?.hasMore === false && logCoverage(state.transcript?.events ?? []).gaps === 0}
+        gaps={logCoverage(state.transcript?.events ?? []).gaps}
+        onCount={() => { void props.loadAllOlder() }}
+      />
         </div>
       )}
     </>
@@ -1100,11 +1110,13 @@ function ContextRing({ t, context }: {
 }
 
 /** The status row under the composer card: turns, steps, throughput, cache. */
-function StatusRow({ t, stats, all, onCount }: {
+function StatusRow({ t, stats, all, gaps, onCount }: {
   t: SessionSyncTranslate
   stats: SessionStats
-  /** True when everything the log has is loaded, so these numbers *are* the log's. */
+  /** True when the held events are contiguous *and* nothing older was offered. */
   all: boolean
+  /** Ordinals missing between the lowest and highest held sequence. */
+  gaps: number
   /** Page back to the log's start, so they can become so. */
   onCount: () => void
 }): React.ReactElement | null {
@@ -1113,7 +1125,11 @@ function StatusRow({ t, stats, all, onCount }: {
   // not the machine's whole log. Without it the two footers read as the same
   // measurement disagreeing, which is how this was reported.
   const scope = all ? t('statusWholeLog') : t('statusLoaded')
-  const parts: string[] = [`${scope} ${String(stats.turns)} ${t('statusTurns')}`, `${String(stats.steps)} ${t('statusSteps')}`]
+  // The gaps are counted here rather than trusted from the chain: `hasMore === false`
+  // only says nothing older was offered, and a console that held 849 of 956 steps still
+  // showed "整份日志" until this check existed.
+  const gapNote = gaps > 0 ? ` · ${t('statusGaps', { n: String(gaps) })}` : ''
+  const parts: string[] = [`${scope}${gapNote} ${String(stats.turns)} ${t('statusTurns')}`, `${String(stats.steps)} ${t('statusSteps')}`]
   if (stats.outputPerSecond !== undefined) parts.push(t('statusOutputRate', { tps: String(stats.outputPerSecond) }))
   const total = stats.usage.inputTokens + stats.usage.cacheReadTokens + stats.usage.outputTokens
   const tail: string[] = []

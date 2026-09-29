@@ -2541,6 +2541,34 @@ window.__ModuleLoader__.load({
 			return before.top + inserted;
 		}
 		//#endregion
+		//#region src/client/log-coverage.ts
+		/**
+		* Count the holes in one set of held events.
+		* @param events - the events this console holds, in any order.
+		* @returns the gaps, and the range they sit in.
+		*/
+		function logCoverage(events) {
+			let first;
+			let last;
+			const seen = /* @__PURE__ */ new Set();
+			for (const event of events) {
+				if (!Number.isInteger(event.seq)) continue;
+				seen.add(event.seq);
+				if (first === void 0 || event.seq < first) first = event.seq;
+				if (last === void 0 || event.seq > last) last = event.seq;
+			}
+			if (first === void 0 || last === void 0) return {
+				gaps: 0,
+				first,
+				last
+			};
+			return {
+				gaps: last - first + 1 - seen.size,
+				first,
+				last
+			};
+		}
+		//#endregion
 		//#region src/client/tree.ts
 		/**
 		* Group the mirror into machines, their directories, and their Sessions.
@@ -6402,7 +6430,8 @@ window.__ModuleLoader__.load({
 					}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(StatusRow, {
 						t,
 						stats: chrome.stats,
-						all: state.transcript?.hasMore === false,
+						all: state.transcript?.hasMore === false && logCoverage(state.transcript?.events ?? []).gaps === 0,
+						gaps: logCoverage(state.transcript?.events ?? []).gaps,
 						onCount: () => {
 							props.loadAllOlder();
 						}
@@ -6526,9 +6555,9 @@ window.__ModuleLoader__.load({
 			});
 		}
 		/** The status row under the composer card: turns, steps, throughput, cache. */
-		function StatusRow({ t, stats, all, onCount }) {
+		function StatusRow({ t, stats, all, gaps, onCount }) {
 			if (stats.turns === 0 && stats.steps === 0) return null;
-			const parts = [`${all ? t("statusWholeLog") : t("statusLoaded")} ${String(stats.turns)} ${t("statusTurns")}`, `${String(stats.steps)} ${t("statusSteps")}`];
+			const parts = [`${all ? t("statusWholeLog") : t("statusLoaded")}${gaps > 0 ? ` · ${t("statusGaps", { n: String(gaps) })}` : ""} ${String(stats.turns)} ${t("statusTurns")}`, `${String(stats.steps)} ${t("statusSteps")}`];
 			if (stats.outputPerSecond !== void 0) parts.push(t("statusOutputRate", { tps: String(stats.outputPerSecond) }));
 			const total = stats.usage.inputTokens + stats.usage.cacheReadTokens + stats.usage.outputTokens;
 			const tail = [];
@@ -7374,6 +7403,7 @@ window.__ModuleLoader__.load({
 			statusWholeLog: "整份日志",
 			statusCount: "按整份日志重算",
 			statusCountHint: "让控制台把日志翻到开头再统计：数字会与源站本机页面一致；长会话要翻几页，稍等。",
+			statusGaps: "缺 {n} 条",
 			turnTimeTitle: "本轮用时和速度",
 			turnTimeDuration: "本轮总用时",
 			turnTimeSpeed: "输出速度（TPS）",
@@ -7661,6 +7691,7 @@ window.__ModuleLoader__.load({
 			statusWholeLog: "whole log",
 			statusCount: "count the whole log",
 			statusCountHint: "Pages this console back to the start of the log before counting, so the numbers match the machine page. A long session takes a few pages.",
+			statusGaps: "{n} missing",
 			turnTimeTitle: "Turn time and speed",
 			turnTimeDuration: "Total run time",
 			turnTimeSpeed: "Tokens per second (TPS)",
