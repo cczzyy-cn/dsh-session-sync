@@ -13,6 +13,7 @@
  * mark, with the wire name carried in the summary rather than invented into a
  * title.
  */
+import { DELEGATION_TOOL_MATCH } from './delegation.ts'
 import type { SessionSyncKey } from './locales.ts'
 
 /** The leading glyph family a tool row renders. */
@@ -47,7 +48,7 @@ const FAMILIES: readonly { glyph: ToolGlyph; labelKey: SessionSyncKey; match: Re
   // todo-row.tsx leads with IconChecklistOutlineRegular.
   { glyph: 'plan', labelKey: 'toolLabelPlan', match: /^(todo|plan|update_plan|checklist)/ },
   // No shipped row exists for these, so the share mark is this console's own.
-  { glyph: 'share', labelKey: 'toolLabelSubagent', match: /^(subagent|workflow|task)/ },
+  { glyph: 'share', labelKey: 'toolLabelSubagent', match: DELEGATION_TOOL_MATCH },
 ]
 
 /**

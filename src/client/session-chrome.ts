@@ -10,6 +10,7 @@
  * nothing here reads a live DSH object: every accessor takes `data` as unknown
  * and falls through to "unknown" rather than throwing.
  */
+import { isDelegationTool } from './delegation.ts'
 import type { MirrorEvent } from '../shared/protocol.ts'
 
 /** The route the Session's last request went to. */
@@ -246,7 +247,10 @@ export function sessionChrome(events: readonly MirrorEvent[]): SessionChrome {
       const callId = text(data?.['callId'])
       const name = text(data?.['name'])
       if (callId === undefined || name === undefined) continue
-      if (name !== 'subagent' && name !== 'subagent_fork') continue
+      // One definition, shared with the ledger's presentation: this used to be a
+      // two-name list, so workflow-driven delegations were drawn above and counted
+      // as zero here.
+      if (!isDelegationTool(name)) continue
       subagents.set(callId, {
         callId,
         label: delegationLabel(data?.['arguments']) ?? name,

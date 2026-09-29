@@ -2572,7 +2572,46 @@ window.__ModuleLoader__.load({
 			return session.title.toLowerCase().includes(needle) || (session.cwd ?? "").toLowerCase().includes(needle) || session.sessionId.toLowerCase().includes(needle);
 		}
 		//#endregion
+		//#region src/client/delegation.ts
+		/**
+		* Which wire tool names are *delegations*, defined once for everyone who asks.
+		*
+		* This set used to live in two places and mean two different things: the ledger's
+		* presentation knew three families (`subagent`, `workflow`, `task` — the regex
+		* below), while the session chrome's subagent counter knew only two names
+		* (`subagent`, `subagent_fork`). So a Session that delegated through `workflow` —
+		* the tool that fans out to many subagents at once — drew its delegation rows in the
+		* ledger and reported `子代理 0` in the header, which is what a reader noticed.
+		*
+		* Prefix matching is deliberate and inherited from the presentation layer: it keeps
+		* future variants (`subagent_*`, `task_*`) counted without another edit here. The
+		* cost is that a hypothetical non-delegating `tasks`-style tool would be counted
+		* too, which is the cheaper mistake of the two.
+		*/
+		/** The one pattern that decides what a delegation is. */
+		const DELEGATION_TOOL_MATCH = /^(subagent|workflow|task)/;
+		/**
+		* Whether one wire tool name is a delegation.
+		* @param name - the tool name as the log reports it.
+		* @returns true when this call delegates work to subagents.
+		*/
+		function isDelegationTool(name) {
+			return DELEGATION_TOOL_MATCH.test(name);
+		}
+		//#endregion
 		//#region src/client/session-chrome.ts
+		/**
+		* What the mirrored log says about a Session's runtime chrome, and the ledger
+		* the trajectory tab renders.
+		*
+		* Both are read from the durable events the mirror already carries — the model
+		* comes from `request/header`, the window from `request/context`, the occupancy
+		* from the last `assistant/message` usage, the policy from the
+		* `permission/preset` / `sandbox/mode` / `approval/policy` events the Session
+		* logs at its head. Nothing here needs a projection or a new wire field, and
+		* nothing here reads a live DSH object: every accessor takes `data` as unknown
+		* and falls through to "unknown" rather than throwing.
+		*/
 		/** Longest content excerpt kept for one cell. */
 		const EXCERPT_LIMIT = 400;
 		/** Longest subagent label kept. */
@@ -2690,7 +2729,7 @@ window.__ModuleLoader__.load({
 					const callId = text$1(data?.["callId"]);
 					const name = text$1(data?.["name"]);
 					if (callId === void 0 || name === void 0) continue;
-					if (name !== "subagent" && name !== "subagent_fork") continue;
+					if (!isDelegationTool(name)) continue;
 					subagents.set(callId, {
 						callId,
 						label: delegationLabel(data?.["arguments"]) ?? name,
@@ -5186,6 +5225,21 @@ window.__ModuleLoader__.load({
 		}
 		//#endregion
 		//#region src/client/tool-presentation.ts
+		/**
+		* What a wire tool name looks like in the console's conversation.
+		*
+		* The shipped client resolves this through `ui-tool`'s keyed
+		* `tool.call.toolview` registrations: each tool family brings its own glyph and
+		* its own localized title ("读取", "搜索", "终端"). A plugin cannot import
+		* another plugin's components, so this is a copy of that vocabulary rather than
+		* a call into it — and the glyphs are the exact ones those registrations use,
+		* read off the toolviews themselves (read-family-row, file-mutation-row,
+		* bash-sample, search-row, web-row, todo-row, ask-question-row, GenericToolCard).
+		*
+		* A tool no family claims falls back to the shipped generic card's own neutral
+		* mark, with the wire name carried in the summary rather than invented into a
+		* title.
+		*/
 		/** Wire names whose row reads as one family, checked in order. */
 		const FAMILIES = [
 			{
@@ -5236,7 +5290,7 @@ window.__ModuleLoader__.load({
 			{
 				glyph: "share",
 				labelKey: "toolLabelSubagent",
-				match: /^(subagent|workflow|task)/
+				match: DELEGATION_TOOL_MATCH
 			}
 		];
 		/**
