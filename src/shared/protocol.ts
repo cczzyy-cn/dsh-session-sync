@@ -410,6 +410,14 @@ export interface SyncState {
     sessionId?: string
     beforeSeq?: number
     throughSeq?: number
+    /**
+     * The message budget this read asked its log for.
+     *
+     * Published because a page that ignored the budget looks exactly like one that
+     * honoured it — same fields, same shape — except in its size, and the size is
+     * what a diagnosis has to compare against.
+     */
+    maxMessages?: number
     records?: number
     hasMore?: boolean
     /**
