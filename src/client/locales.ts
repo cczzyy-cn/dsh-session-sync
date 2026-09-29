@@ -325,6 +325,9 @@ export const zh = {
   statusAuthoritativeHint: '这些数字来自拥有该会话的机器：它按整份日志算好后随索引发过来，所以不受本控制台加载了多少、也不受镜像保留上限影响。',
   // 速率算的是**输出**，总数含 prompt+缓存读取：两者共用一个 'tok' 会读成自相矛盾。
   statusOutputRate: '输出 {tps} tok/s',
+  // 底部也要有占用率：镜像会话画的是本控制台的输入栏，官方那个 meter 的座位没挂上。
+  statusContext: '上下文',
+  statusContextDetail: '~{used} / {window}',
   statusTotalTokens: '共 {total} tok',
   statusWholeLog: '整份日志',
   statusCount: '按整份日志重算',
@@ -655,6 +658,8 @@ export const en: Record<SessionSyncKey, string> = {
   // The rate is *output* while the total includes prompt and cache reads: one shared
   // 'tok' made them read as a contradiction.
   statusOutputRate: 'output {tps} tok/s',
+  statusContext: 'context',
+  statusContextDetail: '~{used} / {window}',
   statusTotalTokens: 'total {total} tok',
   statusWholeLog: 'whole log',
   statusCount: 'count the whole log',

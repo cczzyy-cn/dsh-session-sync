@@ -944,6 +944,19 @@ export interface MirrorStats {
     cacheReadTokens: number
     reasoningTokens: number
   }
+  /**
+   * How full the context is, from the log's own newest window and reading.
+   *
+   * Stated by the machine for the same reason the totals are: a console holding part
+   * of a log cannot see the newest `request/context` or the newest usage, and a
+   * footer that fell silent there would read as "nothing to report" rather than
+   * "this console cannot see it".
+   */
+  context?: {
+    window: number
+    used: number
+    percent: number
+  }
   cacheHitPercent?: number
   stepMs: number
   outputPerSecond?: number

@@ -2700,6 +2700,8 @@ window.__ModuleLoader__.load({
 			let stepMs = 0;
 			let generationMs = 0;
 			let openStepStart;
+			let contextWindow;
+			let contextUsed;
 			const stepStarts = /* @__PURE__ */ new Map();
 			for (const event of events) {
 				const data = asRecord$4(event.data);
@@ -2726,21 +2728,34 @@ window.__ModuleLoader__.load({
 					if (started !== void 0 && started === openStepStart) openStepStart = void 0;
 					continue;
 				}
+				if (event.type === "request/context") {
+					const reported = number$3(data?.["contextWindow"]);
+					if (reported !== void 0 && reported > 0) contextWindow = reported;
+					continue;
+				}
 				if (event.type === "assistant/message") {
 					const reported = asRecord$4(data?.["usage"]);
 					usage.inputTokens += number$3(reported?.["inputTokens"]) ?? 0;
 					usage.outputTokens += number$3(reported?.["outputTokens"]) ?? 0;
 					usage.cacheReadTokens += number$3(reported?.["cacheReadTokens"]) ?? 0;
 					usage.reasoningTokens += number$3(reported?.["reasoningTokens"]) ?? 0;
+					const surface = number$3(reported?.["totalTokens"]) ?? (number$3(reported?.["inputTokens"]) ?? 0) + (number$3(reported?.["outputTokens"]) ?? 0);
+					if (surface > 0) contextUsed = surface;
 					if (openStepStart !== void 0) generationMs += Math.max(0, event.time - openStepStart);
 				}
 			}
 			const inputTotal = usage.inputTokens + usage.cacheReadTokens;
 			const outputPerSecond = generationMs > 0 && usage.outputTokens > 0 ? Math.round(usage.outputTokens / (generationMs / 1e3)) : void 0;
+			const context = contextWindow === void 0 || contextUsed === void 0 ? void 0 : {
+				window: contextWindow,
+				used: contextUsed,
+				percent: Math.min(100, Math.round(contextUsed / contextWindow * 100))
+			};
 			return {
 				turns,
 				steps,
 				usage,
+				...context === void 0 ? {} : { context },
 				...inputTotal > 0 ? { cacheHitPercent: Math.round(usage.cacheReadTokens / inputTotal * 1e3) / 10 } : {},
 				stepMs,
 				...outputPerSecond === void 0 ? {} : { outputPerSecond },
@@ -2780,12 +2795,11 @@ window.__ModuleLoader__.load({
 		*/
 		function sessionChrome(events) {
 			let model;
-			let window;
-			let used;
 			const policy = {};
 			let title;
 			let openTurn = false;
 			const subagents = /* @__PURE__ */ new Map();
+			const stats = logStats(events);
 			for (const event of events) {
 				const data = asRecord$3(event.data);
 				if (event.type === "request/header") {
@@ -2801,8 +2815,6 @@ window.__ModuleLoader__.load({
 					continue;
 				}
 				if (event.type === "request/context") {
-					const reported = number$2(data?.["contextWindow"]);
-					if (reported !== void 0 && reported > 0) window = reported;
 					const provider = text$1(data?.["provider"]);
 					const name = text$1(data?.["model"]);
 					if (model === void 0 && provider !== void 0 && name !== void 0) model = {
@@ -2819,12 +2831,7 @@ window.__ModuleLoader__.load({
 					openTurn = false;
 					continue;
 				}
-				if (event.type === "assistant/message") {
-					const reported = asRecord$3(data?.["usage"]);
-					const surface = number$2(reported?.["totalTokens"]) ?? (number$2(reported?.["inputTokens"]) ?? 0) + (number$2(reported?.["outputTokens"]) ?? 0);
-					if (surface > 0) used = surface;
-					continue;
-				}
+				if (event.type === "assistant/message") continue;
 				if (event.type === "permission/preset") {
 					policy.preset = text$1(data?.["preset"]) ?? policy.preset;
 					continue;
@@ -2863,16 +2870,12 @@ window.__ModuleLoader__.load({
 					seen.isError = data?.["error"] !== void 0;
 				}
 			}
-			const context = window === void 0 || used === void 0 ? void 0 : {
-				window,
-				used,
-				percent: Math.min(100, Math.round(used / window * 100))
-			};
+			const context = stats.context;
 			return {
 				...model === void 0 ? {} : { model },
 				...context === void 0 ? {} : { context },
 				policy,
-				stats: logStats(events),
+				stats,
 				subagents: [...subagents.values()],
 				...title === void 0 ? {} : { title },
 				running: openTurn
@@ -6492,6 +6495,7 @@ window.__ModuleLoader__.load({
 					}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(StatusRow, {
 						t,
 						stats: reportedStats ?? chrome.stats,
+						context: reportedStats?.context ?? chrome.context,
 						all: wholeLog,
 						gaps: coverage.gaps,
 						authoritative: reportedStats !== void 0,
@@ -6618,12 +6622,13 @@ window.__ModuleLoader__.load({
 			});
 		}
 		/** The status row under the composer card: turns, steps, throughput, cache. */
-		function StatusRow({ t, stats, all, gaps, authoritative, onCount }) {
+		function StatusRow({ t, stats, context, all, gaps, authoritative, onCount }) {
 			if (stats.turns === 0 && stats.steps === 0) return null;
 			const scope = authoritative ? "" : all ? t("statusWholeLog") : t("statusLoaded");
 			const gapNote = gaps > 0 && !authoritative ? ` · ${t("statusGaps", { n: String(gaps) })}` : "";
 			const parts = [`${scope === "" ? "" : `${scope}${gapNote} `}${String(stats.turns)} ${t("statusTurns")}`, `${String(stats.steps)} ${t("statusSteps")}`];
 			if (stats.outputPerSecond !== void 0) parts.push(t("statusOutputRate", { tps: String(stats.outputPerSecond) }));
+			if (context !== void 0) parts.push(`${t("statusContext")} ${String(context.percent)}%`);
 			const total = stats.usage.inputTokens + stats.usage.cacheReadTokens + stats.usage.outputTokens;
 			const tail = [];
 			if (total > 0) tail.push(t("statusTotalTokens", { total: compactTokens(total) }));
@@ -6634,6 +6639,13 @@ window.__ModuleLoader__.load({
 				children: [
 					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { children: parts.join(" · ") }),
 					tail.length > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { children: tail.join(" · ") }),
+					context !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+						title: `~${compactTokens(context.used)} / ${compactTokens(context.window)}`,
+						children: t("statusContextDetail", {
+							used: compactTokens(context.used),
+							window: compactTokens(context.window)
+						})
+					}),
 					!authoritative && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
 						type: "button",
 						title: t("statusCountHint"),
@@ -7465,6 +7477,8 @@ window.__ModuleLoader__.load({
 			statusScopeHint: "只统计本控制台已加载的事件；源站本机那页算的是整份日志，所以数字会不同（在控制台多翻几页，这里的数会变大）。",
 			statusAuthoritativeHint: "这些数字来自拥有该会话的机器：它按整份日志算好后随索引发过来，所以不受本控制台加载了多少、也不受镜像保留上限影响。",
 			statusOutputRate: "输出 {tps} tok/s",
+			statusContext: "上下文",
+			statusContextDetail: "~{used} / {window}",
 			statusTotalTokens: "共 {total} tok",
 			statusWholeLog: "整份日志",
 			statusCount: "按整份日志重算",
@@ -7754,6 +7768,8 @@ window.__ModuleLoader__.load({
 			statusScopeHint: "Counts only the events this console has loaded. The origin page counts the whole log, so the numbers differ (paging more in makes these grow).",
 			statusAuthoritativeHint: "These figures come from the machine that owns the Session: it computes them over the whole log and states them with its index, so neither what this console has loaded nor the mirror's retention limit affects them.",
 			statusOutputRate: "output {tps} tok/s",
+			statusContext: "context",
+			statusContextDetail: "~{used} / {window}",
 			statusTotalTokens: "total {total} tok",
 			statusWholeLog: "whole log",
 			statusCount: "count the whole log",

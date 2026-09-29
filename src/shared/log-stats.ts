@@ -36,11 +36,26 @@ export interface LogUsage {
   reasoningTokens: number
 }
 
+/** Context occupancy: what the provider reported against the route's window. */
+export interface LogContext {
+  window: number
+  used: number
+  percent: number
+}
+
 /** Totals the composer's status row renders. */
 export interface LogStats {
   turns: number
   steps: number
   usage: LogUsage
+  /**
+   * How full the context is, when the log states both a window and a reading.
+   *
+   * The same rule the shipped composer's meter uses, because a footer that disagreed
+   * with the meter would be a third number for one fact: the window is the newest
+   * `request/context`'s, the reading is the newest `assistant/message`'s own total.
+   */
+  context?: LogContext
   /** Share of input tokens served from cache, when any input was reported. */
   cacheHitPercent?: number
   /** Summed wall time of the steps that produced an assistant message. */
@@ -87,6 +102,10 @@ export function logStats(events: readonly MirrorEvent[]): LogStats {
   // rows do not always carry.
   let generationMs = 0
   let openStepStart: number | undefined
+  // Context occupancy, from the same two rows the shipped meter reads: the newest
+  // stated window, and the newest reading of what fills it.
+  let contextWindow: number | undefined
+  let contextUsed: number | undefined
   const stepStarts = new Map<string, number>()
 
   for (const event of events) {
@@ -120,12 +139,23 @@ export function logStats(events: readonly MirrorEvent[]): LogStats {
       if (started !== undefined && started === openStepStart) openStepStart = undefined
       continue
     }
+    if (event.type === 'request/context') {
+      const reported = number(data?.['contextWindow'])
+      if (reported !== undefined && reported > 0) contextWindow = reported
+      continue
+    }
     if (event.type === 'assistant/message') {
       const reported = asRecord(data?.['usage'])
       usage.inputTokens += number(reported?.['inputTokens']) ?? 0
       usage.outputTokens += number(reported?.['outputTokens']) ?? 0
       usage.cacheReadTokens += number(reported?.['cacheReadTokens']) ?? 0
       usage.reasoningTokens += number(reported?.['reasoningTokens']) ?? 0
+      // What fills the window is the request's own total when the provider states
+      // one, and its input plus output otherwise. Not the cache reads separately:
+      // a stated total already counts them.
+      const total = number(reported?.['totalTokens'])
+      const surface = total ?? ((number(reported?.['inputTokens']) ?? 0) + (number(reported?.['outputTokens']) ?? 0))
+      if (surface > 0) contextUsed = surface
       // The step that was running when this answer arrived is the one that wrote it.
       if (openStepStart !== undefined) generationMs += Math.max(0, event.time - openStepStart)
     }
@@ -135,10 +165,18 @@ export function logStats(events: readonly MirrorEvent[]): LogStats {
   const outputPerSecond = generationMs > 0 && usage.outputTokens > 0
     ? Math.round(usage.outputTokens / (generationMs / 1000))
     : undefined
+  const context = contextWindow === undefined || contextUsed === undefined
+    ? undefined
+    : {
+        window: contextWindow,
+        used: contextUsed,
+        percent: Math.min(100, Math.round((contextUsed / contextWindow) * 100)),
+      }
   return {
     turns,
     steps,
     usage,
+    ...(context === undefined ? {} : { context }),
     ...(inputTotal > 0 ? { cacheHitPercent: Math.round((usage.cacheReadTokens / inputTotal) * 1000) / 10 } : {}),
     stepMs,
     ...(outputPerSecond === undefined ? {} : { outputPerSecond }),

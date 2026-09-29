@@ -1011,6 +1011,7 @@ function Conversation(props: {
           <StatusRow
             t={t}
             stats={reportedStats ?? chrome.stats}
+            context={reportedStats?.context ?? chrome.context}
             all={wholeLog}
             gaps={coverage.gaps}
             authoritative={reportedStats !== undefined}
@@ -1124,9 +1125,11 @@ function ContextRing({ t, context }: {
 }
 
 /** The status row under the composer card: turns, steps, throughput, cache. */
-function StatusRow({ t, stats, all, gaps, authoritative, onCount }: {
+function StatusRow({ t, stats, context, all, gaps, authoritative, onCount }: {
   t: SessionSyncTranslate
   stats: SessionStats
+  /** The machine's own occupancy reading, when it states one. */
+  context?: SessionContext
   /** True when the held events are contiguous *and* nothing older was offered. */
   all: boolean
   /** Ordinals missing between the lowest and highest held sequence. */
@@ -1154,6 +1157,12 @@ function StatusRow({ t, stats, all, gaps, authoritative, onCount }: {
   const head = scope === '' ? '' : `${scope}${gapNote} `
   const parts: string[] = [`${head}${String(stats.turns)} ${t('statusTurns')}`, `${String(stats.steps)} ${t('statusSteps')}`]
   if (stats.outputPerSecond !== undefined) parts.push(t('statusOutputRate', { tps: String(stats.outputPerSecond) }))
+  // The occupancy the shipped composer shows below its card, in the footer for the
+  // same reason everything else is here: a mirrored Session draws this console's
+  // input bar, so the shipped meter's own seat is not mounted for it. The reading is
+  // the meter's (`~used / window`), and it comes from the machine when it states one
+  // — a console holding part of a log cannot see the newest request's window.
+  if (context !== undefined) parts.push(`${t('statusContext')} ${String(context.percent)}%`)
   const total = stats.usage.inputTokens + stats.usage.cacheReadTokens + stats.usage.outputTokens
   const tail: string[] = []
   if (total > 0) tail.push(t('statusTotalTokens', { total: compactTokens(total) }))
@@ -1162,6 +1171,11 @@ function StatusRow({ t, stats, all, gaps, authoritative, onCount }: {
     <div className={css.statusRow} title={authoritative ? t('statusAuthoritativeHint') : t('statusScopeHint')}>
       <span>{parts.join(' · ')}</span>
       {tail.length > 0 && <span>{tail.join(' · ')}</span>}
+      {context !== undefined && (
+        <span title={`~${compactTokens(context.used)} / ${compactTokens(context.window)}`}>
+          {t('statusContextDetail', { used: compactTokens(context.used), window: compactTokens(context.window) })}
+        </span>
+      )}
       {!authoritative && (
         <button
           type="button"

@@ -153,4 +153,34 @@ describe('reading the machine\'s own Session log', () => {
     assert.equal(stats.firstTime, 1_000)
     assert.equal(stats.lastTime, 3_500)
   })
+
+  it('reads context occupancy the way the shipped meter does', () => {
+    // The window comes from the newest `request/context`, the reading from the newest
+    // `assistant/message`, and a stated `totalTokens` wins over input+output because
+    // it already counts the cached reads. The shipped composer's meter is the
+    // reference: a footer that disagreed with it would be a third number for one fact.
+    const stats = logStats([
+      { type: 'request/context', seq: 0, time: 1_000, data: { contextWindow: 128_000 } },
+      { type: 'assistant/message', seq: 1, time: 2_000, data: { usage: { inputTokens: 1_000, outputTokens: 500, cacheReadTokens: 40_000 } } },
+      // A newer window and a newer reading, which is what must be reported.
+      { type: 'request/context', seq: 2, time: 3_000, data: { contextWindow: 64_000 } },
+      { type: 'assistant/message', seq: 3, time: 4_000, data: { usage: { totalTokens: 32_000, inputTokens: 1, outputTokens: 1 } } },
+    ])
+    assert.deepEqual(stats.context, { window: 64_000, used: 32_000, percent: 50 })
+
+    // Half-stated is not stated: a window with no reading, or a reading with no
+    // window, gives nothing to show rather than a zero that reads as "empty".
+    assert.equal(logStats([
+      { type: 'request/context', seq: 0, time: 1_000, data: { contextWindow: 128_000 } },
+    ]).context, undefined)
+    assert.equal(logStats([
+      { type: 'assistant/message', seq: 0, time: 1_000, data: { usage: { inputTokens: 10, outputTokens: 5 } } },
+    ]).context, undefined)
+
+    // A reading above the window clamps, exactly as the meter's own arithmetic does.
+    assert.equal(logStats([
+      { type: 'request/context', seq: 0, time: 1_000, data: { contextWindow: 1_000 } },
+      { type: 'assistant/message', seq: 1, time: 2_000, data: { usage: { totalTokens: 4_000 } } },
+    ]).context?.percent, 100)
+  })
 })

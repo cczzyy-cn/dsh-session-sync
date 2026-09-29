@@ -11,7 +11,7 @@
  * and falls through to "unknown" rather than throwing.
  */
 import { isDelegationTool } from './delegation.ts'
-import { logStats, type LogStats, type LogUsage } from '../shared/log-stats.ts'
+import { logStats, type LogContext, type LogStats, type LogUsage } from '../shared/log-stats.ts'
 import type { MirrorEvent } from '../shared/protocol.ts'
 
 /** The route the Session's last request went to. */
@@ -24,11 +24,7 @@ export interface SessionModel {
 }
 
 /** Context occupancy: what the provider reported against the route's window. */
-export interface SessionContext {
-  window: number
-  used: number
-  percent: number
-}
+export type SessionContext = LogContext
 
 /** Token totals summed over the Session's assistant messages. */
 export type SessionUsage = LogUsage
@@ -117,12 +113,13 @@ const HIDDEN_EVENTS = new Set([
  */
 export function sessionChrome(events: readonly MirrorEvent[]): SessionChrome {
   let model: SessionModel | undefined
-  let window: number | undefined
-  let used: number | undefined
   const policy: SessionPolicy = {}
   let title: string | undefined
   let openTurn = false
   const subagents = new Map<string, SeenSubagent>()
+  // Occupancy comes from the shared walk, not from a second reading here: the footer,
+  // the ring, and the machine's own answer all have to be one number for one fact.
+  const stats = logStats(events)
 
   for (const event of events) {
     const data = asRecord(event.data)
@@ -147,10 +144,9 @@ export function sessionChrome(events: readonly MirrorEvent[]): SessionChrome {
     }
 
     if (event.type === 'request/context') {
-      const reported = number(data?.['contextWindow'])
-      if (reported !== undefined && reported > 0) window = reported
       // The context event also names the route, which is the only model fact
-      // available before the first request header lands.
+      // available before the first request header lands. Its window is read by the
+      // shared walk, not here.
       const provider = text(data?.['provider'])
       const name = text(data?.['model'])
       if (model === undefined && provider !== undefined && name !== undefined) {
@@ -169,14 +165,8 @@ export function sessionChrome(events: readonly MirrorEvent[]): SessionChrome {
     }
 
     if (event.type === 'assistant/message') {
-      const reported = asRecord(data?.['usage'])
-      // Occupancy follows the newest surface reading, the way the composer's
-      // meter does: the last request's total is what fills the window. The token
-      // *totals* are not read here: they come from the shared walk below, so the
-      // footer has one definition rather than two.
-      const total = number(reported?.['totalTokens'])
-      const surface = total ?? ((number(reported?.['inputTokens']) ?? 0) + (number(reported?.['outputTokens']) ?? 0))
-      if (surface > 0) used = surface
+      // Both the token totals and the occupancy reading come from the shared walk:
+      // one definition rather than two, so the footer and the ring cannot disagree.
       continue
     }
 
@@ -224,9 +214,7 @@ export function sessionChrome(events: readonly MirrorEvent[]): SessionChrome {
     }
   }
 
-  const context: SessionContext | undefined = window === undefined || used === undefined
-    ? undefined
-    : { window, used, percent: Math.min(100, Math.round((used / window) * 100)) }
+  const context: SessionContext | undefined = stats.context
 
   return {
     ...(model === undefined ? {} : { model }),
@@ -235,7 +223,7 @@ export function sessionChrome(events: readonly MirrorEvent[]): SessionChrome {
     // The footer's totals come from the shared walk over the same rows, so the
     // machine that owns a Session and a console holding part of it cannot disagree
     // about what the arithmetic *is* — only about how much log each of them has.
-    stats: logStats(events),
+    stats,
     subagents: [...subagents.values()],
     ...(title === undefined ? {} : { title }),
     running: openTurn,
