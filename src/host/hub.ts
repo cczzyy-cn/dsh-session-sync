@@ -194,6 +194,19 @@ interface SessionRecord {
    */
   originFirstSeq?: number
   /**
+   * The lowest sequence any batch has ever carried for this mirror.
+   *
+   * The fact the backfill frontier is read from, and it lives here because only the
+   * receiving side knows it: a page the origin reads and posts can still be trimmed
+   * away by `EVENT_LIMIT`, so the origin's own "I have sent down to N" is a claim
+   * about *delivery*, not about what this mirror holds. Measured: an origin stating
+   * `firstSeq: 0` for a mirror that had dropped the entire middle of its log — which
+   * pinned the frontier at 0 and made every later ask repeat the same page.
+   *
+   * Only moves down, so a live batch above it cannot push the walk back up.
+   */
+  receivedLow?: number
+  /**
    * The totals the owning machine computed from its own whole log.
    *
    * Carried for the reader, not for the mirror's bookkeeping: a console can only
@@ -463,6 +476,15 @@ export class SyncHub {
       return
     }
     fresh.sort((left, right) => left.seq - right.seq)
+    // The frontier the backfill walks down: the lowest sequence a batch has carried,
+    // known only here. Recorded before the trim below, because the point is what the
+    // page *reached* and not what survived retention — a trimmed-away page still
+    // moves the walk forward, which is what stops the same page being asked for
+    // forever.
+    const low = fresh[0]?.seq
+    if (low !== undefined && (session.receivedLow === undefined || low < session.receivedLow)) {
+      session.receivedLow = low
+    }
     session.events.push(...fresh)
     // A late batch belongs where its sequence says, not at the end: the
     // transcript is rendered in this order.
@@ -548,6 +570,13 @@ export class SyncHub {
       // obvious-looking `hole.from - 1`) asks for a page that ends before the hole
       // starts and repairs nothing — the ask looks right and the mirror never
       // becomes whole, which is exactly what the end-to-end test caught.
+      //
+      // OPEN QUESTION, not settled here: with the real controller a page is cut to
+      // its message budget, so the page that ends at `hole.from` may cover mostly
+      // *held* data below the hole rather than the hole itself. Naming one past the
+      // hole's end is the candidate fix, and it needs the controller's page contract
+      // verified against a live log before it is trusted — a first attempt at it
+      // failed the two hole tests and hung the suite on the link fixture.
       record.origin?.older(session.sessionId, hole.from, HOLE_PAGE_MESSAGES)
     }
     if (asked === undefined) {
@@ -1192,7 +1221,7 @@ export class SyncHub {
     // The origin's stated low-water mark when it has one, and the mirror's own
     // lowest otherwise: a machine that has not stated one yet is still worth
     // asking, and its window's floor is all there is to go on.
-    const floor = session.originFirstSeq ?? session.events[0]?.seq
+    const floor = session.receivedLow ?? session.events[0]?.seq
     if (floor === undefined || floor <= 0) return
     const key = `${record.machineName}|${session.sessionId}`
     const now = Date.now()

@@ -155,39 +155,31 @@ describe('a hole in the middle of a mirror', () => {
     assert.ok(older.length > first, 'a surviving hole is asked for again')
   })
 
-  it('asks below the origin\'s stated frontier, not below the mirror\'s own floor', () => {
-    // The shape a delivered page leaves: it prepends, so the mirror now holds
-    // `[0, 99] ∪ [500, 599]` — its lowest sequence is 0 — while the run between the
-    // page and the window is still missing. Asking below the mirror's own floor
-    // therefore asks for the page it already has, forever: measured on the
-    // deployed pair as thirteen identical reads and a mirror pinned in two pieces.
+  it('walks the frontier by what the mirror received, not by what the origin claims', () => {
+    // The deployed shape: a page the origin *read and posted* was trimmed away by the
+    // mirror's retention limit, so the origin's own "I have sent down to 0" is a
+    // claim about delivery rather than about what this mirror holds. Believing it
+    // pins the frontier at 0 and every later ask repeats the same page — measured as
+    // thirteen identical reads and a mirror stuck in two pieces.
     const { hub, older } = bench()
-    publish(hub, run(0, 99))
-    publish(hub, run(500, 599))
-    // The origin states the frontier: it has sent down to 500, so the page below
-    // that is what it owes.
+    publish(hub, run(100, 199))
+    // The origin claims it has sent everything, down to seq 0.
     hub.publishIndex({
       machineName: MACHINE,
-      sessions: [{ sessionId: SESSION, title: 'x', updatedAt: 1, running: false, lastSeq: 599, firstSeq: 500 }],
+      sessions: [{ sessionId: SESSION, title: 'x', updatedAt: 1, running: false, lastSeq: 199, firstSeq: 0 }],
     })
     hub.sweepGaps()
-    assert.ok(older.some(call => call.throughSeq === 500),
-      `the ask must name the frontier, got ${JSON.stringify(older)}`)
-    // The one thing that must never happen: asking below what the mirror already
-    // holds, because the mirror's own floor is 0 and that ask repeats forever.
-    assert.ok(!older.some(call => call.throughSeq === 0), 'never the page the mirror already holds')
+    assert.ok(older.some(call => call.throughSeq === 100),
+      `the ask must name what the mirror received, got ${JSON.stringify(older)}`)
+    assert.ok(!older.some(call => call.throughSeq === 0),
+      'the origin' + String("'") + 's claim must not become the frontier')
 
-    // And the frontier is monotone: re-stating a *higher* one must not raise the
-    // ask back up over history already delivered. (The ask floor is 0 in this
-    // bench, so repeating the frontier ask itself is allowed and not asserted.)
-    publish(hub, run(400, 499))
-    hub.publishIndex({
-      machineName: MACHINE,
-      sessions: [{ sessionId: SESSION, title: 'x', updatedAt: 1, running: false, lastSeq: 599, firstSeq: 500 }],
-    })
+    // And it descends only as far as batches actually arrive: a page below the mark
+    // lowers it, and then there is nothing further below to ask for.
+    publish(hub, run(0, 99))
     hub.sweepGaps()
-    const raised = older.filter(call => call.throughSeq > 500 && call.throughSeq !== 599)
-    assert.deepEqual(raised, [], 'a re-stated higher frontier must not raise the ask')
+    assert.ok(!older.some(call => call.throughSeq <= 0),
+      `a mirror holding from seq 0 has nothing below to ask for: ${JSON.stringify(older.slice(-4))}`)
   })
 
   it('waits out the retry floor before asking again', () => {
