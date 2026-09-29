@@ -5,3 +5,5 @@ node_modules/
 # Local logs from the helper scripts.
 *.log
 dsh-url.txt
+# 临时探针（state/cookie 之类），绝不进仓库
+.tmp-*
