@@ -404,10 +404,53 @@ export interface SyncState {
     throughSeq?: number
     records?: number
     hasMore?: boolean
+    /**
+     * Lowest durable sequence the page carried.
+     *
+     * The evidence a page read is judged on: `hasMore === false` with a lowest
+     * sequence of 0 means the read walked back to the log's beginning, while a
+     * lowest sequence above 0 means it stopped short of it — and that difference
+     * is what decides whether this machine is allowed to stop offering older
+     * history. Absent when the page carried no durable event.
+     */
+    lowestSeq?: number
+    /** Set when this read is what proved the log's beginning was reached. */
+    reachedStart?: true
     /** Which precondition failed, when the read never happened. */
     reason?: 'no-controller' | 'no-page-api' | 'no-follow' | 'no-cursor' | 'rate-limited'
     error?: string
   }
+  /**
+   * Why the most recent attempt at a history read did not run.
+   *
+   * Apart from {@link SyncState.page} on purpose: the periodic gap sweep re-asks
+   * while a read floor is still active, and recording that skip *as* the read made
+   * a page that was served read as a page that was refused — which is the
+   * diagnosis, not the limiter, that the next fault needs.
+   */
+  pageAttempt?: {
+    sessionId?: string
+    beforeSeq?: number
+    reason?: 'no-controller' | 'no-page-api' | 'no-follow' | 'no-cursor' | 'rate-limited'
+    at?: number
+  }
+  /**
+   * The Sessions this machine has proven it read back to their first event.
+   *
+   * Reported because the claim is what turns "the origin has older history" off
+   * for the rest of an episode: when it is wrong, the origin denies history it is
+   * holding, the mirror's floor freezes, and nothing in the transcript shows why.
+   * The value is the evidence, so a wrong claim can be argued with instead of
+   * merely believed.
+   */
+  started?: {
+    sessionId: string
+    at: number
+    throughSeq: number
+    records: number
+    /** Which read proved it: the opening window itself, or a backwards page. */
+    source: 'opening' | 'page'
+  }[]
 }
 
 /** Where one event sits on the Session surface — `SessionWireSurfaceOp`. */

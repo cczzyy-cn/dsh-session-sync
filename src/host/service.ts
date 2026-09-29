@@ -215,7 +215,7 @@ export class SessionSyncService {
   /** When each Session was last asked for an older page of history. */
   private readonly pageAsked = new Map<string, number>()
   /**
-   * Sessions whose log this machine has read back to its beginning.
+   * Sessions whose log this machine has read back to its beginning, by proof.
    *
    * Service-scoped rather than per-follow because it is a fact about what has
    * been *published*, not about one attempt at opening a window — and a follow
@@ -224,8 +224,15 @@ export class SessionSyncService {
    * handle's opening frame reports `hasMore` for its own tail window, which is
    * true of every Session longer than that window, so trusting it on each
    * re-open put the reader's "older" control back on screen forever.
+   *
+   * The value is the *evidence*, not a flag, because the claim has to be
+   * falsifiable after the fact: a read that reported "nothing older" while its
+   * window never reached the log's first sequence is not proof of a beginning,
+   * and treating it as one latched `hasOlder` to false for the rest of the
+   * episode — the origin then denied history it was holding, the mirror's floor
+   * froze, and nothing left running could clear it.
    */
-  private readonly reachedStart = new Set<string>()
+  private readonly startProven = new Map<string, { at: number; throughSeq: number; records: number; source: 'opening' | 'page' }>()
   /**
    * Owns the signal for the history reads a reader's paging triggers.
    *
@@ -244,6 +251,16 @@ export class SessionSyncService {
    * nothing older — so the one fact that separates them is published here.
    */
   private lastPageRead: SyncState['page']
+  /**
+   * Why the most recent attempt to read history did not run.
+   *
+   * Kept apart from {@link lastPageRead} because they answer different questions
+   * and the second must not erase the first: the sweep re-asks for a gap while a
+   * read floor is still active, and a skipped attempt recorded *as* the read made
+   * a served page look like a refused one — the diagnosis of the next fault would
+   * have been the limiter's, not the fault's.
+   */
+  private lastPageAttempt: SyncState['pageAttempt']
 
   /** The last publish attempt, as the settings page reports it. */
   private lastPublish: { at: number; ok: boolean; error?: string } | undefined
@@ -421,6 +438,16 @@ export class SessionSyncService {
           ...(handle.ended === undefined ? {} : { ended: handle.ended }),
         })),
         ...(this.lastPageRead === undefined ? {} : { page: this.lastPageRead }),
+        ...(this.lastPageAttempt === undefined ? {} : { pageAttempt: this.lastPageAttempt }),
+        ...(this.startProven.size === 0 ? {} : {
+          started: [...this.startProven].map(([sessionId, evidence]) => ({
+            sessionId,
+            at: evidence.at,
+            throughSeq: evidence.throughSeq,
+            records: evidence.records,
+            source: evidence.source,
+          })),
+        }),
       }),
     }
   }
@@ -793,6 +820,14 @@ export class SessionSyncService {
     const controller = this.controller()
     // The reader's bound is inclusive; the page API's is not.
     const beforeSeq = throughSeq + 1
+    // What the controller is asked to read against. It is the follow's log cut,
+    // not the reader's bound: the controller requires the cut the window was taken
+    // at, and it clamps the page inside it. Both halves matter — `beforeSeq` is
+    // what makes the page end exactly where the reader asked, and `throughSeq` is
+    // what keeps the controller's own disagreement check satisfied. A page that
+    // ends up *above* the log's beginning because of that clamp is not evidence of
+    // anything, which is the next decision down.
+    const pageThrough = handle.cursor
     // Named rather than merged: every one of these has a different repair, and
     // the merged text they used to share ("no follow or no page API") could not
     // tell an unopened follow from a missing service. That ambiguity is what
@@ -803,19 +838,34 @@ export class SessionSyncService {
           : handle === undefined ? 'no-follow'
             : handle.cursor < 0 ? 'no-cursor'
               : undefined
+    // What this attempt is, kept apart from what the last read *found*. Writing it
+    // into the read record would erase a served page the moment the mirror's own
+    // sweep re-asked while the read floor was active — the diagnosis of the next
+    // fault would then be the limiter's, not the fault's.
+    const now = Date.now()
+    if (skip !== undefined) {
+      this.lastPageAttempt = { sessionId, beforeSeq, reason: skip, at: now }
+      // Nothing was read, so there is no read to report — unless nothing ever was.
+      if (this.lastPageRead?.records === undefined) this.lastPageRead = { sessionId, beforeSeq, reason: skip }
+      return
+    }
+    const previous = this.pageAsked.get(sessionId)
+    if (previous !== undefined && now - previous < PAGE_FLOOR_MS) {
+      this.lastPageAttempt = { sessionId, beforeSeq, reason: 'rate-limited', at: now }
+      if (this.lastPageRead?.records === undefined) {
+        this.lastPageRead = { sessionId, beforeSeq, reason: 'rate-limited' }
+      }
+      return
+    }
+    // A real read is about to happen, so the attempt's own shape is the honest
+    // stand-in until the answer replaces it.
+    this.lastPageAttempt = { sessionId, beforeSeq, at: now }
     this.lastPageRead = {
       sessionId,
       beforeSeq,
       ...(handle === undefined ? {} : { throughSeq: handle.cursor }),
-      ...(skip === undefined ? {} : { reason: skip }),
     }
-    if (skip !== undefined || handle === undefined || controller === undefined) return
-    const now = Date.now()
-    const previous = this.pageAsked.get(sessionId)
-    if (previous !== undefined && now - previous < PAGE_FLOOR_MS) {
-      this.lastPageRead = { ...this.lastPageRead, reason: 'rate-limited' }
-      return
-    }
+    if (handle === undefined || controller === undefined) return
     this.pageAsked.set(sessionId, now)
     try {
       // Aborted by this service, never by the follow. The read is a cold read of
@@ -829,7 +879,7 @@ export class SessionSyncService {
       const page = await controller.page(
         {
           address: { kind: 'session', sessionId },
-          throughSeq: handle.cursor,
+          throughSeq: pageThrough,
           beforeSeq,
           maxMessages,
         },
@@ -860,8 +910,19 @@ export class SessionSyncService {
       // "older" control finally goes away. That fact outlives this handle: a page
       // read back to the beginning is about the log, and a reconnect that re-opens
       // the follow must not re-open the question with it.
+      //
+      // Claimed on evidence, not on the answer alone: a page whose lowest event is
+      // still above seq 0 was cut before the log's beginning and says nothing about
+      // where that beginning is. Recording it as "reached the start" is what made
+      // the origin deny history it was holding, permanently and invisibly.
+      const lowest = lowestSeqOf(page.records)
+      const reachedStart = page.hasMore === false && lowest === 0
       const hadOlder = handle.hasOlder
-      if (!page.hasMore) this.reachedStart.add(sessionId)
+      if (reachedStart) {
+        this.startProven.set(sessionId, {
+          at: Date.now(), throughSeq: pageThrough, records: page.records.length, source: 'page',
+        })
+      }
       handle.hasOlder = page.hasMore
       // ...and the index has to be re-sent for that to reach the mirror: it is
       // published on a reconcile, and `hasOlder` is only ever *named* when true,
@@ -871,10 +932,14 @@ export class SessionSyncService {
       this.lastPageRead = {
         sessionId,
         beforeSeq,
-        throughSeq: handle.cursor,
+        throughSeq: pageThrough,
         records: page.records.length,
         hasMore: page.hasMore,
+        ...(lowest === undefined ? {} : { lowestSeq: lowest }),
+        ...(reachedStart ? { reachedStart: true } : {}),
       }
+      // The read just happened, so no skip is pending to explain.
+      this.lastPageAttempt = undefined
       if (added > 0) {
         this.ctx.logger.info(`dsh-session-sync: sent ${String(added)} earlier event(s) of "${sessionId}"`)
       }
@@ -882,7 +947,7 @@ export class SessionSyncService {
       this.lastPageRead = {
         sessionId,
         beforeSeq,
-        throughSeq: handle.cursor,
+        throughSeq: pageThrough,
         error: describe(error),
       }
       this.ctx.logger.warn(`dsh-session-sync: reading history for "${sessionId}" failed: ${describe(error)}`)
@@ -936,7 +1001,7 @@ export class SessionSyncService {
       // A Session that stopped publishing starts a new episode if it comes back:
       // what was read back to the beginning belonged to the publish that ended,
       // and the honest starting point for a fresh one is "unknown" again.
-      this.reachedStart.delete(sessionId)
+      this.startProven.delete(sessionId)
     }
     for (const sessionId of desired) {
       if (!this.follows.has(sessionId)) this.startFollow(sessionId)
@@ -1264,8 +1329,21 @@ export class SessionSyncService {
         // claim only while the log's beginning is still unknown. Once a page read
         // has walked back to the start, this machine has published everything
         // there is, and every later opening sits above history it already sent.
-        if (carrier['hasMore'] === false) this.reachedStart.add(handle.sessionId)
-        handle.hasOlder = carrier['hasMore'] === true && !this.reachedStart.has(handle.sessionId)
+        if (carrier['hasMore'] === false) {
+          // The same evidence rule as a page read: only an opening that actually
+          // carried the log's first sequence establishes where the log begins.
+          const opening = Array.isArray(carrier['records'])
+            ? carrier['records'] as readonly { event?: unknown }[]
+            : Array.isArray((carrier['page'] as Record<string, unknown> | undefined)?.['records'])
+              ? (carrier['page'] as Record<string, unknown>)['records'] as readonly { event?: unknown }[]
+              : []
+          if (lowestSeqOf(opening) === 0) {
+            this.startProven.set(handle.sessionId, {
+              at: Date.now(), throughSeq: handle.cursor, records: opening.length, source: 'opening',
+            })
+          }
+        }
+        handle.hasOlder = carrier['hasMore'] === true && !this.startProven.has(handle.sessionId)
       }
       // The opening is the frame a page read depends on, so whether it ever
       // arrived is recorded rather than inferred from the cursor: an empty
@@ -1453,6 +1531,26 @@ function mirrorOf(handle: FollowHandle, event: WireEvent): MirrorEvent {
     // reads as an append, and the console shows the history it superseded.
     ...(event.surfaceOp === undefined ? {} : { surfaceOp: event.surfaceOp }),
   }
+}
+
+/**
+ * The lowest durable sequence in one page of records.
+ *
+ * The evidence half of "this page reached the log's beginning": the controller
+ * slices a page from the log's own first index, so a page that walked all the way
+ * back carries seq 0. Absent when the page carries no durable event at all, which
+ * proves nothing either way.
+ * @param records - the page's records, in log order.
+ * @returns the lowest sequence, or undefined when the page holds none.
+ */
+function lowestSeqOf(records: readonly { readonly event?: unknown }[]): number | undefined {
+  let lowest: number | undefined
+  for (const record of records) {
+    const seq = (record.event as { seq?: unknown } | undefined)?.seq
+    if (typeof seq !== 'number') continue
+    if (lowest === undefined || seq < lowest) lowest = seq
+  }
+  return lowest
 }
 
 /** Append one durable event to the buffer, bounded so memory cannot run away. */
