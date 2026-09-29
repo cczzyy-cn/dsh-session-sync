@@ -1121,6 +1121,7 @@ ssh -n root@210.16.120.228 "echo <base64> | base64 -d > /tmp/t.sh && bash /tmp/t
 | `git push` | 无 gh、无 TTY | 从凭据管理器读 token → 临时改 remote URL → 推 → 还原；提交信息用 `git commit -F`（内嵌引号会坏） |
 | **探针量错** | 用 `limit=400` 的首条当镜像低端，于是"新历史从下面长出来"完全看不见，误判为卡死 | 量低端用 `limit=4000`；先确认探针测的是不是你以为的那个量 |
 | **点击坐标** | 自己按截图算，偏了 290 像素，于是"按钮点了没反应" | 用 `see(text=true)` 给的 `screen_center`，不要手算 |
+| **JSX 里引用了外层组件的局部变量** | 0.10.18 把 `mirrored?.stats` 写进了 `Conversation` 组件，而 `mirrored` 是父组件 `SessionPanel` 的局部变量 ⇒ 浏览器里整个会话面板**直接崩**（`ReferenceError: mirrored is not defined`），而 `tsdown` 只转译、既有测试也只测 Host 与纯函数，**全绿** | 改了 JSX 的变量引用就做两件事：①`tsc -p tsconfig.json 2>&1 \| Select-String TS2304`（未声明标识符，全项目应为 0）；②取回**服务器实际下发的那份 bundle**，grep 新标识符在、旧模式不在（`plugins/??…&rev=` 那个 combo，单入口是 404）。客户端改动**必须真在浏览器里打开一次**再看结论 |
 | 日志读不到 | 两端都看不见插件日志 | 把事实写进 state（既有模式），别指望日志 |
 | 结论过头 | "重放既不重复也不丢失" 被后续证据证伪 | 先写症状与证据，再写根因；范围要写清（例如 `drain` 只覆盖一个 flush 周期） |
 | **沙箱收紧后 `git push` 失败** | 凭证助手 `credential.helper=store` 是 shell 脚本，`sh.exe` 在沙箱下连信号管道都建不了（`couldn't create signal pipe, Win32 error 5`）⇒ `could not read Username`；schannel 另报 `SEC_E_NO_CREDENTIALS` | 绕开助手与 schannel：`git -c http.sslBackend=openssl -c "http.https://github.com/.extraHeader=Authorization: Basic <b64(x-access-token:TOKEN)>" push …`（token 仍从凭据管理器读，不进任何文件） |
