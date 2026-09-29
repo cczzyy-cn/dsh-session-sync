@@ -98,10 +98,40 @@ describe('a hole in the middle of a mirror', () => {
     const before = older.length + resyncs.length
     // A repair can only be retried on the sweep, which is where a lost batch is
     // noticed; a mirror that is whole must clear the episode rather than keep
-    // asking.
+    // asking. "Whole" here is about the *hole*: this fixture's mirror begins at
+    // seq 100, so the sweep also asks for the history below that floor — see the
+    // next test, which is that ask's own case.
+    const holeAsks = (): number => older.filter(call => call.throughSeq < 100).length
+    assert.equal(holeAsks(), 0, 'the hole ask names the hole, not the floor')
     hub.sweepGaps()
-    assert.equal(older.length + resyncs.length, before, 'a whole mirror asks for nothing')
+    assert.equal(holeAsks(), 0, 'a repaired hole is not asked for again')
     assert.equal(hub.machines()[0]?.sessions[0]?.missingEvents, 0)
+  })
+
+  it('keeps asking for history below a window the origin has stopped offering', () => {
+    // The shape a restarted host leaves behind: the mirror holds a tail window,
+    // and the origin's own `hasOlder` is false because it *did* read back to the
+    // start once — the pages from that read are just gone. Nothing else in the
+    // engine reports this (a window's missing history is neither a hole inside it
+    // nor a gap above it), so the sweep has to read it off the floor itself.
+    const { hub, older } = bench()
+    publish(hub, run(100, 299))
+    // The origin states no older history: exactly the false claim.
+    hub.publishIndex({
+      machineName: MACHINE,
+      sessions: [{ sessionId: SESSION, title: 'x', updatedAt: 1, running: false, lastSeq: 299 }],
+    })
+    assert.equal(hub.transcript(MACHINE, SESSION, { limit: 10 })?.hasMore, true, 'the window has nothing below it on offer')
+
+    hub.sweepGaps()
+    const floorAsks = older.filter(call => call.throughSeq === 100)
+    assert.equal(floorAsks.length, 1, 'the floor is asked for even though the origin claims nothing older')
+
+    // And once the missing history arrives, the asking stops on its own.
+    publish(hub, run(0, 99))
+    const after = older.length
+    hub.sweepGaps()
+    assert.equal(older.length, after, 'a mirror that reaches seq 0 has nothing below to ask for')
   })
 
   it('asks for every hole, lowest first', () => {

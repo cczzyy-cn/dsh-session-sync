@@ -461,7 +461,13 @@ export class SyncHub {
    */
   sweepGaps(): void {
     for (const record of this.records.values()) {
-      for (const session of record.sessions.values()) this.reportGap(record, session)
+      for (const session of record.sessions.values()) {
+        this.reportGap(record, session)
+        // And the other way a mirror can be short: it holds a window rather than
+        // the log. `reportGap` cannot see that one, because history below a window
+        // is neither a hole inside it nor a gap above it.
+        this.fillBelowWindow(record, session)
+      }
     }
   }
 
@@ -1110,6 +1116,44 @@ export class SyncHub {
     }
     record.origin.older(sessionId, throughSeq, maxMessages)
     return true
+  }
+
+  /**
+   * Ask the owning machine for the history a mirrored log is still missing below
+   * its own window.
+   *
+   * A mirror whose lowest held sequence is above 0 is *by definition* missing the
+   * log below that point: a log starts at 0, so anything the mirror holds that
+   * begins later is a window rather than a Session. Nothing else in the engine
+   * says so — `holes` counts gaps inside the held range and `behind` counts what
+   * the origin has published above it, and history below a window is neither —
+   * so this is the only reading that a mirror which arrived as a tail window can
+   * be repaired from.
+   *
+   * It has to be this reading rather than the origin's own `hasOlder`: that flag
+   * is one machine's memory of having read back to the start *once*, and it stays
+   * false afterwards. When the pages from that read are lost — the mirror's host
+   * restarted, or the read landed on a link that was closing — the flag says
+   * "nothing older" while the mirror plainly holds a window, and the two ends
+   * deadlock: measured here as a 6,257-event Session whose mirror kept 283 events
+   * (seq 5975..6257) with `missingEvents: 0` for the rest of the episode.
+   *
+   * Asking is not the same as expecting: the origin reads its own log and answers
+   * an empty page once the beginning really is reached, so this can repeat
+   * harmlessly. The floor is in `olderAsked`, so it costs one ask per Session per
+   * interval.
+   * @param record - the machine that owns the Sessions.
+   * @param session - the mirrored Session to measure.
+   */
+  private fillBelowWindow(record: MachineRecord, session: SessionRecord): void {
+    const floor = session.events[0]?.seq
+    if (floor === undefined || floor <= 0) return
+    const key = `${record.machineName}|${session.sessionId}`
+    const now = Date.now()
+    const asked = this.olderAsked.get(key)
+    if (asked !== undefined && now - asked < this.olderAskFloorMs) return
+    this.olderAsked.set(key, now)
+    record.origin?.older(session.sessionId, floor, OLDER_PAGE_MESSAGES)
   }
 
   /** Deliver the older-history asks that waited for an origin to attach. */
