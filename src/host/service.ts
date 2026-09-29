@@ -946,6 +946,10 @@ export class SessionSyncService {
         sessionId,
         beforeSeq,
         throughSeq: pageThrough,
+        // What the read asked its log for. Kept because a page that ignores the
+        // message budget looks exactly like a page that honours it, except in its
+        // size — and its size is what tells the two apart from outside.
+        maxMessages,
         records: page.records.length,
         hasMore: page.hasMore,
         ...(lowest === undefined ? {} : { lowestSeq: lowest }),
