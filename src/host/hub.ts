@@ -18,6 +18,7 @@ import {
   type CommandStatus,
   type DownstreamCommand,
   type MirrorEvent,
+  type MirrorStats,
   type MirrorTranscript,
   type MirroredMachine,
   type MirroredSession,
@@ -179,6 +180,14 @@ interface SessionRecord {
    * origin's own opening window knows that.
    */
   originHasOlder: boolean
+  /**
+   * The totals the owning machine computed from its own whole log.
+   *
+   * Carried for the reader, not for the mirror's bookkeeping: a console can only
+   * count the events it holds, and those are a window. Undefined until a machine
+   * states them, which is also the signal to fall back to counting locally.
+   */
+  originStats?: MirrorStats
 }
 
 /** The one logger method the mirror needs, so it does not own a logging seam. */
@@ -345,6 +354,7 @@ export class SyncHub {
           maxSeq: -1,
           originSeq: reported(session.lastSeq),
           originHasOlder: session.hasOlder === true,
+          ...(session.stats === undefined ? {} : { originStats: session.stats }),
         })
         continue
       }
@@ -353,6 +363,10 @@ export class SyncHub {
       existing.running = session.running
       existing.originSeq = reported(session.lastSeq)
       existing.originHasOlder = session.hasOlder === true
+      // Replace or drop, never merge: a machine that stopped stating totals must
+      // not keep showing the ones it stated for an older log.
+      if (session.stats === undefined) delete existing.originStats
+      else existing.originStats = session.stats
       if (session.cwd === undefined) delete existing.cwd
       else existing.cwd = session.cwd
     }
@@ -1288,6 +1302,7 @@ function summary(session: SessionRecord): MirroredSession {
     eventCount: session.events.length,
     missingEvents: missingOf(session),
     ...shortfallOf(session),
+    ...(session.originStats === undefined ? {} : { stats: session.originStats }),
   }
 }
 

@@ -230,6 +230,14 @@ export interface MirroredSession {
    * case of a turn in flight as for a mirror that lost a batch.
    */
   behind: number
+  /**
+   * The totals the owning machine computed from its whole log.
+   *
+   * Present only while that machine is publishing and its log could be read. A
+   * reader prefers these over anything countable from the events held here,
+   * because the held events are a window and these are not.
+   */
+  stats?: MirrorStats
 }
 
 /** One machine the server knows about, online or not. */
@@ -879,7 +887,41 @@ export interface PublishIndexPayload {
      * told there is none.
      */
     hasOlder?: boolean
+    /**
+     * The totals this machine computed from the Session's *whole* log.
+     *
+     * The console can only count what it holds, and what it holds is a window —
+     * the mirror retains a bounded number of events, so a long Session's footer
+     * understates it by whatever sits below that window. No console-side
+     * arithmetic can recover that; only the machine that owns the log can state
+     * it. Absent when the log could not be read, which leaves the console
+     * counting what it has — today's behaviour, not a wrong number.
+     */
+    stats?: MirrorStats
   }[]
+}
+
+/**
+ * One Session's whole-log totals, as its owning machine computed them.
+ *
+ * The shape mirrors the console's own footer arithmetic field for field, because
+ * a reader compares the two: the same rules over the same log, computed by the
+ * half that holds all of it.
+ */
+export interface MirrorStats {
+  turns: number
+  steps: number
+  usage: {
+    inputTokens: number
+    outputTokens: number
+    cacheReadTokens: number
+    reasoningTokens: number
+  }
+  cacheHitPercent?: number
+  stepMs: number
+  outputPerSecond?: number
+  firstTime?: number
+  lastTime?: number
 }
 
 /** Origin → server: durable events appended to one published Session. */

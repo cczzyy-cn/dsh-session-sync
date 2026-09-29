@@ -11,6 +11,7 @@
  * through {@link SessionSyncService.patch}; there is no second source of truth.
  */
 import { hostname } from 'node:os'
+import { join } from 'node:path'
 import {
   serverOrigin,
   type ConfigPatch,
@@ -45,6 +46,7 @@ import { ApprovalRelay } from './approvals.ts'
 import { InteractionRelay } from './interactions.ts'
 import { resolveHome } from './config.ts'
 import { OriginLink, startSyncServer, type SyncServerHandle } from './transport.ts'
+import { SessionStatsReader } from './session-stats.ts'
 import { pluginVersion } from './version.ts'
 
 /** How often the local index is re-read and the follow set reconciled. */
@@ -261,6 +263,8 @@ export class SessionSyncService {
    * have been the limiter's, not the fault's.
    */
   private lastPageAttempt: SyncState['pageAttempt']
+  /** Reads this machine's own Session logs for the whole-log totals the index carries. */
+  private readonly stats: SessionStatsReader
 
   /** The last publish attempt, as the settings page reports it. */
   private lastPublish: { at: number; ok: boolean; error?: string } | undefined
@@ -309,6 +313,9 @@ export class SessionSyncService {
       },
       now: () => Date.now(),
     })
+    // The whole-log totals the index carries. Read from this machine's own Session
+    // logs, because a mirror's window is all a console can count.
+    this.stats = new SessionStatsReader(join(home, 'sessions'))
   }
 
   /**
@@ -367,6 +374,7 @@ export class SessionSyncService {
     this.link?.stop()
     this.link = undefined
     await this.stopServer()
+    this.stats.dispose()
     this.browsers.clear()
   }
 
@@ -1002,6 +1010,8 @@ export class SessionSyncService {
       // what was read back to the beginning belonged to the publish that ended,
       // and the honest starting point for a fresh one is "unknown" again.
       this.startProven.delete(sessionId)
+      // Totals belong to the log that was read, so they go with the episode.
+      this.stats.forget(sessionId)
     }
     for (const sessionId of desired) {
       if (!this.follows.has(sessionId)) this.startFollow(sessionId)
@@ -1012,6 +1022,14 @@ export class SessionSyncService {
       sessions: rows.filter(row => row.synced).map(row => {
         const handle = this.follows.get(row.sessionId)
         const lastSeq = handle?.lastSeq
+        const stats = this.stats.cached(row.sessionId)
+        // A Session whose totals are missing or stale is read in the background;
+        // this index carries whatever is already known, and the next reconcile —
+        // ten seconds away — carries the new ones. The read is deliberately not
+        // awaited here: a five-megabyte log must not hold up a publish.
+        if (stats === undefined || (lastSeq !== undefined && stats.seq < lastSeq)) {
+          void this.refreshStats(row.sessionId, row.cwd, lastSeq)
+        }
         return {
           sessionId: row.sessionId,
           title: row.title,
@@ -1025,9 +1043,36 @@ export class SessionSyncService {
           // Only said when true: the mirror reads absence as "no history below
           // the window", which is the answer for a Session that arrived whole.
           ...(handle?.hasOlder === true ? { hasOlder: true } : {}),
+          // The one thing a console cannot compute for itself: what the whole log
+          // holds, including everything below the mirror's retained window.
+          ...(stats === undefined ? {} : { stats: stats.stats }),
         }
       }),
     } satisfies PublishIndexPayload)
+  }
+
+  /**
+   * Read one Session's whole log for its totals, and publish them when they land.
+   *
+   * The reconcile that notices the totals are missing does not wait for this: the
+   * read is disk work over a log that can be megabytes, and an index publish that
+   * waits on one Session would delay every other machine's mirror. So the result
+   * is published by triggering the next reconcile, which is where an index is
+   * assembled anyway.
+   * @param sessionId - the Session to read.
+   * @param cwd - its working directory, which is where its log sits.
+   * @param lastSeq - the highest sequence this machine has published for it.
+   */
+  private async refreshStats(sessionId: string, cwd: string | undefined, lastSeq: number | undefined): Promise<void> {
+    if (this.disposed) return
+    try {
+      const computed = await this.stats.compute(sessionId, cwd, lastSeq ?? 0)
+      if (computed !== undefined && !this.disposed) void this.reconcile()
+    } catch (error: unknown) {
+      // Never fatal: the console falls back to counting what it holds, which is
+      // exactly what it did before this existed.
+      this.ctx.logger.info(`dsh-session-sync: whole-log totals for "${sessionId}" unavailable: ${describe(error)}`)
+    }
   }
 
   /**

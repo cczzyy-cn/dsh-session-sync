@@ -649,6 +649,21 @@ function Conversation(props: {
     () => sessionChrome(state.transcript?.events ?? []),
     [state.transcript],
   )
+  // The machine's own totals for this Session, when it states them. Preferred over
+  // anything countable here, because what is here is what the mirror retained —
+  // a window — and a footer computed from a window understates a long Session by
+  // everything below it, no matter how far this console pages.
+  const reportedStats = mirrored?.stats
+  const coverage = React.useMemo(
+    () => logCoverage(state.transcript?.events ?? []),
+    [state.transcript],
+  )
+  // "The whole log" has to be true in one of exactly two ways: the machine stated
+  // its own whole-log totals, or this console holds a contiguous run and the chain
+  // offered nothing older. The chain alone used to be enough, and it claimed the
+  // whole log while holding 849 of the machine's 956 steps.
+  const wholeLog = reportedStats !== undefined
+    || (state.transcript?.hasMore === false && coverage.gaps === 0)
 
   const cells = React.useMemo(
     () => trajectoryCells(state.transcript?.events ?? [], kindLabel(t)),
@@ -992,16 +1007,14 @@ function Conversation(props: {
               </button>
             </div>
           </form>
-          {/* `all` needs both halves: the chain offering nothing older, and the held
-    sequences being contiguous. The chain alone claimed "the whole log" while
-    holding 849 of the machine's 956 steps. */}
-      <StatusRow
-        t={t}
-        stats={chrome.stats}
-        all={state.transcript?.hasMore === false && logCoverage(state.transcript?.events ?? []).gaps === 0}
-        gaps={logCoverage(state.transcript?.events ?? []).gaps}
-        onCount={() => { void props.loadAllOlder() }}
-      />
+          {/* The machine's totals when it states them, this console's count otherwise. */}
+          <StatusRow
+            t={t}
+            stats={reportedStats ?? chrome.stats}
+            all={wholeLog}
+            gaps={coverage.gaps}
+            onCount={() => { void props.loadAllOlder() }}
+          />
         </div>
       )}
     </>

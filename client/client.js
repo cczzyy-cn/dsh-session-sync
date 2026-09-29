@@ -1604,7 +1604,7 @@ window.__ModuleLoader__.load({
 		* @returns the attempt id, or undefined for an envelope without coordinates.
 		*/
 		function settlementAttemptId(event) {
-			const data = asRecord$4(event.data);
+			const data = asRecord$5(event.data);
 			const turn = data?.["turn"];
 			const step = data?.["step"];
 			return typeof turn === "number" && typeof step === "number" ? attemptKey(turn, step) : void 0;
@@ -1631,7 +1631,7 @@ window.__ModuleLoader__.load({
 			return PANEL_ONLY_TYPES.has(event.type);
 		}
 		/** Narrow one unknown value to a plain record. */
-		function asRecord$4(value) {
+		function asRecord$5(value) {
 			if (typeof value !== "object" || value === null || Array.isArray(value)) return void 0;
 			return value;
 		}
@@ -2649,6 +2649,78 @@ window.__ModuleLoader__.load({
 			return DELEGATION_TOOL_MATCH.test(name);
 		}
 		//#endregion
+		//#region src/shared/log-stats.ts
+		/** One record, read as the loose shape these rows arrive in. */
+		function asRecord$4(value) {
+			return typeof value === "object" && value !== null && !Array.isArray(value) ? value : void 0;
+		}
+		/** One finite number field, or undefined. */
+		function number$3(value) {
+			return typeof value === "number" && Number.isFinite(value) ? value : void 0;
+		}
+		/**
+		* Compute the footer's totals for one Session log.
+		* @param events - the Session's events, in log order.
+		* @returns the totals; every field is present, and zero when the log says nothing.
+		*/
+		function logStats(events) {
+			const usage = {
+				inputTokens: 0,
+				outputTokens: 0,
+				cacheReadTokens: 0,
+				reasoningTokens: 0
+			};
+			let turns = 0;
+			let steps = 0;
+			let firstTime;
+			let lastTime;
+			let stepMs = 0;
+			const stepStarts = /* @__PURE__ */ new Map();
+			for (const event of events) {
+				const data = asRecord$4(event.data);
+				if (firstTime === void 0) firstTime = event.time;
+				lastTime = event.time;
+				if (event.type === "turn/start") {
+					const turn = number$3(data?.["turn"]);
+					if (turn !== void 0) turns = Math.max(turns, turn);
+					continue;
+				}
+				if (event.type === "step/start") {
+					steps += 1;
+					const turn = number$3(data?.["turn"]);
+					const step = number$3(data?.["step"]);
+					if (turn !== void 0 && step !== void 0) stepStarts.set(`${String(turn)}\u0000${String(step)}`, event.time);
+					continue;
+				}
+				if (event.type === "step/end") {
+					const turn = number$3(data?.["turn"]);
+					const step = number$3(data?.["step"]);
+					const started = turn === void 0 || step === void 0 ? void 0 : stepStarts.get(`${String(turn)}\u0000${String(step)}`);
+					if (started !== void 0) stepMs += Math.max(0, event.time - started);
+					continue;
+				}
+				if (event.type === "assistant/message") {
+					const reported = asRecord$4(data?.["usage"]);
+					usage.inputTokens += number$3(reported?.["inputTokens"]) ?? 0;
+					usage.outputTokens += number$3(reported?.["outputTokens"]) ?? 0;
+					usage.cacheReadTokens += number$3(reported?.["cacheReadTokens"]) ?? 0;
+					usage.reasoningTokens += number$3(reported?.["reasoningTokens"]) ?? 0;
+				}
+			}
+			const inputTotal = usage.inputTokens + usage.cacheReadTokens;
+			const outputPerSecond = stepMs > 0 && usage.outputTokens > 0 ? Math.round(usage.outputTokens / (stepMs / 1e3)) : void 0;
+			return {
+				turns,
+				steps,
+				usage,
+				...inputTotal > 0 ? { cacheHitPercent: Math.round(usage.cacheReadTokens / inputTotal * 1e3) / 10 } : {},
+				stepMs,
+				...outputPerSecond === void 0 ? {} : { outputPerSecond },
+				...firstTime === void 0 ? {} : { firstTime },
+				...lastTime === void 0 ? {} : { lastTime }
+			};
+		}
+		//#endregion
 		//#region src/client/session-chrome.ts
 		/**
 		* What the mirrored log says about a Session's runtime chrome, and the ledger
@@ -2683,25 +2755,11 @@ window.__ModuleLoader__.load({
 			let window;
 			let used;
 			const policy = {};
-			const usage = {
-				inputTokens: 0,
-				outputTokens: 0,
-				cacheReadTokens: 0,
-				reasoningTokens: 0
-			};
-			let turns = 0;
-			let steps = 0;
-			let firstTime;
-			let lastTime;
 			let title;
-			let stepMs = 0;
 			let openTurn = false;
 			const subagents = /* @__PURE__ */ new Map();
-			const stepStarts = /* @__PURE__ */ new Map();
 			for (const event of events) {
 				const data = asRecord$3(event.data);
-				if (firstTime === void 0) firstTime = event.time;
-				lastTime = event.time;
 				if (event.type === "request/header") {
 					const config = asRecord$3(asRecord$3(data?.["header"])?.["config"]);
 					const provider = text$1(config?.["provider"]);
@@ -2726,8 +2784,6 @@ window.__ModuleLoader__.load({
 					continue;
 				}
 				if (event.type === "turn/start") {
-					const turn = number$2(data?.["turn"]);
-					if (turn !== void 0) turns = Math.max(turns, turn);
 					openTurn = true;
 					continue;
 				}
@@ -2735,26 +2791,8 @@ window.__ModuleLoader__.load({
 					openTurn = false;
 					continue;
 				}
-				if (event.type === "step/start") {
-					steps += 1;
-					const turn = number$2(data?.["turn"]);
-					const step = number$2(data?.["step"]);
-					if (turn !== void 0 && step !== void 0) stepStarts.set(`${String(turn)}\u0000${String(step)}`, event.time);
-					continue;
-				}
-				if (event.type === "step/end") {
-					const turn = number$2(data?.["turn"]);
-					const step = number$2(data?.["step"]);
-					const started = turn === void 0 || step === void 0 ? void 0 : stepStarts.get(`${String(turn)}\u0000${String(step)}`);
-					if (started !== void 0) stepMs += Math.max(0, event.time - started);
-					continue;
-				}
 				if (event.type === "assistant/message") {
 					const reported = asRecord$3(data?.["usage"]);
-					usage.inputTokens += number$2(reported?.["inputTokens"]) ?? 0;
-					usage.outputTokens += number$2(reported?.["outputTokens"]) ?? 0;
-					usage.cacheReadTokens += number$2(reported?.["cacheReadTokens"]) ?? 0;
-					usage.reasoningTokens += number$2(reported?.["reasoningTokens"]) ?? 0;
 					const surface = number$2(reported?.["totalTokens"]) ?? (number$2(reported?.["inputTokens"]) ?? 0) + (number$2(reported?.["outputTokens"]) ?? 0);
 					if (surface > 0) used = surface;
 					continue;
@@ -2797,27 +2835,16 @@ window.__ModuleLoader__.load({
 					seen.isError = data?.["error"] !== void 0;
 				}
 			}
-			const inputTotal = usage.inputTokens + usage.cacheReadTokens;
 			const context = window === void 0 || used === void 0 ? void 0 : {
 				window,
 				used,
 				percent: Math.min(100, Math.round(used / window * 100))
 			};
-			const outputPerSecond = stepMs > 0 && usage.outputTokens > 0 ? Math.round(usage.outputTokens / (stepMs / 1e3)) : void 0;
 			return {
 				...model === void 0 ? {} : { model },
 				...context === void 0 ? {} : { context },
 				policy,
-				stats: {
-					turns,
-					steps,
-					usage,
-					...inputTotal > 0 ? { cacheHitPercent: Math.round(usage.cacheReadTokens / inputTotal * 1e3) / 10 } : {},
-					stepMs,
-					...outputPerSecond === void 0 ? {} : { outputPerSecond },
-					...firstTime === void 0 ? {} : { firstTime },
-					...lastTime === void 0 ? {} : { lastTime }
-				},
+				stats: logStats(events),
 				subagents: [...subagents.values()],
 				...title === void 0 ? {} : { title },
 				running: openTurn
@@ -6147,6 +6174,9 @@ window.__ModuleLoader__.load({
 			}, [state.open?.sessionId, scrollToBottom]);
 			const rows = react.useMemo(() => toRows(state.transcript?.events ?? []), [state.transcript]);
 			const chrome = react.useMemo(() => sessionChrome(state.transcript?.events ?? []), [state.transcript]);
+			const reportedStats = mirrored?.stats;
+			const coverage = react.useMemo(() => logCoverage(state.transcript?.events ?? []), [state.transcript]);
+			const wholeLog = reportedStats !== void 0 || state.transcript?.hasMore === false && coverage.gaps === 0;
 			const cells = react.useMemo(() => trajectoryCells(state.transcript?.events ?? [], kindLabel(t)), [state.transcript, t]);
 			const latestTurn = react.useMemo(() => rows.reduce((newest, row) => row.kind === "assistant" && row.turn > newest ? row.turn : newest, state.live.turn), [rows, state.live.turn]);
 			const labels = react.useMemo(() => ({
@@ -6433,9 +6463,9 @@ window.__ModuleLoader__.load({
 						})]
 					}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(StatusRow, {
 						t,
-						stats: chrome.stats,
-						all: state.transcript?.hasMore === false && logCoverage(state.transcript?.events ?? []).gaps === 0,
-						gaps: logCoverage(state.transcript?.events ?? []).gaps,
+						stats: reportedStats ?? chrome.stats,
+						all: wholeLog,
+						gaps: coverage.gaps,
 						onCount: () => {
 							props.loadAllOlder();
 						}

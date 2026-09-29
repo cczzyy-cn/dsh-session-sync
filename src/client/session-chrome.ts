@@ -11,6 +11,7 @@
  * and falls through to "unknown" rather than throwing.
  */
 import { isDelegationTool } from './delegation.ts'
+import { logStats, type LogStats, type LogUsage } from '../shared/log-stats.ts'
 import type { MirrorEvent } from '../shared/protocol.ts'
 
 /** The route the Session's last request went to. */
@@ -30,27 +31,10 @@ export interface SessionContext {
 }
 
 /** Token totals summed over the Session's assistant messages. */
-export interface SessionUsage {
-  inputTokens: number
-  outputTokens: number
-  cacheReadTokens: number
-  reasoningTokens: number
-}
+export type SessionUsage = LogUsage
 
 /** Totals the composer's status row renders. */
-export interface SessionStats {
-  turns: number
-  steps: number
-  usage: SessionUsage
-  /** Share of input tokens served from cache, when any input was reported. */
-  cacheHitPercent?: number
-  /** Summed wall time of the steps that produced an assistant message. */
-  stepMs: number
-  /** Output tokens per second over those steps. */
-  outputPerSecond?: number
-  firstTime?: number
-  lastTime?: number
-}
+export type SessionStats = LogStats
 
 /** One subagent delegation seen in the log. */
 export interface SeenSubagent {
@@ -136,21 +120,12 @@ export function sessionChrome(events: readonly MirrorEvent[]): SessionChrome {
   let window: number | undefined
   let used: number | undefined
   const policy: SessionPolicy = {}
-  const usage: SessionUsage = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, reasoningTokens: 0 }
-  let turns = 0
-  let steps = 0
-  let firstTime: number | undefined
-  let lastTime: number | undefined
   let title: string | undefined
-  let stepMs = 0
   let openTurn = false
   const subagents = new Map<string, SeenSubagent>()
-  const stepStarts = new Map<string, number>()
 
   for (const event of events) {
     const data = asRecord(event.data)
-    if (firstTime === undefined) firstTime = event.time
-    lastTime = event.time
 
     if (event.type === 'request/header') {
       const config = asRecord(asRecord(data?.['header'])?.['config'])
@@ -185,8 +160,6 @@ export function sessionChrome(events: readonly MirrorEvent[]): SessionChrome {
     }
 
     if (event.type === 'turn/start') {
-      const turn = number(data?.['turn'])
-      if (turn !== undefined) turns = Math.max(turns, turn)
       openTurn = true
       continue
     }
@@ -194,31 +167,13 @@ export function sessionChrome(events: readonly MirrorEvent[]): SessionChrome {
       openTurn = false
       continue
     }
-    if (event.type === 'step/start') {
-      steps += 1
-      const turn = number(data?.['turn'])
-      const step = number(data?.['step'])
-      if (turn !== undefined && step !== undefined) stepStarts.set(`${String(turn)}\u0000${String(step)}`, event.time)
-      continue
-    }
-    if (event.type === 'step/end') {
-      const turn = number(data?.['turn'])
-      const step = number(data?.['step'])
-      const started = turn === undefined || step === undefined
-        ? undefined
-        : stepStarts.get(`${String(turn)}\u0000${String(step)}`)
-      if (started !== undefined) stepMs += Math.max(0, event.time - started)
-      continue
-    }
 
     if (event.type === 'assistant/message') {
       const reported = asRecord(data?.['usage'])
-      usage.inputTokens += number(reported?.['inputTokens']) ?? 0
-      usage.outputTokens += number(reported?.['outputTokens']) ?? 0
-      usage.cacheReadTokens += number(reported?.['cacheReadTokens']) ?? 0
-      usage.reasoningTokens += number(reported?.['reasoningTokens']) ?? 0
       // Occupancy follows the newest surface reading, the way the composer's
-      // meter does: the last request's total is what fills the window.
+      // meter does: the last request's total is what fills the window. The token
+      // *totals* are not read here: they come from the shared walk below, so the
+      // footer has one definition rather than two.
       const total = number(reported?.['totalTokens'])
       const surface = total ?? ((number(reported?.['inputTokens']) ?? 0) + (number(reported?.['outputTokens']) ?? 0))
       if (surface > 0) used = surface
@@ -269,28 +224,18 @@ export function sessionChrome(events: readonly MirrorEvent[]): SessionChrome {
     }
   }
 
-  const inputTotal = usage.inputTokens + usage.cacheReadTokens
   const context: SessionContext | undefined = window === undefined || used === undefined
     ? undefined
     : { window, used, percent: Math.min(100, Math.round((used / window) * 100)) }
-  const outputPerSecond = stepMs > 0 && usage.outputTokens > 0
-    ? Math.round(usage.outputTokens / (stepMs / 1000))
-    : undefined
 
   return {
     ...(model === undefined ? {} : { model }),
     ...(context === undefined ? {} : { context }),
     policy,
-    stats: {
-      turns,
-      steps,
-      usage,
-      ...(inputTotal > 0 ? { cacheHitPercent: Math.round((usage.cacheReadTokens / inputTotal) * 1000) / 10 } : {}),
-      stepMs,
-      ...(outputPerSecond === undefined ? {} : { outputPerSecond }),
-      ...(firstTime === undefined ? {} : { firstTime }),
-      ...(lastTime === undefined ? {} : { lastTime }),
-    },
+    // The footer's totals come from the shared walk over the same rows, so the
+    // machine that owns a Session and a console holding part of it cannot disagree
+    // about what the arithmetic *is* — only about how much log each of them has.
+    stats: logStats(events),
     subagents: [...subagents.values()],
     ...(title === undefined ? {} : { title }),
     running: openTurn,
