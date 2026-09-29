@@ -155,6 +155,41 @@ describe('a hole in the middle of a mirror', () => {
     assert.ok(older.length > first, 'a surviving hole is asked for again')
   })
 
+  it('asks below the origin\'s stated frontier, not below the mirror\'s own floor', () => {
+    // The shape a delivered page leaves: it prepends, so the mirror now holds
+    // `[0, 99] ∪ [500, 599]` — its lowest sequence is 0 — while the run between the
+    // page and the window is still missing. Asking below the mirror's own floor
+    // therefore asks for the page it already has, forever: measured on the
+    // deployed pair as thirteen identical reads and a mirror pinned in two pieces.
+    const { hub, older } = bench()
+    publish(hub, run(0, 99))
+    publish(hub, run(500, 599))
+    // The origin states the frontier: it has sent down to 500, so the page below
+    // that is what it owes.
+    hub.publishIndex({
+      machineName: MACHINE,
+      sessions: [{ sessionId: SESSION, title: 'x', updatedAt: 1, running: false, lastSeq: 599, firstSeq: 500 }],
+    })
+    hub.sweepGaps()
+    assert.ok(older.some(call => call.throughSeq === 500),
+      `the ask must name the frontier, got ${JSON.stringify(older)}`)
+    // The one thing that must never happen: asking below what the mirror already
+    // holds, because the mirror's own floor is 0 and that ask repeats forever.
+    assert.ok(!older.some(call => call.throughSeq === 0), 'never the page the mirror already holds')
+
+    // And the frontier is monotone: re-stating a *higher* one must not raise the
+    // ask back up over history already delivered. (The ask floor is 0 in this
+    // bench, so repeating the frontier ask itself is allowed and not asserted.)
+    publish(hub, run(400, 499))
+    hub.publishIndex({
+      machineName: MACHINE,
+      sessions: [{ sessionId: SESSION, title: 'x', updatedAt: 1, running: false, lastSeq: 599, firstSeq: 500 }],
+    })
+    hub.sweepGaps()
+    const raised = older.filter(call => call.throughSeq > 500 && call.throughSeq !== 599)
+    assert.deepEqual(raised, [], 'a re-stated higher frontier must not raise the ask')
+  })
+
   it('waits out the retry floor before asking again', () => {
     // The floor is wide, so exactly one ask fits: the index is published first and
     // spends it (an origin claiming more than an empty mirror holds is a gap too),

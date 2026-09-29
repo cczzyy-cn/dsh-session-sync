@@ -1049,6 +1049,12 @@ export class SessionSyncService {
           // machine has not read a sequence yet", which is not the same claim as
           // "this Session has no events".
           ...(lastSeq === undefined || lastSeq < 0 ? {} : { lastSeq }),
+          // The other end of the same statement, and the backfill's frontier: the
+          // lowest sequence this machine has sent. It only moves down as pages are
+          // delivered, so the mirror can ask below it — instead of below its own
+          // lowest held sequence, which a prepended page pins at 0 and thereby
+          // makes every later ask repeat the page it already holds.
+          ...(handle === undefined || handle.firstSeq < 0 ? {} : { firstSeq: handle.firstSeq }),
           // Only said when true: the mirror reads absence as "no history below
           // the window", which is the answer for a Session that arrived whole.
           ...(handle?.hasOlder === true ? { hasOlder: true } : {}),

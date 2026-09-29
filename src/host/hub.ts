@@ -181,6 +181,19 @@ interface SessionRecord {
    */
   originHasOlder: boolean
   /**
+   * The lowest sequence the owning machine has *ever* sent for this Session.
+   *
+   * A backfill's frontier, and the reason it is not the mirror's lowest held
+   * sequence: a page prepends, so the mirror's lowest jumps to 0 while the run
+   * between that page and the window is still missing. Asking below 0 asks for the
+   * same page again — measured as thirteen identical reads and a mirror pinned in
+   * two pieces. This number only ever moves down, which is what a frontier is.
+   *
+   * Undefined until a machine states one, which leaves the ask to fall back to the
+   * mirror's own floor.
+   */
+  originFirstSeq?: number
+  /**
    * The totals the owning machine computed from its own whole log.
    *
    * Carried for the reader, not for the mirror's bookkeeping: a console can only
@@ -354,6 +367,7 @@ export class SyncHub {
           maxSeq: -1,
           originSeq: reported(session.lastSeq),
           originHasOlder: session.hasOlder === true,
+          ...(session.firstSeq === undefined ? {} : { originFirstSeq: session.firstSeq }),
           ...(session.stats === undefined ? {} : { originStats: session.stats }),
         })
         continue
@@ -363,6 +377,13 @@ export class SyncHub {
       existing.running = session.running
       existing.originSeq = reported(session.lastSeq)
       existing.originHasOlder = session.hasOlder === true
+      // The frontier only ever moves down: a re-stated value above the one already
+      // known is a machine that reconnected to a newer window, not a frontier that
+      // retreated, and honouring it would re-ask for pages already delivered.
+      if (session.firstSeq !== undefined
+        && (existing.originFirstSeq === undefined || session.firstSeq < existing.originFirstSeq)) {
+        existing.originFirstSeq = session.firstSeq
+      }
       // Replace or drop, never merge: a machine that stopped stating totals must
       // not keep showing the ones it stated for an older log.
       if (session.stats === undefined) delete existing.originStats
@@ -1152,6 +1173,14 @@ export class SyncHub {
    * deadlock: measured here as a 6,257-event Session whose mirror kept 283 events
    * (seq 5975..6257) with `missingEvents: 0` for the rest of the episode.
    *
+   * The bound is the origin's own stated low-water mark, not the mirror's lowest
+   * held sequence. Those differ the moment one page arrives: a page prepends, so
+   * the mirror's lowest becomes 0 while the run *between* the page and the window
+   * is still missing — and asking below 0 asks for the same page again, forever.
+   * Measured exactly that: thirteen reads of `[0, 2344]`, a mirror pinned at
+   * `[0, 2318] ∪ [5975, 6257]`, and a frontier that never moved. The origin's
+   * `firstSeq` is monotone down, which is what a frontier has to be.
+   *
    * Asking is not the same as expecting: the origin reads its own log and answers
    * an empty page once the beginning really is reached, so this can repeat
    * harmlessly. The floor is in `olderAsked`, so it costs one ask per Session per
@@ -1160,7 +1189,10 @@ export class SyncHub {
    * @param session - the mirrored Session to measure.
    */
   private fillBelowWindow(record: MachineRecord, session: SessionRecord): void {
-    const floor = session.events[0]?.seq
+    // The origin's stated low-water mark when it has one, and the mirror's own
+    // lowest otherwise: a machine that has not stated one yet is still worth
+    // asking, and its window's floor is all there is to go on.
+    const floor = session.originFirstSeq ?? session.events[0]?.seq
     if (floor === undefined || floor <= 0) return
     const key = `${record.machineName}|${session.sessionId}`
     const now = Date.now()

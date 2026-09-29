@@ -896,6 +896,17 @@ export interface PublishIndexPayload {
      */
     hasOlder?: boolean
     /**
+     * The lowest sequence this machine has ever sent for the Session.
+     *
+     * The frontier a backfill walks down, and it has to come from this side: a page
+     * arrives by prepending, so the mirror's own lowest sequence jumps to 0 while
+     * the run between that page and the window is still missing — and a reader
+     * asking below 0 asks for the page it already holds. This number only moves
+     * down as pages are delivered, which is what a frontier is.
+     * Absent before the first page, which leaves the mirror to use its own floor.
+     */
+    firstSeq?: number
+    /**
      * The totals this machine computed from the Session's *whole* log.
      *
      * The console can only count what it holds, and what it holds is a window —
