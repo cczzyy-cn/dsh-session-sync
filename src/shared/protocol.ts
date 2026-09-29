@@ -390,6 +390,14 @@ export interface SyncState {
     sessionId: string
     cursor: number
     firstSeq: number
+    /**
+     * Lowest sequence this machine has ever sent, or -1 before any.
+     *
+     * The backfill's frontier, and not the same as {@link firstSeq}: a reconnect
+     * replays the opening window, whose lowest sequence rises with the log, so the
+     * window counter climbs while the frontier must only descend.
+     */
+    sentFirstSeq?: number
     lastSeq: number
     hasOlder: boolean
     opened: boolean

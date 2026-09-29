@@ -129,6 +129,15 @@ interface FollowHandle {
    */
   firstSeq: number
   /**
+   * Lowest durable sequence this machine has *ever sent* for the Session.
+   *
+   * The mirror's backfill frontier, and deliberately not {@link firstSeq}: a
+   * reconnect replays the opening window, whose lowest sequence rises with the
+   * log, so a window counter would report a frontier that climbs — and the mirror
+   * would re-ask for pages it already has. This one only moves down.
+   */
+  sentFirstSeq: number
+  /**
    * Whether this machine's log holds history below what the follow delivered.
    *
    * Taken from the opening snapshot's own `hasMore`, which is the only thing
@@ -438,6 +447,7 @@ export class SessionSyncService {
           sessionId: handle.sessionId,
           cursor: handle.cursor,
           firstSeq: handle.firstSeq,
+          sentFirstSeq: handle.sentFirstSeq,
           lastSeq: handle.lastSeq,
           hasOlder: handle.hasOlder,
           opened: handle.opened,
@@ -1054,7 +1064,7 @@ export class SessionSyncService {
           // delivered, so the mirror can ask below it — instead of below its own
           // lowest held sequence, which a prepended page pins at 0 and thereby
           // makes every later ask repeat the page it already holds.
-          ...(handle === undefined || handle.firstSeq < 0 ? {} : { firstSeq: handle.firstSeq }),
+          ...(handle === undefined || handle.sentFirstSeq < 0 ? {} : { firstSeq: handle.sentFirstSeq }),
           // Only said when true: the mirror reads absence as "no history below
           // the window", which is the answer for a Session that arrived whole.
           ...(handle?.hasOlder === true ? { hasOlder: true } : {}),
@@ -1128,6 +1138,7 @@ export class SessionSyncService {
       step: 0,
       lastSeq: -1,
       firstSeq: -1,
+      sentFirstSeq: -1,
       hasOlder: false,
       cursor: -1,
       opened: false,
@@ -1577,6 +1588,12 @@ function mirrorOf(handle: FollowHandle, event: WireEvent): MirrorEvent {
   // learns that the tail window it received is not the whole conversation.
   if (typeof event.seq === 'number' && (handle.firstSeq < 0 || event.seq < handle.firstSeq)) {
     handle.firstSeq = event.seq
+  }
+  // And the frontier: the lowest sequence this machine has ever *sent*. A
+  // reconnect re-opens the follow and its window climbs with the log, so
+  // `firstSeq` alone would report a frontier moving the wrong way.
+  if (typeof event.seq === 'number' && (handle.sentFirstSeq < 0 || event.seq < handle.sentFirstSeq)) {
+    handle.sentFirstSeq = event.seq
   }
   return {
     type: event.type,
