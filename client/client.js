@@ -1444,6 +1444,41 @@ window.__ModuleLoader__.load({
 			return seq > newestHeld ? "newer" : "history";
 		}
 		//#endregion
+		//#region src/client/live-text.ts
+		/** The accumulator one mirrored Session keeps for its live text. */
+		var LiveText = class {
+			shown = /* @__PURE__ */ new Map();
+			/**
+			* Take one frame's whole text so far and return the part that is new.
+			* @param attemptId - the attempt the text belongs to.
+			* @param kind - which of the step's two texts it is.
+			* @param text - the whole text so far, as the relay form carries it.
+			* @returns the delta to append, and whether this kind restarted.
+			*/
+			take(attemptId, kind, text) {
+				const key = `${attemptId}\u0000${kind}`;
+				const shown = this.shown.get(key) ?? "";
+				const restarted = !text.startsWith(shown);
+				this.shown.set(key, text);
+				return {
+					delta: text.slice(restarted ? 0 : shown.length),
+					restarted
+				};
+			}
+			/**
+			* Forget every kind of one attempt, because it is no longer live.
+			* @param attemptId - the attempt that settled.
+			*/
+			forget(attemptId) {
+				const prefix = `${attemptId}\u0000`;
+				for (const key of [...this.shown.keys()]) if (key.startsWith(prefix)) this.shown.delete(key);
+			}
+			/** Forget everything, because the whole window was replaced. */
+			clear() {
+				this.shown.clear();
+			}
+		};
+		//#endregion
 		//#region src/client/routing.ts
 		/**
 		* The browser half's one decision, in a module with no imports.
@@ -1576,8 +1611,20 @@ window.__ModuleLoader__.load({
 			face;
 			/** The live attempt whose text is on screen, by the plugin's turn|step key. */
 			liveAttempt;
-			/** Whole text already shown per attempt, for the delta the window expects. */
-			liveText = /* @__PURE__ */ new Map();
+			/**
+			* Whole text already shown, per attempt **and per kind**.
+			*
+			* One entry per attempt was wrong, and the symptom was subtle enough to be
+			* reported as "the thinking only appears once it has finished": a step streams its
+			* reasoning and *then* its answer through the same attempt id, so the first answer
+			* delta is never an extension of the reasoning text — which took the restart path
+			* in {@link OfficialSession.feedLive}, and the restart path retires the attempt's
+			* transient rows. The thinking a reader was watching was therefore torn down at the
+			* exact moment the answer began, leaving only the durable reasoning block that
+			* arrives with the settlement. Nothing about an answer means the reasoning before
+			* it stopped being live, so the two accumulate apart.
+			*/
+			liveText = new LiveText();
 			/** Dense transient position, so a live row sorts above the durable window. */
 			transient = 0;
 			/** Highest durable sequence seen, the base of a transient row's position. */
@@ -1756,17 +1803,18 @@ window.__ModuleLoader__.load({
 			*
 			* The wire form of live Assistant text is a dense run of chunks, and the
 			* relay carries the whole text so far instead — so the delta is computed here,
-			* and a text that is not an extension of the last one restarts the attempt
+			* and a text that is not an extension of the last one restarts **that kind**
 			* rather than inventing a chunk the fold would rebaseline on.
+			*
+			* The accumulator is per kind ({@link OfficialSession.liveText} explains why): a
+			* step's reasoning and its answer are two separate streams through one attempt id,
+			* so an answer that begins after a reasoning run is not a restart at all — and
+			* treating it as one is what used to retire the thinking row mid-stream.
 			*/
 			feedLive(attemptId, frame) {
-				let shown = this.liveText.get(attemptId) ?? "";
-				if (!frame.text.startsWith(shown)) {
-					this.closeLive({ attemptId });
-					shown = "";
-				}
-				const delta = frame.text.slice(shown.length);
-				this.liveText.set(attemptId, frame.text);
+				const step = this.liveText.take(attemptId, frame.kind, frame.text);
+				if (step.restarted) this.closeLive({ attemptId });
+				const delta = step.delta;
 				if (delta === "") return;
 				const time = Date.now();
 				this.transient += 1;
@@ -1793,7 +1841,7 @@ window.__ModuleLoader__.load({
 			}
 			/** Close one live attempt with its durable settlement, or with nothing. */
 			closeLive(o) {
-				this.liveText.delete(o.attemptId);
+				this.liveText.forget(o.attemptId);
 				if (o.event === void 0) this.source?.settleAssistant(o.attemptId);
 				else {
 					this.observe(o.event.seq);

@@ -24,6 +24,7 @@ import {
   type SyncTransportObserver,
 } from './api.ts'
 import { envelopePlacement } from './envelope-placement.ts'
+import { LiveText } from './live-text.ts'
 import { scopeCapable } from './routing.ts'
 
 /**
@@ -273,8 +274,20 @@ export class OfficialMirror {
   private readonly face: { handleRunning?(running: boolean): void } | undefined
   /** The live attempt whose text is on screen, by the plugin's turn|step key. */
   private liveAttempt: string | undefined
-  /** Whole text already shown per attempt, for the delta the window expects. */
-  private readonly liveText = new Map<string, string>()
+  /**
+   * Whole text already shown, per attempt **and per kind**.
+   *
+   * One entry per attempt was wrong, and the symptom was subtle enough to be
+   * reported as "the thinking only appears once it has finished": a step streams its
+   * reasoning and *then* its answer through the same attempt id, so the first answer
+   * delta is never an extension of the reasoning text — which took the restart path
+   * in {@link OfficialSession.feedLive}, and the restart path retires the attempt's
+   * transient rows. The thinking a reader was watching was therefore torn down at the
+   * exact moment the answer began, leaving only the durable reasoning block that
+   * arrives with the settlement. Nothing about an answer means the reasoning before
+   * it stopped being live, so the two accumulate apart.
+   */
+  private readonly liveText = new LiveText()
   /** Dense transient position, so a live row sorts above the durable window. */
   private transient = 0
   /** Highest durable sequence seen, the base of a transient row's position. */
@@ -504,17 +517,18 @@ export class OfficialMirror {
    *
    * The wire form of live Assistant text is a dense run of chunks, and the
    * relay carries the whole text so far instead — so the delta is computed here,
-   * and a text that is not an extension of the last one restarts the attempt
+   * and a text that is not an extension of the last one restarts **that kind**
    * rather than inventing a chunk the fold would rebaseline on.
+   *
+   * The accumulator is per kind ({@link OfficialSession.liveText} explains why): a
+   * step's reasoning and its answer are two separate streams through one attempt id,
+   * so an answer that begins after a reasoning run is not a restart at all — and
+   * treating it as one is what used to retire the thinking row mid-stream.
    */
   private feedLive(attemptId: string, frame: SyncLiveDelta): void {
-    let shown = this.liveText.get(attemptId) ?? ''
-    if (!frame.text.startsWith(shown)) {
-      this.closeLive({ attemptId })
-      shown = ''
-    }
-    const delta = frame.text.slice(shown.length)
-    this.liveText.set(attemptId, frame.text)
+    const step = this.liveText.take(attemptId, frame.kind, frame.text)
+    if (step.restarted) this.closeLive({ attemptId })
+    const delta = step.delta
     if (delta === '') return
     const time = Date.now()
     this.transient += 1
@@ -544,7 +558,9 @@ export class OfficialMirror {
 
   /** Close one live attempt with its durable settlement, or with nothing. */
   private closeLive(o: { attemptId: string; event?: MirrorEvent }): void {
-    this.liveText.delete(o.attemptId)
+    // Every kind of this attempt: settling it means neither its reasoning nor its
+    // answer is live any more.
+    this.liveText.forget(o.attemptId)
     if (o.event === undefined) {
       this.source?.settleAssistant(o.attemptId)
     } else {
@@ -574,6 +590,8 @@ export class OfficialMirror {
 function entryOf(event: MirrorEvent): unknown {
   return { type: 'event', event }
 }
+
+
 
 /**
  * The bridge between the console's transport and the shipped renderer.
