@@ -653,7 +653,7 @@ function Conversation(props: {
   // anything countable here, because what is here is what the mirror retained —
   // a window — and a footer computed from a window understates a long Session by
   // everything below it, no matter how far this console pages.
-  const reportedStats = mirrored?.stats
+  const reportedStats = props.session.stats
   const coverage = React.useMemo(
     () => logCoverage(state.transcript?.events ?? []),
     [state.transcript],

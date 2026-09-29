@@ -6174,7 +6174,7 @@ window.__ModuleLoader__.load({
 			}, [state.open?.sessionId, scrollToBottom]);
 			const rows = react.useMemo(() => toRows(state.transcript?.events ?? []), [state.transcript]);
 			const chrome = react.useMemo(() => sessionChrome(state.transcript?.events ?? []), [state.transcript]);
-			const reportedStats = mirrored?.stats;
+			const reportedStats = props.session.stats;
 			const coverage = react.useMemo(() => logCoverage(state.transcript?.events ?? []), [state.transcript]);
 			const wholeLog = reportedStats !== void 0 || state.transcript?.hasMore === false && coverage.gaps === 0;
 			const cells = react.useMemo(() => trajectoryCells(state.transcript?.events ?? [], kindLabel(t)), [state.transcript, t]);
