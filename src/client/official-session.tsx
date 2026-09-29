@@ -23,7 +23,7 @@ import {
   type SyncLiveDelta,
   type SyncTransportObserver,
 } from './api.ts'
-import { envelopePlacement } from './envelope-placement.ts'
+import { envelopePlacement, highestOf } from './envelope-placement.ts'
 import { LiveText, liveChunkOf } from './live-text.ts'
 import { scopeCapable } from './routing.ts'
 
@@ -414,7 +414,10 @@ export class OfficialMirror {
         continue
       }
       this.fed.add(event.seq)
-      this.highestFed = Math.max(this.highestFed, event.seq)
+      // `highestOf`, not `Math.max`: with no window yet the first argument is
+      // undefined, `Math.max` answers NaN, and every later `seq > NaN` is false — so
+      // live events would all be filed as history and the pane would stop appending.
+      this.highestFed = highestOf(this.highestFed, event.seq)
       this.observe(event.seq)
       this.source?.append(entryOf(event))
     }

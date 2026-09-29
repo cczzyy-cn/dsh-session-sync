@@ -50,3 +50,18 @@ export function envelopePlacement(
   if (newestHeld === undefined) return 'newer'
   return seq > newestHeld ? 'newer' : 'history'
 }
+
+/**
+ * The higher of two optional sequences, treating "no mark yet" as the other one.
+ *
+ * `Math.max(undefined, seq)` is `NaN`, and every comparison against NaN is false —
+ * so a caller that starts with no mark and reaches for `Math.max` files every live
+ * event as history and the pane silently stops appending. One line, two failure
+ * modes, and no type error to warn you: spelled out, and tested.
+ * @param current - the mark so far, or undefined when nothing has been marked.
+ * @param seq - the sequence to fold in.
+ * @returns the higher of the two, or `seq` when there is no mark yet.
+ */
+export function highestOf(current: number | undefined, seq: number): number {
+  return current === undefined || seq > current ? seq : current
+}

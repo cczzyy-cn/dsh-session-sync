@@ -1124,7 +1124,7 @@ function ContextRing({ t, context }: {
 }
 
 /** The status row under the composer card: turns, steps, throughput, cache. */
-function StatusRow({ t, stats, all, gaps, onCount }: {
+function StatusRow({ t, stats, all, gaps, authoritative, onCount }: {
   t: SessionSyncTranslate
   stats: SessionStats
   /** True when the held events are contiguous *and* nothing older was offered. */

@@ -1465,6 +1465,20 @@ window.__ModuleLoader__.load({
 			if (newestHeld === void 0) return "newer";
 			return seq > newestHeld ? "newer" : "history";
 		}
+		/**
+		* The higher of two optional sequences, treating "no mark yet" as the other one.
+		*
+		* `Math.max(undefined, seq)` is `NaN`, and every comparison against NaN is false —
+		* so a caller that starts with no mark and reaches for `Math.max` files every live
+		* event as history and the pane silently stops appending. One line, two failure
+		* modes, and no type error to warn you: spelled out, and tested.
+		* @param current - the mark so far, or undefined when nothing has been marked.
+		* @param seq - the sequence to fold in.
+		* @returns the higher of the two, or `seq` when there is no mark yet.
+		*/
+		function highestOf(current, seq) {
+			return current === void 0 || seq > current ? seq : current;
+		}
 		//#endregion
 		//#region src/client/live-text.ts
 		/**
@@ -1757,7 +1771,7 @@ window.__ModuleLoader__.load({
 						continue;
 					}
 					this.fed.add(event.seq);
-					this.highestFed = Math.max(this.highestFed, event.seq);
+					this.highestFed = highestOf(this.highestFed, event.seq);
 					this.observe(event.seq);
 					this.source?.append(entryOf(event));
 				}
@@ -6604,7 +6618,7 @@ window.__ModuleLoader__.load({
 			});
 		}
 		/** The status row under the composer card: turns, steps, throughput, cache. */
-		function StatusRow({ t, stats, all, gaps, onCount }) {
+		function StatusRow({ t, stats, all, gaps, authoritative, onCount }) {
 			if (stats.turns === 0 && stats.steps === 0) return null;
 			const scope = authoritative ? "" : all ? t("statusWholeLog") : t("statusLoaded");
 			const gapNote = gaps > 0 && !authoritative ? ` · ${t("statusGaps", { n: String(gaps) })}` : "";

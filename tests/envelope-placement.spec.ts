@@ -17,11 +17,29 @@
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { envelopePlacement } from '../src/client/envelope-placement.ts'
+import { envelopePlacement, highestOf } from '../src/client/envelope-placement.ts'
 
 /** The window after one older page: seqs 1308..2105 are drawn. */
 const OLDEST = 1308
 const NEWEST = 2105
+
+describe('the highest sequence fed so far', () => {
+  it('starts at the first sequence rather than at NaN', () => {
+    // The one-line hazard this exists for: `Math.max(undefined, 7)` is NaN, and
+    // `7 > NaN` is false — so the monotonic guard would file every live event as
+    // history and the pane would stop appending, with no error anywhere.
+    assert.equal(highestOf(undefined, 7), 7)
+    assert.ok(!Number.isNaN(highestOf(undefined, 7)))
+  })
+
+  it('keeps the higher of the two, in either order', () => {
+    assert.equal(highestOf(NEWEST, NEWEST + 1), NEWEST + 1)
+    assert.equal(highestOf(NEWEST + 1, NEWEST), NEWEST + 1)
+    assert.equal(highestOf(NEWEST, NEWEST), NEWEST)
+    // A sequence a page put *below* the mark never lowers it.
+    assert.equal(highestOf(NEWEST, OLDEST), NEWEST)
+  })
+})
 
 describe('where an arriving envelope belongs', () => {
   it('appends an envelope newer than everything the window holds', () => {
