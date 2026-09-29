@@ -155,6 +155,14 @@ export interface SyncPanelProps {
   openSession: (machineName: string, sessionId: string) => Promise<void>
   /** Fetch the page of the open Session that sits before the one held. */
   loadOlder: () => Promise<void>
+  /**
+   * Page all the way back to the log's start, so the footer can count the whole log.
+   *
+   * Its own prop rather than a flag on `loadOlder`: one page keeps the reader's place
+   * (it is inserted above), while this one is a deliberate, slow, read-everything
+   * action — a long Session is several round trips through the machine that owns it.
+   */
+  loadAllOlder: () => Promise<void>
   /** Leave the open Session. */
   closeSession: () => void
   /** Send one takeover prompt to the open Session's machine. */
@@ -426,6 +434,7 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
               answerQuestion={props.answerQuestion}
               decideApproval={props.decideApproval}
               loadOlder={props.loadOlder}
+              loadAllOlder={props.loadAllOlder}
               official={props.official}
               renderSlot={props.renderSlot}
               SessionProvider={props.SessionProvider}
@@ -507,6 +516,14 @@ function Conversation(props: {
   ) => Promise<boolean>
   /** Fetch the page of this Session that sits before the one held. */
   loadOlder: () => Promise<void>
+  /**
+   * Page all the way back to the log's start, so the footer can count the whole log.
+   *
+   * Its own prop rather than a flag on `loadOlder`: one page keeps the reader's place
+   * (it is inserted above), while this one is a deliberate, slow, read-everything
+   * action — a long Session is several round trips through the machine that owns it.
+   */
+  loadAllOlder: () => Promise<void>
   official: OfficialBridgeFace
   renderSlot: RenderSlotLike
   SessionProvider: SessionProviderComponent
@@ -974,7 +991,7 @@ function Conversation(props: {
               </button>
             </div>
           </form>
-          <StatusRow t={t} stats={chrome.stats} />
+          <StatusRow t={t} stats={chrome.stats} all={state.transcript?.hasMore === false} onCount={() => { void props.loadAllOlder() }} />
         </div>
       )}
     </>
@@ -1083,15 +1100,20 @@ function ContextRing({ t, context }: {
 }
 
 /** The status row under the composer card: turns, steps, throughput, cache. */
-function StatusRow({ t, stats }: {
+function StatusRow({ t, stats, all, onCount }: {
   t: SessionSyncTranslate
   stats: SessionStats
+  /** True when everything the log has is loaded, so these numbers *are* the log's. */
+  all: boolean
+  /** Page back to the log's start, so they can become so. */
+  onCount: () => void
 }): React.ReactElement | null {
   if (stats.turns === 0 && stats.steps === 0) return null
   // `statusLoaded` says which scope these are: the events this console has fetched,
   // not the machine's whole log. Without it the two footers read as the same
   // measurement disagreeing, which is how this was reported.
-  const parts: string[] = [`${t('statusLoaded')} ${String(stats.turns)} ${t('statusTurns')}`, `${String(stats.steps)} ${t('statusSteps')}`]
+  const scope = all ? t('statusWholeLog') : t('statusLoaded')
+  const parts: string[] = [`${scope} ${String(stats.turns)} ${t('statusTurns')}`, `${String(stats.steps)} ${t('statusSteps')}`]
   if (stats.outputPerSecond !== undefined) parts.push(t('statusOutputRate', { tps: String(stats.outputPerSecond) }))
   const total = stats.usage.inputTokens + stats.usage.cacheReadTokens + stats.usage.outputTokens
   const tail: string[] = []
@@ -1101,6 +1123,14 @@ function StatusRow({ t, stats }: {
     <div className={css.statusRow} title={t('statusScopeHint')}>
       <span>{parts.join(' · ')}</span>
       {tail.length > 0 && <span>{tail.join(' · ')}</span>}
+      <button
+        type="button"
+        title={t('statusCountHint')}
+        disabled={all}
+        onClick={onCount}
+      >
+        {all ? t('statusWholeLog') : t('statusCount')}
+      </button>
     </div>
   )
 }

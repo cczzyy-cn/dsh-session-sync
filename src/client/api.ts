@@ -465,6 +465,27 @@ export class SyncClient {
    * the held page already carries everything above them.
    * @returns nothing; the store is the result.
    */
+  /**
+   * Page this console all the way back to the start of the Session's log.
+   *
+   * The footer counts what this console holds, and the machine's own page counts the
+   * whole log — so the only way the two can agree without the machine sending its own
+   * totals is for the console to *hold* the whole log. Paging does that: every page it
+   * fetches stays in its transcript even after the server's mirror trims its window.
+   * @returns when the log's start is reached, or when a page was already in flight.
+   */
+  async loadAllOlder(): Promise<void> {
+    // Bounded, so a server that keeps claiming more cannot spin here forever.
+    for (let page = 0; page < 500; page += 1) {
+      const snapshot = this.store.getSnapshot()
+      const transcript = snapshot.transcript
+      if (transcript === undefined || !transcript.hasMore) return
+      // A page already in flight: let it land rather than queueing behind it. The
+      // reader can press again, and the button stays disabled while it loads.
+      if (snapshot.loadingOlder) return
+      await this.loadOlder()
+    }
+  }
   async loadOlder(): Promise<void> {
     const snapshot = this.store.getSnapshot()
     const open = snapshot.open

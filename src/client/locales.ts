@@ -323,6 +323,9 @@ export const zh = {
   // 速率算的是**输出**，总数含 prompt+缓存读取：两者共用一个 'tok' 会读成自相矛盾。
   statusOutputRate: '输出 {tps} tok/s',
   statusTotalTokens: '共 {total} tok',
+  statusWholeLog: '整份日志',
+  statusCount: '按整份日志重算',
+  statusCountHint: '让控制台把日志翻到开头再统计：数字会与源站本机页面一致；长会话要翻几页，稍等。',
   turnTimeTitle: '本轮用时和速度',
   turnTimeDuration: '本轮总用时',
   turnTimeSpeed: '输出速度（TPS）',
@@ -646,6 +649,9 @@ export const en: Record<SessionSyncKey, string> = {
   // 'tok' made them read as a contradiction.
   statusOutputRate: 'output {tps} tok/s',
   statusTotalTokens: 'total {total} tok',
+  statusWholeLog: 'whole log',
+  statusCount: 'count the whole log',
+  statusCountHint: 'Pages this console back to the start of the log before counting, so the numbers match the machine page. A long session takes a few pages.',
   turnTimeTitle: 'Turn time and speed',
   turnTimeDuration: 'Total run time',
   turnTimeSpeed: 'Tokens per second (TPS)',

@@ -966,6 +966,24 @@ window.__ModuleLoader__.load({
 			* the held page already carries everything above them.
 			* @returns nothing; the store is the result.
 			*/
+			/**
+			* Page this console all the way back to the start of the Session's log.
+			*
+			* The footer counts what this console holds, and the machine's own page counts the
+			* whole log — so the only way the two can agree without the machine sending its own
+			* totals is for the console to *hold* the whole log. Paging does that: every page it
+			* fetches stays in its transcript even after the server's mirror trims its window.
+			* @returns when the log's start is reached, or when a page was already in flight.
+			*/
+			async loadAllOlder() {
+				for (let page = 0; page < 500; page += 1) {
+					const snapshot = this.store.getSnapshot();
+					const transcript = snapshot.transcript;
+					if (transcript === void 0 || !transcript.hasMore) return;
+					if (snapshot.loadingOlder) return;
+					await this.loadOlder();
+				}
+			}
 			async loadOlder() {
 				const snapshot = this.store.getSnapshot();
 				const open = snapshot.open;
@@ -5926,6 +5944,7 @@ window.__ModuleLoader__.load({
 						answerQuestion: props.answerQuestion,
 						decideApproval: props.decideApproval,
 						loadOlder: props.loadOlder,
+						loadAllOlder: props.loadAllOlder,
 						official: props.official,
 						renderSlot: props.renderSlot,
 						SessionProvider: props.SessionProvider,
@@ -6382,7 +6401,11 @@ window.__ModuleLoader__.load({
 						})]
 					}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(StatusRow, {
 						t,
-						stats: chrome.stats
+						stats: chrome.stats,
+						all: state.transcript?.hasMore === false,
+						onCount: () => {
+							props.loadAllOlder();
+						}
 					})]
 				})
 			] });
@@ -6503,9 +6526,9 @@ window.__ModuleLoader__.load({
 			});
 		}
 		/** The status row under the composer card: turns, steps, throughput, cache. */
-		function StatusRow({ t, stats }) {
+		function StatusRow({ t, stats, all, onCount }) {
 			if (stats.turns === 0 && stats.steps === 0) return null;
-			const parts = [`${t("statusLoaded")} ${String(stats.turns)} ${t("statusTurns")}`, `${String(stats.steps)} ${t("statusSteps")}`];
+			const parts = [`${all ? t("statusWholeLog") : t("statusLoaded")} ${String(stats.turns)} ${t("statusTurns")}`, `${String(stats.steps)} ${t("statusSteps")}`];
 			if (stats.outputPerSecond !== void 0) parts.push(t("statusOutputRate", { tps: String(stats.outputPerSecond) }));
 			const total = stats.usage.inputTokens + stats.usage.cacheReadTokens + stats.usage.outputTokens;
 			const tail = [];
@@ -6514,7 +6537,17 @@ window.__ModuleLoader__.load({
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 				className: sync_module_css_default.statusRow,
 				title: t("statusScopeHint"),
-				children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { children: parts.join(" · ") }), tail.length > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { children: tail.join(" · ") })]
+				children: [
+					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { children: parts.join(" · ") }),
+					tail.length > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { children: tail.join(" · ") }),
+					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
+						type: "button",
+						title: t("statusCountHint"),
+						disabled: all,
+						onClick: onCount,
+						children: all ? t("statusWholeLog") : t("statusCount")
+					})
+				]
 			});
 		}
 		/**
@@ -7338,6 +7371,9 @@ window.__ModuleLoader__.load({
 			statusScopeHint: "只统计本控制台已加载的事件；源站本机那页算的是整份日志，所以数字会不同（在控制台多翻几页，这里的数会变大）。",
 			statusOutputRate: "输出 {tps} tok/s",
 			statusTotalTokens: "共 {total} tok",
+			statusWholeLog: "整份日志",
+			statusCount: "按整份日志重算",
+			statusCountHint: "让控制台把日志翻到开头再统计：数字会与源站本机页面一致；长会话要翻几页，稍等。",
 			turnTimeTitle: "本轮用时和速度",
 			turnTimeDuration: "本轮总用时",
 			turnTimeSpeed: "输出速度（TPS）",
@@ -7622,6 +7658,9 @@ window.__ModuleLoader__.load({
 			statusScopeHint: "Counts only the events this console has loaded. The origin page counts the whole log, so the numbers differ (paging more in makes these grow).",
 			statusOutputRate: "output {tps} tok/s",
 			statusTotalTokens: "total {total} tok",
+			statusWholeLog: "whole log",
+			statusCount: "count the whole log",
+			statusCountHint: "Pages this console back to the start of the log before counting, so the numbers match the machine page. A long session takes a few pages.",
 			turnTimeTitle: "Turn time and speed",
 			turnTimeDuration: "Total run time",
 			turnTimeSpeed: "Tokens per second (TPS)",
@@ -7699,6 +7738,7 @@ window.__ModuleLoader__.load({
 						client.closeSession();
 					},
 					loadOlder: () => client.loadOlder(),
+					loadAllOlder: () => client.loadAllOlder(),
 					sendPrompt: (text) => client.sendPrompt(text),
 					answerQuestion: (machineName, questionId, answers) => client.answerQuestion(machineName, questionId, answers),
 					decideApproval: (machineName, approvalId, decision) => client.decideApproval(machineName, approvalId, decision),

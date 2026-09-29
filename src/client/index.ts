@@ -118,6 +118,7 @@ export function apply(ctx: ClientContext): void {
       openSession: (machineName: string, sessionId: string) => client.openSession(machineName, sessionId),
       closeSession: () => { client.closeSession() },
       loadOlder: () => client.loadOlder(),
+      loadAllOlder: () => client.loadAllOlder(),
       sendPrompt: (text: string) => client.sendPrompt(text),
       answerQuestion: (machineName: string, questionId: string, answers: RelayedAnswerItem[]) =>
         client.answerQuestion(machineName, questionId, answers),
