@@ -1679,6 +1679,15 @@ window.__ModuleLoader__.load({
 			* event, like an older one, would break the pane rather than merely duplicate.
 			*/
 			fed = /* @__PURE__ */ new Set();
+			/**
+			* The highest sequence this mirror has handed the shipped assembler.
+			*
+			* Not the same as the window's newest entry: the window is a view, and a page
+			* this console prepends can move its oldest end down while the assembler has
+			* already taken matches from further up. Monotonicity has to be measured
+			* against what the assembler saw, or the window's own shape lies about it.
+			*/
+			highestFed;
 			released = false;
 			/**
 			* Take one remote Session up through the route this build offers.
@@ -1703,6 +1712,7 @@ window.__ModuleLoader__.load({
 				this.liveText.clear();
 				const events = transcript.events.filter((event) => !isPanelOnly(event));
 				this.fed = new Set(events.map((event) => event.seq));
+				this.highestFed = events.reduce((highest, event) => highest === void 0 || event.seq > highest ? event.seq : highest, void 0);
 				this.transient = 0;
 				this.lastSeq = -1;
 				for (const event of transcript.events) this.observe(event.seq);
@@ -1731,8 +1741,6 @@ window.__ModuleLoader__.load({
 			*/
 			appendEvents(events) {
 				if (this.released) return;
-				const held = this.source?.getSnapshot().entries ?? [];
-				const newest = held[held.length - 1]?.event.seq;
 				const history = [];
 				for (const event of events) {
 					if (isPanelOnly(event)) {
@@ -1740,7 +1748,7 @@ window.__ModuleLoader__.load({
 						continue;
 					}
 					if (this.fed.has(event.seq)) continue;
-					if (envelopePlacement(event.seq, newest, this.fed) === "history") {
+					if (envelopePlacement(event.seq, this.highestFed, this.fed) === "history") {
 						history.push(event);
 						continue;
 					}
@@ -1749,6 +1757,7 @@ window.__ModuleLoader__.load({
 						continue;
 					}
 					this.fed.add(event.seq);
+					this.highestFed = Math.max(this.highestFed, event.seq);
 					this.observe(event.seq);
 					this.source?.append(entryOf(event));
 				}

@@ -302,6 +302,15 @@ export class OfficialMirror {
    * event, like an older one, would break the pane rather than merely duplicate.
    */
   private fed = new Set<number>()
+  /**
+   * The highest sequence this mirror has handed the shipped assembler.
+   *
+   * Not the same as the window's newest entry: the window is a view, and a page
+   * this console prepends can move its oldest end down while the assembler has
+   * already taken matches from further up. Monotonicity has to be measured
+   * against what the assembler saw, or the window's own shape lies about it.
+   */
+  private highestFed: number | undefined
   private released = false
 
   /**
@@ -335,6 +344,11 @@ export class OfficialMirror {
     // sequence is what a live row's position is measured against.
     const events = transcript.events.filter(event => !isPanelOnly(event))
     this.fed = new Set(events.map(event => event.seq))
+    // The window this call installs is what the assembler has taken so far.
+    this.highestFed = events.reduce<number | undefined>(
+      (highest, event) => (highest === undefined || event.seq > highest ? event.seq : highest),
+      undefined,
+    )
     // A mirrored window is everything the server holds: it never reports older
     // history as reachable, so `hasMore` is false. Claiming otherwise would make
     // the shipped renderer offer a page that cannot arrive.
@@ -367,8 +381,6 @@ export class OfficialMirror {
    */
   appendEvents(events: readonly MirrorEvent[]): void {
     if (this.released) return
-    const held = this.source?.getSnapshot().entries ?? []
-    const newest = held[held.length - 1]?.event.seq
     const history: MirrorEvent[] = []
     for (const event of events) {
       if (isPanelOnly(event)) {
@@ -385,7 +397,15 @@ export class OfficialMirror {
       // So anything not newer than the window goes through the merge path, which
       // takes entries in sequence order and replays what they touch. That covers
       // both an older page and an event inside a range a page just extended.
-      if (envelopePlacement(event.seq, newest, this.fed) === 'history') {
+      //
+      // The comparison is against the highest sequence ever *fed*, not against the
+      // window's newest entry: a page this console prepends can leave the window's
+      // newest entry untouched while the assembler has already taken that page's
+      // neighbours, and appending then hands it a match below one it accepted —
+      // measured as `conversation Context 25:trajectory-assistant-step7:31 received
+      // an update before its start Match`, which fails the whole feed. The only
+      // sound rule is monotonicity against what the assembler itself has seen.
+      if (envelopePlacement(event.seq, this.highestFed, this.fed) === 'history') {
         history.push(event)
         continue
       }
@@ -394,6 +414,7 @@ export class OfficialMirror {
         continue
       }
       this.fed.add(event.seq)
+      this.highestFed = Math.max(this.highestFed, event.seq)
       this.observe(event.seq)
       this.source?.append(entryOf(event))
     }
