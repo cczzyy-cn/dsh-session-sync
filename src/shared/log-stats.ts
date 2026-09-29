@@ -18,8 +18,13 @@
  *  - a *step* is one `step/start`;
  *  - usage is summed over `assistant/message` events only, because that is where
  *    the provider's own report lives;
- *  - throughput is output tokens over the wall time of the steps that produced an
- *    assistant message, so a long tool call does not read as a slow model.
+ *  - throughput is output tokens over the time their own step had been running when
+ *    the message arrived — from that step's `step/start` to the message. Neither
+ *    the whole step nor the gap to the next message will do: a step keeps running
+ *    through its tool calls (57 tok/s measured that way for a Session whose replies
+ *    came at 138), and the gap between messages is mostly tool time and idle
+ *    (38 tok/s the same way). What a reader is asking is how fast the model wrote,
+ *    which is the step-start-to-message interval.
  */
 import type { MirrorEvent } from './protocol.ts'
 
@@ -40,7 +45,13 @@ export interface LogStats {
   cacheHitPercent?: number
   /** Summed wall time of the steps that produced an assistant message. */
   stepMs: number
-  /** Output tokens per second over those steps. */
+  /**
+   * Output tokens per second while a step was writing.
+   *
+   * Measured from the step's own `step/start` to the message that reported its
+   * usage — not the whole step (which runs on through tool calls) and not the gap
+   * to the next message (which is mostly tool time and idle).
+   */
   outputPerSecond?: number
   firstTime?: number
   lastTime?: number
@@ -70,6 +81,12 @@ export function logStats(events: readonly MirrorEvent[]): LogStats {
   let firstTime: number | undefined
   let lastTime: number | undefined
   let stepMs = 0
+  // The generation interval: from the step that is currently running to the message
+  // it produced. A message belongs to the newest `step/start` before it, which is
+  // the only attribution available without trusting a per-event turn/step the older
+  // rows do not always carry.
+  let generationMs = 0
+  let openStepStart: number | undefined
   const stepStarts = new Map<string, number>()
 
   for (const event of events) {
@@ -84,6 +101,7 @@ export function logStats(events: readonly MirrorEvent[]): LogStats {
     }
     if (event.type === 'step/start') {
       steps += 1
+      openStepStart = event.time
       const turn = number(data?.['turn'])
       const step = number(data?.['step'])
       if (turn !== undefined && step !== undefined) stepStarts.set(`${String(turn)}\u0000${String(step)}`, event.time)
@@ -95,7 +113,11 @@ export function logStats(events: readonly MirrorEvent[]): LogStats {
       const started = turn === undefined || step === undefined
         ? undefined
         : stepStarts.get(`${String(turn)}\u0000${String(step)}`)
-      if (started !== undefined) stepMs += Math.max(0, event.time - started)
+      if (started !== undefined && started === openStepStart) stepMs += Math.max(0, event.time - started)
+      // The step is over, so a message arriving after this one is not its answer:
+      // leaving the start open would charge a later turn's message to this step's
+      // generation time and drag the rate down for no reason in the data.
+      if (started !== undefined && started === openStepStart) openStepStart = undefined
       continue
     }
     if (event.type === 'assistant/message') {
@@ -104,12 +126,14 @@ export function logStats(events: readonly MirrorEvent[]): LogStats {
       usage.outputTokens += number(reported?.['outputTokens']) ?? 0
       usage.cacheReadTokens += number(reported?.['cacheReadTokens']) ?? 0
       usage.reasoningTokens += number(reported?.['reasoningTokens']) ?? 0
+      // The step that was running when this answer arrived is the one that wrote it.
+      if (openStepStart !== undefined) generationMs += Math.max(0, event.time - openStepStart)
     }
   }
 
   const inputTotal = usage.inputTokens + usage.cacheReadTokens
-  const outputPerSecond = stepMs > 0 && usage.outputTokens > 0
-    ? Math.round(usage.outputTokens / (stepMs / 1000))
+  const outputPerSecond = generationMs > 0 && usage.outputTokens > 0
+    ? Math.round(usage.outputTokens / (generationMs / 1000))
     : undefined
   return {
     turns,

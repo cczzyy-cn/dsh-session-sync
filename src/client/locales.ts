@@ -320,6 +320,9 @@ export const zh = {
   // 天然不同。标签把口径写出来，别让读者以为它们是同一个量。
   statusLoaded: '已加载',
   statusScopeHint: '只统计本控制台已加载的事件；源站本机那页算的是整份日志，所以数字会不同（在控制台多翻几页，这里的数会变大）。',
+  // 权威口径：数字来自拥有该会话的机器，按整份日志算出——此时既不需要标签，也不需要
+  // 「重算」按钮（翻本控制台的窗口改不了这些数）。
+  statusAuthoritativeHint: '这些数字来自拥有该会话的机器：它按整份日志算好后随索引发过来，所以不受本控制台加载了多少、也不受镜像保留上限影响。',
   // 速率算的是**输出**，总数含 prompt+缓存读取：两者共用一个 'tok' 会读成自相矛盾。
   statusOutputRate: '输出 {tps} tok/s',
   statusTotalTokens: '共 {total} tok',
@@ -647,6 +650,8 @@ export const en: Record<SessionSyncKey, string> = {
   // page counts the whole log, so the two differ by construction.
   statusLoaded: 'Loaded',
   statusScopeHint: 'Counts only the events this console has loaded. The origin page counts the whole log, so the numbers differ (paging more in makes these grow).',
+  // The machine's own answer: no scope label, and nothing for a paging control to do.
+  statusAuthoritativeHint: 'These figures come from the machine that owns the Session: it computes them over the whole log and states them with its index, so neither what this console has loaded nor the mirror\'s retention limit affects them.',
   // The rate is *output* while the total includes prompt and cache reads: one shared
   // 'tok' made them read as a contradiction.
   statusOutputRate: 'output {tps} tok/s',

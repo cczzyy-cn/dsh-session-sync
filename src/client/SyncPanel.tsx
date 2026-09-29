@@ -1013,6 +1013,7 @@ function Conversation(props: {
             stats={reportedStats ?? chrome.stats}
             all={wholeLog}
             gaps={coverage.gaps}
+            authoritative={reportedStats !== undefined}
             onCount={() => { void props.loadAllOlder() }}
           />
         </div>
@@ -1130,36 +1131,47 @@ function StatusRow({ t, stats, all, gaps, onCount }: {
   all: boolean
   /** Ordinals missing between the lowest and highest held sequence. */
   gaps: number
+  /**
+   * Whether these totals are the machine's own whole-log answer.
+   *
+   * Then the scope needs no label and the paging control has nothing left to do:
+   * this console's window is not what the numbers came from, so neither "整份日志"
+   * nor a button that walks the window back can change them.
+   */
+  authoritative: boolean
   /** Page back to the log's start, so they can become so. */
   onCount: () => void
 }): React.ReactElement | null {
   if (stats.turns === 0 && stats.steps === 0) return null
-  // `statusLoaded` says which scope these are: the events this console has fetched,
-  // not the machine's whole log. Without it the two footers read as the same
-  // measurement disagreeing, which is how this was reported.
-  const scope = all ? t('statusWholeLog') : t('statusLoaded')
+  // Without the machine's totals these count the events this console has fetched,
+  // and saying so is what keeps two footers from reading as one measurement
+  // disagreeing — which is how this was reported in the first place.
+  const scope = authoritative ? '' : all ? t('statusWholeLog') : t('statusLoaded')
   // The gaps are counted here rather than trusted from the chain: `hasMore === false`
   // only says nothing older was offered, and a console that held 849 of 956 steps still
   // showed "整份日志" until this check existed.
-  const gapNote = gaps > 0 ? ` · ${t('statusGaps', { n: String(gaps) })}` : ''
-  const parts: string[] = [`${scope}${gapNote} ${String(stats.turns)} ${t('statusTurns')}`, `${String(stats.steps)} ${t('statusSteps')}`]
+  const gapNote = gaps > 0 && !authoritative ? ` · ${t('statusGaps', { n: String(gaps) })}` : ''
+  const head = scope === '' ? '' : `${scope}${gapNote} `
+  const parts: string[] = [`${head}${String(stats.turns)} ${t('statusTurns')}`, `${String(stats.steps)} ${t('statusSteps')}`]
   if (stats.outputPerSecond !== undefined) parts.push(t('statusOutputRate', { tps: String(stats.outputPerSecond) }))
   const total = stats.usage.inputTokens + stats.usage.cacheReadTokens + stats.usage.outputTokens
   const tail: string[] = []
   if (total > 0) tail.push(t('statusTotalTokens', { total: compactTokens(total) }))
   if (stats.cacheHitPercent !== undefined) tail.push(`${t('statusCacheHit')} ${String(stats.cacheHitPercent)}%`)
   return (
-    <div className={css.statusRow} title={t('statusScopeHint')}>
+    <div className={css.statusRow} title={authoritative ? t('statusAuthoritativeHint') : t('statusScopeHint')}>
       <span>{parts.join(' · ')}</span>
       {tail.length > 0 && <span>{tail.join(' · ')}</span>}
-      <button
-        type="button"
-        title={t('statusCountHint')}
-        disabled={all}
-        onClick={onCount}
-      >
-        {all ? t('statusWholeLog') : t('statusCount')}
-      </button>
+      {!authoritative && (
+        <button
+          type="button"
+          title={t('statusCountHint')}
+          disabled={all}
+          onClick={onCount}
+        >
+          {all ? t('statusWholeLog') : t('statusCount')}
+        </button>
+      )}
     </div>
   )
 }

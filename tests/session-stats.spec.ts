@@ -143,8 +143,11 @@ describe('reading the machine\'s own Session log', () => {
     assert.equal(stats.usage.inputTokens, 10)
     assert.equal(stats.usage.cacheReadTokens, 30)
     assert.equal(stats.usage.reasoningTokens, 5)
-    // 20 output tokens over the one matched step's 1000 ms.
-    assert.equal(stats.outputPerSecond, 20)
+    // 20 output tokens over the step that wrote it: the newest `step/start` before
+    // the message is 1_100, and the message carries seq 2 at 1_600 — 500 ms. Neither
+    // the whole step (1_100 → 2_100, which runs on through a tool call) nor the gap
+    // to the next message (1_600 → 3_500, which is mostly idle) is the rate.
+    assert.equal(stats.outputPerSecond, 40)
     assert.equal(stats.stepMs, 1_000)
     assert.equal(stats.cacheHitPercent, 75)
     assert.equal(stats.firstTime, 1_000)

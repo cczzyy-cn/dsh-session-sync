@@ -2684,6 +2684,8 @@ window.__ModuleLoader__.load({
 			let firstTime;
 			let lastTime;
 			let stepMs = 0;
+			let generationMs = 0;
+			let openStepStart;
 			const stepStarts = /* @__PURE__ */ new Map();
 			for (const event of events) {
 				const data = asRecord$4(event.data);
@@ -2696,6 +2698,7 @@ window.__ModuleLoader__.load({
 				}
 				if (event.type === "step/start") {
 					steps += 1;
+					openStepStart = event.time;
 					const turn = number$3(data?.["turn"]);
 					const step = number$3(data?.["step"]);
 					if (turn !== void 0 && step !== void 0) stepStarts.set(`${String(turn)}\u0000${String(step)}`, event.time);
@@ -2705,7 +2708,8 @@ window.__ModuleLoader__.load({
 					const turn = number$3(data?.["turn"]);
 					const step = number$3(data?.["step"]);
 					const started = turn === void 0 || step === void 0 ? void 0 : stepStarts.get(`${String(turn)}\u0000${String(step)}`);
-					if (started !== void 0) stepMs += Math.max(0, event.time - started);
+					if (started !== void 0 && started === openStepStart) stepMs += Math.max(0, event.time - started);
+					if (started !== void 0 && started === openStepStart) openStepStart = void 0;
 					continue;
 				}
 				if (event.type === "assistant/message") {
@@ -2714,10 +2718,11 @@ window.__ModuleLoader__.load({
 					usage.outputTokens += number$3(reported?.["outputTokens"]) ?? 0;
 					usage.cacheReadTokens += number$3(reported?.["cacheReadTokens"]) ?? 0;
 					usage.reasoningTokens += number$3(reported?.["reasoningTokens"]) ?? 0;
+					if (openStepStart !== void 0) generationMs += Math.max(0, event.time - openStepStart);
 				}
 			}
 			const inputTotal = usage.inputTokens + usage.cacheReadTokens;
-			const outputPerSecond = stepMs > 0 && usage.outputTokens > 0 ? Math.round(usage.outputTokens / (stepMs / 1e3)) : void 0;
+			const outputPerSecond = generationMs > 0 && usage.outputTokens > 0 ? Math.round(usage.outputTokens / (generationMs / 1e3)) : void 0;
 			return {
 				turns,
 				steps,
@@ -6475,6 +6480,7 @@ window.__ModuleLoader__.load({
 						stats: reportedStats ?? chrome.stats,
 						all: wholeLog,
 						gaps: coverage.gaps,
+						authoritative: reportedStats !== void 0,
 						onCount: () => {
 							props.loadAllOlder();
 						}
@@ -6600,7 +6606,9 @@ window.__ModuleLoader__.load({
 		/** The status row under the composer card: turns, steps, throughput, cache. */
 		function StatusRow({ t, stats, all, gaps, onCount }) {
 			if (stats.turns === 0 && stats.steps === 0) return null;
-			const parts = [`${all ? t("statusWholeLog") : t("statusLoaded")}${gaps > 0 ? ` · ${t("statusGaps", { n: String(gaps) })}` : ""} ${String(stats.turns)} ${t("statusTurns")}`, `${String(stats.steps)} ${t("statusSteps")}`];
+			const scope = authoritative ? "" : all ? t("statusWholeLog") : t("statusLoaded");
+			const gapNote = gaps > 0 && !authoritative ? ` · ${t("statusGaps", { n: String(gaps) })}` : "";
+			const parts = [`${scope === "" ? "" : `${scope}${gapNote} `}${String(stats.turns)} ${t("statusTurns")}`, `${String(stats.steps)} ${t("statusSteps")}`];
 			if (stats.outputPerSecond !== void 0) parts.push(t("statusOutputRate", { tps: String(stats.outputPerSecond) }));
 			const total = stats.usage.inputTokens + stats.usage.cacheReadTokens + stats.usage.outputTokens;
 			const tail = [];
@@ -6608,11 +6616,11 @@ window.__ModuleLoader__.load({
 			if (stats.cacheHitPercent !== void 0) tail.push(`${t("statusCacheHit")} ${String(stats.cacheHitPercent)}%`);
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 				className: sync_module_css_default.statusRow,
-				title: t("statusScopeHint"),
+				title: authoritative ? t("statusAuthoritativeHint") : t("statusScopeHint"),
 				children: [
 					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { children: parts.join(" · ") }),
 					tail.length > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { children: tail.join(" · ") }),
-					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
+					!authoritative && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
 						type: "button",
 						title: t("statusCountHint"),
 						disabled: all,
@@ -7441,6 +7449,7 @@ window.__ModuleLoader__.load({
 			turnUsageReasoning: "（其中推理 {tokens}）",
 			statusLoaded: "已加载",
 			statusScopeHint: "只统计本控制台已加载的事件；源站本机那页算的是整份日志，所以数字会不同（在控制台多翻几页，这里的数会变大）。",
+			statusAuthoritativeHint: "这些数字来自拥有该会话的机器：它按整份日志算好后随索引发过来，所以不受本控制台加载了多少、也不受镜像保留上限影响。",
 			statusOutputRate: "输出 {tps} tok/s",
 			statusTotalTokens: "共 {total} tok",
 			statusWholeLog: "整份日志",
@@ -7729,6 +7738,7 @@ window.__ModuleLoader__.load({
 			turnUsageReasoning: " ({tokens} reasoning)",
 			statusLoaded: "Loaded",
 			statusScopeHint: "Counts only the events this console has loaded. The origin page counts the whole log, so the numbers differ (paging more in makes these grow).",
+			statusAuthoritativeHint: "These figures come from the machine that owns the Session: it computes them over the whole log and states them with its index, so neither what this console has loaded nor the mirror's retention limit affects them.",
 			statusOutputRate: "output {tps} tok/s",
 			statusTotalTokens: "total {total} tok",
 			statusWholeLog: "whole log",
