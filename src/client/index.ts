@@ -3,13 +3,14 @@
  *
  * Three additive contributions, none of which replaces a shipped cell:
  *
- *  - `plugins.row.config` — this bundle's configuration, registered under the
- *    row's key (`dsh-session-sync#session-sync`): machine name, server address,
- *    the server switch, the password, and the per-Session publish list. It is
- *    the Plugins page's own slot for a bundle's row, so the page gains a
- *    configure control on this row; the registration is declared against the
- *    slot, which is what makes an older build — one that declares no such slot —
- *    keep working with no contribution rather than a broken one.
+ *  - `plugins.detail.section` — this plugin's configuration, on its own pages of
+ *    the Plugins page: machine name, server address, the server switch, the
+ *    password, and the per-Session publish list. The section renders on every
+ *    detail page, so the entry reads the open page's subject and answers `null`
+ *    for a page that is not this bundle's.
+ *  - `settings.section` is deliberately *not* registered any more: the
+ *    configuration moved to the Plugins page, and one document should not have
+ *    two forms.
  *  - `sidebar.panellist` — the panel row that opens the console. It needs no
  *    host patch and renders in both column widths, which is what makes the panel
  *    reachable in the collapsed rail.
@@ -27,8 +28,11 @@
  * retention seam, and `ui-primitives` supplies every control it renders.
  */
 import type { Context as ClientContext } from '@deepseek-ai/cordis'
+import * as React from 'react'
 import type { ConfigPatch, RelayedAnswerItem, RelayedApprovalDecision } from '../shared/protocol.ts'
 import { ConfigSection } from './ConfigSection.tsx'
+import type { ConfigSectionProps } from './ConfigSection.tsx'
+import { ownsSubject, type PluginsSubjectLike } from './config-entry.ts'
 import { OFFICIAL_SLOT, OfficialConversation, OfficialSessions } from './official-session.tsx'
 import { PanelIcon } from './PanelIcon.tsx'
 import { SyncPanel } from './SyncPanel.tsx'
@@ -47,6 +51,20 @@ export const inject = ['slots', 'locale']
  * keys, so the panel key and this constant are one contract.
  */
 const PANEL_ID = 'session-sync'
+
+/**
+ * The configuration form, seated on the Plugins page's detail section.
+ *
+ * The section renders on every detail page, so this is where the subject is
+ * read: the form is reached only for this bundle or its row, and every other
+ * page gets `null` rather than another plugin's configuration.
+ * @param props - the entry's props, with the open page's subject.
+ * @returns the configuration, or null for a page that is not this plugin's.
+ */
+function ConfigSectionForDetail(props: ConfigSectionProps & { subject?: PluginsSubjectLike }): React.ReactElement | null {
+  if (!ownsSubject(props.subject)) return null
+  return ConfigSection(props)
+}
 
 /**
  * Mount the settings page, the sidebar panel row, and the console.
@@ -82,15 +100,19 @@ export function apply(ctx: ClientContext): void {
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'dsh-session-sync: dictionaries')
   const t = ctx.locale.bind(NS)
 
-  ctx.slots.inject('plugins.row.config', () => ctx.slots.register({
-    name: 'plugins.row.config',
-    // `<package name>#<row id>` — the row this bundle's patch inserts. The
-    // Plugins page draws a configure control on that row only when this key is
-    // registered (`config-ledger.ts` collects exactly these keys), so without it
-    // the package's page shows a description and no way to configure it. The
-    // declared slot also caps what the page will look for: `plugins.item` is the
-    // official settings pages' slot and is occupied.
-    key: 'dsh-session-sync#session-sync',
+  // This plugin's configuration, on its own pages of the Plugins page.
+  //
+  // The slot renders on *every* detail page, so the guard is what keeps the form
+  // off other plugins' pages: it is reached only for this bundle or its row.
+  //
+  // `plugins.row.config` — the configure control the page's contract describes
+  // for one row — was implemented first and produced no control on this
+  // deployment: registering under every plausible key left the row without one,
+  // on both the packaged desktop host and the deployed server. This section is
+  // verified on both. See `config-entry.ts` for the full note.
+  ctx.slots.inject('plugins.detail.section', () => ctx.slots.register({
+    name: 'plugins.detail.section',
+    id: PANEL_ID,
     locale: NS,
     inject: () => ({
       hooks: { sync: client.snapshot },
@@ -99,7 +121,7 @@ export function apply(ctx: ClientContext): void {
       setSessionApprovals: (sessionId: string, approved: boolean) =>
         client.setSessionApprovals(sessionId, approved),
     }),
-  }, ConfigSection))
+  }, ConfigSectionForDetail))
 
   // The row the sidebar draws above the browsing region. It is the console's
   // only entry point, and it is a shipped slot: no host patch is involved.

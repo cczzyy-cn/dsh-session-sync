@@ -8,8 +8,8 @@
 | 项 | 值 |
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
-| 版本 | **`0.10.33`**（本版：配置入口从 `settings.section` 迁到插件页的 `plugins.row.config`）· 上一版 `0.10.32`（tag `v0.10.32` → `1fb4efc`，落地 0.10.29–0.10.31 + 文档中文化） |
-| 部署面 | **2026-09-30 晚**：服务器与本机两个 profile（`web` / `desktop`）都曾钉到 `#v0.10.32`，两端产物 sha256 逐字节相同；服务器 unit 已重启 ⇒ 跑 0.10.32。**0.10.33 的落地读数见 §2 该节**。实时读数用 `scripts/deploy-status.ps1` 取，不要看这一行 |
+| 版本 | **`0.10.34`**（配置改到已验证可用的 `plugins.detail.section`）· 上一版 `0.10.33`（`plugins.row.config`，在已发布构建里不产生控件） |
+| 部署面 | **2026-09-30 晚**：服务器与本机两个 profile（`web` / `desktop`）都曾钉到 `#v0.10.32`，两端产物 sha256 逐字节相同；服务器 unit 已重启 ⇒ 跑 0.10.32。**0.10.33/0.10.34 的落地读数见 §2 那两节**。实时读数用 `scripts/deploy-status.ps1` 取，不要看这一行 |
 | 服务器（远端） | **已上线 `0.10.32`**（依赖 `#v0.10.32`，lock → `1fb4efc`）· DSH **`0.2.0-rc.1`** · unit `dsh-web.service` active · 3080（绑 `127.0.0.1`）与 8791 都在听 |
 | 本机宿主 | **这个 GUI 跑的是打包版** `DeepSeek Harness.exe`（`resources\app.asar\dsh`，DSH 0.2.0-rc.1），**不是源码 checkout**；它加载的 profile 是 `~/.dsh/profiles/desktop`。`profiles/web` 与 `profiles/desktop` 两个 profile 里都装着本插件 |
 | 本机 DSH checkout | `C:\Users\14339\Desktop\git\deepseek-harness` = **`0.2.0-rc.1`**（与服务器、与打包版同版）· `packages/settings/settings` 与 `packages/client/ui-plugin-manager` 都在树里，是本插件两条契约的**参考实现** |
@@ -96,7 +96,36 @@
 > 2026-09-25 及以前的推进日志（从"② 的答案"一路到 0.3.x）已归档到 `docs/history-2026-09.md`。
 > 这一段只留本版（0.8.x/0.9.x/0.10.x）的改动与验证；历史文件是当时的推理记录，不要照它实现。
 
+### v0.10.34：配置改到**已验证可用**的 `plugins.detail.section`（2026-09-30 深夜）
+
+**0.10.33 用的 `plugins.row.config` 在真实构建里不产生配置控件**——这一版换到那条我实测过能用的路。
+
+- **怎么发现的**（三条证据，都在**打包版桌面宿主**与**服务器控制台**上各验一遍）：
+  1. 0.10.33 部署后，插件页上本 bundle 的那一行仍然只有一个标题、一段描述和 `session-sync`，
+     **没有配置控件**；点那一行没有反应。用 OCR 逐词确认过，不是肉眼漏看。
+  2. 把**所有候选键**一次性注册（`dsh-session-sync#session-sync`、裸包名、裸 row id、
+     `dsh-session-sync#dsh-session-sync`）重建部署后，控件**仍然**不出现 ⇒ 不是键的取值问题。
+  3. 同时注册 `plugins.row.config` 与 `plugins.detail.section` 的探针：后者渲染的 `PROBE-SECTION`
+     **出现在页面上** ⇒ 我们的条目确实进了插件页的注册表、跨插件注册是通的；只有前者的账本条目
+     不起作用。这一条把"插件没加载""作用域不对""注册被拒"三种猜测一次排除。
+- **改法**：`plugins.detail.section`（契约里就是"详情页内容之下的区块"）。它**在每个详情页都会渲染**，
+  所以贡献方必须自己判断该不该出现——判据抽成纯函数 `ownsSubject`（bundle 或本 bundle 的 row 才认），
+  由 5 个用例钉住（含"别的插件的页面必须为 null"这条，它正是不加判断时的故障）。
+- **为什么不继续猜**：`plugins.row.config` 的语义在**这个仓库能读到的源码**里是清楚的（`config-ledger.ts`
+  收集 `entry.options.key`，`RowDetail` 据此画控件），而**已发布的构建**里不生效——两边不一致，
+  而部署的是后者。继续猜键或猜时序，代价是每次 2 分钟的"改-构建-装-刷新-看"循环；把资源花在
+  一条已验证的路线上更划算。**留待上游对齐后再试**：若某版 DSH 上该控件出现，可以再迁回去。
+- 验证：`client/client.js` 变化（新 bundle 里 `plugins.detail.section` 4 处、`ownsSubject` 3 处、
+  `plugins.row.config`/`settings.section` 均为 **0**）；`lib/index.js` 字节未变 ⇒ 刷新页面即可；
+  测试 **164/164**；类型门禁 69 文件 / 0 致命。
+- **真机截图确认**（打包版桌面宿主，本 bundle 的卡片页）：表单出现在「包含的组件」之下，
+  带**迁移过来的真实值**——本机名称 `DESKTOP-M1EERFC`、`210.16.120.228:8791`、连接密码（掩码显示）、
+  监听地址 `0.0.0.0`、监听端口 `8791`、保存/放弃修改与状态行。
+
 ### v0.10.33：配置入口从 `settings.section` 迁到插件页（`plugins.row.config`）（2026-09-30 晚）
+
+> 这一版的**做法被 0.10.34 证伪**（`plugins.row.config` 在已发布构建里不产生配置控件），
+> 记录保留，因为"怎么发现的"比结论更有用——见上一节。
 
 **症状（用户报）**：设置没有出现在新版官方插件配置页。**先查清了这不是"等重启"。**
 

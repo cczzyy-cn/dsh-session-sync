@@ -1,18 +1,57 @@
 /**
- * The configuration entry's one-liner, as a pure function of the configuration.
+ * Where this plugin's configuration is offered, and to whom.
  *
- * It lives apart from the component that renders it because the test runner
- * cannot load a `.tsx` module (no bundler in the test path), and this is the one
- * part of the entry with a decision in it: the Plugins page asks the entry for a
- * summary *and* for the form, and the summary is a fallback the page drops into
- * a paragraph when the row declares no description. A summary that answered with
- * the form would be a whole page inside that paragraph.
+ * The Plugins page gives a bundle two ways to carry configuration: a configure
+ * control on one of its rows (`plugins.row.config`, keyed `<package>#<row id>`)
+ * and a section under a detail page's own content (`plugins.detail.section`).
+ * The row control is the one the page's own contract describes for a bundle like
+ * this, and it was implemented first — but the build this deployment runs does
+ * not turn a registration into that control: registering under every plausible
+ * key (`dsh-session-sync#session-sync`, the bare package name, the bare row id)
+ * still left the row without one, on both the packaged desktop host and the
+ * deployed server. The detail section is verified to work on both, so the form is
+ * offered there instead, and the guard below is what keeps it off every other
+ * plugin's page.
+ *
+ * This module stays pure (no React, no JSX) because the test runner cannot load
+ * a `.tsx` module: the predicate is the part with a decision in it, and that
+ * decision is testable.
  */
 import type { SyncConfig } from '../shared/protocol.ts'
 import type { SessionSyncKey } from './locales.ts'
 
+/** This plugin's npm package name, as the Plugins page reports it. */
+export const PACKAGE_NAME = 'dsh-session-sync'
+
+/** The row id this bundle's patch inserts. */
+export const ROW_ID = 'session-sync'
+
+/** The shape of a detail page's subject, to the depth this plugin reads. */
+export interface PluginsSubjectLike {
+  readonly kind: 'bundle' | 'row' | 'item'
+  readonly pkg?: { readonly name: string } | undefined
+  readonly row?: { readonly rowId: string } | undefined
+  readonly id?: string | undefined
+}
+
 /**
- * The line the Plugins page shows under this row's title.
+ * Whether the open detail page is this plugin's.
+ *
+ * `plugins.detail.section` renders on *every* detail page — the contribution
+ * decides from the subject whether it has anything to say — so without this the
+ * form would appear under every installed plugin's page.
+ * @param subject - the open page's subject.
+ * @returns true when the page is about this plugin's bundle or its row.
+ */
+export function ownsSubject(subject: PluginsSubjectLike | undefined): boolean {
+  if (subject === undefined) return false
+  if (subject.kind === 'bundle') return subject.pkg?.name === PACKAGE_NAME
+  if (subject.kind === 'row') return subject.pkg?.name === PACKAGE_NAME && subject.row?.rowId === ROW_ID
+  return false
+}
+
+/**
+ * One line reading the configuration in force, for a header or a fallback.
  * @param t - localized copy.
  * @param config - the configuration in force.
  * @returns the summary text.

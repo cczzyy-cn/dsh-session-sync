@@ -30,7 +30,7 @@ checkout 里还留着已应用的补丁，它现在是**惰性**的，可以用
 
 | 界面 | 插槽 | 是什么 |
 | --- | --- | --- |
-| 插件页 | `plugins.row.config`（key `dsh-session-sync#session-sync`） | 本插件的配置：本机名称、服务器域名/IP、服务器开关、连接密码、监听地址/端口、逐会话的发布列表，以及两端各自上报的插件版本。插件页因此在本 bundle 的那一行上多出一个配置控件，点开就是这个表单 |
+| 插件页 | `plugins.detail.section`（id `session-sync`） | 本插件的配置：本机名称、服务器域名/IP、服务器开关、连接密码、监听地址/端口、逐会话的发布列表，以及两端各自上报的插件版本。在插件页打开本 bundle 的那张卡，表单就在「包含的组件」下面 |
 | 侧边栏面板行 | `sidebar.panellist`（id `session-sync`） | 打开控制台的入口，也是折叠成窄栏后仍然留下的那一个 |
 | 中央面板 | `main`（key `session-sync`） | 控制台：一棵 **机器 → 目录 → 会话** 树，旁边是所打开会话的对话与接管输入栏 |
 
@@ -115,7 +115,7 @@ checkout 里还留着已应用的补丁，它现在是**惰性**的，可以用
 ## 配置
 
 配置的真源是 **DSH 的设置层**：本插件声明了一份 Host `Config`，Loader 校验该行的
-`config:` 映射，插件页（`plugins.row.config`，key `dsh-session-sync#session-sync`）据此渲染出表单，改动会
+`config:` 映射，插件页（`plugins.detail.section`，id `session-sync`）据此渲染出表单，改动会
 **热提交**给正在运行的插件，不用重挂载。
 
 插件自己那份文档 `$DSH_HOME/dsh-session-sync.json`（通常是
@@ -536,7 +536,7 @@ src/client/stat-panels.tsx   轮次用量与轮次时长胶囊和对话框
 src/client/locales.ts        两个界面渲染的每一个字符串，zh 与 en
 src/client/*.module.css      自带聊天样式表，逐字拷贝
 src/client/css-modules.d.ts  本次构建的 CSS 模块导入形状
-src/client/config-entry.ts  配置那一行的摘要（纯函数，受测试约束）
+src/client/config-entry.ts  配置表单该出现在哪些页面（纯函数，受测试约束），以及那一行摘要
 src/client/ConfigSection.tsx 插件页上的本插件配置页
 src/client/PanelIcon.tsx     侧边栏面板行的字形
 src/client/SyncPanel.tsx     控制台：树、对话、接管
