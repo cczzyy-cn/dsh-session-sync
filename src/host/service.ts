@@ -40,6 +40,7 @@ import type {
   SessionControllerLike,
   SessionSummaryRow,
   WireEvent,
+  WorkspaceRegistryLike,
 } from './dsh.ts'
 import { SyncHub, type BrowserSink } from './hub.ts'
 import { ApprovalRelay } from './approvals.ts'
@@ -479,12 +480,19 @@ export class SessionSyncService {
     if (controller === undefined) return []
     const { items } = await controller.list({}, new AbortController().signal)
     this.localItems = items.length
+    // An archived Session arrives here as an ordinary row, because the archive
+    // set is the Workspace registry's and `SessionSummary` has no field for it.
+    // This list is the publish picker *and* what `reconcile` desires, so dropping
+    // the row here is what stops offering it and what ends its follow — the
+    // index then no longer names it, and the mirror drops it in turn.
+    const archived = this.archivedSessions()
     // A top-level Session may report no parent as either null or undefined, and
     // testing only for undefined dropped every row when it was null -- which read
     // as "this machine has no Sessions" while the publish marks still said three.
     const rows = items
       // Subagent children are part of their parent's story, not separate rows.
       .filter(item => (item.parentSessionId ?? undefined) === undefined && item.origin !== 'subagent')
+      .filter(item => !archived.has(item.sessionId))
       .map(item => this.row(item))
     this.localRows = rows.length
     return rows.sort((left, right) => right.updatedAt - left.updatedAt)
@@ -1538,6 +1546,24 @@ export class SessionSyncService {
     const found = this.ctx.get('sessionController')
     if (found === undefined || found === null) return undefined
     return found as SessionControllerLike
+  }
+
+  /**
+   * The Session ids the Workspace registry has archived.
+   *
+   * Read through `get` rather than injected, for the same reason the Session list
+   * itself is feature-detected: a composition without the registry must keep
+   * listing Sessions, and an absent archive set reads as "nothing is archived"
+   * rather than as an error. Every entry is type-checked, because this is another
+   * plugin's state and a registry that changed shape must not hide every row.
+   * @returns the archived Session ids, empty when the registry is unavailable.
+   */
+  private archivedSessions(): ReadonlySet<string> {
+    const found = this.ctx.get('workspaceRegistry')
+    if (found === undefined || found === null) return new Set()
+    const ids = (found as WorkspaceRegistryLike).archivedSessionIds
+    if (!Array.isArray(ids)) return new Set()
+    return new Set(ids.filter(id => typeof id === 'string'))
   }
 
   /** Project one summary onto a presentation row. */

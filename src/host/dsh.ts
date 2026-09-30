@@ -347,6 +347,21 @@ export interface SessionControllerLike {
   prompt(request: PromptRequest, signal: AbortSignal): Promise<{ accepted: true }>
 }
 
+/**
+ * The Workspace registry, read only for its archive set.
+ *
+ * Archiving is deliberately **not** a field on `SessionSummary`: the id set
+ * belongs to the registry, so `SessionController.list` reports an archived
+ * Session exactly like any other and a list that trusts it alone offers
+ * archived work for publishing. `pinnedSessionIds` lives beside it and is
+ * deliberately not read here — a pinned Session is still a Session someone
+ * wants, and hiding it would be a different mistake.
+ */
+export interface WorkspaceRegistryLike {
+  /** Ids the user has archived. Absent in a build without an archive feature. */
+  readonly archivedSessionIds?: readonly string[]
+}
+
 /** The browser HTTP carrier — `WebServer` in `packages/host/webserver/src/index.ts`. */
 export interface WebServerLike {
   register(route: {
