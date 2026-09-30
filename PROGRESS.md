@@ -1,31 +1,55 @@
 # dsh-session-sync 推进记录
 
 > 只写被证据支撑的事实：跑过的命令、测到的数字、看到的现象。每条结论都要能指出它是怎么被验证的。
-> 本文件不参与构建。最近更新：2026-09-28（0.10.0：跨机器提问「两边竞速」）
+> 本文件不参与构建。最近更新：2026-09-30（0.10.29–0.10.31：两道门禁真正生效 / 归档会话不再出现在发布列表 / 配置迁入 DSH 设置层）
 
 ## 0. 现状一眼看
 
 | 项 | 值 |
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
-| 版本 | **`0.10.14`**（tag **`v0.10.14`**）· 底部统计可"按整份日志重算" + 标签改为可自证（见 §2） |
-| 服务器（远端） | **已上线 `0.10.14`**（依赖 `#v0.10.14`）；0.10.9 起全是纯客户端改动 ⇒ 期间**没有重启**，只换 served bundle。Host 半边仍是 **0.10.8**（改动自 0.10.6 起为 0 字节，只是加载时记下的版本串不同） |
-| 本机（源站） | profile 已装 `0.10.14`；**Host 半边 0.10.12**（09-29 21:40:52 重启时加载），自 0.10.6 起字节未变 ⇒ 功能上即最新 |
-| 测试 | **110 通过 / 0 失败**（27 suites）· 新增 `log-coverage` 5、`delegation` 3、`live-text` 7 |
-| 真机验证 | 提问竞速（0.10.4）、控制台**放行**与**拒绝**审批（0.10.5）都已在部署上跑通，账本签名见 §2 |
-| 产物 | `lib/index.js` **162,567 B**（sha256 `a7700833…`，自 0.10.6 起未变）· `client/client.js` **362,080 B**（sha256 `3d46f21b…`）；产物自报版本 `0.10.14` |
-| 编码门禁 | `node scripts/check-encoding.mjs` **clean**（原先在 HEAD 上就是红的：见 §6） |
-| 类型 | Host 半边 `tsc` 0（9 个文件）；客户端半边用 `%TEMP%\synccheck` 的 stub 配置整体 `tsc` 0 |
-| 服务器 | `210.16.120.228` · DSH **`0.2.0-rc.1`**（`npx` 缓存 `ed2e730009a84a04`，unit 里钉的版本；`latest` 当时仍是 `0.1.7-rc.2`，0.2.0-rc.1 在 `next` 上）· 插件 **`0.10.5`** · unit `dsh-web.service` · active |
+| 版本 | **`0.10.31`**（HEAD `c7ae027`）· **最新 tag 是 `v0.10.28`** ⇒ 其后 3 个提交**未打 tag**（见下"未落地的一批"） |
+| 部署面 | **仓库/产物 `0.10.31` · 本机 profile 与运行进程 `0.10.28` · 服务器 `0.10.28`**——即 0.10.29–0.10.31 三个提交**一处都没上线**（0.10.29 只改工具链、0.10.30/31 改 Host 半边 ⇒ 生效要重启本机 DSH，会杀掉正在跑的会话） |
+| 服务器（远端） | **已上线 `0.10.28`**（profile 依赖钉 `github:cczzyy-cn/dsh-session-sync#v0.10.28`）· DSH **`0.2.0-rc.1`** · unit `dsh-web.service` active · 3080（绑 `127.0.0.1`）与 8791 都在听（实测 `ss -lntp`） |
+| 本机（源站） | profile 装 **`0.10.28`**（其 `lib/index.js` 里 `settings.describe` 命中 **0** 次，`cordis.patch.yml` 无 `config:` ⇒ 设置层确实没跑起来）· **本机依赖是裸 `github:cczzyy-cn/dsh-session-sync`（无 tag）**，服务器是 `#v0.10.28`，两边漂移 |
+| 本机 DSH | checkout `C:\Users\14339\Desktop\git\deepseek-harness` = **`0.2.0-rc.1`**（与服务器同版）· `packages/settings/settings` 在树里 ⇒ 设置层这条真源在本机具备条件，但**从未被激活过**（`~/.dsh/settings.yaml` 不存在，只有 9-19 的 `settings.yaml.imported`） |
+| 测试 | **156 通过 / 0 失败**（38 suites，7.3 s）· 本版新增 `settings-config` **27 例 / 7 suites**（单独跑也是 27） |
+| 真机验证 | 仍停在 0.10.5 那批：提问竞速（0.10.4）、控制台**放行**与**拒绝**审批（0.10.5）见 §2。**0.10.29–0.10.31 无真机验证** |
+| 产物 | `lib/index.js` **248,713 B**（sha256 `479fc3cb…`）· `client/client.js` **366,347 B**（sha256 `00921724…`）；两个产物均已含设置层标记（`settings.describe`、`expectedRevision` 命中）。客户端产物自 **0.10.29** 起字节未变 |
+| 编码门禁 | `node scripts/check-encoding.mjs` **clean（60 文件）**；0.10.29 之前它在空转（只扫 3 个文件却报 clean），见 §2 |
+| 类型 | `npm run typecheck` = 67 文件 / 752 诊断 / **undeclared 0 · relative imports 全解析 · 类型不匹配 0**（752 全是无 bundler 解析时的 JSX/上游项） |
 | 控制台路线 | **`scope`**：服务器上 `dsh-api-session-controller/lib/client.js` 命中 `retainAgentScope` ⇒ 特性探测确定走它；`adopt` 在任何已发布构建里都不存在（该路线已从代码删除） |
 | 服务器镜像 | 按需重建：源站 reconcile + follow 快照；此刻本机发布列表为空（`syncSessions: {}`），所以镜像里没有会话 |
-| 旧副本 | 已留档移走（**未删**）到服务器 `/root/legacy-copies-<ts>/`：两个会话目录 + 投影缓存 + 台账 |
-| 本机（源站） | DSH 源码运行（checkout = `dsh-v0.1.7-rc.1`）· profile 装 **0.9.0**；**0.10.0 的 Host 半边要等一次本机重启才生效**（会杀掉正在跑的会话，留给用户） |
+| 旧副本 | 已留档移走（**未删**）到服务器 `/root/legacy-copies-<ts>/`：两个会话目录 + 投影缓存 + 台账（本行为 0.10.0 时代的记录，2026-09-30 未复核该路径是否还在） |
 | 控制台 | `https://dsh.c-zy.cc/?token=<43 位>`（浏览器 cookie 持久） |
 | 同步口 | `210.16.120.228:8791`（源站连它；**不经** Cloudflare） |
 | 端到端脚本 | `scripts/e2e-dsh.ps1`：构建工作树 → 两个真 `dsh web` 实例（3098/3099）→ 发布真会话 → 断言镜像 222 条 / 零缺口 / 版本握手 / 掉线再恢复，跑完自清理。**实测 all checks passed**；**尚未覆盖提问竞速**（见 §4） |
 | 文档 | `PROGRESS.md` 现状 + 本版日志 + 手册；2026-09-25 及以前归档在 `docs/history-2026-09.md`；计划在 `docs/project-plan.md`；提问那条的设计分析在 `docs/analysis-agent-team-profile.md` |
 | 版本握手 | `state.pluginVersion`（本机）+ `machines[].pluginVersion`（各源站自报）；设置页显示并在不一致时标红；`build-and-install.ps1` 会核对产物自报的版本 |
+
+### 未落地的一批：0.10.29 / 0.10.30 / 0.10.31（2026-09-30 实测）
+
+上面那张表里"部署面"那一行是本节的核心事实，单独写清楚，免得下次排查又先怀疑运行中的代码：
+
+| 面 | 版本 | 证据 |
+| --- | --- | --- |
+| 仓库 + 产物 | **0.10.31** | HEAD `c7ae027`；`lib/index.js` 248,713 B / sha256 `479fc3cb…`；`client/client.js` 366,347 B / sha256 `00921724…` |
+| 本机 profile | **0.10.28** | 安装副本 `package.json` 报 0.10.28；其 `lib/index.js` 里 `settings.describe` 命中 **0**；`cordis.patch.yml` 只有 `insert`、无 `config: {}` |
+| 本机运行进程 | **0.10.28** | Host 半边在启动时读取并冻结（`version.ts`），换包不重启只会造成"假一致" |
+| 服务器 | **0.10.28** | profile 依赖 `github:cczzyy-cn/dsh-session-sync#v0.10.28`；`systemctl is-active dsh-web.service` = active；3080/8791 在听 |
+
+- **为什么没落地不算遗漏**：0.10.29 只改工具链（`src/client/**` 那点改动由 HMR 收），0.10.30/31 改 `src/host/**`，
+  生效必须重启本机 DSH = 杀掉当时正在跑的会话，所以有意留给你；`build-and-install.ps1` 也**主动拒绝**
+  把本地构建拷进一个 `github:` 依赖的 profile（除非 `-ForceCopy`），正是为了不让"跑着的字节"和"装出来的字节"悄悄分叉。
+- **tag 只到 `v0.10.28`**（已推）；`v0.10.29/30/31` 不存在，而服务器 unit 钉的就是 tag ⇒ 忘记打 tag 会直接表现为"服务器装不上新版"。
+- **本机依赖是裸 `github:cczzyy-cn/dsh-session-sync`（无 tag），服务器是 `#v0.10.28`。** 本机下次 `pnpm update`
+  会拉到 trunk 上的任意提交——而 Host 半边的替换仍然要重启才生效，这正是版本握手存在的理由。
+- **0.10.31 自报的未验证项（要重启才能查，刷新页面不够）**：live `settings` 是否挂载了本插件的行、
+  `describe()` 的命名空间里有没有 `session-sync`、插件页是否渲染出那张表单、真实旧文件的导入与归档。
+  本机 `~/.dsh/settings.yaml` 此刻**不存在**（只有 9-19 的 `settings.yaml.imported`）⇒ 设置层从未被激活过。
+- **回滚代价（要提前知道）**：迁移会把 `~/.dsh/dsh-session-sync.json` **rename** 成
+  `dsh-session-sync.json.imported-<时间戳>.json`；一旦回退到 0.10.28（只认该文件、无设置层），
+  它会**以默认值启动**（`isServer` / `serverUrl` / `syncSessions` 全丢）。要回滚，先把那份归档改回原名。
 
 **2026-09-25 服务器更新（三次）**：插件 `13b7aa2`（按字节切批 + 具名 413）→ `b2a7811`（回填分页边界）→ `4f3ed9a`/`c3862a2`/`5a80c15`/`32298d1`（保留上限 / 预算 / 跨平台 cwd / 拒写截断）→ **`v0.4.0`（tag）**。每次都用 lock 的 tar.gz + 安装产物的代码标记双向核对（`v0.4.0` 这次 9 个 host 标记 + 2 个 client 标记全中、旧串 `no follow or no page API` 为 0），`systemctl restart dsh-web` 后 active、3080/8791 在听。依赖也从裸 `github:` 改成 **`github:cczzyy-cn/dsh-session-sync#v0.4.0`**（lock → `8eeb0dd`），改前备份 `/root/package.json.bak-<时间戳>`。**本机 origin 跑的是 18:12:58 启动的构建**（`lib` 与仓库哈希一致，即含全部修复）。
 
@@ -64,7 +88,77 @@
 > 2026-09-25 及以前的推进日志（从"② 的答案"一路到 0.3.x）已归档到 `docs/history-2026-09.md`。
 > 这一段只留本版（0.8.x/0.9.x/0.10.x）的改动与验证；历史文件是当时的推理记录，不要照它实现。
 
-### v0.10.24 → v0.10.27：速率口径、「整份日志」标签、typecheck 空转、补历史前沿（2026-09-30）
+### v0.10.28 → v0.10.31：占用率、两道门禁真正生效、归档会话、配置迁入设置层（2026-09-30）
+
+> 这一批**四个提交一个都没上线**（三个面都还是 0.10.28，证据见 §0「未落地的一批」）。
+> 下面每条只写"改了什么 + 怎么被验证"，落地状态见 §0。
+
+**0.10.28（`9c49de0`）：底部状态行补上上下文占用率。**
+用户问"底部缺少上下文百分比，能用官方 UI 吗"。查清后：官方的 `ContextMeter` 只由**官方输入栏**渲染
+（`InputBar.tsx`），读的是 `contextPressure`/`contextBreakdown` **投影**，而投影只在真 DSH 会话状态里存在——
+镜像会话挂的是本控制台的输入栏，那个座位根本没上去；且该组件没有对外导出（包 `exports` 只有 `.` 与 `./client`）。
+所以"直接用官方 UI"做不到，采纳**同形状自绘 + 走已有权威统计通道**：占用率算法搬进共享的 `logStats`
+成为唯一定义（窗口取最新 `request/context`，已用取最新 `assistant/message` 的 `totalTokens`），
+`sessionChrome` 改为消费同一份 `stats.context`，避免"一个事实三个数"；`MirrorStats` 增加 `context`，
+因为镜像只持部分日志时看不到最新 usage，底部若因此沉默会被读成"没有可报的"。
+产物：`client/client.js` 366,332 B（本版起变）。
+
+**0.10.29（`a5a6592`）：两道门禁原先在空转，本版真的接上。**
+- 乱码（用户可见）：控制台提示条关闭按钮是 U+8133 `脳`，应为 U+00D7 `×`；同文件注释里 U+95B3 改回 `—`。
+  （这正是 v0.10.24→0.10.27 那一节里"关闭按钮乱码"的下文。）
+- `check-encoding.mjs` 修 **62 行**：补上实际出现的码点、新增**非法 UTF-8 检测**（原先 `readFileSync('utf8')`
+  把坏字节变成 U+FFFD 而放行）、扩根到 `scripts/` 与根级构建输入、报 `文件:行:列` 与原因；
+  并修掉一个**静默失败**：`flatMap` 不展开生成器 ⇒ 只扫到 3 个文件却报 clean。两条构建路径（`prebuild` 与
+  `build-and-install.ps1`）都接上它。
+- `typecheck.ps1` 修 **82 行**：缺 `@types/node` 时 TS2688 落进噪声桶、打印绿色、exit 0 —— 现在 TS2688 与
+  "tsconfig 解析到 0 个文件"都判失败（用伪造 checkout 验证）；新增"相对导入写错即致命"（TS2307 且说明符以
+  `./` 或 `../` 开头，原被当上游噪声静默放过，同样用植入验证）；路径改为自动发现，不再写死某台机器的 checkout。
+- 配套：`test` / `test:fast` / `typecheck` / `check-encoding` / `verify` 入库（`test` 走串行）。
+产物：`client/client.js` → 366,347 B（乱码修复，此后未再变）；`lib/index.js` **字节未变**（184,659 B）⇒ Host 半边不受影响。
+
+**0.10.30（`f87fa8b`）：归档的会话不再出现在设置页的发布列表里。**
+根因：归档不是 `SessionSummary` 上的字段，而是 Workspace 注册表持有的 id 集合
+（`ctx.workspaceRegistry.archivedSessionIds`），所以 `SessionController.list` 把归档会话当普通会话返回。
+改法：`src/host/dsh.ts` 结构化声明 `WorkspaceRegistryLike`（**明确不读** `pinnedSessionIds`——置顶是"还想要"、
+归档是"先收起来"，一起过滤是另一个错误）；`src/host/service.ts` 的 `localSessions()` 过滤掉归档 id
+（这个列表同时是 `reconcile` 的 desired 来源，所以在这里丢掉一行也就结束了它的 follow，索引不再提它、镜像随之删除）；
+注册表经 `ctx.get` 软读取，组合里没有或形状变了都只读作"没有归档"，而不是把每一行都藏起来。
+验证：`tests/archived-sessions.spec.ts` 6 例；**反向对照——去掉过滤后其中 3 例失败**；编码门禁 clean（58 文件）；
+类型 64 文件 / 742 诊断 / 0 致命；测试 **129/129（31 suites，串行）**。
+产物：`lib/index.js` 185,605 B 变化；`client/client.js` 与其 sourcemap **逐字节不变** ⇒ 只动 Host 半边，刷新页面不够。
+
+**0.10.31（`c7ae027`）：插件配置迁入 DSH 设置层，出现在新版插件页。**
+背景：DSH 插件页只渲染"被服务的命名空间"，而本插件的 Loader 行此前 `Config.listConfigs` 报 `status: "absent"`
+（没声明 Config）⇒ 插件页只有一个启用开关。本版把配置迁到设置层：声明 `Config`、由 settings 文档持有真源、
+旧 JSON 一次性导入后归档。
+- `src/host/config-schema.ts`（162 行）：8 个字段**全部 `.volatile()`**——非 volatile 的字段 `SettingsForms.write`
+  直接拒绝该路径，页面连存都存不了；密码 `.role('secret')`（`describe` 只回 `{path, set}`）；`listenPort` 默认 8791；
+  两张按会话的表用 `Schema.dict(Schema.const(true))`，写 `['syncSessions', id]` 时 `applyPathOp` 才找得到 schema 节点
+  （固定键 `object` 会让写入不被校验）。构建器由参数传入，因为本包不解析 `@deepseek-ai/*` 类型。
+- `src/host/config-store.ts`（845 行）：真源 = settings 文档，无 `settings` 时回退 JSON 文件。标量走
+  `settings.update`（带刚读到的 revision，**冲突则拒绝而非覆盖**），两张表走一次 `settings.mutate`。
+  导入顺序是"读旧文件 → 写进命名空间并确认存储 → **最后才 rename** 成 `<name>.imported-<ts>.json`"，
+  绝不删除：崩在中间只是幂等重放，崩在写入中则文件原样保留 ⇒ 不丢用户设置；导入失败保留原文件、下次重试。
+  引擎起服时的取值优先级是 **settings 区 → 文件（有文件但导入没吃下时）→ Loader 声明 → 默认值**。
+- `src/index.ts` / `service.ts` / `dsh.ts`：`apply(ctx, config)` 传入声明配置，`ConfigStore` 持有配置，
+  `patch()` 经它写入；新增 `adoptSettings()` 在角色变化时重新应用；监听 `settings/document-updated`。
+- 构建：Host 半边**真的打包** `@deepseek-ai/schemastery`，不声明 peerDependencies。先按
+  peerDependency + external 实现并验证其不可行：从真实安装位置 `import.meta.resolve('@deepseek-ai/schemastery')`
+  报 `ERR_MODULE_NOT_FOUND`（DSH 只以 app.asar 内的 vendor 树提供它），而 Loader 激活时就读 `Config`，
+  external 会在 `apply` 之前抛错。故改为打包，并让构建脚本临时建立 `@deepseek-ai/{schemastery,cosmokit}`
+  junction（缺失即 fail-closed），与既有 node_modules junction 在同一个 `finally` 里清理。
+- 两处**有意**的语义变化（均有测试钉住）：取消发布某会话时，即使补丁未提 `sessionApprovals` 也一并撤销其审批授权
+  （补丁现在只携带变化字段，旧规则需显式维持）；settings **写**失败不再静默改写 JSON，而是作为错误回给 `POST /config`。
+- 验证：`tests/settings-config.spec.ts` **27 例 / 7 suites**（update + 单次 mutate 且 revision 生效、陈旧 revision
+  被拒而非覆盖、导入 + 单个归档 + 二次启动不再导入、导入失败保留文件并重试、三条回退路径：无 settings／形状不符／
+  挂载了但无可配置行）；编码门禁 clean（60 文件）；类型 67 文件 / 752 诊断 / 0 致命；测试 **156/156（38 suites，串行）**。
+  部署产物在无自带 `node_modules` 的情况下独立加载通过（exports `Config, apply, name, pluginVersion`；
+  8 字段可解析；`password` role=secret）。
+- **本版未验证（需重启才查得到）**：live `settings` 是否挂载了本插件的行、`describe()` 里有没有 `session-sync`、
+  插件页是否渲染出表单、真实旧文件的导入与归档 —— Host 半边在启动时读取，刷新页面不够。
+  这一条与 §0「未落地的一批」是同一件事，落地后要回来划掉。
+产物：`lib/index.js` → 248,713 B（Host 半边变化）。
+
 
 **用户报的三件事，逐条量过再改：**
 
