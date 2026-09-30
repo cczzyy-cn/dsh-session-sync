@@ -1,725 +1,600 @@
 # dsh-session-sync
 
-Multi-machine Session sync for DeepSeek Harness.
+DeepSeek Harness 的跨机器会话同步。
 
-Publish selected Sessions from this machine to a sync server, and — on the
-server — browse every connected machine's Sessions in the console, grouped by
-machine and by the directory they run in. A Session opened there can be taken
-over: prompts typed in the console are forwarded to the machine that owns the
-Session, which admits them into its own agent loop, and the results stream back.
+把本机选中的会话发布到一台同步服务器，并在服务器上按机器、按它们所在的目录浏览
+每一台连上来的机器的会话。在那里打开的会话可以被**接管**：在控制台里输入的
+prompt 会被转发给拥有该会话的机器，由它送进自己的 agent 循环，结果再流回来。
 
-## Install
+## 安装
 
 ```sh
 dsh plugin --profile web add github:cczzyy-cn/dsh-session-sync
 ```
 
-The built Host and browser halves are committed to this repository on purpose.
-A plugin installed from git cannot build itself here: the browser half has to
-exist as `client/client.js` before the client module registry will serve it, and
-pnpm refuses a git dependency's `prepare` script until the consumer allowlists
-it — `vision` and `dshmarket` are installed from git on that same basis. Source
-changes therefore need `scripts/build-and-install.ps1` to run before they are
-committed.
+构建好的 Host 半边与浏览器半边是**有意**提交在本仓库里的。从 git 安装的插件无法
+在这里自己构建：浏览器半边必须先作为 `client/client.js` 存在，客户端模块注册表才会
+提供它；而 pnpm 在消费者把它加进 allowlist 之前会拒绝执行 git 依赖的 `prepare`
+脚本——`vision` 与 `dshmarket` 正是基于同一条理由从 git 安装的。所以源码改动在提交
+之前需要先跑 `scripts/build-and-install.ps1`。
 
-### No host extension is needed
+### 不需要任何宿主扩展
 
-Every contribution goes through a shipped slot. An earlier revision also drew a
-glance into the sidebar's browsing region and carried a 28-line patch that
-declared `sidebar.region.section` for it; the console's panel row needs no such
-seat, so that section, the patch, and the checkout modification it asked for are
-all gone. If your DSH checkout still carries the applied patch, it is now inert
-and may be reverted with `git -C <checkout> checkout -- packages/client/ui-sidebar`.
+每一项贡献都走官方自带的插槽。更早的一版还往侧边栏的浏览区里挤了一瞥，并为此带了
+一个 28 行的补丁去声明 `sidebar.region.section`；控制台的面板行并不需要这样的座位，
+所以那一节、那个补丁，以及它要求的 checkout 改动，现在都已经删掉了。如果你的 DSH
+checkout 里还留着已应用的补丁，它现在是**惰性**的，可以用
+`git -C <checkout> checkout -- packages/client/ui-sidebar` 还原。
 
-## What it adds
+## 它增加了什么
 
-| Surface | Slot | What it is |
+| 界面 | 插槽 | 是什么 |
 | --- | --- | --- |
-| Settings page | `settings.section` (id `session-sync`) | Machine name, server domain/IP, the server switch, the connection password, the listen address/port, the per-Session publish list, and the plugin versions both ends report |
-| Sidebar panel row | `sidebar.panellist` (id `session-sync`) | The entry that opens the console, and the one that survives the collapsed rail |
-| Centre panel | `main` (key `session-sync`) | The console: a **machine → directory → Session** tree beside the opened Session's conversation and the takeover composer |
+| 设置页 | `settings.section`（id `session-sync`） | 本机名称、服务器域名/IP、服务器开关、连接密码、监听地址/端口、逐会话的发布列表，以及两端各自上报的插件版本 |
+| 侧边栏面板行 | `sidebar.panellist`（id `session-sync`） | 打开控制台的入口，也是折叠成窄栏后仍然留下的那一个 |
+| 中央面板 | `main`（key `session-sync`） | 控制台：一棵 **机器 → 目录 → 会话** 树，旁边是所打开会话的对话与接管输入栏 |
 
-All three are additive: no shipped cell is replaced, and the sidebar row and the
-console share one id because the frame validates a selected panel against the
-registered `main` keys.
+三处都是**增量**的：不替换任何自带单元；侧边栏行与控制台共用一个 id，因为框架要用
+已注册的 `main` key 来校验被选中的面板。
 
-### The console wears the DSH UI it stands beside
+### 控制台穿的是它旁边那套 DSH UI
 
-- **The list is the workspace browser.** Machines are the tree's first level,
-  their `cwd` values the second, and the Sessions the third — the same 34px
-  project row, the same 32px session row, the same folder glyph that becomes an
-  expand arrow on hover, the same trailing relative time. A remote Session should
-  scan exactly like a local one, because telling them apart is a detail of where
-  the row lives, not of what the row is.
-- **The talk column is the conversation.** A centered reading column capped at
-  920px, user prompts as right-aligned bubbles, assistant answers as Markdown,
-  thinking folded behind one row, each tool call one summary line that opens into
-  the card its tool calls for — a terminal transcript, a diff with its totals, a
-  line-capped file read, search hits, a fetched page — and an elevated
-  22px-radius composer card with a circular send button. A step that is still
-  running shows its thinking and its answer under that row as they arrive, the
-  folded thinking row sweeps while it streams and follows its newest line, an
-  interrupted answer carries the shipped `已停止` chip, a model retry shows the
-  shipped `details` row with its countdown, a turn that failed or hit the output
-  cap shows the shipped notice, and a turn's closing answer carries the copy,
-  usage and run-time actions — one row of them per turn, plus one per user
-  prompt. That row waits for the turn to close: while a turn is still producing,
-  its narration carries no actions at all (the shipped footer's own rule), so the
-  row never appears and then moves. Once it is there it follows the shipped
-  recency rule: the newest turn's row stays, an older turn's appears on hover or
-  keyboard focus, and an earlier prompt's clock-and-copy row does the same once a
-  later prompt exists. Assistant blocks keep the order the model wrote them in:
-  reasoning and prose interleave, and hoisting every reasoning block to the top
-  rewrites what it actually said.
-- **There is no machine pane.** The machine is a level of the tree, so choosing
-  one and opening a Session are the same gesture; a separate column would only
-  restate what the row already says.
-- **A Session that is short of events says so, where the reader already is.** The
-  count is per Session — on its tree row before the relative time, and beside the
-  title in the panel header — because the total in settings says how much is
-  missing without saying which Session to re-publish. The top of an opened
-  transcript carries a quiet `加载更早的消息` row for the same reason: it appears
-  only when the mirror is not the whole conversation, and it reads the page
-  behind its window from the machine that owns the Session. On the route that
-  draws the shipped pane, the row is shown only while that pane is scrolled to
-  its top: the shipped conversation brings its own scroll body, so a row drawn
-  beside it would sit above the conversation forever — offering history to a
-  reader who is nowhere near the end it belongs to — instead of marking where the
-  fetched range begins. That route also has to keep the reader's place itself: the
-  shipped chat arms its paging anchor in its own control's handler, and this
-  console pages through its own channel, so the compensation is written here, in a
-  layout effect, and never while the reader is following the tail.
-- **Nothing user-visible is invented.** Both panes reuse `ui-primitives`
-  (`DisclosureRow`, `MarkdownText`, `Input`, `StateDot`, `Button`) and the shipped
-  tokens, so the console follows a theme change, a font-size preference, and a
-  hairline change with the rest of the product.
-- **The conversation is the shipped one wherever the build allows it.** The
-  console draws the open remote Session with the product's real
-  `conversation.content` factory — its transcript, its tool cards, its turn
-  folds — through the one route a released DSH offers:
+- **列表就是工作区浏览器。** 机器是树的第一层，它们的 `cwd` 是第二层，会话是第三层——
+  同样的 34px 项目行、同样的 32px 会话行、同样的悬停时变成展开箭头的文件夹字形、
+  同样的尾部相对时间。远端会话看起来就该和本地会话一模一样，因为区分它们只是"这一行
+  住在哪里"的细节，而不是这一行是什么。
+- **对话列就是那段对话。** 居中的阅读列上限 920px，用户 prompt 是右对齐气泡，助手
+  回答是 Markdown，思考折在一行后面，每个工具调用是一行摘要、展开后变成它的工具调用
+  所要求的卡片——终端转录、带总计的 diff、限行数的文件读取、搜索命中、抓取的网页——
+  以及一张抬起、22px 圆角的输入卡片与圆形发送按钮。仍在运行的一步会在那一行下面随着
+  到达显示它的思考与回答；折起的思考行在流式时扫动并跟随最新一行；被打断的回答带着
+  自带的 `已停止` 标签；模型重试显示自带的 `details` 行与倒计时；失败或撞上输出上限的
+  一轮显示自带的提示；一轮收尾的回答带着复制、用量与运行时长这些动作——每轮一行，
+  外加每个用户 prompt 一行。那一行要等这一轮收尾：一轮还在产出时，它的叙述不带任何
+  动作（自带页脚自己的规则），所以那一行不会先出现再移动。一旦它在了，就遵守自带的
+  就近规则：最新一轮的行常驻，更早一轮的行在悬停或键盘聚焦时出现，更早的 prompt 的
+  时钟与复制行在后一个 prompt 出现后也一样。助手块保持模型写出来的顺序：推理与正文
+  交错，而把所有推理块提到最上面，就是在改写它实际说过的话。
+- **没有机器面板。** 机器是树的一层，所以"选一台机器"和"打开一个会话"是同一个手势；
+  单独一列只会把行里已经写着的东西再说一遍。
+- **事件不全的会话会在读者已经在的地方说明。** 计数是**逐会话**的——在它的树行上、
+  相对时间之前，以及面板头部标题旁——因为设置页里的总数只说了缺多少，没说该重新发布
+  哪一个会话。打开的正文顶部带着一行安静的 `加载更早的消息`，理由相同：它只在镜像
+  不是整段对话时出现，并且向拥有该会话的机器读取它窗口之后的那一页。在画自带面板的
+  那条路线上，这一行只在该面板滚动到顶部时才显示：自带对话带着它自己的滚动主体，
+  所以画在它旁边的一行会永远停在对话上方——把历史递给一个离它该在的那一端还很远的
+  读者——而不是标出取回的那段从哪里开始。那条路线还得自己维持读者的位置：自带聊天
+  在它自己控件的处理函数里武装分页锚点，而这个控制台通过自己的通道翻页，所以这份补偿
+  写在这里、写在 layout effect 里，且绝不在读者正跟随尾部时触发。
+- **不发明任何用户可见的东西。** 两个面板都复用 `ui-primitives`
+  （`DisclosureRow`、`MarkdownText`、`Input`、`StateDot`、`Button`）与自带 token，
+  所以控制台会跟着产品一起响应主题切换、字号偏好与细线变化。
+- **只要构建允许，对话就是自带的那一个。** 控制台用产品真正的
+  `conversation.content` 工厂——它的正文、它的工具卡、它的轮次折叠——来画打开的远端
+  会话，走的是已发布 DSH 提供的唯一一条路线：
 
-  | Route | Needs | What it gives |
+  | 路线 | 需要 | 给出什么 |
   | --- | --- | --- |
-  | `scope` | `ctx.sessions.retainAgentScope` + `binding` | The shipped pane with no Host I/O at all; the console's takeover composer stands in for the shipped one |
+  | `scope` | `ctx.sessions.retainAgentScope` + `binding` | 自带面板，且完全不需要 Host I/O；控制台自己的接管输入栏顶替自带的那一个 |
 
-  Only when the build has no such seam does the console keep the hand-drawn pane
-  described above, unchanged — so a stock build loses likeness, never function.
-  The route is feature-detected in `src/client/official-session.tsx`, and the
-  decision itself is a pure function under test (`scopeCapable` in
-  `src/client/routing.ts`); `sessions` is deliberately not in this plugin's
-  required `inject` list, because the console has to load on builds that predate
-  the seam.
+  只有当构建没有这条接缝时，控制台才保留上面描述的手绘面板，且原样不变——所以原版
+  构建失去的是**像不像**，绝不是**能不能用**。路线在 `src/client/official-session.tsx`
+  里做特性探测，判断本身是一个受测试约束的纯函数（`src/client/routing.ts` 里的
+  `scopeCapable`）；`sessions` 有意不放进本插件要求的 `inject` 列表，因为控制台必须
+  在早于这条接缝的构建上也能加载。
 
-  Two other routes were built and are gone. `adopt` (`ctx.sessions.adopt`) was a
-  client-only addition to `@deepseek-ai/dsh-api-session-controller`, carried as a
-  source patch in `patches/` against `dsh-v0.1.7-alpha.2`; it was the only route
-  that could hand the shipped composer a prompt that reaches the origin, and the
-  next `dsh` install dropped it — no released build has it, so the code path was
-  dead weight. `address` (`retain` with a catalogued parent identity) needed only
-  released surfaces, but the reference's own Host history read could never
-  succeed, so its only visible effect was a failure line the pane then hid.
-  `patches/` is kept as history: the plugin no longer has an adopt route, so
-  applying it changes nothing.
+  另外两条路线做过又删了。`adopt`（`ctx.sessions.adopt`）曾是对
+  `@deepseek-ai/dsh-api-session-controller` 的纯客户端增补，以源码补丁形式存在
+  `patches/` 里、对着 `dsh-v0.1.7-alpha.2`；它是唯一能把一条能到达源站的 prompt 递给
+  自带输入栏的路线，而下一次 `dsh` 安装就把它丢了——没有任何已发布构建带它，所以那段
+  代码是死重。`address`（用编目的父身份去 `retain`）只需要已发布的界面，但引用方自己
+  的 Host 历史读取永远无法成功，于是它唯一可见的效果是一行失败信息，随后被面板藏掉。
+  `patches/` 作为历史保留：插件已经没有 adopt 路线，所以应用它什么也不会改变。
 
-  On this route the shipped composer is hidden, because its prompt would go to a
-  Host that has never heard of the Session: its seat is replaced by the console's
-  own takeover composer, which reaches the machine that owns the Session. The
-  composer-block registry (`ctx.conversation.blocks`) is raised alongside so the
-  reason shows wherever that block survives — another plugin publishing its own
-  state for the same Session can clear it, which is why the seat is hidden rather
-  than trusted.
+  在这条路线上，自带输入栏是隐藏的，因为它的 prompt 会送到一个从未听说过该会话的
+  Host：它的座位被控制台自己的接管输入栏顶替，后者能到达拥有该会话的机器。输入栏
+  区块注册表（`ctx.conversation.blocks`）会同步抬起，好让理由在那个区块还存在的地方
+  显示出来——另一个插件为同一会话发布自己的状态时可能把它清掉，这正是"隐藏座位"而不是
+  "信任座位"的原因。
 
-  Older history is reachable from the pane. A mirror serves a tail window, and
-  the shipped conversation's own older-end control would ask the Host that has
-  never heard of the Session, so the window it is given never claims more; the
-  console's own paging is the road, and a `加载更早的消息` control above the pane
-  reads one page over the sync link per click and prepends it to the same window,
-  so the reader keeps their place. Pages arrive over two roads — the page the
-  console read, and the origin's ordinary replay frames once the mirror has grown
-  downward — so the pane drops envelopes the window already carries and treats
-  ones below it as history, because the shipped conversation's assembler requires
-  each node's matches in sequence order and an appended older event breaks it.
+  从面板可以够到更早的历史。镜像提供的是一个尾部窗口，而自带对话自己的"更早一端"控件
+  会去问那个从未听说过该会话的 Host，所以给它的窗口从不宣称更多；控制台自己的翻页才是
+  那条路，面板上方一个 `加载更早的消息` 控件每点一次就经同步链路读一页并前插进同一个
+  窗口，于是读者保住了自己的位置。页从两条路到达——控制台读到的那一页，以及镜像向下
+  长出之后源站发来的普通重放帧——所以面板会丢弃窗口已经携带的信封，并把比它更低的
+  当作历史，因为自带对话的组装器要求每个节点的匹配按序号顺序出现，而把一个更早的事件
+  追加进去会打断它。
 
-  Presentation follows the DSH install's own setting. The work-details mode
-  (`ui-chat`'s `transcriptView`: compact, standard, detailed, or verbose) is a
-  Host-backed chat setting read through the plugin's own `configForms` scope, and
-  the pane is that same client instance — so a mirrored Session folds completed
-  turns, groups its process rows, and previews settled reasoning exactly as the
-  server's own window does, including a change made while the pane is open. What
-  that setting does *not* cover is per-row disclosure: opening one reasoning or
-  tool row is local click state, in the console as everywhere else.
+  呈现方式跟随该 DSH 安装自己的设置。工作详情模式（`ui-chat` 的 `transcriptView`：
+  compact、standard、detailed 或 verbose）是一个由 Host 支撑的聊天设置，经插件自己的
+  `configForms` 作用域读取，而面板就是同一个客户端实例——所以镜像来的会话会和服务器
+  自己的窗口一样折叠已完成的轮次、归组它的过程行、预览已定稿的推理，包括面板打开期间
+  做的改动。这个设置**不**覆盖的是逐行展开：展开某一行推理或工具行是本地点击状态，
+  在控制台里和在别处一样。
 
-## Configuration
+## 配置
 
-The plugin writes its own document at `$DSH_HOME/dsh-session-sync.json`
-(usually `~/.dsh/dsh-session-sync.json`), atomically. The settings page is the
-normal way to edit it.
+配置的真源是 **DSH 的设置层**：本插件声明了一份 Host `Config`，Loader 校验该行的
+`config:` 映射，设置页（`settings.section`，id `session-sync`）据此渲染出表单，改动会
+**热提交**给正在运行的插件，不用重挂载。
 
-### Server side
+插件自己那份文档 `$DSH_HOME/dsh-session-sync.json`（通常是
+`~/.dsh/dsh-session-sync.json`）仍然存在，但换了两重身份：**没有** `settings` 服务的
+组合里它是回退存储（插件必须在那种组合里也能用），而对已有安装它是**一次性导入源**。
+第一次在带设置层的组合里启动时，插件读那份文档、把每个值写进命名空间并确认存储成功，
+**最后才**把它改名成 `dsh-session-sync.json.imported-<时间戳>.json`——绝不删除。崩在
+中间只会重放一次幂等的写入，崩在写入当中则文件原样保留，所以你的设置不会丢。
 
-1. Set **本机名称** to the name other machines should see.
-2. Turn on **作为服务器**.
-3. Set **连接密码** — the same value every client must use.
-4. Leave **监听地址** at `0.0.0.0` to accept other machines, or set `127.0.0.1`
-   to accept only this host.
-5. **监听端口** defaults to `8791`; change it if that port is taken.
-6. Save.
+### 服务器侧
 
-### Client side
+1. 把 **本机名称** 设成其它机器应当看到的名字。
+2. 打开 **作为服务器**。
+3. 设置 **连接密码** —— 每个客户端都必须用同一个值。
+4. **监听地址** 留在 `0.0.0.0` 以接受其它机器，或设为 `127.0.0.1` 只接受本机。
+5. **监听端口** 默认 `8791`；该端口被占用时改掉它。
+6. 保存。
 
-1. Set **本机名称**.
-2. Leave **作为服务器** off.
-3. Set **服务器域名 / IP** to the server's host and port, for example
-   `192.168.1.10:8791`. Plain HTTP is assumed; write `https://…` explicitly if
-   the server is behind TLS.
-4. Set the same **连接密码**.
-5. Save, then tick the Sessions to publish in **会话列表**.
+### 客户端侧
 
-## How it works
+1. 设置 **本机名称**。
+2. **作为服务器** 保持关闭。
+3. 把 **服务器域名 / IP** 设为服务器的主机与端口，例如 `192.168.1.10:8791`。
+   默认按明文 HTTP 处理；服务器在 TLS 后面时显式写 `https://…`。
+4. 设置同一个 **连接密码**。
+5. 保存，然后在 **会话列表** 里勾选要发布的会话。
+
+## 工作原理
 
 ```
-   client (origin)                         server
+   客户端（源站）                            服务器
    ───────────────                         ──────
-   ctx.sessionController.list()   ──POST /publish──▶  SyncHub index
-   follow(sessionId) ──durable events──POST /frames──▶  SyncHub events
-   follow(sessionId) ──whole step text──POST /stream-delta──▶  transient frame
-   page(beforeSeq)   ──older history──POST /frames──▶  SyncHub events
+   ctx.sessionController.list()   ──POST /publish──▶  SyncHub 索引
+   follow(sessionId) ──持久事件──POST /frames──▶  SyncHub 事件
+   follow(sessionId) ──整步文本──POST /stream-delta──▶  瞬时帧
+   page(beforeSeq)   ──更早历史──POST /frames──▶  SyncHub 事件
    prompt(sessionId, text)  ◀──SSE /stream──  DownstreamCommand
-   re-open follow / read a page  ◀──SSE /stream──  {kind:'resync'} / {kind:'older'}
+   重新打开 follow / 读一页  ◀──SSE /stream──  {kind:'resync'} / {kind:'older'}
         │                                            │
-        └────────POST /ack (ok | reason)─────────────▶│ command status
+        └────────POST /ack (ok | reason)─────────────▶│ 命令状态
                                                      │
-   browser: /dsh-session-sync/events ◀──SSE───────────┘
-            /dsh-session-sync/transcript ──page──▶  the mirror's window
+   浏览器：/dsh-session-sync/events ◀──SSE───────────┘
+            /dsh-session-sync/transcript ──分页──▶  镜像的窗口
 ```
 
-- The origin keeps one `ctx.sessionController.follow` stream open per published
-  Session and forwards its durable events — each with the surface placement that
-  says whether it appends or replaces — plus the streamed step text its
-  assistant frames carry while a step is still running.
-- **A batch is not published until the server has it.** A follow hands its events
-  to the link, which holds them in an outbox and retries until a post is
-  accepted; membership does the rest, so a replay or a retry that arrives twice
-  changes nothing. A post that hangs is failed after 20 s, because a connection
-  black-holed by a network blip used to leave the fetch pending forever — the
-  outbox stopped draining, nothing reconnected, and the link looked healthy while
-  publishing nothing.
-- **The mirror counts what it is missing, in the two readings that differ.** Each
-  Session reports `holes` — sequences missing *inside* the range the mirror holds,
-  which is a repair the sweep owes — and `behind`, the events the origin has
-  published above the mirror's top, which is simply what a running Session looks
-  like. The sum is `missingEvents`. The console shows the two apart: a red
-  `缺 N 条` only for holes, a quiet `落后 N` for being behind, because one badge
-  for both made every healthy Session look broken. The origin states its extent in
-  the index (`lastSeq`), so a mirror holding nothing is not mistaken for a Session
-  with nothing to hold.
-- **What is missing is asked for.** The server asks the origin to re-open one
-  Session's follow (`{kind:'resync'}`, retried every 30 s while the gap lasts);
-  the opening snapshot is replayed into the mirror, and because membership rather
-  than a high-water mark decides what is new, that replay fills a hole instead of
-  being discarded as history. A hole the replay cannot reach — one far below the
-  window — is asked for on its own, as a page aimed at the hole's first sequence.
-- **The two ends state their own versions.** Every index carries the publishing
-  build's plugin version, and `/state` carries this Host's own; the settings page
-  prints them side by side and says so when they differ. Two halves of one
-  deployment are loaded at different times — an origin keeps the Host half it
-  started with, a server keeps what `pnpm install` last put there — and reading
-  both lockfiles by hand was the only way to notice before this.
-- **History below the window is asked for too.** A follow opens on a tail window,
-  so a long Session's mirror begins mid-conversation. The origin says whether its
-  own log continues below what it published (`hasOlder`, from the opening
-  snapshot's `hasMore`), the console serves a 400-event page of what the mirror
-  holds, and a reader who wants older asks for the page behind it
-  (`{kind:'older'}`, 50 messages). The origin reads that page out of its own log
-  — against the same cut the window was taken at — and it comes back as ordinary
-  durable events.
-- **A published batch is split to fit the wire.** A follow opening on a long
-  Session is its whole window in one frame, which is megabytes: measured here,
-  3,478 events of a real Session serialize to 12.5 MB, and the sync server refuses
-  a request body over `MAX_BODY_BYTES` (4 MB). One oversized POST is not a single
-  failure — the batch stays at the head of the outbox and is retried on every
-  reconnect, so the follow never finishes, its `cursor` stays `-1`, and every page
-  read cut against that cursor is refused. So `batchEvents`
-  (`src/shared/protocol.ts`) splits one run of events by a byte budget derived
-  from that same limit, in order, dropping nothing; a single event larger than the
-  whole budget travels alone rather than being dropped. The listener answers an
-  oversized body with a named 413 *before* reading it, because throwing on an
-  unread body makes Node reset the connection — and a network error is not a
-  refusal the sender can act on.
-- Un-publishing a Session removes it from the index, which drops the mirror and
-  its events.
-- Takeover prompts go down the origin's own SSE stream; the origin calls
-  `ctx.sessionController.prompt`, which resumes a cold Session before admitting
-  the message.
+- 源站为每个已发布的会话保持一条 `ctx.sessionController.follow` 流，并转发它的持久
+  事件——每个都带着说明它是追加还是替换的界面位置——外加**一步仍在运行时**它的助手帧
+  所携带的流式步骤文本。
+- **一批事件在服务器确实拿到之前不算已发布。** follow 把事件交给链路，链路把它们放进
+  outbox 并重试，直到某次 post 被接受；成员资格负责其余部分，所以一次重放或一次到达
+  两次的重试不改变任何东西。挂住的 post 在 20 秒后判失败，因为被网络抖动黑洞掉的连接
+  以前会让 fetch 永远 pending——outbox 停止排空、没有任何重连，而链路看起来健康却在
+  什么都没发布。
+- **镜像用两个不同的读数来数自己缺什么。** 每个会话上报 `holes`——缺失在镜像所持范围
+  **内部**的序号，那是清扫欠下的一次修复——以及 `behind`，源站已发布到镜像顶部之上的
+  事件数，那只是"一个正在跑的会话"的样子。两者之和是 `missingEvents`。控制台把两者
+  分开显示：只有洞才显示红色 `缺 N 条`，落后则显示安静的 `落后 N`，因为用一个徽标
+  表示两者会让每个健康会话都看着像坏了。源站在索引里声明自己的范围（`lastSeq`），
+  所以什么都没持有的镜像不会被误认成一个本来就没什么可持有的会话。
+- **缺什么就去要什么。** 服务器请求源站重新打开某一个会话的 follow
+  （`{kind:'resync'}`，缺口还在时每 30 秒重试）；开场快照被重放进镜像，而由于决定
+  什么是"新"的是成员资格而不是高水位线，这次重放会填上一个洞，而不会被当成历史丢弃。
+  重放够不到的洞——远在窗口之下的那种——单独去要，作为一页、瞄准该洞的第一个序号。
+- **两端各自声明自己的版本。** 每个索引都携带发布方构建的插件版本，`/state` 携带本
+  Host 自己的；设置页把两者并排打印，不一致时说明。同一个部署的两个半边是在不同时间
+  加载的——源站保留它启动时的那个 Host 半边，服务器保留 `pnpm install` 最后放进去的
+  那个——而在这之前，手工读两份 lockfile 是唯一能察觉这件事的办法。
+- **窗口之下的历史也去要。** follow 从一个尾部窗口开始，所以长会话的镜像从对话中段
+  开始。源站说明它自己的日志在已发布内容之下是否还有（`hasOlder`，来自开场快照的
+  `hasMore`），控制台提供镜像所持内容的一页 400 条事件，而想要更早的读者就去要它后面
+  那一页（`{kind:'older'}`，50 条消息）。源站从自己的日志里读出那一页——对着取窗口
+  时的同一个切口——它再以普通持久事件的形式回来。
+- **已发布的一批会被切分以适配线路。** 一个长会话上的 follow 开场就是它整个窗口在一帧
+  里，那是若干 MB：这里实测，一个真实会话的 3,478 条事件序列化成 12.5 MB，而同步
+  服务器拒绝超过 `MAX_BODY_BYTES`（4 MB）的请求体。一个过大的 POST 不是一次孤立的
+  失败——那一批会留在 outbox 头部、每次重连都被重试，于是 follow 永远完不成，它的
+  `cursor` 停在 `-1`，而对着那个 cursor 切的每一次读页都被拒。所以
+  `batchEvents`（`src/shared/protocol.ts`）按从同一个上限推导出的字节预算、按顺序切分
+  一段事件，不丢任何东西；单个事件大于整个预算时独自成行，而不是被丢掉。监听器在
+  **读取之前**就用一个具名的 413 回应过大的请求体，因为对着未读的请求体抛错会让 Node
+  重置连接——而网络错误不是发送方能据以行动的拒绝。
+- 取消发布一个会话会把它从索引里移除，镜像及其事件随之被丢掉。
+- 接管 prompt 沿着源站自己的 SSE 流下行；源站调用 `ctx.sessionController.prompt`，
+  后者会先唤醒一个冷会话，再收下这条消息。
 
-### A prompt is a claim, so it is confirmed
+### prompt 是一次主张，所以要被确认
 
-`POST /command` answers with a `commandId`, and the server then narrates what
-became of that command down the browser's own event stream:
+`POST /command` 用一个 `commandId` 作答，随后服务器沿浏览器自己的事件流叙述这条命令
+后来怎么样了：
 
-| State | Meaning |
+| 状态 | 含义 |
 | --- | --- |
-| `queued` | Accepted; no origin stream is attached, so it waits |
-| `delivered` | Written to the owning machine's stream; nothing confirmed yet |
-| `accepted` | The machine admitted the prompt into its Session |
-| `failed` | The machine refused it, with its reason |
-| `expired` | The TTL passed before the machine confirmed it |
+| `queued` | 已受理；没有挂上源站流，所以它在等待 |
+| `delivered` | 已写入拥有它的机器的流；还没有任何确认 |
+| `accepted` | 那台机器把 prompt 收进了它的会话 |
+| `failed` | 那台机器拒绝了它，并给出理由 |
+| `expired` | 在那台机器确认之前 TTL 已过 |
 
-- A command carries `expiresAt` (`COMMAND_TTL_MS`, two minutes). A prompt is a
-  human act addressed at a Session that may have moved on, so a command that sat
-  in a queue while the owning machine slept is retired rather than admitted later
-  as if it had just been typed. Both ends enforce it: the server sweeps on its
-  reconcile tick, and the origin refuses an expired command even if that sweep
-  has not run yet.
-- The queue per machine is bounded (`PENDING_LIMIT`, 32 commands); what does not
-  fit is retired with that reason rather than growing the server's memory.
-- The browser narrates only the commands it sent, matched by `commandId`.
+- 命令携带 `expiresAt`（`COMMAND_TTL_MS`，两分钟）。prompt 是一个指向某个可能已经往前
+  走了的会话的人类动作，所以一条在拥有它的机器休眠期间留在队列里的命令会被**作废**，
+  而不是稍后被当成"刚刚输入"收下。两端都执行这条：服务器在自己的 reconcile tick 上
+  清扫，源站即使那次清扫还没跑也会拒绝一条已过期的命令。
+- 每台机器的队列是有界的（`PENDING_LIMIT`，32 条命令）；装不下的以该理由作废，而不是
+  去增长服务器的内存。
+- 浏览器只叙述它自己发出的命令，按 `commandId` 匹配。
 
-### The browser surface's routes
+### 浏览器界面的路由
 
-All of them sit under `/dsh-session-sync` and behind the GUI's own gate.
+它们全都在 `/dsh-session-sync` 之下，并且都在 GUI 自己的门禁之后。
 
-| Route | Method | What it is |
+| 路由 | 方法 | 是什么 |
 | --- | --- | --- |
-| `/config` | GET | The plugin's configuration plus the current state |
-| `/config` | POST | Patch the configuration; answers with the fresh config, state, and local Session list |
-| `/state` | GET | The state every surface reads: role, link, mirror, this Host's own `pluginVersion`, and the per-Session counts |
-| `/sessions` | GET | This machine's own Session list, for the publish picker |
-| `/transcript` | GET | A page of one mirrored Session (`machine`, `session`, optional `limit`, `before`); asks the owning machine for history below its window when a reader reaches the mirror's edge |
-| `/command` | POST | One takeover prompt; answers with the `commandId` its status is narrated under |
-| `/answer` | POST | This console's answer to one question a machine relayed (`machineName`, `questionId`, `answers`); answers with the `commandId` that carries it, or 409 with the reason the question is no longer open |
-| `/approval` | POST | This console's decision on one approval a machine is blocked on (`machineName`, `approvalId`, `decision` of `allowed-once` or `rejected`); answers with the `commandId` that carries it, or 409 with the reason the approval is no longer waiting. Any other decision value is a 400: `cancelled` and `unavailable` describe an answerer, not a decision a console may make |
-| `/events` | GET | The SSE stream: state frames, per-Session event frames, relayed questions, and transient live text |
+| `/config` | GET | 插件的配置加上当前状态 |
+| `/config` | POST | 打补丁修改配置；以新配置、状态与本机会话列表作答 |
+| `/state` | GET | 每个界面都读的状态：角色、链路、镜像、本 Host 自己的 `pluginVersion`，以及逐会话的计数 |
+| `/sessions` | GET | 本机自己的会话列表，供发布选择器使用 |
+| `/transcript` | GET | 某个镜像会话的一页（`machine`、`session`，可选 `limit`、`before`）；读者到达镜像边缘时向拥有它的机器索取窗口之下的历史 |
+| `/command` | POST | 一条接管 prompt；以其状态被叙述所依据的 `commandId` 作答 |
+| `/answer` | POST | 本控制台对某台机器转来的一个提问的回答（`machineName`、`questionId`、`answers`）；以携带它的 `commandId` 作答，或用 409 加该提问已不再开放的理由 |
+| `/approval` | POST | 本控制台对某台机器正被阻塞的一个审批的决定（`machineName`、`approvalId`、`decision` 为 `allowed-once` 或 `rejected`）；以携带它的 `commandId` 作答，或用 409 加该审批已不再等待的理由。任何别的取值都是 400：`cancelled` 与 `unavailable` 描述的是**作答方**，不是控制台可以做出的决定 |
+| `/events` | GET | SSE 流：状态帧、逐会话的事件帧、转来的提问，以及瞬时的实时文本 |
 
-### A question is asked on both sides
+### 提问是两边同时被问
 
-A Session that runs on another machine can stop mid-turn and ask its human
-something — `ask_user`, or an approval. Upstream hands that request to a
-**waterfall**: the first answerer to return an answer claims it, and `next()`
-delegates to the answerers behind. The shipped browser UI is one such answerer,
-reached through the Remote waterfall bridge, and it is the only one a stock
-install has.
+一个跑在另一台机器上的会话可以在轮次中途停下来问它的人一件事——`ask_user`，或者一个
+审批。上游把这个请求交给一条 **waterfall**：第一个返回答案的作答方**认领**它，`next()`
+则委派给它后面的作答方。自带浏览器 UI 就是这样一个作答方，经 Remote waterfall 桥接到
+达，而它是原版安装唯一拥有的那一个。
 
-This plugin registers itself **ahead** of that answerer on the published
-Session's behalf, and then asks both sides at once: the machine's own UI through
-`next()`, and this console down the sync link. **Whichever answers first wins**,
-and the other is told so rather than left guessing.
+本插件代表被发布的会话，把自己注册在**那个作答方之前**，然后同时问两边：那台机器自己
+的 UI 走 `next()`，本控制台走同步链路。**谁先答谁赢**，另一边被告知这件事，而不是留在
+那里猜。
 
 ```
-   machine (the asker)                       sync server / console
+   机器（提问方）                            同步服务器 / 控制台
    ───────────────────                       ─────────────────────
-   agent calls ask_user
+   agent 调用 ask_user
      │ waterfall: user-questions/request
-     ├─▶ plugin, registered prepend
-     │     ├─ next() ──▶ shipped browser UI on that machine   ─┐
-     │     └─ POST /question/open ──▶ hub ──▶ card in console  │  race
+     ├─▶ 插件，注册为前置
+     │     ├─ next() ──▶ 那台机器上的自带浏览器 UI   ─┐
+     │     └─ POST /question/open ──▶ hub ──▶ 控制台里的卡片  │  竞速
      │                                                        │
-     │   first answer claims the question ◀───────────────────┘
-     ├─▶ local answer  ⇒ POST /question/close (answered-at-origin)
-     └─▶ console answer ⇒ DownstreamCommand {kind:'answer'} ⇒ claimed, or
-                          refused with the reason it was already answered
+     │   第一个答案认领该提问 ◀───────────────────────────────┘
+     ├─▶ 本地作答  ⇒ POST /question/close (answered-at-origin)
+     └─▶ 控制台作答 ⇒ DownstreamCommand {kind:'answer'} ⇒ 被认领，或
+                      以"已被回答"的理由被拒
 ```
 
-- **Nothing is mirrored.** A question exists only while the machine is waiting
-  for it, and the origin withdraws it the moment its own human answers — so a
-  question never becomes part of the transcript, and a server restart loses only
-  the offer to answer, never the ask.
-- **The console's answer rides the prompt lifecycle**, for the reason that
-  lifecycle exists: held while the machine is away, one delivery, a TTL, and an
-  ack that says whether the machine **claimed** it. The claim is the race's
-  finish line, and it is decided on the machine — the side that can still see
-  whether the question is open.
-- **A lost race is reported, not retried.** A console that answers after the
-  machine's own human did gets `failed` carrying *"this question was already
-  answered on the machine that asked it"*, and the card says so. That is the
-  ordinary outcome of a two-sided race, not an error.
-- **Only a published Session is relayed.** Anything else delegates on the first
-  line, so a Session you have not marked for sync behaves exactly as it does
-  without this plugin.
-- **The losing side is counted.** `state.interactions` reports `open`,
-  `answeredLocally`, `answeredRemotely`, `lateAnswers` and `aborted`: without
-  them, "the console never offered the question" and "the console offered it and
-  the machine answered first" are the same observation from both ends.
-- **Questions are not the takeover prompt.** A prompt says something to a
-  Session; an answer decides something it is waiting on. The answer travels to
-  the machine that asked, never to this Host, and the model sees it as the tool
-  result it was waiting for rather than as a message from a user.
+- **什么都不镜像。** 一个提问只在机器等待它的时候存在，源站在自己的人答出答案的那一刻
+  就撤回它——所以提问永远不会变成正文的一部分，而服务器重启只会丢掉"可以作答"的
+  机会，绝不会丢掉那次提问。
+- **控制台的回答乘 prompt 的生命周期**，理由正是这个生命周期存在的理由：机器不在时
+  留住、只投递一次、有 TTL，以及一个说明机器是否**认领**了它的 ack。认领是这场竞速的
+  终点线，而它由那台机器判定——那一方仍然能看到该提问是否开放。
+- **输掉的竞速会被报告，不会被重试。** 在机器自己的人之后作答的控制台会收到 `failed`，
+  带着*"this question was already answered on the machine that asked it"*，卡片照此
+  说明。那是双边竞速的**常规**结果，不是错误。
+- **只有已发布的会话才会被转达。** 其它任何情况都在第一行就委派下去，所以你没有勾选
+  同步的会话，其行为与没有本插件时完全一致。
+- **输的一方会被计数。** `state.interactions` 上报 `open`、`answeredLocally`、
+  `answeredRemotely`、`lateAnswers` 与 `aborted`：没有它们，"控制台从没提供过这个
+  提问"和"控制台提供了、机器先答了"从两端看是同一种观察。
+- **提问不是接管 prompt。** prompt 对会话**说**点什么；回答则**决定**它正在等待的
+  某件事。回答会走到提问的那台机器，绝不走到本 Host，而模型把它看作它一直在等的那个
+  工具结果，而不是一条来自用户的消息。
 
-### An approval is the same race, with a different stake
+### 审批是同一场竞速，赌注不同
 
-The other seam this plugin answers is `approval/request`, and it is shaped exactly
-like the question seam: a waterfall, a first answerer that claims the request, and
-the shipped browser UI sitting behind this plugin. What differs is what the claim
-*means*. An answer to a question is information. An outcome here is **permission**:
-`allowed-once` releases a tool call this machine's own permission preset was
-gating. So the race is the same and the terms are not, and the difference shows up
-in four places:
+本插件作答的另一条接缝是 `approval/request`，它的形状和提问接缝完全一样：一条
+waterfall、一个认领请求的首位作答方，以及坐落在本插件之后的自带浏览器 UI。不同的是
+认领**意味着**什么。提问的答案是信息。这里的结局是**权限**：`allowed-once` 放行一次
+本机自己的权限预设正在拦截的工具调用。所以竞速相同，条款不同，而差别出现在四处：
 
-- **It is a separate, per-Session opt-in.** Publishing a conversation is a read;
-  deciding an approval is not. `state.config.approveSessions` names the Sessions
-  whose approvals may be decided from a console — empty by default, never inferred
-  from `syncSessions`, and the settings page draws the switch only for a Session
-  that is also published (the console resolves a card's arguments from the mirror,
-  so an un-published Session would offer a reader a permission over something they
-  cannot see).
-- **The machine's permission preset still wins.** A `never` policy is enforced by
-  the upstream approval service *before* it dispatches `approval/request`, so no
-  listener — this plugin's included — can turn a denied operation into an allowed
-  one. What can be decided here is only what the policy left open.
-- **Two decisions travel, and only two.** The upstream vocabulary also has
-  `cancelled` and `unavailable`, which describe an *answerer* rather than a
-  decision, and `unavailable` is the fail-closed value a caller must receive from
-  its own side. A console may produce `allowed-once` or `rejected`, and a frame
-  claiming anything else is refused at the route *and* at the claim, so the
-  request stays open and can still be decided properly.
-- **Every ending but a grant fails closed.** A TTL, an aborted turn, a decision
-  refused as late, a machine that went offline: all of them leave the operation
-  ungranted, because the caller treats anything but `allowed-once` as a refusal.
+- **它是一份独立、逐会话的勾选。** 发布一段对话是**读**；决定一个审批不是。
+  `state.config.approveSessions` 列出其审批可以被某个控制台决定的会话——默认为空、
+  绝不从 `syncSessions` 推断，而设置页只为**同时已发布**的会话画这个开关（控制台从
+  镜像解析卡片的参数，所以未发布的会话会把一个读者看不见的东西上的权限递给读者）。
+- **机器的权限预设仍然说了算。** `never` 策略由上游审批服务在派发
+  `approval/request` **之前**执行，所以没有任何监听者——包括本插件——能把一个被拒的操作
+  变成被允许的。这里能决定的只有策略留下来的那部分。
+- **只有两种决定会传递，且只有两种。** 上游的词表里还有 `cancelled` 与 `unavailable`，
+  它们描述的是**作答方**而不是一个决定，而 `unavailable` 是调用方必须从自己那一侧收到
+  的 fail-closed 值。控制台可以产出 `allowed-once` 或 `rejected`，声称别的取值的帧会在
+  路由**和**认领处都被拒，于是请求保持开放、仍能被正确地决定。
+- **除了放行，每一种结局都是 fail-closed。** 一个 TTL、一次被中止的轮次、一个被判为
+  过晚而拒绝的决定、一台掉线的机器：它们全都让该操作得不到放行，因为调用方把
+  `allowed-once` 之外的任何东西都当作拒绝。
 
-The card shows **what would actually run**, resolved from the mirrored transcript
-by the `callId` the offer names — the seam does not hand out arguments, and the
-console already holds the call. When the window no longer carries it, the card says
-so instead of showing a bare tool name: "allow bash" and "allow a bash call this
-window can no longer show you" are different questions to answer. Refusal is a real
-button, because it is a real decision.
+卡片显示的是**实际将要运行的东西**，由镜像正文按该提议所命名的 `callId` 解析出来——
+这条接缝不发放参数，而控制台本来就持有那次调用。当窗口不再携带它时，卡片会照实说明，
+而不是显示一个光秃秃的工具名："允许 bash"和"允许一次本窗口已无法展示给你的 bash 调用"
+是要回答的两个不同问题。拒绝是一个真实按钮，因为它是一个真实的决定。
 
 ```
-   machine (blocked on a tool call)          sync server / console
+   机器（阻塞在一次工具调用上）              同步服务器 / 控制台
    ────────────────────────────────          ─────────────────────
-   agent wants a gated call
-     │ (a `never` preset already refused it — this is never dispatched)
+   agent 想进行一次受限调用
+     │（`never` 预设已经拒绝了它——这里根本不会被派发）
      │ waterfall: approval/request
-     ├─▶ plugin, registered prepend, only for an opted-in Session
-     │     ├─ next() ──▶ shipped browser UI on that machine   ─┐
-     │     └─ POST /approval/open ──▶ hub ──▶ card in console  │  race
+     ├─▶ 插件，注册为前置，仅对已勾选的会话
+     │     ├─ next() ──▶ 那台机器上的自带浏览器 UI   ─┐
+     │     └─ POST /approval/open ──▶ hub ──▶ 控制台里的卡片  │  竞速
      │                                                        │
-     │   first decision claims the approval ◀─────────────────┘
-     ├─▶ local decision ⇒ POST /approval/close (allowed-|rejected-at-origin)
-     └─▶ console decision ⇒ DownstreamCommand {kind:'approval'} ⇒ claimed,
-                            or refused with the reason it was already decided
+     │   第一个决定认领该审批 ◀───────────────────────────────┘
+     ├─▶ 本地决定 ⇒ POST /approval/close (allowed-|rejected-at-origin)
+     └─▶ 控制台决定 ⇒ DownstreamCommand {kind:'approval'} ⇒ 被认领，
+                       或以"已被决定"的理由被拒
 ```
 
-`state.approvalCounts` counts the same way `state.interactions` does, plus
-`offered`: an approval that was never relayed at all (its Session is not opted in)
-must not look like one that was offered and lost the race, because the first is a
-configuration fact and the second is a race outcome.
+`state.approvalCounts` 的计数方式和 `state.interactions` 一样，外加 `offered`：
+一个**根本没被转达**的审批（它的会话没有勾选）不能看起来像被提供了却输掉竞速的那一个，
+因为前者是配置事实，后者是竞速结果。
 
 
-### A mirrored Session is read here, never written into DSH
+### 镜像来的会话只在这里被读，绝不写进 DSH
 
-An earlier revision also wrote each mirrored Session into the server's **own**
-session storage, which made it a real Session there — listed in DSH's workspace
-browser, opened in DSH's own conversation page, with the Host serving its history
-and its paging. It is gone, and the reason is structural rather than a matter of
-taste:
+更早的一版还把每个镜像会话写进服务器**自己的**会话存储，让它在那边成为一个真会话——
+列在 DSH 的工作区浏览器里、在 DSH 自己的对话页里打开，由 Host 提供它的历史与翻页。
+它被删掉了，理由是结构性的，而不是口味问题：
 
-- **DSH writes into a Session it has open.** Resuming one with a seed appends its
-  own `session/end-seed`, and a prompt typed into it leaves a turn skeleton —
-  both on sequences the origin's next events need, which is exactly what a copy
-  must not have.
-- **So a copy could only be advanced while cold**, which is the opposite of being
-  read: a reader with the page open *is* what keeps it from advancing. Honest, but
-  it means the official page shows a snapshot whose staleness the plugin has to
-  explain.
-- **Feeding the copy through DSH's own Session** — the obvious way to keep it live
-  — was tried and reverted: it makes DSH a *participant* in the conversation
-  rather than a recorder of it. Measured on the deployed server, a mirrored
-  interrupted `tool/result` made the Host end the turn in the copy where the
-  origin's log has the next step.
+- **DSH 会往它打开的会话里写。** 用一个种子恢复会话会追加它自己的 `session/end-seed`，
+  而在里面输入一条 prompt 会留下一个轮次骨架——两者都落在源站下一条事件所需的序号上，
+  而那正是一份副本绝不能有的东西。
+- **所以副本只能在冷的时候被推进**，这与"被读"正好相反：一个开着这个页面的读者
+  **就是**它不能推进的原因。诚实，但这意味着官方页显示的是一个快照，而它有多陈旧
+  得由插件来解释。
+- **让副本走 DSH 自己的会话**——保持它活着的最显然办法——试过又回退了：那会让 DSH
+  成为这段对话的**参与者**，而不是它的记录者。在已部署的服务器上实测，一个镜像来的
+  被打断的 `tool/result` 让 Host 在副本里结束了那一轮，而源站的日志里下一步还在。
 
-A feature whose every failure needed an operator — `release`, stop the Host, move
-the log aside, clear the projection cache, start the Host — is not worth a second
-reading surface. The console is that surface now, and it is the only one: it is
-fed by this plugin's own event stream, it follows a running Session live, and it
-pages older history over the sync link. What it gives up is DSH's own chrome
-around a mirrored Session, which the shipped renderer still draws *inside* the
-pane wherever the build offers `ctx.sessions.retainAgentScope`.
+一个每次失败都需要运维介入的功能——`release`、停掉 Host、把日志移开、清投影缓存、
+再启动 Host——不值当再做一个阅读界面。控制台现在就是那个界面，而且是唯一的：它由本
+插件自己的事件流供给，它实时跟随正在跑的会话，它经同步链路翻更早的历史。它放弃的是
+DSH 围绕镜像会话自己的外壳，而在构建提供 `ctx.sessions.retainAgentScope` 的地方，
+自带渲染器仍然**在面板内部**把它画出来。
 
-### Two listeners, two purposes
-- **The sync transport** is a `node:http` listener this plugin owns
-  (`0.0.0.0:<listenPort>` on the server), guarded by a password handshake and a
-  bearer token. It is deliberately *not* a route on the GUI's web server, so
-  exposing sync never exposes the session GUI.
-- **The browser surface** is registered on `ctx.webServer` under
-  `/dsh-session-sync`, same-origin with the GUI, and it **adopts the GUI's own
-  gate**: every request goes through `ctx.connection.requestRejection`, which is
-  the shipped seam for putting the composition's browser session and Host/Origin
-  fence in front of another route. Same cookie, same launch token, same fence —
-  no second secret.
+### 两个监听者，两种用途
 
-  This is not automatic, which is worth stating plainly: a prefix route is
-  matched *before* the fallback that enforces the frontend's gate, so an
-  unguarded plugin route is reachable by anyone who can reach the port. An
-  earlier revision of this plugin was exactly that, and answered
-  `/dsh-session-sync/config` — sync password included — with 200 and no token.
+- **同步传输**是本插件自己拥有的一个 `node:http` 监听者（服务器上是
+  `0.0.0.0:<listenPort>`），由密码握手与一个 bearer token 守卫。它**有意**不是 GUI
+  web 服务器上的一条路由，所以暴露同步永远不会连会话 GUI 一起暴露。
+- **浏览器界面**注册在 `ctx.webServer` 上、位于 `/dsh-session-sync` 之下，与 GUI
+  同源，并且**采纳 GUI 自己的门禁**：每个请求都经过 `ctx.connection.requestRejection`，
+  那是把组合的浏览器会话与 Host/Origin 围栏放到另一条路由前面的自带接缝。同一个
+  cookie、同一个启动 token、同一道围栏——没有第二份秘密。
 
-  Behind a reverse proxy the deployment must name its authority, or the fence
-  rejects it with 403 (the GUI's own `/api` included):
+  这**不是**自动的，值得直说：前缀路由是在执行前端门禁的那个兜底**之前**被匹配的，
+  所以一条没有守卫的插件路由，任何能到达该端口的人都能到达。本插件更早的一版正是如此，
+  它对 `/dsh-session-sync/config`——**包括同步密码**——回了 200 且不要 token。
+
+  在反向代理后面，部署必须声明自己的 authority，否则围栏会以 403 拒绝它（GUI 自己的
+  `/api` 也一样）：
 
   ```sh
   dsh --profile web --port 3080 --trusted-host dsh.example.com
   ```
 
-## Security
+## 安全
 
-- The plugin's browser routes require the same browser session as the GUI
-  (`ctx.connection.requestRejection`), so they are no easier to reach than the
-  GUI itself. A composition that mounts no browser frontend has no
-  `ctx.connection` to inherit, and the routes are then only as protected as that
-  composition's own web surface.
-- The **sync transport** (`<listenPort>`) is a separate listener with its own
-  password handshake. It is not covered by the browser session, so an exposed
-  deployment should firewall that port and use a long password: the browser gate
-  says nothing about who may publish or take over Sessions.
-- The password is compared with `timingSafeEqual`; a token is minted per
-  machine and bound to the machine name it was issued for, so a client cannot
-  publish under another machine's identity.
-- The password is stored in plaintext in `dsh-session-sync.json`, because the
-  server compares it against what a client sends. Treat that file as a secret.
-- The transport is plain HTTP unless `serverUrl` says `https://`. On an
-  untrusted network the password and every synced transcript are readable in
-  transit. Use a TLS-terminating proxy, a VPN, or a trusted LAN.
-- Publishing a Session sends its full readable transcript — prompts, assistant
-  text, reasoning blocks, and tool calls with their arguments and results — to
-  the server. Do not publish Sessions that touch material you would not put on
-  that server.
-- The mirror is memory-only and disappears when the server restarts.
+- 插件的浏览器路由要求与 GUI 相同的浏览器会话（`ctx.connection.requestRejection`），
+  所以它们并不比 GUI 本身更容易到达。没有挂载浏览器前端的组合没有 `ctx.connection`
+  可继承，那时这些路由的保护程度就只等于该组合自己的 web 界面。
+- **同步传输**（`<listenPort>`）是一个独立的监听者，有自己的密码握手。它不在浏览器
+  会话的覆盖范围内，所以对外暴露的部署应当对该端口设防火墙并使用长密码：浏览器门禁
+  并不说明谁可以发布或接管会话。
+- 密码用 `timingSafeEqual` 比较；token 按机器铸造并绑定到它被签发时的机器名，所以
+  客户端无法冒用另一台机器的身份发布。
+- 密码以明文存放在**配置真正所在的地方**（迁到设置层之后就是 DSH 的设置文档；没有
+  `settings` 的组合里仍是 `dsh-session-sync.json`），因为服务器要拿它和客户端发来的值
+  比较。把那份存储当作秘密对待。声明里它是 `role('secret')`，所以设置页的表单读到的
+  是"是否已设置"而不是值本身。
+- 除非 `serverUrl` 写了 `https://`，传输是明文 HTTP。在不可信网络上，密码与每一段被
+  同步的正文在途中都是可读的。请使用 TLS 终结代理、VPN，或可信的局域网。
+- 发布一个会话会把它完整可读的正文——prompt、助手文本、推理块，以及带参数与结果的
+  工具调用——送到服务器。不要发布那些触及你不愿放到那台服务器上的材料的会话。
+- 镜像只在内存里，服务器重启即消失。
 
-## Limitations
+## 局限
 
-- **The server can take over a Session; it cannot start one.** A prompt is
-  admitted into the origin's Session, so takeover works for Sessions that
-  already exist there.
-- **Live thinking and output are relayed while a step runs; the mirror does not
-  keep them.** Each published Session's `follow` opts into the process-local
-  assistant frames, their deltas are accumulated per Session and per step, and
-  the whole text so far is posted as a transient frame every 150 ms — the tick
-  the deltas' own rate asks for, since they arrive at some 200 a second and a
-  whole thinking block is on the wire in under three seconds. The console
-  renders it under the transcript, and the durable settlement — the
-  `assistant/message` that ends the step, or the `assistant/attempt` a failed or
-  aborted request leaves behind — is what retires it. None of it is stored, so
-  the mirror and a console opened mid-step fill from the next relay rather than
-  from a replay. **A step's thinking and its answer accumulate separately**, on
-  both sides of the wire: they are two streams through one attempt id, and the
-  relay carries each one's whole text so far, so anything that compares the two
-  against each other sees the answer as a replacement of the thinking — which is
-  what "the thinking only appears once it has finished" turned out to be
-  (`src/client/live-text.ts`, and `tests/live-text.spec.ts` for the regression).
-- **A mirror shows the last 4,000 events** of a Session; older history is trimmed
-  from the mirror itself. The console reads what the mirror holds a page at a
-  time — 400 events, newest first — and a page the mirror is missing is read from
-  the machine that owns the Session when a reader asks for it. That read is not
-  instant: it is a read of that machine's log, a POST back, and a trip through
-  whatever proxy sits in front, which measured at ten to twenty seconds on a
-  cross-border link, so the control waits rather than answering at once.
-- **A gap in the middle of a mirror is repaired, but that repair has never been
-  observed happening on a live deployment.** The sweep notices a hole and the
-  server asks the origin for a page aimed at it, which the three test layers pin
-  (`tests/hole-repair*.spec.ts`); on the deployed pair no hole has occurred while
-  anyone was watching, so the honest statement is "implemented and tested, never
-  seen in the wild". A hole that stays is reported truthfully — the console shows
-  `缺 N 条` on its row and in the header.
-- **A mirrored transcript carries no Host-computed panels.** The shipped
-  conversation offers its change-review cards, and the official `ui-deliverables`
-  plugin fills one by asking *its own Host* for
-  `/api/changes.summary?sessionId=…&seq=…`. A mirrored Session lives on the sync
-  server, so that Host would answer 404 for every announcement — the plugin's
-  ordinary "no longer served" state, one failed request each and a card stuck on
-  unavailable. The data cannot be recovered here either: a `workspace/changes`
-  event carries only `{ turn }`, while the files and totals are computed by the
-  Host that owns the workspace. So the announcement is filtered out of the window
-  the console feeds (`PANEL_ONLY_TYPES` in `src/client/official-session.tsx`) and
-  the cards never appear — the tool rows that actually changed the files are
-  ordinary events and stay. Making those cards work would mean carrying the
-  summary over the sync link *and* writing it into that plugin's own state table,
-  a deeper coupling than this plugin takes on today.
-- **A mirrored pane hides the shipped history-failure line.** A session-scoped
-  integration behind the (hidden) shipped composer can still retain the Session
-  through the contract, and a retained Session opens history against the Host
-  that owns it — for a mirror, a Host that has never heard of it. The answer is
-  `session/not-found`, and the shipped chat draws its own "history failed to
-  load" line for it. That line describes a read this pane neither uses (the
-  transcript comes from the mirror) nor can satisfy, so it is hidden inside the
-  pane; the header chip names the route, which is where that fact belongs.
-  Drawing the session View *without* the content shell
-  was tried as a way to avoid the read altogether and renders an empty pane — the
-  shell is what supplies the context that View is written against.
-- **One origin per machine name.** Two origins configured with the same
-  `本机名称` will overwrite each other's mirror.
-- **A takeover prompt expires after two minutes**, and at most 32 may wait for
-  one machine at a time. Both limits are deliberate; a queued prompt that
-  outlives them is reported as `expired` rather than delivered late.
-- **A question answered at the console leaves the machine's own dialog up.** The
-  two sides are raced, and a race cannot cancel its loser: the shipped answerer
-  still holds a dialog on the machine that asked, and this plugin has no seat
-  from which to close another plugin's UI. The decision is already made and the
-  tool call has already returned, so answering the stale dialog changes nothing —
-  its own `next()` chain simply ends. Aborting the shared signal to dismiss it was
-  rejected: that signal belongs to the asking tool call, so aborting it would fail
-  the very step the answer was meant to continue.
-- **A relayed question is only offered where a reader is looking.** The card
-  appears above the composer of the Session that asked, with a pointer line when
-  the reader is viewing a different Session. A console nobody is watching simply
-  never answers, and the machine's own UI wins by default — which is why the
-  question's ten-minute TTL only ever costs the remote option.
-- **Relayed questions are not covered by a real-deployment test.** The race, the
-  claim, the refusal of a late answer and the expiry sweep are pinned by
-  `tests/interaction-race.spec.ts` against the real hub and the real relay, and the
-  *transport* is pinned by `tests/question-relay-link.spec.ts` over a real listener
-  and a real link — but no test drives a question from a machine through a deployed
-  server and back; that path has only been exercised by hand.
-- **Relayed approvals have been driven end to end, both ways.** The race, the claim,
-  the refusal of a non-decision, the late-decision refusal and the TTL are pinned by
-  `tests/approval-race.spec.ts`, the transport by
-  `tests/approval-relay-link.spec.ts`, and what a card can honestly say about a call
-  by `tests/approval-view.spec.ts`. On a live deployment a gated operation was offered
-  to the console twice: **allowed** once, and the operation then completed
-  (`offered: 1` / `decidedRemotely: 1`, with an `/ack` and no `/approval/close`);
-  **refused** once, and the operation did not happen — the file it would have deleted
-  is still there (`offered: 2` / `decidedRemotely: 2`). Both directions carry the same
-  signature, because a console's decision is always closed by the server when it
-  accepts the ack, and the origin sends a close only when *it* decided or withdrew.
-  One thing no test in this repository can cover is the `never`-policy precedence,
-  because it is enforced by the upstream approval service before the waterfall — the
-  ordering this feature leans on hardest, cited from upstream's own
-  `docs/subsystems/approval.zh.md` rather than asserted here. A session on that policy
-  produces no request at all, which is exactly what `offered: 0` means.
-- **An approval decided at the console leaves the machine's own dialog up too**,
-  for the same structural reason as a question: this plugin has no seat from which
-  to close another plugin's UI, and aborting the shared signal would fail the very
-  tool call the decision was about.
-- **A takeover prompt typed inside a reconnect window used to be lost, and is now
-  retried.** The server handed a command to the stream it believed belonged to that
-  machine; if the machine had just dropped the link and the server had not noticed,
-  the write went nowhere while the command was still recorded as `delivered` — and
-  nothing re-sends a command that was "sent". The window is short (measured at about
-  300 ms). It is repaired in two halves that only work together: the machine refuses
-  a command id it has already admitted (`RecentCommands`, acknowledging the repeat
-  instead of acting on it), and the server keeps a command **owed until it is
-  acknowledged**, handing it over again every five seconds up to four retries, with
-  the two-minute TTL still ending it and the retry count reported on the status.
-  Without the first half a retried prompt would be a second prompt in the same
-  Session, which is worse than the loss. `tests/command-redelivery.spec.ts` pins
-  both halves, including a real link where the re-sent command is not acted on
-  twice.
-- **Assistant text is rendered as Markdown and each tool call is one folded row**
-  that opens into the card its tool calls for — terminal transcript, diff with its
-  totals, line-capped read, search hits, fetched page — with the generic IN/OUT
-  card for anything else.
-- **An image block shows its facts, never the picture.** The mirror carries the
-  content block — media type and size — but not the attachment bytes, so the
-  console says an image was there instead of drawing it.
-- **The turn-level folds are not copied.** The shipped chat folds a turn's whole
-  process under one summary and offers a turn navigator rail; the console lists
-  each step's rows instead. The per-turn usage and time readings are copied,
-  though — pills that open the shipped detail dialogs (see below) — and the
-  session totals sit in the header. Command, approval, and compaction cards, and
-  the full composer (attachments, slash commands, model selection), are likewise
-  not copied.
-- **A surface replacement is honored.** The origin forwards each event's
-  `surfaceOp`, so a durable event that replaces a range of earlier ones — a
-  compaction, a replay after a fork — supersedes those rows in the console
-  instead of appearing beside them.
-- **The console copies the shipped UI; it does not import it.** A browser plugin
-  cannot import another plugin's components, so the tree and the conversation are
-  this package's own markup — unless the build offers the retention seam, in
-  which case the conversation *is* the shipped renderer (see above) and only the
-  tree is this package's own. The chat rows go further than wearing the tokens:
-  `ToolRow`, `ReasoningRow`, `MessageIconActions`, `TurnUsagePanel`,
-  `stat-dialog` and the accessibility helpers are the shipped `ui-chat`
-  stylesheets copied verbatim, and `SyncPanel` uses their class vocabulary and
-  data attributes, so a row's metrics are the product's own. Only the two parent
-  offsets `ui-chat` keeps out of those shared sheets stay here — the user row's
-  6px action gap (`MessageItem.module.css`) and the tail's 4px/-6px IconActions
-  offset (`TurnTailNodeView.module.css`). Anything `ui-chat` does beyond that — a
-  refactor of the row markup itself — still needs a re-copy, not a re-derivation.
-- **The two turn-stat pills are the shipped ones, dialogs included.** `用量` opens
-  the turn-usage dialog and `用时` the turn-time dialog: the shipped seat (open
-  state, `useAnchoredPosition` clamp above the trigger, outside-pointer and
-  Escape close) with the panel portaled to the body, and the shipped rows —
-  provider/model, cache hit, the four token buckets, inline reasoning; total run
-  time, decode throughput, and first-token latency. Throughput and TTFT are folded
-  from the mirrored stream records by the same arithmetic the host uses
-  (`turn-metrics.ts`), so they appear when a step recorded them and the row is
-  omitted when it did not. The copy action's tooltip is the shipped `复制` /
-  `复制成功` pair.
-- The mirror is lost on server restart; origins re-publish on their next
-  reconcile tick (within 10 s) plus their follow snapshots.
+- **服务器可以接管一个会话；它不能开始一个。** prompt 被收进源站的会话，所以接管只对
+  那边已经存在的会话有效。
+- **实时思考与输出在一步运行期间被转达；镜像不保留它们。** 每个已发布会话的 `follow`
+  选择加入进程本地的助手帧，它们的增量按会话、按步骤累积，到目前为止的整段文本每
+  150 ms 作为一帧瞬时数据发出——这个 tick 是增量自身的速率要求的，因为它们以每秒约
+  200 个到达，而一整块思考不到三秒就上了线路。控制台把它渲染在正文之下，而持久的
+  了结——结束该步的 `assistant/message`，或一次失败/被中止的请求留下的
+  `assistant/attempt`——才是让它退场的东西。这些都不被存储，所以镜像与在步骤中途打开
+  的控制台是从下一次转达而不是从重放里填满的。**一步的思考与它的回答分别累积**，
+  在线的两端都是如此：它们是同一个 attempt id 上的两条流，而转达携带每一条到目前
+  为止的整段文本，所以任何把两者相互比较的东西都会把回答看成对思考的替换——"思考
+  只在结束之后才出现"这件事真身就是如此（`src/client/live-text.ts`，回归测试见
+  `tests/live-text.spec.ts`）。
+- **镜像只显示一个会话的最后 4,000 条事件**；更早的历史会从镜像本身被裁掉。控制台
+  按页读取镜像所持内容——400 条事件、最新在前——而镜像缺的那一页，会在读者要的时候
+  从拥有该会话的机器上读取。那次读取不是瞬时的：它是对那台机器日志的一次读、一次
+  回程 POST，以及穿过挡在前面任何代理的一趟，实测在跨境链路上是十到二十秒，所以那个
+  控件是等待而不是立刻作答。
+- **镜像中段的洞会被修复，但那次修复从未在真实部署上被观察到发生。** 清扫会注意到
+  一个洞，服务器向源站要一页瞄准它的内容，三层测试都钉住了这件事
+  （`tests/hole-repair*.spec.ts`）；但在已部署的那一对上，没有任何洞在人看着的时候
+  发生过，所以诚实的说法是"已实现、已测试，从未在野外见过"。留下来的洞会被如实报告
+  ——控制台在它的行上与头部显示 `缺 N 条`。
+- **镜像来的正文不携带任何由 Host 算出的面板。** 自带对话提供它的变更审查卡片，而
+  官方 `ui-deliverables` 插件是通过向**它自己的 Host** 要
+  `/api/changes.summary?sessionId=…&seq=…` 来填一张的。镜像会话活在同步服务器上，
+  所以那个 Host 对每一条公告都会回 404——该插件常规的"已不再服务"状态，每个一条失败
+  请求，以及一张卡在不可用上的卡片。数据在这里也无法找回：一条 `workspace/changes`
+  事件只携带 `{ turn }`，而文件与总计是由拥有该工作区的 Host 算出来的。所以那条公告
+  被从控制台喂出的窗口里过滤掉（`src/client/official-session.tsx` 里的
+  `PANEL_ONLY_TYPES`），卡片永远不出现——真正改了文件的那些工具行是普通事件，会留下。
+  要让那些卡片可用，就得把摘要经同步链路带过来**并且**写进那个插件自己的状态表，
+  那是比本插件今天承担的更深的耦合。
+- **镜像面板会隐藏自带的"历史加载失败"行。** 一个坐落在（被隐藏的）自带输入栏之后的
+  会话级集成仍然可以按契约 retain 该会话，而被 retain 的会话会对着拥有它的 Host 打开
+  历史——对镜像来说，那是一个从未听说过它的 Host。答案是 `session/not-found`，自带
+  聊天为它画出自己的"历史加载失败"行。那一行描述的是一次本面板既不用（正文来自镜像）
+  也无法满足的读取，所以它被藏在面板内部；头部标签说明了路线，那才是这个事实该在的
+  地方。把会话 View 画成**不带**内容外壳，曾是避免这次读取的一种尝试，结果是渲染出
+  一个空面板——外壳正是提供那个 View 所依据的上下文的来源。
+- **一个机器名只能有一个源站。** 两个用同一个 `本机名称` 配置的源站会互相覆盖镜像。
+- **一条接管 prompt 两分钟后过期**，且同一时刻最多 32 条可以等待一台机器。两个上限都是
+  有意的；超出它们的排队 prompt 会被报告为 `expired`，而不是迟到地被投递。
+- **在控制台答出的提问会让机器自己的对话框留在那里。** 两边是竞速的，而竞速无法取消
+  它的输家：自带作答方仍然在那台提问的机器上持有对话框，而本插件没有座位去关掉另一个
+  插件的 UI。决定已经作出、工具调用也已经返回，所以回答那个陈旧的对话框不改变任何事
+  ——它自己的 `next()` 链只会结束。为 dismiss 它而去 abort 共享 signal 被否决了：
+  那个 signal 属于提问的工具调用，abort 它会让答案本来要延续的那一步本身失败。
+- **转达来的提问只在读者正在看的地方提供。** 卡片出现在提问的那个会话的输入栏之上，
+  当读者正在看另一个会话时带一行指引。没人看的控制台就是永远不作答，而那台机器自己的
+  UI 默认获胜——这也是为什么提问十分钟的 TTL 只会让远端这个选项作废。
+- **转达来的提问没有真实部署测试覆盖。** 竞速、认领、对迟到答案的拒绝与过期清扫由
+  `tests/interaction-race.spec.ts` 对着真实的 hub 与真实的中继钉住，而**传输**由
+  `tests/question-relay-link.spec.ts` 在真实监听者与真实链路上钉住——但没有任何测试
+  把一条提问从某台机器驱动着穿过已部署的服务器再回来；那条路径只被手工走过。
+- **转达来的审批已经双向端到端驱动过。** 竞速、认领、对"不是决定"的拒绝、对迟到决定的
+  拒绝以及 TTL 由 `tests/approval-race.spec.ts` 钉住，传输由
+  `tests/approval-relay-link.spec.ts` 钉住，而卡片能对一次调用如实说什么由
+  `tests/approval-view.spec.ts` 钉住。在一次真实部署上，一个受限操作被两次提供给控制台：
+  一次**放行**，随后该操作完成（`offered: 1` / `decidedRemotely: 1`，带一个 `/ack`
+  且没有 `/approval/close`）；一次**拒绝**，该操作没有发生——它本来会删掉的那个文件
+  还在（`offered: 2` / `decidedRemotely: 2`）。两个方向携带同样的签名，因为控制台的
+  决定在服务器接受那条 ack 时总会被它闭合，而源站只在**它**做了决定或撤回时才发一条
+  close。本仓库里没有一个测试能覆盖的是 `never` 策略的优先级，因为它是由上游审批服务
+  在 waterfall **之前**执行的——这个功能最依赖的那条次序，引自上游自己的
+  `docs/subsystems/approval.zh.md`，而不是在这里断言。处于该策略下的会话根本不产生
+  请求，那正是 `offered: 0` 的含义。
+- **在控制台决定的审批同样会让机器自己的对话框留在那里**，结构上的理由与提问相同：
+  本插件没有座位去关掉另一个插件的 UI，而 abort 共享 signal 会让这个决定所针对的那次
+  工具调用失败。
+- **在重连窗口里输入的接管 prompt 曾经会丢，现在会重试。** 服务器把一条命令交给它
+  认为属于那台机器的流；如果那台机器刚掉了链路而服务器还没注意到，这次写入哪儿也没去，
+  而命令仍然被记成 `delivered`——并且没有任何东西会重发一条"已发送"的命令。这个窗口
+  很短（实测约 300 ms）。它由必须协同工作的两半修复：机器拒绝一个它已经收过的命令 id
+  （`RecentCommands`，对重复**确认**而不是据它行动），服务器则把一条命令**一直欠着，
+  直到它被确认**，每五秒再交一次、最多重试四次，仍由两分钟的 TTL 终结，并把重试次数
+  报在状态上。少了前半，被重试的 prompt 会在同一个会话里变成第二条 prompt，那比丢失
+  更糟。`tests/command-redelivery.spec.ts` 钉住了两半，包括一条真实的链路、其中重发的
+  命令不会被据以行动两次。
 
-## Layout
+- **助手文本渲染为 Markdown，每个工具调用是一行折叠行**，展开后变成它的工具调用所要
+  求的卡片——终端转录、带总计的 diff、限行数的读取、搜索命中、抓取的网页——其它一切
+  走通用的 IN/OUT 卡片。
+- **图像块显示它的事实，绝不显示图片。** 镜像携带那个内容块——媒体类型与大小——但不带
+  附件字节，所以控制台说明"这里曾有一张图"，而不是把它画出来。
+- **轮次级的折叠没有被照搬。** 自带聊天把一轮的整个过程折在一个摘要之下，并提供一条
+  轮次导航轨；控制台改为列出每一步的行。不过逐轮的用量与时长读数是照搬的——那些打开
+  自带详情对话框的胶囊（见下）——会话总计则在头部。命令、审批与压缩卡片，以及完整的
+  输入栏（附件、斜杠命令、模型选择），同样没有被照搬。
+- **界面替换会被尊重。** 源站转发每个事件的 `surfaceOp`，所以一个替换掉更早一段的
+  持久事件——一次压缩、一次 fork 之后的重放——会在控制台里取代那些行，而不是出现在
+  它们旁边。
+- **控制台是抄自带 UI，不是 import 它。** 浏览器插件无法 import 另一个插件的组件，
+  所以树与对话都是本包自己的标记——除非构建提供了 retention 接缝，那种情况下对话
+  **就是**自带渲染器（见上），只有树是本包自己的。聊天行做得比"穿上 token"更多：
+  `ToolRow`、`ReasoningRow`、`MessageIconActions`、`TurnUsagePanel`、`stat-dialog`
+  以及无障碍辅助都是自带 `ui-chat` 样式表的逐字拷贝，而 `SyncPanel` 使用它们的类名
+  词汇与 data 属性，所以一行的度量就是产品自己的度量。只有 `ui-chat` 留在那些共享
+  样式表之外的两个父级偏移留在这里——用户行的 6px 动作间距
+  （`MessageItem.module.css`）与尾部的 4px/-6px IconActions 偏移
+  （`TurnTailNodeView.module.css`）。`ui-chat` 在此之外的任何变化——对行标记本身的重构
+  ——仍然需要重新拷贝，而不是重新推导。
+- **那两个轮次统计胶囊是自带的，对话框也是。** `用量` 打开轮次用量对话框，`用时`
+  打开轮次时长对话框：自带座位（打开状态、`useAnchoredPosition` 在触发器上方的钳制、
+  外部指针与 Escape 关闭）加上 portal 到 body 的面板，以及自带的那些行——provider/
+  model、缓存命中、四个 token 桶、内联推理；总运行时长、解码吞吐与首 token 延迟。
+  吞吐与 TTFT 由镜像来的流记录按 host 使用的同一套算术折出（`turn-metrics.ts`），
+  所以某一步记录过它们就会出现，没记录该行就省略。复制动作的 tooltip 是自带的
+  `复制` / `复制成功` 这一对。
+- 服务器重启会丢掉镜像；源站在它们下一次 reconcile tick（10 秒内）加上它们的 follow
+  快照时重新发布。
+
+## 目录
 
 ```
-PROGRESS.md              the running log: current state, measurements, open problems
-src/shared/protocol.ts   wire and persisted shapes, shared by both halves
-src/host/dsh.ts          structural declarations of the Host capabilities used
-src/host/config.ts       atomic JSON configuration document
-src/host/hub.ts          server-side mirror, fan-out, and the command lifecycle
-src/host/interactions.ts the two-sided race for one question, and its claim
-src/host/transport.ts    the sync listener and the origin link
-src/host/service.ts      the engine: config, follow set, publish, takeover
-src/index.ts             Host plugin entry and the browser routes
-src/client/index.ts      browser plugin entry: the slots and their injections
-src/client/api.ts        transport plus the one snapshot every surface reads
-src/client/official-session.tsx  the retained Session: the shipped renderer's pane
-src/client/QuestionCard.tsx  one relayed question, offered to this reader
-src/client/transcript.ts mirrored events projected onto readable rows
-src/client/tool-cards.ts  tool-row models: card choice, labels, caps
-src/client/tool-presentation.ts  a wire tool name's glyph and localized title
-src/client/session-chrome.ts  runtime chrome read off the log, and the ledger rows
-src/client/TrajectoryView.tsx  the 轨迹 tab: toolbar, timeline strip, ledger
-src/client/message-stats.ts  clock, run time and token figures for a row
-src/client/turn-metrics.ts   per-turn TTFT, throughput and route, folded
-src/client/stat-panels.tsx   the turn-usage and turn-time pills and dialogs
-src/client/locales.ts        every string both surfaces render, zh and en
-src/client/*.module.css      the shipped chat stylesheets, copied verbatim
-src/client/css-modules.d.ts  the CSS-module import shape for this build
-src/client/ConfigSection.tsx  the settings page
-src/client/PanelIcon.tsx      the sidebar panel row's glyph
-src/client/SyncPanel.tsx      the console: the tree, the conversation, takeover
+PROGRESS.md              推进记录：现状、实测、未解问题
+src/shared/protocol.ts   线路与持久化的形状，两个半边共用
+src/host/dsh.ts          所用 Host 能力的结构化声明
+src/host/config.ts       原子 JSON 配置文档（回退存储，以及一次性导入源）
+src/host/config-schema.ts    声明为 Host `Config` 的设置项（全部 `.volatile()`）
+src/host/config-store.ts     真源在设置层，没有 `settings` 时回退 JSON 文件；含导入与归档
+src/host/hub.ts          服务器侧镜像、扇出与命令生命周期
+src/host/interactions.ts 一个提问的双边竞速与它的认领
+src/host/transport.ts    同步监听者与源站链路
+src/host/service.ts      引擎：配置、follow 集合、发布、接管
+src/index.ts             Host 插件入口与浏览器路由
+src/client/index.ts      浏览器插件入口：插槽与它们的注入
+src/client/api.ts        传输，加上每个界面都读的那一份快照
+src/client/official-session.tsx  被 retain 的会话：自带渲染器的面板
+src/client/QuestionCard.tsx  一个转达来的提问，提供给这位读者
+src/client/transcript.ts 镜像事件投影成可读的行
+src/client/tool-cards.ts 工具行模型：卡片选择、标签、上限
+src/client/tool-presentation.ts  线路工具名的字形与本地化标题
+src/client/session-chrome.ts  从日志读出的运行时外壳，以及台账行
+src/client/TrajectoryView.tsx  轨迹 tab：工具栏、时间轴条、台账
+src/client/message-stats.ts  一行的时钟、运行时长与 token 数字
+src/client/turn-metrics.ts   逐轮的 TTFT、吞吐与路线，折出
+src/client/stat-panels.tsx   轮次用量与轮次时长胶囊和对话框
+src/client/locales.ts        两个界面渲染的每一个字符串，zh 与 en
+src/client/*.module.css      自带聊天样式表，逐字拷贝
+src/client/css-modules.d.ts  本次构建的 CSS 模块导入形状
+src/client/ConfigSection.tsx 设置页
+src/client/PanelIcon.tsx     侧边栏面板行的字形
+src/client/SyncPanel.tsx     控制台：树、对话、接管
 ```
 
-`src/host/dsh.ts` declares the consumed Host services structurally rather than
-importing them: this package has no workspace dependency graph, so
-`@deepseek-ai/*` is not resolvable from its sources. The Host bundle therefore
-imports nothing but Node builtins, and the browser bundle keeps exactly the
-shell's `PLATFORM_MODULES` as `require()` calls.
+`src/host/dsh.ts` 以结构化方式声明它消费的 Host 服务，而不是 import 它们：本包没有
+workspace 依赖图，所以 `@deepseek-ai/*` 无法从它的源码里解析。因此 Host 产物除 Node
+内置模块外不 import 任何东西，而浏览器产物只把 shell 的 `PLATFORM_MODULES` 保留为
+`require()` 调用。
 
-## Build
+## 构建
 
 ```sh
 powershell -ExecutionPolicy Bypass -File scripts/build-and-install.ps1
 ```
 
-Both halves are built from sources that depend on nothing but `tsdown` and
-`lightningcss`; the script also refreshes the profile's installed copy **when the
-profile holds this package as a local dependency**
-(`dsh plugin --profile web add file:<this directory>`). pnpm hardlinks a `file:`
-dependency to this directory, so a rebuild usually lands in place — the copy
-exists for the links `tsdown`'s clean pass breaks.
+两个半边都从除 `tsdown` 与 `lightningcss` 之外不依赖任何东西的源码构建；当 **profile
+把本包作为本地依赖**时（`dsh plugin --profile web add file:<此目录>`），该脚本还会
+刷新 profile 里已安装的那份拷贝。pnpm 会把 `file:` 依赖硬链接到本目录，所以一次重建
+通常就地生效——那份拷贝是为 `tsdown` 的 clean 阶段断掉的链接而存在的。
 
-When the profile holds the **published** dependency instead
-(`github:cczzyy-cn/dsh-session-sync`), the installed tree comes from pnpm's store
-and nothing written here reaches it. The script builds and then says so, rather
-than writing bytes a fresh install would never see. Two ways forward:
+当 profile 持有的是**已发布**的依赖（`github:cczzyy-cn/dsh-session-sync`）时，安装树
+来自 pnpm 的 store，写在这里的任何东西都到不了它。脚本会构建，然后说明这件事，而不是
+写入一份全新安装永远看不到的字节。两条前进的路：
 
-- to iterate: `dsh plugin --profile web add file:<this directory>`
-- to publish: commit and push, then
+- 想迭代：`dsh plugin --profile web add file:<此目录>`
+- 想发布：提交并推送，然后
   `pnpm --dir <profile> update dsh-session-sync`
 
-Once the installed bundle is refreshed, the HMR watcher stat-polls it and
-hot-swaps the **browser** half within about half a second (reload the page). The
-**Host** half is read at boot, so a change there needs a server restart;
-`scripts/restart-server.ps1` performs one from outside the host — the only way it
-can work, because the agent asking for the restart runs inside the process being
-restarted.
+### 发一版、看部署、核对产物
 
-On one real host a `pnpm update` of the `github:` dependency replaced the bundle
-without the watcher noticing: the shell kept serving the previous bytes with the
-previous `rev`, so the console went on rendering the old half. Touching the
-installed `client/client.js` made it re-publish within a second (`/plugins/events`
-reported a new `rev` for the plugin, and the bootstrap combo carried the new
-code). A restart re-reads it as well, because the module registry's cache lives
-in the process. That host also serves its browser bundles inside one
-`/plugins/??…` combo, so verifying a deploy means grepping that combo for a
-marker from the new build rather than fetching `/plugins/<id>/client.js`.
+```sh
+powershell -ExecutionPolicy Bypass -File scripts/release.ps1 -MessageFile <tag说明文件>
+powershell -ExecutionPolicy Bypass -File scripts/deploy-status.ps1
+powershell -ExecutionPolicy Bypass -File scripts/compare-artifacts.ps1 -Restore
+```
+
+- **tag 是部署契约的一部分**：profile 依赖钉的是 `#v<版本>`，所以没打 tag 的提交装不上。
+  `release.ps1` 因此先校验（版本未被本地/远端打过 tag、产物=源码、两道门禁+测试通过），
+  再打 tag 并推送分支与 tag；token 仍从 Windows 凭据管理器读，以一次性 header 交给 git，
+  **不碰仓库自己的 git 配置**。`-DryRun` 只报告。
+- `deploy-status.ps1` 逐面打印**读数**：仓库版本/HEAD/tag/产物哈希、本机安装副本的版本
+  与设置层标记、本机 DSH checkout、服务器上的依赖 spec / 安装版本 / unit 状态 / 端口 /
+  DSH 版本（从 unit 的 `npx @deepseek-ai/dsh@<版本>` 读——profile 树里没有
+  `@deepseek-ai`，只有 npx 缓存里有）。
+- `compare-artifacts.ps1` 回答"提交的产物是不是这些源码编出来的"，三档判定
+  `identical` / `same apart from the build root` / `DIFFERENT`。**客户端产物换机器不可能
+  逐字节相同**：CSS 模块的类名前缀是按源文件**绝对路径**哈希出来的，产物里还嵌着那个
+  路径。Host 产物没有这种指纹，必须逐字节相同。
+
+一旦安装的那份产物被刷新，HMR watcher 会 stat-poll 它，并在约半秒内热换**浏览器**
+半边（重新加载页面即可）。**Host** 半边在启动时读取，所以那里的改动需要重启服务器；
+`scripts/restart-server.ps1` 从 host 之外执行一次——这是唯一可行的方式，因为请求重启的
+agent 正运行在被重启的那个进程里。
+
+在一台真实的 host 上，对 `github:` 依赖的一次 `pnpm update` 换掉了产物而 watcher 没有
+注意到：shell 继续用上一个 `rev` 提供上一次的字节，于是控制台继续渲染旧的那一半。
+touch 一下安装位置的 `client/client.js` 就让它在不到一秒内重新发布
+（`/plugins/events` 为该插件报出了新的 `rev`，bootstrap combo 也带上了新代码）。
+重启同样会重新读取它，因为模块注册表的缓存活在进程里。那台 host 还把它的浏览器产物
+装在一个 `/plugins/??…` combo 里提供，所以核对一次部署，意味着在那个 combo 里 grep
+新构建的某个标记，而不是去取 `/plugins/<id>/client.js`。
