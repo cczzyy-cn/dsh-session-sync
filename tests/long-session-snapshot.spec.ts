@@ -103,6 +103,7 @@ function fakeContext(controller: SessionControllerLike): HostContext {
     effect: () => {},
     get: (name: string) => (name === 'sessionController' ? controller : undefined),
     inject: () => {},
+    on: () => () => {},
   }
 }
 

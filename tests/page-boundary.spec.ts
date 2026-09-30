@@ -80,6 +80,7 @@ const context = (value: SessionControllerLike): HostContext => ({
   effect: () => {},
   get: (name: string) => (name === 'sessionController' ? value : undefined),
   inject: () => {},
+  on: () => () => {},
 })
 
 async function until<T>(check: () => T | undefined, label: string, timeoutMs = 20_000): Promise<T> {

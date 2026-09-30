@@ -125,6 +125,7 @@ const context = (value: SessionControllerLike | undefined): HostContext => ({
   effect: () => {},
   get: (name: string) => (name === 'sessionController' ? value : undefined),
   inject: () => {},
+  on: () => () => {},
 })
 
 /** Poll until `check` answers, or throw naming what was waited for. */

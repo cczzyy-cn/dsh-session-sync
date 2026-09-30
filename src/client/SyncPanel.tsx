@@ -2,7 +2,7 @@
  * The centre panel: the server's console over every machine that publishes here.
  *
  * Two panes and a three-level tree. The list groups by machine, then by the
- * directory a Session runs in, then lists the Sessions themselves 閳?the shape
+ * directory a Session runs in, then lists the Sessions themselves — the shape
  * the sidebar's workspace browser uses, so a remote Session reads the way a
  * local one does. The talk column beside it is the conversation the DSH client
  * already shows, wearing that UI's own clothes: a centered content column, a
@@ -298,7 +298,7 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
                 aria-label={t('tjClose')}
                 onClick={() => { setDismissedResets(state.mirrorResets) }}
               >
-                脳
+                ×
               </button>
             </p>
           )}

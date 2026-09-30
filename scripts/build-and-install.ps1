@@ -9,26 +9,63 @@
 # within about half a second, so the browser half updates on a page reload with
 # no restart. `lib/index.js` is the Host half: a change there needs a restart.
 
+param(
+  # The DSH checkout this package borrows `tsdown`/`lightningcss` from. Left empty
+  # it is discovered, because the path is per-machine: a hardcoded one made this
+  # script unrunnable anywhere but its author's host.
+  [string]$Checkout = '',
+  # The profile whose installed copy is refreshed.
+  [string]$Profile = 'web',
+  # Copy even when the profile's dependency is not a local `file:` path. Off by
+  # default: the installed tree then comes from pnpm's store, and bytes written
+  # here would silently diverge from what a fresh install gets. Turn it on only to
+  # iterate against a machine whose profile depends on git.
+  [switch]$ForceCopy
+)
+
 $ErrorActionPreference = 'Stop'
 
 $package = Split-Path $PSScriptRoot -Parent
-$checkout = 'C:\Users\14339\Desktop\git\deepseek-harness'
-$installed = Join-Path $env:USERPROFILE '.dsh\profiles\web\node_modules\dsh-session-sync'
+$installed = Join-Path (Join-Path $env:USERPROFILE ".dsh\profiles\$Profile") 'node_modules\dsh-session-sync'
+
+if ($Checkout -eq '') {
+  $candidates = @(
+    (Join-Path $env:USERPROFILE 'Desktop\git\deepseek-harness'),
+    (Join-Path $env:USERPROFILE 'git\deepseek-harness'),
+    (Join-Path (Split-Path $package -Parent) 'deepseek-harness')
+  )
+  if ($env:DSH_CHECKOUT) { $candidates = @($env:DSH_CHECKOUT) + $candidates }
+  $Checkout = @($candidates | Where-Object { Test-Path (Join-Path $_ 'node_modules\.bin\tsdown.cmd') })[0]
+  if (-not $Checkout) {
+    throw "no DSH checkout found (tried: $($candidates -join '; ')); pass -Checkout <path> or set DSH_CHECKOUT"
+  }
+}
+$tsdown = Join-Path $Checkout 'node_modules\.bin\tsdown.cmd'
+if (-not (Test-Path $tsdown)) { throw "no tsdown under $Checkout" }
+Write-Host "checkout: $Checkout"
+Write-Host "profile:  $Profile"
 
 # tsdown resolves `lightningcss` and its own runtime from the checkout's
 # node_modules, because this package deliberately has none of its own.
 $junction = Join-Path $package 'node_modules'
 if (-not (Test-Path $junction)) {
-  cmd /c mklink /J "$junction" "$checkout\node_modules" | Out-Null
+  cmd /c mklink /J "$junction" "$Checkout\node_modules" | Out-Null
 }
 
 try {
+  # The encoding gate runs here as well as in the `prebuild` hook, because this
+  # script is the documented build path and a gate that one path skips is not a
+  # gate. It scans the sources *and* the artifacts, so it also catches a bundle
+  # that was committed from damaged sources.
+  & node (Join-Path $PSScriptRoot 'check-encoding.mjs')
+  if ($LASTEXITCODE -ne 0) { throw "check-encoding exited $LASTEXITCODE" }
+
   # tsdown resolves its entry points against the process working directory, so
   # the build must run from the package root rather than from wherever the
   # caller happened to be.
   Push-Location $package
   try {
-    & "$checkout\node_modules\.bin\tsdown.cmd"
+    & $tsdown
     if ($LASTEXITCODE -ne 0) { throw "tsdown exited $LASTEXITCODE" }
   } finally {
     Pop-Location
@@ -75,23 +112,34 @@ try {
 }
 
 if (-not ($spec -like 'file:*')) {
-  Write-Host "built. the profile dependency is '$spec', not a local path, so nothing was copied."
-  Write-Host 'The installed copy comes from the store: a fresh install would not see these bytes.'
-  Write-Host 'To iterate against these sources, temporarily:'
-  Write-Host "  dsh plugin --profile web add file:$package"
-  Write-Host 'To publish instead, commit and push, then:'
-  Write-Host "  pnpm --dir `"$profileDir`" update dsh-session-sync"
-  exit 0
+  if (-not $ForceCopy) {
+    Write-Host "built. the profile dependency is '$spec', not a local path, so nothing was copied."
+    Write-Host 'The installed copy comes from the store: a fresh install would not see these bytes.'
+    Write-Host 'To iterate against these sources, temporarily:'
+    Write-Host "  dsh plugin --profile $Profile add file:$package"
+    Write-Host 'To publish instead, commit and push, then:'
+    Write-Host "  pnpm --dir `"$profileDir`" update dsh-session-sync"
+    Write-Host 'Or pass -ForceCopy to override this guard for a local check.'
+    exit 0
+  }
+  Write-Warning "the profile dependency is '$spec', not a local path; -ForceCopy is overriding the guard."
+  Write-Warning 'The installed copy now differs from what a fresh install would get, until these bytes are pushed.'
 }
 
-foreach ($directory in 'lib', 'client') {
-  $root = Join-Path $package $directory
+# `package.json` travels with the artifacts: the running process reads the version
+# it reports from that manifest, so copying the code without it would leave the
+# profile stating a version these bytes do not have.
+foreach ($entry in 'lib', 'client', 'package.json') {
+  $root = Join-Path $package $entry
   if (-not (Test-Path $root)) { continue }
   # File by file rather than `Copy-Item -Recurse` over the directory: the
   # destination already exists, and a recursive directory copy onto an existing
   # tree re-opens files it has just written.
-  Get-ChildItem $root -Recurse -File | ForEach-Object {
-    $relative = $_.FullName.Substring($package.Length + 1)
+  $sources = @()
+  if ((Get-Item $root).PSIsContainer) { $sources = @(Get-ChildItem $root -Recurse -File) }
+  else { $sources = @(Get-Item $root) }
+  foreach ($source in $sources) {
+    $relative = $source.FullName.Substring($package.Length + 1)
     $target = Join-Path $installed $relative
     New-Item -ItemType Directory -Force -Path (Split-Path $target -Parent) | Out-Null
 
@@ -109,7 +157,7 @@ foreach ($directory in 'lib', 'client') {
         # A running server watches its plugin bundles, so replacing one races
         # with the watcher opening it. The window is milliseconds, and a bounded
         # retry is the honest fix — a skipped copy would serve stale bytes.
-        Copy-Item -Force $_.FullName $target -ErrorAction Stop
+        Copy-Item -Force $source.FullName $target -ErrorAction Stop
         $copied = $true
       } catch {
         if ($attempt -eq 20) { throw }
@@ -119,5 +167,5 @@ foreach ($directory in 'lib', 'client') {
   }
 }
 
-Write-Host "copied lib/ and client/ into $installed"
+Write-Host "copied lib/, client/ and package.json into $installed"
 Write-Host 'reload the browser page; restart the server if the Host half changed.'

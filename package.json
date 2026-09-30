@@ -1,6 +1,6 @@
 {
   "name": "dsh-session-sync",
-  "version": "0.10.28",
+  "version": "0.10.29",
   "private": true,
   "description": "Multi-machine Session sync for DeepSeek Harness: publish selected Sessions to a sync server and browse every connected machine's Sessions from the left sidebar.",
   "type": "module",
@@ -30,8 +30,14 @@
     "README.md"
   ],
   "scripts": {
+    "prebuild": "node scripts/check-encoding.mjs",
     "build": "tsdown",
-    "watch": "tsdown --watch"
+    "watch": "tsdown --watch",
+    "check-encoding": "node scripts/check-encoding.mjs",
+    "typecheck": "powershell -ExecutionPolicy Bypass -File scripts/typecheck.ps1",
+    "test": "node --test --experimental-transform-types --test-concurrency=1 \"tests/*.spec.ts\"",
+    "test:fast": "node --test --experimental-transform-types \"tests/*.spec.ts\"",
+    "verify": "npm run check-encoding && npm run typecheck && npm test"
   },
   "devDependencies": {
     "lightningcss": "^1.32.0",
