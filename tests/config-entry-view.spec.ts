@@ -9,7 +9,7 @@
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { ownsSubject, summaryOf } from '../src/client/config-entry.ts'
+import { ownsSubject, parseRecommendedLabel, summaryOf } from '../src/client/config-entry.ts'
 import { defaultConfig } from '../src/shared/protocol.ts'
 import type { SyncConfig } from '../src/shared/protocol.ts'
 
@@ -56,8 +56,26 @@ describe('the pages this plugin puts its configuration on', () => {
   })
 })
 
-describe('the summary line', () => {
-  it('reads a publisher as a machine with somewhere to publish to', () => {
+describe('the recommended marker on an option', () => {
+  it('reads the shipped suffix out of the label, in either language or bracket', () => {
+    assert.deepEqual(parseRecommendedLabel('Keep it (recommended)'), { label: 'Keep it', recommended: true })
+    assert.deepEqual(parseRecommendedLabel('保留（推荐）'), { label: '保留', recommended: true })
+  })
+
+  it('leaves a label that merely mentions the word alone', () => {
+    // Only a suffix counts: an option *about* recommendations is not one.
+    assert.deepEqual(
+      parseRecommendedLabel('Ask the reviewer to recommended something'),
+      { label: 'Ask the reviewer to recommended something', recommended: false },
+    )
+  })
+
+  it('does not eat a parenthesis that is part of the label', () => {
+    assert.deepEqual(parseRecommendedLabel('Redis (cluster mode)'), { label: 'Redis (cluster mode)', recommended: false })
+  })
+})
+
+describe('the summary line', () => {  it('reads a publisher as a machine with somewhere to publish to', () => {
     const line = summaryOf(t, config({ machineName: 'origin', serverUrl: '10.0.0.9:8791' }))
     assert.equal(line, 'origin · Client · 10.0.0.9:8791')
   })

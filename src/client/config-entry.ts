@@ -51,6 +51,23 @@ export function ownsSubject(subject: PluginsSubjectLike | undefined): boolean {
 }
 
 /**
+ * Split an option's shipped "recommended" marker off its label.
+ *
+ * The asker marks a suggestion by suffixing its label — `(recommended)` or
+ * `（推荐）` — and the shipped composer renders that marker as its own badge rather
+ * than as part of the text. This console reads the same convention out of the
+ * relayed option, so an option the asking machine flagged looks flagged here too.
+ * @param label - the option's label as the asker wrote it.
+ * @returns the label without the marker, and whether the marker was there.
+ */
+export function parseRecommendedLabel(label: string): { label: string; recommended: boolean } {
+  const suffix = /\s*(?:\((?:recommended|推荐)\)|（(?:recommended|推荐)）)\s*$/i
+  return suffix.test(label)
+    ? { label: label.replace(suffix, ''), recommended: true }
+    : { label, recommended: false }
+}
+
+/**
  * One line reading the configuration in force, for a header or a fallback.
  * @param t - localized copy.
  * @param config - the configuration in force.

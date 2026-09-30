@@ -670,6 +670,26 @@ window.__ModuleLoader__.load({
 			if (subject.kind === "row") return subject.pkg?.name === "dsh-session-sync" && subject.row?.rowId === "session-sync";
 			return false;
 		}
+		/**
+		* Split an option's shipped "recommended" marker off its label.
+		*
+		* The asker marks a suggestion by suffixing its label — `(recommended)` or
+		* `（推荐）` — and the shipped composer renders that marker as its own badge rather
+		* than as part of the text. This console reads the same convention out of the
+		* relayed option, so an option the asking machine flagged looks flagged here too.
+		* @param label - the option's label as the asker wrote it.
+		* @returns the label without the marker, and whether the marker was there.
+		*/
+		function parseRecommendedLabel(label) {
+			const suffix = /\s*(?:\((?:recommended|推荐)\)|（(?:recommended|推荐)）)\s*$/i;
+			return suffix.test(label) ? {
+				label: label.replace(suffix, ""),
+				recommended: true
+			} : {
+				label,
+				recommended: false
+			};
+		}
 		//#endregion
 		//#region src/shared/protocol.ts
 		/**
@@ -2202,7 +2222,7 @@ window.__ModuleLoader__.load({
 		}
 		//#endregion
 		//#region \0dsh-css:C:\Users\14339\Desktop\git\dsh-session-sync\src\client\ApprovalCard.module.css.mjs
-		const css$7 = ".luWWxG_card{box-sizing:border-box;--dsw-elevation-stroke-color:var(--dsw-alias-state-warn-primary);background:var(--dsw-alias-bg-layer-1);width:100%;max-width:calc(min(920px,100%) + 32px);box-shadow:var(--dsw-elevation-soft);font:var(--dsw-font-s-14);border:0;border-radius:16px;flex-direction:column;gap:10px;margin-bottom:8px;padding:12px 16px 10px;display:flex}.luWWxG_head{align-items:center;gap:8px;display:flex}.luWWxG_title{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-strong-13)}.luWWxG_origin{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11)}.luWWxG_summary{color:var(--dsw-alias-label-primary);font:var(--dsw-font-s-14)}.luWWxG_missing{color:var(--dsw-alias-state-warn-primary);font:var(--dsw-font-xxs-12)}.luWWxG_arguments{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);white-space:pre-wrap;word-break:break-word;border-radius:8px;max-height:220px;margin:0;padding:8px 10px;overflow:auto}.luWWxG_reason{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12);white-space:pre-wrap;margin:0}.luWWxG_bar{align-items:center;gap:8px;display:flex}.luWWxG_spacer{flex:1}.luWWxG_hint,.luWWxG_sent{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11)}.luWWxG_error{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxxs-11)}.luWWxG_allow,.luWWxG_reject{font:var(--dsw-font-xxs-12);cursor:pointer;border-radius:999px;flex:none;padding:5px 14px}.luWWxG_allow{background:var(--dsw-alias-button-info-fill);color:#fff;border:0}.luWWxG_reject{border:.5px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-primary);background:0 0}.luWWxG_allow:disabled,.luWWxG_reject:disabled{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-tertiary);cursor:default}.luWWxG_elsewhere{box-sizing:border-box;border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-state-warn-tertiary);width:100%;max-width:calc(min(920px,100%) + 32px);color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);border-radius:10px;align-items:center;gap:8px;margin-bottom:8px;padding:6px 12px;display:flex}.luWWxG_elsewhereGo{color:var(--dsw-alias-label-primary-bluish);font:var(--dsw-font-xxxs-11);cursor:pointer;background:0 0;border:0;padding:0;text-decoration:underline}";
+		const css$7 = ".luWWxG_root{padding:8px calc(var(--dsh-composer-side-clearance) + 16px) 12px;flex-direction:column;align-items:center;display:flex}.luWWxG_card{width:100%;max-width:var(--dsh-chat-content-width);border:1px solid var(--dsw-alias-state-warn-secondary);border-radius:var(--dsw-radius-xl);background:var(--dsw-specific-input-major);box-shadow:var(--dsw-shadow-lv2);--dsh-scrollbar-thumb:var(--dsw-alias-scrollbar-bg-l2);--dsh-scrollbar-thumb-hover:var(--dsw-alias-scrollbar-hover-l2);overflow:hidden}.luWWxG_strip{background:var(--dsw-alias-state-warn-tertiary);color:var(--dsw-alias-state-warn-primary);align-items:center;gap:8px;padding:10px 16px;font-size:13px;line-height:18px;display:flex}.luWWxG_body{box-sizing:border-box;max-height:var(--dsh-composer-text-max-height);flex-direction:column;gap:6px;padding:12px 16px 0;display:flex;overflow-y:auto}.luWWxG_headline{color:var(--dsw-alias-label-primary);font-size:15px;font-weight:500;line-height:24px}.luWWxG_command{color:var(--dsw-alias-label-tertiary);font-family:var(--ds-font-family-code);word-break:break-all;font-size:13px;line-height:20px}.luWWxG_actionRow{justify-content:flex-end;align-items:center;gap:8px;padding:14px 16px;display:flex}.luWWxG_reject:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover-danger);color:var(--dsw-alias-state-error-primary);border-color:#0000}.luWWxG_note{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}.luWWxG_missing{color:var(--dsw-alias-state-warn-primary);font-size:13px;line-height:20px}.luWWxG_error{color:var(--dsw-alias-state-error-primary);margin-right:auto;font-size:12px;line-height:18px}.luWWxG_sent{color:var(--dsw-alias-state-success-primary);margin-right:auto;font-size:12px;line-height:18px}.luWWxG_hint{color:var(--dsw-alias-label-tertiary);margin-right:auto;font-size:12px;line-height:18px}.luWWxG_elsewhere{box-sizing:border-box;background:var(--dsw-alias-state-warn-tertiary);width:100%;max-width:calc(min(920px,100%) + 32px);color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);border-radius:10px;justify-content:center;align-items:center;gap:8px;margin:0 auto 8px;padding:6px 10px;display:flex}.luWWxG_elsewhereGo{color:var(--dsw-alias-button-info-fill);font:inherit;cursor:pointer;background:0 0;border:0;padding:0}";
 		const tagId$7 = "dsh-session-sync/ApprovalCard.module.css";
 		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagId$7) + "]") === null) {
 			const tag = document.createElement("style");
@@ -2212,23 +2232,21 @@ window.__ModuleLoader__.load({
 			document.head.appendChild(tag);
 		}
 		var ApprovalCard_module_css_default = {
-			"allow": "luWWxG_allow",
-			"arguments": "luWWxG_arguments",
-			"bar": "luWWxG_bar",
+			"actionRow": "luWWxG_actionRow",
+			"body": "luWWxG_body",
 			"card": "luWWxG_card",
+			"command": "luWWxG_command",
 			"elsewhere": "luWWxG_elsewhere",
 			"elsewhereGo": "luWWxG_elsewhereGo",
 			"error": "luWWxG_error",
-			"head": "luWWxG_head",
+			"headline": "luWWxG_headline",
 			"hint": "luWWxG_hint",
 			"missing": "luWWxG_missing",
-			"origin": "luWWxG_origin",
-			"reason": "luWWxG_reason",
+			"note": "luWWxG_note",
 			"reject": "luWWxG_reject",
+			"root": "luWWxG_root",
 			"sent": "luWWxG_sent",
-			"spacer": "luWWxG_spacer",
-			"summary": "luWWxG_summary",
-			"title": "luWWxG_title"
+			"strip": "luWWxG_strip"
 		};
 		//#endregion
 		//#region src/client/approval-view.ts
@@ -2258,22 +2276,27 @@ window.__ModuleLoader__.load({
 		/**
 		* The card that asks a reader to allow or refuse one operation on another machine.
 		*
-		* It is deliberately heavier than the question card, because the decision is: this
-		* grants a *permission* the owning machine's own preset was gating. So the card
-		* shows three things before it shows a button —
+		* It wears the product's own approval takeover: the shipped panel
+		* (`@deepseek-ai/dsh-client-ui-approval`) cannot be imported from a plugin — its
+		* package is not in the shell's frozen module table — so this is that panel's
+		* markup and stylesheet, copied, over this console's data. What the card says is
+		* deliberately heavier than a bare tool name, because the decision grants a
+		* *permission* the owning machine's own preset was gating:
 		*
-		*  - **which machine** is asking, and which tool the decision is about;
+		*  - the shipped strip and headline, so it reads as the same surface;
 		*  - **what would actually run**, resolved from the mirrored transcript by `callId`
 		*    (`approval-view.ts`), because a bare tool name is not something anyone should
 		*    be asked to grant;
-		*  - **the asker's reason**, when it gave one.
+		*  - **which machine** is asking and **the asker's reason**, in the notes the
+		*    shipped panel has no equivalent for.
 		*
-		* And when the mirror no longer holds the call, it says *that* instead of quietly
+		* When the mirror no longer holds the call it says *that* instead of quietly
 		* showing less. Two buttons, never one, and neither is the default: refusal is a
 		* decision too, and a card whose only affordance is "allow" is not a choice.
+		* Enter grants and Escape refuses, as the shipped panel binds them.
 		*/
 		/**
-		* One relayed approval, as a card.
+		* One relayed approval, as the product's own panel.
 		* @param props - the offer, the rows to resolve it against, and how to decide.
 		* @returns the card.
 		*/
@@ -2281,79 +2304,96 @@ window.__ModuleLoader__.load({
 			const { t, approval } = props;
 			const view = react.useMemo(() => approvalPresentation(props.rows, approval.approval), [props.rows, approval.approval]);
 			const sent = props.decision?.sent === true;
-			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-				className: ApprovalCard_module_css_default.card,
-				role: "group",
-				"aria-label": t("approvalTitle"),
-				children: [
-					/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-						className: ApprovalCard_module_css_default.head,
-						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-							className: ApprovalCard_module_css_default.title,
-							children: t("approvalTitle")
-						}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-							className: ApprovalCard_module_css_default.origin,
-							children: t("approvalFrom", {
+			const onKeyDown = (event) => {
+				if (event.defaultPrevented || event.key !== "Enter" && event.key !== "Escape") return;
+				if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return;
+				const target = event.target;
+				if (target.closest("input, textarea, select, [contenteditable]") !== null) return;
+				if (event.key === "Enter" && target.closest("button, a[href], [role=\"button\"]") !== null) return;
+				if (event.repeat || event.nativeEvent.isComposing || event.keyCode === 229 || sent) return;
+				event.preventDefault();
+				event.stopPropagation();
+				props.onDecide(event.key === "Enter" ? "allowed-once" : "rejected");
+			};
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+				className: ApprovalCard_module_css_default.root,
+				onKeyDown,
+				children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+					className: ApprovalCard_module_css_default.card,
+					role: "group",
+					"aria-label": t("approvalTitle"),
+					"aria-busy": sent,
+					children: [
+						/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+							className: ApprovalCard_module_css_default.strip,
+							children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.StateDot, { state: sent ? "ongoing" : "warning" }), t("approvalFrom", {
 								machine: approval.machineName,
 								tool: view.toolName
-							})
-						})]
-					}),
-					view.held ? view.summary === "" ? null : /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-						className: ApprovalCard_module_css_default.summary,
-						children: view.summary
-					}) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-						className: ApprovalCard_module_css_default.missing,
-						children: t("approvalCallMissing")
-					}),
-					view.argumentsText !== "" && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("pre", {
-						className: ApprovalCard_module_css_default.arguments,
-						children: view.argumentsText
-					}),
-					approval.approval.reason !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
-						className: ApprovalCard_module_css_default.reason,
-						children: t("approvalReason", { reason: approval.approval.reason })
-					}),
-					/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-						className: ApprovalCard_module_css_default.bar,
-						children: [
-							props.decision?.error !== void 0 ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-								className: ApprovalCard_module_css_default.error,
-								children: props.decision.error
-							}) : sent ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-								className: ApprovalCard_module_css_default.sent,
-								children: t("approvalSent")
-							}) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-								className: ApprovalCard_module_css_default.hint,
-								children: t("approvalHint")
-							}),
-							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { className: ApprovalCard_module_css_default.spacer }),
-							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
-								type: "button",
-								className: ApprovalCard_module_css_default.reject,
-								disabled: sent,
-								onClick: () => {
-									props.onDecide("rejected");
-								},
-								children: t("approvalReject")
-							}),
-							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
-								type: "button",
-								className: ApprovalCard_module_css_default.allow,
-								disabled: sent,
-								onClick: () => {
-									props.onDecide("allowed-once");
-								},
-								children: t("approvalAllow")
-							})
-						]
-					})
-				]
+							})]
+						}),
+						/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+							className: ApprovalCard_module_css_default.body,
+							children: [
+								/* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+									className: ApprovalCard_module_css_default.headline,
+									children: t("approvalTitle")
+								}),
+								view.held ? view.summary === "" ? null : /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+									className: ApprovalCard_module_css_default.command,
+									children: view.summary
+								}) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+									className: ApprovalCard_module_css_default.missing,
+									children: t("approvalCallMissing")
+								}),
+								view.argumentsText !== "" && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("pre", {
+									className: ApprovalCard_module_css_default.command,
+									children: view.argumentsText
+								}),
+								approval.approval.reason !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+									className: ApprovalCard_module_css_default.note,
+									children: t("approvalReason", { reason: approval.approval.reason })
+								})
+							]
+						}),
+						/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+							className: ApprovalCard_module_css_default.actionRow,
+							children: [
+								props.decision?.error !== void 0 ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+									className: ApprovalCard_module_css_default.error,
+									children: props.decision.error
+								}) : sent ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+									className: ApprovalCard_module_css_default.sent,
+									children: t("approvalSent")
+								}) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+									className: ApprovalCard_module_css_default.hint,
+									children: t("approvalHint")
+								}),
+								/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
+									variant: "outline",
+									className: ApprovalCard_module_css_default.reject,
+									disabled: sent,
+									onClick: () => {
+										props.onDecide("rejected");
+									},
+									children: t("approvalReject")
+								}),
+								/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
+									variant: "primary",
+									disabled: sent,
+									onClick: () => {
+										props.onDecide("allowed-once");
+									},
+									children: t("approvalAllow")
+								})
+							]
+						})
+					]
+				})
 			});
 		}
 		//#endregion
 		//#region \0dsh-css:C:\Users\14339\Desktop\git\dsh-session-sync\src\client\QuestionCard.module.css.mjs
-		const css$6 = ".zAWt7G_card{box-sizing:border-box;--dsw-elevation-stroke-color:var(--dsw-alias-border-l3);background:var(--dsw-alias-bg-layer-1);width:100%;max-width:calc(min(920px,100%) + 32px);box-shadow:var(--dsw-elevation-soft);font:var(--dsw-font-s-14);border:0;border-radius:16px;flex-direction:column;gap:10px;margin-bottom:8px;padding:12px 16px 10px;display:flex}.zAWt7G_head{align-items:center;gap:8px;display:flex}.zAWt7G_title{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-strong-13)}.zAWt7G_origin{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11)}.zAWt7G_question{color:var(--dsw-alias-label-primary);font:var(--dsw-font-s-14)}.zAWt7G_detail{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12);white-space:pre-wrap;margin:0}.zAWt7G_options{flex-wrap:wrap;gap:6px;display:flex}.zAWt7G_option{box-sizing:border-box;border:.5px solid var(--dsw-alias-border-l3);background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12);cursor:pointer;transition:background-color var(--ds-transition-duration-fast) var(--ds-ease-in-out);border-radius:999px;padding:5px 12px}.zAWt7G_option:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.zAWt7G_option[aria-pressed=true]{border-color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-state-business-tertiary);color:var(--dsw-alias-label-primary-bluish)}.zAWt7G_optionDescription{color:var(--dsw-alias-label-caption);font:var(--dsw-font-xxxs-11)}.zAWt7G_other{box-sizing:border-box;border:.5px solid var(--dsw-alias-border-l2);width:100%;color:var(--dsw-alias-label-primary);font:inherit;background:0 0;border-radius:8px;padding:6px 10px}.zAWt7G_other::placeholder{color:var(--dsw-alias-placeholder)}.zAWt7G_other:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary)}.zAWt7G_bar{align-items:center;gap:8px;display:flex}.zAWt7G_spacer{flex:1}.zAWt7G_hint,.zAWt7G_sent{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11)}.zAWt7G_error{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxxs-11)}.zAWt7G_submit{background:var(--dsw-alias-button-info-fill);color:#fff;font:var(--dsw-font-xxs-12);cursor:pointer;border:0;border-radius:999px;flex:none;padding:5px 14px}.zAWt7G_submit:disabled{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-tertiary);cursor:default}.zAWt7G_elsewhere{box-sizing:border-box;border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-state-warn-tertiary);width:100%;max-width:calc(min(920px,100%) + 32px);color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);border-radius:10px;align-items:center;gap:8px;margin-bottom:8px;padding:6px 12px;display:flex}.zAWt7G_elsewhereGo{color:var(--dsw-alias-label-primary-bluish);font:var(--dsw-font-xxxs-11);cursor:pointer;background:0 0;border:0;padding:0;text-decoration:underline}";
+		const css$6 = ".zAWt7G_frame{padding:6px calc(var(--dsh-composer-side-clearance) + 16px) 10px;justify-content:center;display:flex}.zAWt7G_card{width:100%;max-width:var(--dsh-chat-content-width);--dsw-elevation-stroke-color:var(--dsw-alias-border-l2-darkmode-thin);border-radius:var(--dsw-radius-xl);background:var(--dsw-specific-input-major);max-height:min(60vh,520px);box-shadow:var(--dsw-elevation-panel);color:var(--dsw-alias-label-primary);--dsh-scrollbar-thumb:var(--dsw-alias-scrollbar-bg-l2);--dsh-scrollbar-thumb-hover:var(--dsw-alias-scrollbar-hover-l2);border:0;flex-direction:column;padding:0 0 10px;display:flex;overflow:hidden}.zAWt7G_card,.zAWt7G_card *{box-sizing:border-box}.zAWt7G_header{flex-shrink:0;justify-content:space-between;align-items:flex-start;gap:16px;padding:20px 16px 0 24px;display:flex}.zAWt7G_headingBlock{min-width:0}.zAWt7G_eyebrow{color:var(--dsw-alias-label-tertiary);margin-bottom:5px;font-size:11px;line-height:16px}.zAWt7G_title{margin:0;font-size:16px;font-weight:500;line-height:22px}.zAWt7G_detail{margin:0 2px 8px}.zAWt7G_body{overscroll-behavior:contain;flex-direction:column;flex:auto;min-height:0;display:flex;overflow-y:auto}.zAWt7G_options{flex-direction:column;gap:1px;margin:8px 0 0;padding:4px 12px;display:flex}.zAWt7G_option{border-radius:var(--dsw-radius-md);width:100%;min-height:40px;color:inherit;text-align:left;cursor:pointer;background:0 0;border:1px solid #0000;flex-shrink:0;align-items:flex-start;gap:8px;padding:8px 12px 8px 8px;transition:background-color .12s,border-color .12s;display:flex}.zAWt7G_option:hover:not(:disabled),.zAWt7G_optionSelected{background:var(--dsw-alias-interactive-bg-hover)}.zAWt7G_optionSelected{border-color:var(--dsw-alias-border-l2)}.zAWt7G_option:disabled{cursor:default}.zAWt7G_number{border-radius:var(--dsw-radius-xs);background:var(--dsw-alias-bg-overlay);width:20px;height:20px;color:var(--dsw-alias-label-secondary);flex:0 0 20px;place-items:center;margin-top:2px;font-size:12px;font-weight:500;line-height:18px;display:grid}.zAWt7G_checkbox{flex:0 0 20px;place-items:center;width:20px;height:20px;margin-top:2px;display:grid}.zAWt7G_checkbox:before{content:\"\";border:.5px solid var(--dsw-alias-border-l4);border-radius:var(--dsw-radius-xs);grid-area:1/1;width:14px;height:14px;transition:background-color .12s,border-color .12s}.zAWt7G_checkbox>svg{grid-area:1/1}.zAWt7G_checkboxChecked{color:var(--dsw-alias-label-primary-foreground)}.zAWt7G_checkboxChecked:before{border-color:var(--dsw-alias-label-primary);background:var(--dsw-alias-label-primary)}.zAWt7G_optionCopy{flex:1;min-width:0}.zAWt7G_optionLine{flex-wrap:wrap;align-items:baseline;gap:2px 6px;display:flex}.zAWt7G_optionLabel{font-size:14px;font-weight:500;line-height:24px}.zAWt7G_badge{border-radius:var(--dsw-radius-xs);background:var(--dsw-specific-sidebar-nav-item-active-accent);color:var(--dsw-alias-button-info-fill);padding:0 4px;font-size:11px;font-weight:600;line-height:18px}.zAWt7G_description{color:var(--dsw-alias-label-tertiary);font-size:14px;font-weight:400;line-height:24px}.zAWt7G_customRow{border-radius:var(--dsw-radius-md);border:1px solid #0000;flex-shrink:0;align-items:flex-start;gap:8px;width:100%;min-height:40px;padding:8px 12px 8px 8px;transition:background-color .12s,border-color .12s;display:flex}.zAWt7G_customRow:hover,.zAWt7G_customRow:focus-within,.zAWt7G_customRowActive{background:var(--dsw-alias-interactive-bg-hover)}.zAWt7G_customRow:focus-within,.zAWt7G_customRowActive{border-color:var(--dsw-alias-border-l2)}.zAWt7G_field{--dsh-answer-field-padding:0;min-width:0;display:grid}.zAWt7G_field>*{min-width:0;padding:var(--dsh-answer-field-padding);font:inherit;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;grid-area:1/1;font-size:14px;line-height:24px}.zAWt7G_fieldMirror{box-sizing:content-box;visibility:hidden;max-height:144px;overflow:hidden}.zAWt7G_fieldInput{resize:none;color:var(--dsw-alias-label-primary);caret-color:var(--dsw-alias-state-business-primary);background:0 0;border:none;outline:none;overflow-y:auto}.zAWt7G_fieldInput::placeholder{color:var(--dsw-alias-label-caption)}.zAWt7G_customInline{flex:1}.zAWt7G_customBlock{border:.5px solid var(--dsw-alias-border-l4);border-radius:var(--dsw-radius-lg);background:var(--dsw-alias-bg-module-platform);--dsh-answer-field-padding:8px 12px;flex-shrink:0;min-height:64px;margin:0 12px}.zAWt7G_customBlock:focus-within{border-color:var(--dsw-alias-state-business-primary)}.zAWt7G_footer{flex-shrink:0;justify-content:space-between;align-items:center;gap:12px;margin-top:12px;padding:0 10px 0 18px;display:flex}.zAWt7G_footerActions{flex-shrink:0;align-items:center;gap:12px;display:flex}.zAWt7G_feedback{min-height:16px;color:var(--dsw-alias-state-error-primary);text-align:right;flex:1;font-size:11px;line-height:16px}.zAWt7G_elsewhere{box-sizing:border-box;background:var(--dsw-alias-state-warn-tertiary);width:100%;max-width:calc(min(920px,100%) + 32px);color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);border-radius:10px;justify-content:center;align-items:center;gap:8px;margin:0 auto 8px;padding:6px 10px;display:flex}.zAWt7G_elsewhereGo{color:var(--dsw-alias-button-info-fill);font:inherit;cursor:pointer;background:0 0;border:0;padding:0}@media (width<=720px){.zAWt7G_header{padding:10px 12px 0 18px}.zAWt7G_options{padding:4px 8px}.zAWt7G_title{font-size:15px;line-height:21px}.zAWt7G_option,.zAWt7G_customRow{padding:8px 6px}.zAWt7G_footer{align-items:flex-end;padding:0 10px}.zAWt7G_footerActions{flex-shrink:0}}@media (prefers-reduced-motion:reduce){.zAWt7G_option,.zAWt7G_customRow{transition:none}}";
 		const tagId$6 = "dsh-session-sync/QuestionCard.module.css";
 		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagId$6) + "]") === null) {
 			const tag = document.createElement("style");
@@ -2363,23 +2403,36 @@ window.__ModuleLoader__.load({
 			document.head.appendChild(tag);
 		}
 		var QuestionCard_module_css_default = {
-			"bar": "zAWt7G_bar",
+			"badge": "zAWt7G_badge",
+			"body": "zAWt7G_body",
 			"card": "zAWt7G_card",
+			"checkbox": "zAWt7G_checkbox",
+			"checkboxChecked": "zAWt7G_checkboxChecked",
+			"customBlock": "zAWt7G_customBlock",
+			"customInline": "zAWt7G_customInline",
+			"customRow": "zAWt7G_customRow",
+			"customRowActive": "zAWt7G_customRowActive",
+			"description": "zAWt7G_description",
 			"detail": "zAWt7G_detail",
 			"elsewhere": "zAWt7G_elsewhere",
 			"elsewhereGo": "zAWt7G_elsewhereGo",
-			"error": "zAWt7G_error",
-			"head": "zAWt7G_head",
-			"hint": "zAWt7G_hint",
+			"eyebrow": "zAWt7G_eyebrow",
+			"feedback": "zAWt7G_feedback",
+			"field": "zAWt7G_field",
+			"fieldInput": "zAWt7G_fieldInput",
+			"fieldMirror": "zAWt7G_fieldMirror",
+			"footer": "zAWt7G_footer",
+			"footerActions": "zAWt7G_footerActions",
+			"frame": "zAWt7G_frame",
+			"header": "zAWt7G_header",
+			"headingBlock": "zAWt7G_headingBlock",
+			"number": "zAWt7G_number",
 			"option": "zAWt7G_option",
-			"optionDescription": "zAWt7G_optionDescription",
+			"optionCopy": "zAWt7G_optionCopy",
+			"optionLabel": "zAWt7G_optionLabel",
+			"optionLine": "zAWt7G_optionLine",
+			"optionSelected": "zAWt7G_optionSelected",
 			"options": "zAWt7G_options",
-			"origin": "zAWt7G_origin",
-			"other": "zAWt7G_other",
-			"question": "zAWt7G_question",
-			"sent": "zAWt7G_sent",
-			"spacer": "zAWt7G_spacer",
-			"submit": "zAWt7G_submit",
 			"title": "zAWt7G_title"
 		};
 		//#endregion
@@ -2394,9 +2447,13 @@ window.__ModuleLoader__.load({
 		* the ordinary outcome of a race, not an error to retry, and the only place a
 		* reader can learn it is here.
 		*
-		* A batch is rendered whole: the asker's questions share one answer, and a
-		* question left untouched travels back as an empty choice — the same shape the
-		* machine's own UI produces for a skipped question.
+		* It wears the product's own question takeover: the shipped composer
+		* (`@deepseek-ai/dsh-client-ui-user-questions`) is not importable from a plugin —
+		* its package is not in the shell's frozen module table — so this is that
+		* composer's markup and stylesheet, copied, over this console's data. A batch is
+		* rendered whole rather than paged one question at a time (see the stylesheet),
+		* because a question left untouched travels back as an empty choice — the same
+		* shape the machine's own UI produces for a skipped question.
 		*/
 		/** The empty draft for one question. */
 		function emptyDraft() {
@@ -2440,14 +2497,89 @@ window.__ModuleLoader__.load({
 		function decides(draft) {
 			return draft.selected.length > 0 || draft.custom.trim() !== "";
 		}
+		/** One option row's leading indicator: its number, or a checked multi-select box. */
+		function OptionIndicator(props) {
+			return props.multi ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+				className: props.checked ? `${QuestionCard_module_css_default.checkbox} ${QuestionCard_module_css_default.checkboxChecked}` : QuestionCard_module_css_default.checkbox,
+				"aria-hidden": "true",
+				children: props.checked && /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutlineRegular, {})
+			}) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+				className: QuestionCard_module_css_default.number,
+				"aria-hidden": "true",
+				children: props.index + 1
+			});
+		}
+		/** One option row, as the shipped composer draws it. */
+		function OptionRow(props) {
+			const recommended = parseRecommendedLabel(props.option.label);
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("button", {
+				type: "button",
+				className: props.checked ? `${QuestionCard_module_css_default.option} ${QuestionCard_module_css_default.optionSelected}` : QuestionCard_module_css_default.option,
+				"aria-pressed": props.checked,
+				onClick: props.onChoose,
+				children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(OptionIndicator, {
+					multi: props.multi,
+					index: props.index,
+					checked: props.checked
+				}), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
+					className: QuestionCard_module_css_default.optionCopy,
+					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
+						className: QuestionCard_module_css_default.optionLine,
+						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+							className: QuestionCard_module_css_default.optionLabel,
+							children: recommended.label
+						}), recommended.recommended && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+							className: QuestionCard_module_css_default.badge,
+							children: props.t("questionRecommended")
+						})]
+					}), props.option.description !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+						className: QuestionCard_module_css_default.description,
+						children: props.option.description
+					})]
+				})]
+			});
+		}
 		/**
-		* Render one relayed question batch.
+		* Auto-growing free-text answer: a textarea over a hidden mirror that owns the
+		* height, so a long answer soft-wraps and the box grows with it.
+		*
+		* The mirror renders the draft plus a trailing newline in normal flow and so
+		* sizes the grid row (counting rows by '\n' cannot see soft wraps); the textarea
+		* shares that one cell and stretches to it, and `rows={1}` keeps the control's
+		* own intrinsic height out of the row sizing so the mirror alone decides. The two
+		* layers MUST share font, line-height, padding and wrapping rules or their
+		* heights diverge — that is what `.field > *` guarantees.
+		* @param props - the draft text, its placeholder, and the change handler.
+		* @returns the field.
+		*/
+		function AnswerField(props) {
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
+				className: QuestionCard_module_css_default.field,
+				children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+					"aria-hidden": true,
+					className: QuestionCard_module_css_default.fieldMirror,
+					children: `${props.value}\n`
+				}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("textarea", {
+					className: QuestionCard_module_css_default.fieldInput,
+					value: props.value,
+					disabled: props.disabled,
+					rows: 1,
+					placeholder: props.placeholder,
+					onChange: (event) => {
+						props.onChange(event.target.value);
+					}
+				})]
+			});
+		}
+		/**
+		* Render one relayed question batch in the shipped composer's own shell.
 		* @param props - copy, the question, its answer progress, and the send action.
 		* @returns the card.
 		*/
 		function QuestionCard(props) {
 			const { t, question } = props;
 			const [drafts, setDrafts] = react.useState({});
+			const sent = props.answer?.sent === true;
 			const draftOf = (id) => drafts[id] ?? emptyDraft();
 			const setDraft = (id, next) => {
 				setDrafts((current) => ({
@@ -2464,94 +2596,131 @@ window.__ModuleLoader__.load({
 			};
 			const ready = question.questions.some((candidate) => decides(draftOf(candidate.id)));
 			const answers = answerOf(question.questions, drafts);
-			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("form", {
-				className: QuestionCard_module_css_default.card,
+			const labels = react.useMemo(() => ({
+				code: {
+					copyLabel: t("copyCode"),
+					copiedLabel: t("copiedCode")
+				},
+				footnotes: t("footnotes")
+			}), [t]);
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)("form", {
+				className: QuestionCard_module_css_default.frame,
 				"aria-label": t("questionTitle"),
 				onSubmit: (event) => {
 					event.preventDefault();
-					if (!ready) return;
+					if (!ready || sent) return;
 					props.onAnswer(answers);
 				},
-				children: [
-					/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-						className: QuestionCard_module_css_default.head,
-						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-							className: QuestionCard_module_css_default.title,
-							children: t("questionTitle")
-						}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-							className: QuestionCard_module_css_default.origin,
-							children: t("questionFrom", { machine: question.machineName })
-						})]
-					}),
-					question.questions.map((item) => {
-						const draft = draftOf(item.id);
-						const multi = item.multiSelect === true;
-						return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react.Fragment, { children: [
-							item.header !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-								className: QuestionCard_module_css_default.origin,
-								children: item.header
-							}),
-							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-								className: QuestionCard_module_css_default.question,
-								children: item.question
-							}),
-							item.detail !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
-								className: QuestionCard_module_css_default.detail,
-								children: item.detail
-							}),
-							item.options !== void 0 && item.options.length > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
-								className: QuestionCard_module_css_default.options,
-								children: item.options.map((option) => /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("button", {
-									type: "button",
-									className: QuestionCard_module_css_default.option,
-									"aria-pressed": draft.selected.includes(option.label),
-									title: option.description ?? option.label,
-									onClick: () => {
-										choose(item.id, option.label, multi);
-									},
-									children: [option.label, option.description !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-										className: QuestionCard_module_css_default.optionDescription,
-										children: ` · ${option.description}`
-									})]
-								}, option.label))
-							}),
-							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("input", {
-								className: QuestionCard_module_css_default.other,
-								value: draft.custom,
-								placeholder: t("questionOther"),
-								"aria-label": `${item.question} — ${t("questionOther")}`,
-								onChange: (event) => {
-									setDraft(item.id, {
-										...draft,
-										custom: event.target.value
-									});
-								}
+				children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+					className: QuestionCard_module_css_default.card,
+					children: [
+						/* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+							className: QuestionCard_module_css_default.header,
+							children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+								className: QuestionCard_module_css_default.headingBlock,
+								children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+									className: QuestionCard_module_css_default.eyebrow,
+									children: t("questionFrom", { machine: question.machineName })
+								}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("h2", {
+									className: QuestionCard_module_css_default.title,
+									children: t("questionTitle")
+								})]
 							})
-						] }, item.id);
-					}),
-					/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-						className: QuestionCard_module_css_default.bar,
-						children: [
-							props.answer?.error !== void 0 ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-								className: QuestionCard_module_css_default.error,
-								children: props.answer.error
-							}) : props.answer?.sent === true ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-								className: QuestionCard_module_css_default.sent,
-								children: t("questionSent")
-							}) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-								className: QuestionCard_module_css_default.hint,
-								children: question.questions.some((item) => item.multiSelect === true) ? t("questionMultiHint") : ""
-							}),
-							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { className: QuestionCard_module_css_default.spacer }),
-							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
-								type: "submit",
-								className: QuestionCard_module_css_default.submit,
-								disabled: !ready || props.answer?.sent === true,
-								children: t("questionSubmit")
+						}),
+						/* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+							className: QuestionCard_module_css_default.body,
+							children: question.questions.map((item) => {
+								const draft = draftOf(item.id);
+								const multi = item.multiSelect === true;
+								const options = item.options ?? [];
+								return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react.Fragment, { children: [
+									/* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+										className: QuestionCard_module_css_default.header,
+										children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+											className: QuestionCard_module_css_default.headingBlock,
+											children: [item.header !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+												className: QuestionCard_module_css_default.eyebrow,
+												children: item.header
+											}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("h2", {
+												className: QuestionCard_module_css_default.title,
+												children: item.question
+											})]
+										})
+									}),
+									item.detail !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+										className: QuestionCard_module_css_default.detail,
+										children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.MarkdownText, {
+											text: item.detail,
+											labels
+										})
+									}),
+									options.length > 0 ? /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+										className: QuestionCard_module_css_default.options,
+										role: multi ? "group" : "radiogroup",
+										children: [options.map((option, index) => /* @__PURE__ */ (0, react_jsx_runtime.jsx)(OptionRow, {
+											option,
+											index,
+											multi,
+											checked: draft.selected.includes(option.label),
+											t,
+											onChoose: () => {
+												choose(item.id, option.label, multi);
+											}
+										}, option.label)), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+											className: draft.custom !== "" ? `${QuestionCard_module_css_default.customRow} ${QuestionCard_module_css_default.customRowActive}` : QuestionCard_module_css_default.customRow,
+											children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(OptionIndicator, {
+												multi,
+												index: options.length,
+												checked: draft.custom !== ""
+											}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+												className: QuestionCard_module_css_default.customInline,
+												children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(AnswerField, {
+													value: draft.custom,
+													placeholder: t("questionOther"),
+													disabled: sent,
+													onChange: (value) => {
+														setDraft(item.id, {
+															...draft,
+															custom: value
+														});
+													}
+												})
+											})]
+										})]
+									}) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+										className: `${QuestionCard_module_css_default.customBlock} ${QuestionCard_module_css_default.field}`,
+										children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(AnswerField, {
+											value: draft.custom,
+											placeholder: t("questionOther"),
+											disabled: sent,
+											onChange: (value) => {
+												setDraft(item.id, {
+													...draft,
+													custom: value
+												});
+											}
+										})
+									})
+								] }, item.id);
 							})
-						]
-					})
-				]
+						}),
+						/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+							className: QuestionCard_module_css_default.footer,
+							children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+								className: QuestionCard_module_css_default.feedback,
+								children: props.answer?.error !== void 0 ? props.answer.error : sent ? t("questionSent") : question.questions.some((item) => item.multiSelect === true) ? t("questionMultiHint") : ""
+							}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+								className: QuestionCard_module_css_default.footerActions,
+								children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
+									type: "submit",
+									variant: "primary",
+									disabled: !ready || sent,
+									children: t("questionSubmit")
+								})
+							})]
+						})
+					]
+				})
 			});
 		}
 		/**
@@ -7396,6 +7565,7 @@ window.__ModuleLoader__.load({
 			questionTitle: "源站在等一个回答",
 			questionFrom: "在 {machine} 上的提问",
 			questionMultiHint: "可多选",
+			questionRecommended: "推荐",
 			questionOther: "其他…",
 			questionSubmit: "回答",
 			questionSent: "已提交，等待源站确认",
@@ -7686,6 +7856,7 @@ window.__ModuleLoader__.load({
 			questionTitle: "A machine is waiting on an answer",
 			questionFrom: "Asked on {machine}",
 			questionMultiHint: "Select any",
+			questionRecommended: "Recommended",
 			questionOther: "Other…",
 			questionSubmit: "Answer",
 			questionSent: "Sent; waiting for the machine to claim it",

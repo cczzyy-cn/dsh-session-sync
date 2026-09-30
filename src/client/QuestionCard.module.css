@@ -1,163 +1,332 @@
 /*
- * The card that asks the reader to decide something a remote Session is waiting
- * on. It sits directly above the takeover composer, in the same reading column,
- * because it belongs to the open Session's conversation: the model is stopped
- * mid-turn until somebody answers.
+ * The question card's stylesheet: the shipped question composer's own sheet,
+ * copied verbatim.
  *
- * Drawn with the shipped tokens and the composer card's own elevation pattern
- * (stroke as a hairline rather than a border, so it costs no layout).
+ * The product's question takeover (`@deepseek-ai/dsh-client-ui-user-questions`,
+ * its `QuestionComposer.module.css`) is not importable from a plugin — the
+ * shell's frozen module table shares nine specifiers and that is not one of them
+ * — so this console wears a copy of its sheet, exactly as `ui-chat`'s chat sheets
+ * are worn by this package's row components. Every value is a shipped token,
+ * which is what makes the copy follow a theme change, a font-size preference and
+ * a hairline change with the rest of the product.
+ *
+ * One deliberate difference from the original, and the only one: the shipped
+ * composer steps through a batch one question at a time (its `pager` and
+ * `progress` seats), while this console renders every question of the batch at
+ * once — a reader watching another machine should see the whole ask at a glance,
+ * and a card that hides half of it behind a pager is a card they can answer
+ * wrongly. The sheet keeps those two rules for fidelity; this console repeats the
+ * `header`/`body` pair per question instead of paging through it.
  */
+.frame {
+  display: flex;
+  justify-content: center;
+  padding: 6px calc(var(--dsh-composer-side-clearance) + 16px) 10px;
+}
+
 .card {
   display: flex;
   flex-direction: column;
-  gap: 10px;
   width: 100%;
-  max-width: calc(min(920px, 100%) + 32px);
-  box-sizing: border-box;
-  margin-bottom: 8px;
-  padding: 12px 16px 10px;
+  max-width: var(--dsh-chat-content-width);
+  max-height: min(60vh, 520px);
+  padding: 0 0 10px;
   border: 0;
-  --dsw-elevation-stroke-color: var(--dsw-alias-border-l3);
-  border-radius: 16px;
-  background: var(--dsw-alias-bg-layer-1);
-  box-shadow: var(--dsw-elevation-soft);
-  font: var(--dsw-font-s-14);
+  --dsw-elevation-stroke-color: var(--dsw-alias-border-l2-darkmode-thin);
+  border-radius: var(--dsw-radius-xl);
+  background: var(--dsw-specific-input-major);
+  box-shadow: var(--dsw-elevation-panel);
+  color: var(--dsw-alias-label-primary);
+  overflow: hidden;
+  --dsh-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2);
+  --dsh-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
 }
 
-.head {
+.card,
+.card * {
+  box-sizing: border-box;
+}
+
+.header {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-shrink: 0;
+  padding: 20px 16px 0 24px;
+}
+
+.headingBlock {
+  min-width: 0;
+}
+
+.eyebrow {
+  margin-bottom: 5px;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 11px;
+  line-height: 16px;
 }
 
 .title {
-  color: var(--dsw-alias-label-primary);
-  font: var(--dsw-font-xs-strong-13);
-}
-
-.origin {
-  color: var(--dsw-alias-label-tertiary);
-  font: var(--dsw-font-xxxs-11);
-}
-
-.question {
-  color: var(--dsw-alias-label-primary);
-  font: var(--dsw-font-s-14);
+  margin: 0;
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 500;
 }
 
 .detail {
-  margin: 0;
-  color: var(--dsw-alias-label-secondary);
-  font: var(--dsw-font-xxs-12);
-  white-space: pre-wrap;
+  margin: 0 2px 8px;
+}
+
+.body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .options {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  flex-direction: column;
+  gap: 1px;
+  margin: 8px 0 0;
+  padding: 4px 12px;
 }
 
 .option {
-  box-sizing: border-box;
-  padding: 5px 12px;
-  border: 0.5px solid var(--dsw-alias-border-l3);
-  border-radius: 999px;
-  background: var(--dsw-alias-bg-layer-1);
-  color: var(--dsw-alias-label-secondary);
-  font: var(--dsw-font-xxs-12);
-  cursor: pointer;
-  transition: background-color var(--ds-transition-duration-fast) var(--ds-ease-in-out);
-}
-
-.option:hover {
-  background: var(--dsw-alias-interactive-bg-hover);
-  color: var(--dsw-alias-label-primary);
-}
-
-.option[aria-pressed='true'] {
-  border-color: var(--dsw-alias-state-business-primary);
-  background: var(--dsw-alias-state-business-tertiary);
-  color: var(--dsw-alias-label-primary-bluish);
-}
-
-.optionDescription {
-  color: var(--dsw-alias-label-caption);
-  font: var(--dsw-font-xxxs-11);
-}
-
-.other {
-  box-sizing: border-box;
-  width: 100%;
-  padding: 6px 10px;
-  border: 0.5px solid var(--dsw-alias-border-l2);
-  border-radius: 8px;
-  background: transparent;
-  color: var(--dsw-alias-label-primary);
-  font: inherit;
-}
-
-.other::placeholder {
-  color: var(--dsw-alias-placeholder);
-}
-
-.other:focus-visible {
-  outline: 1px solid var(--dsw-alias-state-business-primary);
-}
-
-.bar {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
-}
-
-.spacer {
-  flex: 1;
-}
-
-.hint,
-.sent {
-  color: var(--dsw-alias-label-tertiary);
-  font: var(--dsw-font-xxxs-11);
-}
-
-.error {
-  color: var(--dsw-alias-state-error-primary);
-  font: var(--dsw-font-xxxs-11);
-}
-
-.submit {
-  flex: none;
-  padding: 5px 14px;
-  border: 0;
-  border-radius: 999px;
-  background: var(--dsw-alias-button-info-fill);
-  color: #fff;
-  font: var(--dsw-font-xxs-12);
+  width: 100%;
+  min-height: 40px;
+  flex-shrink: 0;
+  padding: 8px 12px 8px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--dsw-radius-md);
+  background: transparent;
+  color: inherit;
+  text-align: left;
   cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
 }
 
-.submit:disabled {
+.option:hover:not(:disabled),
+.optionSelected {
   background: var(--dsw-alias-interactive-bg-hover);
-  color: var(--dsw-alias-label-tertiary);
+}
+
+.optionSelected {
+  border-color: var(--dsw-alias-border-l2);
+}
+
+.option:disabled {
   cursor: default;
 }
 
-/*
- * The line that says questions are waiting in a Session this reader is *not*
- * looking at. Without it a question could expire unread, because the card only
- * ever appears in the pane of the Session that asked it.
- */
+.number {
+  display: grid;
+  place-items: center;
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  border-radius: var(--dsw-radius-xs);
+  background: var(--dsw-alias-bg-overlay);
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+}
+
+.checkbox {
+  display: grid;
+  place-items: center;
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+}
+
+.checkbox::before {
+  content: '';
+  grid-area: 1 / 1;
+  width: 14px;
+  height: 14px;
+  border: 0.5px solid var(--dsw-alias-border-l4);
+  border-radius: var(--dsw-radius-xs);
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.checkbox > svg {
+  grid-area: 1 / 1;
+}
+
+.checkboxChecked {
+  color: var(--dsw-alias-label-primary-foreground);
+}
+
+.checkboxChecked::before {
+  border-color: var(--dsw-alias-label-primary);
+  background: var(--dsw-alias-label-primary);
+}
+
+.optionCopy {
+  min-width: 0;
+  flex: 1;
+}
+
+.optionLine {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px 6px;
+}
+
+.optionLabel {
+  font-size: 14px;
+  line-height: 24px;
+  font-weight: 500;
+}
+
+.badge {
+  padding: 0 4px;
+  border-radius: var(--dsw-radius-xs);
+  background: var(--dsw-specific-sidebar-nav-item-active-accent);
+  color: var(--dsw-alias-button-info-fill);
+  font-size: 11px;
+  line-height: 18px;
+  font-weight: 600;
+}
+
+.description {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 14px;
+  line-height: 24px;
+  font-weight: 400;
+}
+
+.customRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  min-height: 40px;
+  flex-shrink: 0;
+  padding: 8px 12px 8px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--dsw-radius-md);
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.customRow:hover,
+.customRow:focus-within,
+.customRowActive {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.customRow:focus-within,
+.customRowActive {
+  border-color: var(--dsw-alias-border-l2);
+}
+
+.field {
+  display: grid;
+  min-width: 0;
+  --dsh-answer-field-padding: 0;
+}
+
+.field > * {
+  grid-area: 1 / 1;
+  min-width: 0;
+  padding: var(--dsh-answer-field-padding);
+  font: inherit;
+  font-size: 14px;
+  line-height: 24px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.fieldMirror {
+  box-sizing: content-box;
+  max-height: 144px;
+  overflow: hidden;
+  visibility: hidden;
+}
+
+.fieldInput {
+  resize: none;
+  overflow-y: auto;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--dsw-alias-label-primary);
+  caret-color: var(--dsw-alias-state-business-primary);
+}
+
+.fieldInput::placeholder {
+  color: var(--dsw-alias-label-caption);
+}
+
+.customInline {
+  flex: 1;
+}
+
+.customBlock {
+  min-height: 64px;
+  flex-shrink: 0;
+  margin: 0 12px;
+  border: 0.5px solid var(--dsw-alias-border-l4);
+  border-radius: var(--dsw-radius-lg);
+  background: var(--dsw-alias-bg-module-platform);
+  --dsh-answer-field-padding: 8px 12px;
+}
+
+.customBlock:focus-within {
+  border-color: var(--dsw-alias-state-business-primary);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+  margin-top: 12px;
+  padding: 0 10px 0 18px;
+}
+
+.footerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.feedback {
+  flex: 1;
+  min-height: 16px;
+  color: var(--dsw-alias-state-error-primary);
+  font-size: 11px;
+  line-height: 16px;
+  text-align: right;
+}
+
+/* This console's own line: a question batch waiting in a Session the reader is
+ * not looking at, and the way to go there. The shipped composer has no
+ * equivalent — it only ever shows the Session it was opened in. */
 .elsewhere {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   width: 100%;
   max-width: calc(min(920px, 100%) + 32px);
   box-sizing: border-box;
-  margin-bottom: 8px;
-  padding: 6px 12px;
-  border: 0.5px solid var(--dsw-alias-border-l2);
+  margin: 0 auto 8px;
+  padding: 6px 10px;
   border-radius: 10px;
   background: var(--dsw-alias-state-warn-tertiary);
   color: var(--dsw-alias-label-secondary);
@@ -165,11 +334,46 @@
 }
 
 .elsewhereGo {
-  padding: 0;
   border: 0;
-  background: transparent;
-  color: var(--dsw-alias-label-primary-bluish);
-  font: var(--dsw-font-xxxs-11);
-  text-decoration: underline;
+  padding: 0;
+  background: 0 0;
+  color: var(--dsw-alias-button-info-fill);
+  font: inherit;
   cursor: pointer;
+}
+
+@media (max-width: 720px) {
+  .header {
+    padding: 10px 12px 0 18px;
+  }
+
+  .options {
+    padding: 4px 8px;
+  }
+
+  .title {
+    font-size: 15px;
+    line-height: 21px;
+  }
+
+  .option,
+  .customRow {
+    padding: 8px 6px;
+  }
+
+  .footer {
+    align-items: flex-end;
+    padding: 0 10px;
+  }
+
+  .footerActions {
+    flex-shrink: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .option,
+  .customRow {
+    transition: none;
+  }
 }

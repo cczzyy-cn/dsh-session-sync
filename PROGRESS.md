@@ -8,7 +8,7 @@
 | 项 | 值 |
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
-| 版本 | **`0.10.34`**（配置改到已验证可用的 `plugins.detail.section`）· 上一版 `0.10.33`（`plugins.row.config`，在已发布构建里不产生控件） |
+| 版本 | **`0.10.35`**（问答/审批卡片改用官方面板的样式与标记）· 上一版 `0.10.34`（配置迁到 `plugins.detail.section`） |
 | 部署面 | **2026-09-30 晚**：服务器与本机两个 profile（`web` / `desktop`）都曾钉到 `#v0.10.32`，两端产物 sha256 逐字节相同；服务器 unit 已重启 ⇒ 跑 0.10.32。**0.10.33/0.10.34 的落地读数见 §2 那两节**。实时读数用 `scripts/deploy-status.ps1` 取，不要看这一行 |
 | 服务器（远端） | **已上线 `0.10.32`**（依赖 `#v0.10.32`，lock → `1fb4efc`）· DSH **`0.2.0-rc.1`** · unit `dsh-web.service` active · 3080（绑 `127.0.0.1`）与 8791 都在听 |
 | 本机宿主 | **这个 GUI 跑的是打包版** `DeepSeek Harness.exe`（`resources\app.asar\dsh`，DSH 0.2.0-rc.1），**不是源码 checkout**；它加载的 profile 是 `~/.dsh/profiles/desktop`。`profiles/web` 与 `profiles/desktop` 两个 profile 里都装着本插件 |
@@ -96,7 +96,32 @@
 > 2026-09-25 及以前的推进日志（从"② 的答案"一路到 0.3.x）已归档到 `docs/history-2026-09.md`。
 > 这一段只留本版（0.8.x/0.9.x/0.10.x）的改动与验证；历史文件是当时的推理记录，不要照它实现。
 
-### v0.10.34：配置改到**已验证可用**的 `plugins.detail.section`（2026-09-30 深夜）
+### v0.10.35：问答与审批的卡片改用**官方那两套面板的样式与标记**（2026-10-01 凌晨）
+
+用户要"复制原版 DSH 的 UI"。查清后的结论与做法：
+
+- **官方那两套面板无法 import**（三条已核对的事实）：`packages/client/web/src/seed.ts` 的冻结模块表
+  只有 9 个词；上线下发的 bootstrap 里 66 个客户端条目**只有 4 个**声明 external，且都只是
+  `@deepseek-ai/dsh-api-gateway/client`；那两个包的类因此既拿不到也 new 不出来。**所以"直接用"
+  做不到，只能照搬它们的样式与标记**（就像本包已经在穿 `ui-chat` 的聊天样式）。
+- **照搬的内容**：`QuestionComposer.module.css`（460 行）与 `ApprovalPanel.module.css`（67 行）
+  逐字复制（值全是自带 token，所以跟随主题/字号/细线变化）；标记改用官方同一套类名与结构
+  （`frame/card/header/headingBlock/eyebrow/title/body/options/option/number/checkbox/badge/
+  description/customRow/field/fieldMirror/fieldInput/footer/feedback`；审批侧
+  `root/card/strip/body/headline/command/actionRow`），并接上官方 primitives
+  （`Button`、`StateDot`、`MarkdownText`、`IconCheckOutlineRegular`）。
+- **两处刻意的差异**（都写在样式表注释里）：① 官方问答是**一题一屏分页**，本控制台仍**一次显示整批**
+  ——读者是在看另一台机器，把一半问题藏在翻页后面会答错；② 官方审批面板只有 strip/headline/命令/两个
+  按钮，本包多三行：哪台机器、镜像里已找不到那次调用、以及源站拒绝的理由。
+- 顺带落地一条官方约定：选项标签的 `(recommended)` / `（推荐）` 后缀由 `parseRecommendedLabel`
+  解析成徽标（纯函数，3 个用例）。
+- **验证**：`client/client.js` 368,125 → **379,160 B**；`lib/index.js` 字节未变 ⇒ 只有浏览器半边变，
+  刷新即可。测试 **167/167（41 suites）**；类型门禁 69 文件 / 0 致命；编码门禁 clean（64 文件）。
+  **外观用产物里编译好的 CSS 与哈希类名静态渲染确认**（编号方块、推荐徽标、选中态、复选框、
+  自定义作答行、748px 卡片与右下「回答」按钮）。**未做真机问答链路验证**：本机 `desktop` profile
+  的控制台列表当时是空的，没找到可打开的镜像会话来触发展示——这是唯一没验到的点，而本次改动只动
+  展示层与数据映射，转达链路此前已验证过（§2 v0.10.4/v0.10.5）。
+
 
 **0.10.33 用的 `plugins.row.config` 在真实构建里不产生配置控件**——这一版换到那条我实测过能用的路。
 
@@ -121,6 +146,8 @@
 - **真机截图确认**（打包版桌面宿主，本 bundle 的卡片页）：表单出现在「包含的组件」之下，
   带**迁移过来的真实值**——本机名称 `DESKTOP-M1EERFC`、`210.16.120.228:8791`、连接密码（掩码显示）、
   监听地址 `0.0.0.0`、监听端口 `8791`、保存/放弃修改与状态行。
+
+### v0.10.34：配置改到**已验证可用**的 `plugins.detail.section`（2026-09-30 深夜）
 
 ### v0.10.33：配置入口从 `settings.section` 迁到插件页（`plugins.row.config`）（2026-09-30 晚）
 
