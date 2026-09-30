@@ -21,25 +21,29 @@
 .frame {
   display: flex;
   justify-content: center;
-  /* The gutter belongs to the console's own composer root (`.composerRoot`,
-     16px), not to this frame: the shipped rule above wanted the composer seat's
-     `--dsh-composer-side-clearance`, and applying either here as well would inset
-     the card 16px more than the input box on each side. */
-  padding: 0;
+  /* Both insets of the console's own input card: `composerRoot` owns the 16px
+     gutter (so this frame adds none), and `composerCard` owes 16px of its own on
+     each side — without that second inset the card ends up TOUCHING the viewport
+     edge on a narrow page while the input box keeps its margin, which is what
+     "narrow page: it fills the width" describes. */
+  padding: 0 16px;
 }
 
 .card {
   display: flex;
   flex-direction: column;
   width: 100%;
-  /* The console's own input box (`composerCard`) is `calc(min(920px, 100%) + 32px)`
-     wide inside the same 16px gutter, and these cards sit *above* it in that
-     column — so the shipped `--dsh-chat-content-width` (748px) is replaced rather
-     than kept: two `max-width` declarations in one rule would leave the shipped
-     one winning, which is exactly the narrower-than-the-input-box card. */
+  /* Exactly the input card's own box (`composerCard`): `calc(min(920px, 100%) +
+     32px)` wide, `border-box`, with 16px of its own on each side so a line of
+     text starts at the same x as the input box's placeholder does. The shipped
+     `--dsh-chat-content-width` (748px) is replaced rather than kept: two
+     `max-width` declarations in one rule leave the shipped one winning. */
   max-width: calc(min(920px, 100%) + 32px);
+  box-sizing: border-box;
+  padding: 0 16px 10px;
+  /* Capped against the viewport with the body scrolling, as the shipped seat is:
+     the option list scrolls so header and footer actions stay reachable. */
   max-height: min(60vh, 520px);
-  padding: 0 0 10px;
   /* Breathing room above the input box; the shipped seat had the composer's own
      margin to do this and this console's card has nothing. */
   margin-bottom: 8px;
@@ -354,13 +358,57 @@
   cursor: pointer;
 }
 
-@media (max-width: 720px) {
-  .header {
-    padding: 10px 12px 0 18px;
-  }
+/* ---------------------------------------------------------------------------
+ * Console geometry. Everything above is the shipped sheet verbatim; the rules
+ * here exist because this console's card is not the composer seat the shipped
+ * one was drawn for. The console's own input card (`composerCard`) is
+ * `calc(min(920px, 100%) + 32px)` wide, `border-box`, inside `composerRoot`'s
+ * 16px gutter, and it carries 16px of its own on each side. So this frame takes
+ * the gutter, the card takes the same width and its own 16px, and the shipped
+ * per-section insets are zeroed: they were measured against a card with no side
+ * padding of its own, and leaving them would indent the title and option rows
+ * 12–24px further than the input box's text.
+ *
+ * This block sits BEFORE the media queries on purpose. The shipped sheet narrows
+ * `.header` and `.options` below 720px; with equal specificity the later rule
+ * wins, and any padding-with-x left in those queries would both override the
+ * wide values (a desktop symptom) and add to the card's own inset (a narrow one).
+ * ------------------------------------------------------------------------- */
+.frame {
+  padding: 0 16px;
+}
 
-  .options {
-    padding: 4px 8px;
+.card {
+  box-sizing: border-box;
+  max-width: calc(min(920px, 100%) + 32px);
+  padding: 0 16px 10px;
+  margin-bottom: 8px;
+}
+
+.header {
+  padding: 20px 0 0;
+}
+
+.detail {
+  margin: 0 0 8px;
+}
+
+.options {
+  padding: 4px 0;
+}
+
+.customBlock {
+  margin: 0;
+}
+
+.footer {
+  padding: 0;
+}
+
+@media (max-width: 720px) {
+  /* Vertical rules only: every horizontal inset is the card's, above. */
+  .header {
+    padding-top: 10px;
   }
 
   .title {
@@ -375,7 +423,6 @@
 
   .footer {
     align-items: flex-end;
-    padding: 0 10px;
   }
 
   .footerActions {
