@@ -183,15 +183,10 @@ if ($VerifyBuild) {
   Note ''
   Note '== artifact freshness =='
   if (-not $checkout) { throw 'no DSH checkout found; cannot rebuild' }
-  $before = @{}
-  foreach ($artifact in 'lib/index.js', 'client/client.js') {
-    $before[$artifact] = (Get-FileHash (Join-Path $package $artifact) -Algorithm SHA256).Hash
-  }
-  & powershell -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'build-and-install.ps1') -Checkout $checkout | Out-Null
-  if ($LASTEXITCODE -ne 0) { throw "build-and-install.ps1 exited $LASTEXITCODE" }
-  foreach ($artifact in $before.Keys) {
-    $after = (Get-FileHash (Join-Path $package $artifact) -Algorithm SHA256).Hash
-    $verdict = if ($after -eq $before[$artifact]) { 'unchanged' } else { 'CHANGED - the committed artifact is stale' }
-    Note "$artifact  $verdict"
-  }
+  # The comparison, not a hash equality: the client bundle contains the absolute
+  # path it was built under, and its CSS-Module class names are fingerprinted from
+  # that path, so only the Host bundle can be byte-identical across machines.
+  # `-Restore` leaves the committed artifacts in place; a nonzero exit throws.
+  & powershell -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'compare-artifacts.ps1') -Checkout $checkout -Restore
+  if ($LASTEXITCODE -ne 0) { throw "compare-artifacts.ps1 exited $LASTEXITCODE" }
 }

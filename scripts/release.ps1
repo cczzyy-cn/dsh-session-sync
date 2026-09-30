@@ -10,8 +10,10 @@
 # What it checks before it tags anything, all of it locally:
 #   1. the version in `package.json` is not already tagged here or on origin;
 #   2. `lib/` and `client/` are the artifacts of these sources — the built Host
-#      half reports the same version, and a regular build of the working tree
-#      changes neither byte (a stale artifact is a deployment of other code);
+#      half reports the same version, and a rebuild produces the same artifacts
+#      (the Host half byte for byte; the client half past the build root, which
+#      its CSS-Module class names are fingerprinted from — see
+#      `compare-artifacts.ps1`);
 #   3. the two gates and the test suite pass.
 # Only then does it tag. It never touches the repository's git config: the token
 # is read from Windows Credential Manager and handed to git as a one-shot header.
@@ -28,8 +30,11 @@ param(
   [switch]$NoPush,
   # Verify and report, tag nothing.
   [switch]$DryRun,
-  # Skip the test suite and the bundle-freshness build (gates still run).
+  # Skip the test suite (the gates and the artifact comparison still run).
   [switch]$SkipTests,
+  # Skip the rebuild-and-compare step that proves the committed bundles are the
+  # bundles of these sources. Only for a machine without a DSH checkout.
+  [switch]$SkipBuildCheck,
   # Windows Credential Manager target holding the GitHub token.
   [string]$CredentialTarget = 'gh:github.com:cczzyy-cn'
 )
@@ -121,26 +126,17 @@ $reported = (& node -e "import('file:///$entry').then(m => process.stdout.write(
 if ($reported -ne $version) { Fail "lib/index.js states '$reported' but package.json says '$version'" }
 Note "artifacts state $reported"
 
-if (-not $SkipTests) {
-  if (-not $checkout) { Fail 'no DSH checkout found for the bundle-freshness build; set DSH_CHECKOUT or pass -SkipTests' }
-  $before = @{}
-  foreach ($artifact in 'lib/index.js', 'client/client.js') {
-    $before[$artifact] = (Get-FileHash (Join-Path $package $artifact) -Algorithm SHA256).Hash
+if (-not $SkipBuildCheck) {
+  if (-not $checkout) { Fail 'no DSH checkout found for the artifact comparison; set DSH_CHECKOUT or pass -SkipBuildCheck' }
+  # Byte identity is not the right question for the client bundle: tsdown
+  # fingerprints its CSS-Module class names from the *absolute* source path, so
+  # the committed bundle (built under another user's directory) can never match
+  # byte for byte here. `compare-artifacts.ps1` compares past that and says which
+  # of the two it found; it restores the committed bundles when it is done.
+  & powershell -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'compare-artifacts.ps1') -Checkout $checkout -Restore
+  if ($LASTEXITCODE -ne 0) {
+    Fail 'the committed bundles are not what these sources build to; commit a rebuild (scripts/build-and-install.ps1)'
   }
-  Note 'rebuilding to confirm the committed artifacts match these sources ...'
-  & powershell -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'build-and-install.ps1') -Checkout $checkout | Out-Null
-  if ($LASTEXITCODE -ne 0) { Fail "build-and-install.ps1 exited $LASTEXITCODE" }
-  # The build must not change anything: identical hashes are the evidence that
-  # what is committed is what these sources compile to. tsdown removes the
-  # junction itself when build-and-install is the caller, and that removal is the
-  # only working-tree change a clean build is allowed to make.
-  foreach ($artifact in $before.Keys) {
-    $after = (Get-FileHash (Join-Path $package $artifact) -Algorithm SHA256).Hash
-    if ($after -ne $before[$artifact]) {
-      Fail "a rebuild of these sources changed $artifact; commit the built artifact (the deploy installs the commit, not this directory)"
-    }
-  }
-  Note 'artifacts are identical to a fresh build of these sources'
 }
 
 # --- 3. the gates ------------------------------------------------------------

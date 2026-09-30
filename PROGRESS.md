@@ -26,6 +26,7 @@
 | 端到端脚本 | `scripts/e2e-dsh.ps1`：构建工作树 → 两个真 `dsh web` 实例（3098/3099）→ 发布真会话 → 断言镜像 222 条 / 零缺口 / 版本握手 / 掉线再恢复，跑完自清理。**实测 all checks passed**；**尚未覆盖提问竞速**（见 §4） |
 | 文档 | `PROGRESS.md` 现状 + 本版日志 + 手册；2026-09-25 及以前归档在 `docs/history-2026-09.md`；计划在 `docs/project-plan.md`；提问那条的设计分析在 `docs/analysis-agent-team-profile.md` |
 | 版本握手 | `state.pluginVersion`（本机）+ `machines[].pluginVersion`（各源站自报）；设置页显示并在不一致时标红；`build-and-install.ps1` 会核对产物自报的版本 |
+| 发版与读数 | `scripts/release.ps1`（校验：版本未被本地/远端打过 tag、产物=源码、门禁+测试 → 打 tag → 推分支与 tag；凭据仍走凭据管理器，不碰仓库配置）· `scripts/deploy-status.ps1`（一条命令读出四个面各自是什么版本）· `scripts/compare-artifacts.ps1`（产物 vs 源码，三档判定）。用法与两条实现坑见 §5 |
 
 ### 未落地的一批：0.10.29 / 0.10.30 / 0.10.31（2026-09-30 实测）
 
@@ -1178,7 +1179,55 @@ pnpm add "github:cczzyy-cn/dsh-session-sync#v0.10.0" --reporter=append-only
 
 ## 5. 操作手册（可复制）
 
-**发一版：提交 + 打 tag + 推送**（本仓库无 gh、无 TTY；token 在 Windows 凭据管理器里）
+**0) 先看四个面各是什么版本**（0.10.31 那一批"一处都没上线"就是靠它一眼看出来的）
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/deploy-status.ps1            # 含服务器
+powershell -ExecutionPolicy Bypass -File scripts/deploy-status.ps1 -SkipRemote
+powershell -ExecutionPolicy Bypass -File scripts/deploy-status.ps1 -VerifyBuild   # 顺带证明产物=源码
+```
+
+它逐面打印**读数**而不是结论：仓库版本/HEAD/tag/产物哈希、安装副本的版本与两个设置层标记
+（`settings.describe` 是否在 bundle 里、`cordis.patch.yml` 有没有 `config:`）、本机 config 与
+`settings.yaml` 的存在性、本机 DSH checkout 版本、以及服务器上的依赖 spec / 安装版本 / unit
+状态 / 端口数 / DSH 版本（**从 unit 的 `npx @deepseek-ai/dsh@<版本>` 读**：profile 树里没有
+`@deepseek-ai`，只有 npx 缓存里有，实测踩过）。
+
+**1) 发一版：`scripts/release.ps1`（提交 + tag + 推送，先校验再动手）**
+
+```powershell
+# 提交信息先写进文件（内嵌引号在 .cmd 下会坏），commit 用 -F
+git commit -F "$env:TEMP\commit-<版本>.txt"
+# 校验并推送：版本未被本地/远端打过 tag、产物=源码、两道门禁+测试通过，然后打 tag 推分支与 tag
+powershell -ExecutionPolicy Bypass -File scripts/release.ps1 -MessageFile "$env:TEMP\tag-<版本>.txt"
+# 只想看结论：-DryRun（不打 tag 不推送）、-SkipTests（跳过测试，门禁与产物比对仍跑）、-NoPush（只打 tag）
+```
+
+**tag 是部署契约的一部分**：profile 依赖钉的是 `#v<版本>`，没打 tag 的提交**装不上**，
+而这个失败要到部署时才显形——0.10.29/30/31 三个提交就是这样推上去却没 tag 的。
+所以脚本把"先校验、后打 tag"写死，并且**不碰仓库的 git 配置**：token 从 Windows 凭据管理器
+读、按 UTF-8 解码，以 `http.https://github.com/.extraHeader=Authorization: Basic <b64>` 一次性
+交给 git（`http.sslBackend=openssl`，理由见 §6）。
+
+**2) 产物是否等于源码：`scripts/compare-artifacts.ps1`**
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/compare-artifacts.ps1 -Restore
+```
+
+判定三档：`identical`（逐字节）、`same apart from the build root`、`DIFFERENT`（产物不是这些源码编出来的）。
+**为什么不能用"字节相等"当门禁**（实测）：客户端产物里嵌着构建时的源文件绝对路径，CSS 模块的
+类名前缀又是按那个路径哈希出来的，所以**换机器/换目录就重建不出同样的字节**——仓库里的客户端产物
+是在 `C:\Users\C\Desktop\…` 构建的，本机在 `C:\Users\14339\Desktop\…`，重建会改 289 行，全是这些路径
+与由它们派生的类名（前缀连大小写形状都不固定：提交版里既有 `SnSagW_card` 也有 `o_HR-W_card`）。
+Host 产物没有这种指纹，必须逐字节相同。掩码只盖"标识符位置 + 6 字符以上前缀"，所以
+`update_`、`cordis_update(` 这类词不会被误伤。
+**两条踩出来的实现坑**（都会让判据永远说"相同"，比门禁缺失更坏）：
+①读完"提交版"再去构建——构建是就地覆盖产物，于是拿重建版跟自己比；必须先取哈希再构建。
+②用 `git show … | Out-String` 读提交版会把 LF 变成 CRLF（这一份相差 7,873 个字符），
+必须用 `git cat-file blob … > 临时文件` 再 `ReadAllText`。
+
+**3) 旧的发一版写法（保留为历史，已被上面取代）**
 
 ```powershell
 # 1) 提交信息写进文件再 -F 传（内嵌引号在 .cmd 下会坏）
@@ -1297,7 +1346,8 @@ ssh -n root@210.16.120.228 "echo <base64> | base64 -d > /tmp/t.sh && bash /tmp/t
 | `printf %s` 经 `.cmd` | 输出空、`EXIT=0` | 用 `echo`（`%` 被 cmd 吃掉） |
 | PowerShell 5.1 读文件 | 中文乱码 | `Get-Content -Encoding UTF8`；执行策略 Restricted 时 `iex (Get-Content … -Raw)` |
 | 等待判据 | 曾空等 900 秒 | 判据必须是**真的会出现**的字符串 |
-| `git push` | 无 gh、无 TTY | 从凭据管理器读 token → 临时改 remote URL → 推 → 还原；提交信息用 `git commit -F`（内嵌引号会坏） |
+| **`git push`** | 无 gh、无 TTY | 从凭据管理器读 token → 临时改 remote URL → 推 → 还原；提交信息用 `git commit -F`（内嵌引号会坏）。现已固化进 `scripts/release.ps1`（用一次性 extraHeader，不改 remote） |
+| **把"产物逐字节相同"当门禁** | 客户端产物换台机器必不相同（CSS 类名前缀按源文件**绝对路径**哈希，产物里还嵌着那个路径），于是门禁要么永远红、要么被写成永远绿 | 判据分档：Host 逐字节；客户端**掩掉构建根与其派生指纹**后比（`scripts/compare-artifacts.ps1`）。同理，**先取"提交版"哈希再构建**——构建就地覆盖产物，事后读等于拿重建版跟自己比 |
 | **探针量错** | 用 `limit=400` 的首条当镜像低端，于是"新历史从下面长出来"完全看不见，误判为卡死 | 量低端用 `limit=4000`；先确认探针测的是不是你以为的那个量 |
 | **点击坐标** | 自己按截图算，偏了 290 像素，于是"按钮点了没反应" | 用 `see(text=true)` 给的 `screen_center`，不要手算 |
 | **JSX 里引用了外层组件的局部变量** | 0.10.18 把 `mirrored?.stats` 写进了 `Conversation` 组件，而 `mirrored` 是父组件 `SessionPanel` 的局部变量 ⇒ 浏览器里整个会话面板**直接崩**（`ReferenceError: mirrored is not defined`），而 `tsdown` 只转译、既有测试也只测 Host 与纯函数，**全绿** | 改了 JSX 的变量引用就做两件事：①`tsc -p tsconfig.json 2>&1 \| Select-String TS2304`（未声明标识符，全项目应为 0）；②取回**服务器实际下发的那份 bundle**，grep 新标识符在、旧模式不在（`plugins/??…&rev=` 那个 combo，单入口是 404）。客户端改动**必须真在浏览器里打开一次**再看结论 |
