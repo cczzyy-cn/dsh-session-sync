@@ -10,7 +10,6 @@
  * Everything the browser sees is read from this service, and every write goes
  * through {@link SessionSyncService.patch}; there is no second source of truth.
  */
-import { hostname } from 'node:os'
 import { join } from 'node:path'
 import {
   serverOrigin,
@@ -27,7 +26,6 @@ import {
   type SyncState,
   type SyncStreamFrame,
 } from '../shared/protocol.ts'
-import { loadConfig, saveConfig } from './config.ts'
 import type {
   ApprovalNext,
   ApprovalOutcomeLike,
@@ -42,10 +40,10 @@ import type {
   WireEvent,
   WorkspaceRegistryLike,
 } from './dsh.ts'
+import { ConfigStore } from './config-store.ts'
 import { SyncHub, type BrowserSink } from './hub.ts'
 import { ApprovalRelay } from './approvals.ts'
 import { InteractionRelay } from './interactions.ts'
-import { resolveHome } from './config.ts'
 import { OriginLink, startSyncServer, type SyncServerHandle } from './transport.ts'
 import { SessionStatsReader } from './session-stats.ts'
 import { pluginVersion } from './version.ts'
@@ -191,6 +189,14 @@ function stepKey(handle: FollowHandle): string {
 
 /** The engine. */
 export class SessionSyncService {
+  /**
+   * The configuration in force, and the store it came from.
+   *
+   * A *snapshot*, not the store: the engine reads a field dozens of times per view
+   * and the settings document re-reads its section on every access. The store is
+   * authoritative, and {@link adoptSettings} is what replaces this snapshot when
+   * the settings document changes underneath a running engine.
+   */
   private config: SyncConfig
   private readonly hub: SyncHub
   private readonly browsers = new Set<BrowserSink>()
@@ -296,8 +302,17 @@ export class SessionSyncService {
 
   private constructor(
     private readonly ctx: HostContext,
-    private readonly home: string,
+    home: string,
     config: SyncConfig,
+    /**
+     * Where configuration reads and writes go.
+     *
+     * Never absent for a service this module built — created instances always have
+     * one — and the reason it is a store rather than a path: the same engine has to
+     * write to the DSH settings document in one composition and to the plugin's own
+     * JSON document in another without knowing which it is talking to.
+     */
+    private readonly store: ConfigStore,
   ) {
     this.config = config
     // The mirror emits data frames; every state frame is assembled here, where
@@ -329,14 +344,47 @@ export class SessionSyncService {
   }
 
   /**
-   * Load the persisted configuration and build the engine.
+   * Resolve the configuration and build the engine.
+   *
+   * The configuration comes from the DSH settings document when the composition
+   * mounts one and this plugin has a configurable row; otherwise it comes from the
+   * plugin's own JSON document, exactly as before. A legacy JSON document is
+   * imported into settings and archived on the first such start (see
+   * `config-store.ts`).
    * @param ctx - the scoped Host context that already resolved `sessionController`.
    * @param home - Harness home directory.
+   * @param declared - the validated row config, when the Loader supplied one.
    * @returns the ready service; the caller decides when to {@link start} it.
    */
-  static async create(ctx: HostContext, home: string): Promise<SessionSyncService> {
-    const config = await loadConfig(home, hostname())
-    return new SessionSyncService(ctx, home, config)
+  static async create(ctx: HostContext, home: string, declared?: unknown): Promise<SessionSyncService> {
+    const store = await ConfigStore.create(ctx, home, declared)
+    return new SessionSyncService(ctx, home, store.current(), store)
+  }
+
+  /**
+   * Adopt the settings document's current values, if it has changed.
+   *
+   * Registered with `settings/document-updated`, so an edit made on the Plugins
+   * page — which the settings service hot-commits into the running plugin — also
+   * reaches a browser session that is already open.
+   * @returns the configuration in force after the re-read.
+   */
+  async adoptSettings(): Promise<SyncConfig> {
+    const previous = this.config
+    await this.store.adoptDocument()
+    const next = this.store.current()
+    this.config = next
+    // A role change made from the generated form must take effect the same way one
+    // made from this plugin's own page does: the listener below would otherwise
+    // leave the previous role running while the page says otherwise.
+    if (previous.isServer !== next.isServer
+      || serverOrigin(previous.serverUrl) !== serverOrigin(next.serverUrl)
+      || previous.listenHost !== next.listenHost
+      || previous.listenPort !== next.listenPort) {
+      await this.applyRole()
+    }
+    this.broadcast({ type: 'state', state: this.view() })
+    return this.config
   }
 
   /** Begin reconciling and bring the configured role up. */
@@ -500,38 +548,18 @@ export class SessionSyncService {
 
   /**
    * Apply one partial configuration write and persist it.
+   *
+   * The write goes to whichever store is live — the DSH settings document when
+   * there is one, the plugin's JSON document otherwise — and the resulting
+   * configuration is what the engine keeps, so the page and the engine cannot
+   * disagree about what was just saved.
    * @param patch - the fields to change; absent fields keep their value.
    * @returns the complete configuration after the write.
    */
   async patch(patch: ConfigPatch): Promise<SyncConfig> {
     const previous = this.config
-    const next: SyncConfig = {
-      machineName: nonEmpty(patch.machineName) ?? previous.machineName,
-      serverUrl: patch.serverUrl === undefined ? previous.serverUrl : patch.serverUrl.trim(),
-      isServer: patch.isServer ?? previous.isServer,
-      password: patch.password === undefined ? previous.password : patch.password,
-      listenHost: nonEmpty(patch.listenHost) ?? previous.listenHost,
-      listenPort: validPort(patch.listenPort) ?? previous.listenPort,
-      syncSessions: { ...previous.syncSessions },
-      approveSessions: { ...previous.approveSessions },
-    }
-    if (patch.sessionSync !== undefined) {
-      if (patch.sessionSync.synced) next.syncSessions[patch.sessionSync.sessionId] = true
-      else delete next.syncSessions[patch.sessionSync.sessionId]
-    }
-    if (patch.sessionApprovals !== undefined) {
-      // Un-publishing a Session drops its approval opt-in in the same write: the
-      // console cannot decide an approval for a Session it cannot see, so leaving
-      // the grant behind would be a switch that reads "on" while doing nothing —
-      // and would silently arm itself again if the Session were published later.
-      if (patch.sessionApprovals.approved && next.syncSessions[patch.sessionApprovals.sessionId] === true) {
-        next.approveSessions[patch.sessionApprovals.sessionId] = true
-      } else {
-        delete next.approveSessions[patch.sessionApprovals.sessionId]
-      }
-    }
-    this.config = next
-    await saveConfig(this.home, next)
+    this.config = await this.store.patch(patch)
+    const next = this.config
 
     const roleChanged = previous.isServer !== next.isServer
       || serverOrigin(previous.serverUrl) !== serverOrigin(next.serverUrl)
@@ -1682,18 +1710,6 @@ function jsonObject(value: unknown): Record<string, unknown> | undefined {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
     ? value as Record<string, unknown>
     : undefined
-}
-
-/** One optional non-empty string. */
-function nonEmpty(value: string | undefined): string | undefined {
-  if (value === undefined) return undefined
-  return value.trim().length > 0 ? value.trim() : undefined
-}
-
-/** One optional listenable port. */
-function validPort(value: number | undefined): number | undefined {
-  if (value === undefined) return undefined
-  return Number.isInteger(value) && value > 0 && value < 65_536 ? value : undefined
 }
 
 /** Mint one client-side prompt identity. */

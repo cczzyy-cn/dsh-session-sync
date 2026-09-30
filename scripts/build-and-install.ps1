@@ -52,6 +52,29 @@ if (-not (Test-Path $junction)) {
   cmd /c mklink /J "$junction" "$Checkout\node_modules" | Out-Null
 }
 
+# The Host half imports `@deepseek-ai/schemastery` for real — it builds the `Config`
+# schema the Plugins page renders — and that import must be bundled rather than
+# externalized, because it is not resolvable from a profile install (DSH ships it
+# only as a vendor tree inside app.asar). Bundling needs the specifier to resolve
+# here first, and the checkout hoists it only into the packages that use it
+# (`packages/*/*/node_modules/@deepseek-ai/schemastery` → `vendor/schemastery`), not
+# into the root the junction above points at. So the two links are added for the
+# build and removed in the same `finally` as the junction: nothing that outlives
+# this script changes, and the encoding gate's rule — no `node_modules` in the
+# repository — still holds.
+$linked = @()
+$vendorRoot = Join-Path (Join-Path $Checkout 'node_modules') '@deepseek-ai'
+foreach ($name in 'schemastery', 'cosmokit') {
+  $link = Join-Path $vendorRoot $name
+  if (Test-Path $link) { continue }
+  $target = Join-Path (Join-Path $Checkout 'vendor') $name
+  if (-not (Test-Path $target)) { throw "no $name under $Checkout\vendor; cannot build the Host half" }
+  New-Item -ItemType Directory -Force -Path $vendorRoot | Out-Null
+  cmd /c mklink /J "$link" "$target" | Out-Null
+  $linked += $link
+  Write-Host "linked $name for the build"
+}
+
 try {
   # The encoding gate runs here as well as in the `prebuild` hook, because this
   # script is the documented build path and a gate that one path skips is not a
@@ -73,6 +96,9 @@ try {
 } finally {
   # The junction must never survive into an install: pnpm would walk it.
   if (Test-Path $junction) { cmd /c rmdir "$junction" | Out-Null }
+  foreach ($link in $linked) {
+    if (Test-Path $link) { cmd /c rmdir "$link" | Out-Null }
+  }
 }
 
 # The version a build states is the one thing a deployment gets checked against,

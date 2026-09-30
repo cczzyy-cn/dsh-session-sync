@@ -74,6 +74,23 @@ export interface HostContext {
     listener: (request: ApprovalRequestLike, next: ApprovalNext) => Promise<ApprovalOutcomeLike>,
     options?: { prepend?: boolean },
   ): () => void
+  /**
+   * Observe one profile entry's configuration form changing.
+   *
+   * Emitted by the `settings` service whenever an entry's resolved values, schema,
+   * or page policy change — including when the plugin's own generated form on the
+   * Plugins page is saved. `ns` is the Loader row's id, which is also the settings
+   * namespace this plugin owns; a listener that ignores every other id is how a
+   * change to *another* plugin stays out of this one's config reads.
+   *
+   * `revision` is the entry's new revision. It is not used here — the plugin
+   * re-reads the section, which reports the revision it read — but it is part of
+   * the shipped signature and declaring it keeps this shape honest.
+   */
+  on(
+    event: 'settings/document-updated',
+    listener: (ns: string, revision: number) => void,
+  ): () => void
 }
 
 /** The continuation that delegates to the answerers behind this one. */

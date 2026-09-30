@@ -1,4 +1,12 @@
 # dsh bundle patch: inserts this plugin into a profile's layer stack.
+#
+# The `config:` mapping is the plugin's configuration now: the DSH settings
+# service reads and writes it (as the profile patch's user layer for this row),
+# and the Plugins page renders it from the `Config` schema the Host half exports.
+# It is deliberately empty: the real values were imported from the plugin's old
+# `dsh-session-sync.json` document on the first start after the migration, and a
+# value written here would be a second source of truth.
 - insert:
     - id: session-sync
       name: 'dsh-session-sync'
+      config: {}

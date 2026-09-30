@@ -4,8 +4,10 @@
  * Two artifacts:
  *  - `lib/index.js` — the Host half. Self-contained ESM: it imports nothing but
  *    Node builtins, so it runs from a real profile install with no workspace
- *    `node_modules` of its own. Every `@deepseek-ai/*` use in the Host sources is
- *    `import type` and is erased here.
+ *    `node_modules` of its own. Other `@deepseek-ai/*` uses in the Host sources are
+ *    `import type` and are erased here; the one real dependency,
+ *    `@deepseek-ai/schemastery`, is bundled and the note below says why it has to
+ *    be rather than being left external.
  *  - `client/client.js` — the browser half, in the exact artifact contract the
  *    client module registry serves: CJS wrapped in
  *    `window.__ModuleLoader__.load({ id, factory })`, with `PLATFORM_MODULES`
@@ -24,6 +26,37 @@ import { transform } from 'lightningcss'
 
 /** Plugin identity: the `__ModuleLoader__.load` id and the style-tag owner. */
 const ID = 'dsh-session-sync'
+
+/**
+ * DSH packages the Host half must **not** import at runtime.
+ *
+ * Empty on purpose, and deliberately spelled out rather than deleted, because the
+ * Host entry looks like it needs one: it imports `@deepseek-ai/schemastery` as a
+ * *value* to build the `Config` schema the Plugins page renders. That import must
+ * be **bundled**, not externalized, and the reason is measurable:
+ *
+ *  - the package is not resolvable from a profile install. From
+ *    `$DSH_HOME/profiles/desktop/node_modules/dsh-session-sync`,
+ *    `import.meta.resolve('@deepseek-ai/schemastery')` fails with
+ *    `ERR_MODULE_NOT_FOUND`; DSH ships it only as a vendor tree inside the
+ *    application bundle (`resources/app.asar` → `vendor/schemastery`), which is not
+ *    a `node_modules` path any bare specifier can reach.
+ *  - so an external there is a start-up failure, not a size saving: the Loader
+ *    reads this module's `Config` export during activation, and the import would
+ *    throw before `apply` was ever called.
+ *  - bundling is safe here. `schemastery` is pure JavaScript with no install script
+ *    or native part, and everything downstream reads the schema as a plain object —
+ *    `schema.meta`, `schema.dict`, `schema.toJSON()` — rather than by identity with
+ *    another copy (`packages/settings/settings/src/schema.ts`).
+ *
+ * The one thing that stays out of the bundle is a Node builtin.
+ */
+const HOST_PEER_MODULES: readonly string[] = []
+
+/** Whether a specifier is supplied by the running Harness rather than this bundle. */
+function isHostPeer(specifier: string): boolean {
+  return HOST_PEER_MODULES.includes(specifier)
+}
 
 /**
  * `PLATFORM_MODULES` from `packages/client/web/src/platform.ts` — the shell
@@ -152,8 +185,8 @@ const hostConfig: UserConfig = {
   dts: false,
   clean: true,
   deps: {
-    neverBundle: (specifier: string) => isBuiltin(specifier),
-    alwaysBundle: (specifier: string) => !isBuiltin(specifier),
+    neverBundle: (specifier: string) => isBuiltin(specifier) || isHostPeer(specifier),
+    alwaysBundle: (specifier: string) => !isBuiltin(specifier) && !isHostPeer(specifier),
   },
 }
 

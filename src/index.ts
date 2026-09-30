@@ -19,6 +19,7 @@ import {
   type RelayedApprovalDecision,
   type SyncStreamFrame,
 } from './shared/protocol.ts'
+import { SETTINGS_NAMESPACE } from './host/config-store.ts'
 import { configPath, resolveHome } from './host/config.ts'
 import type {
   ConnectionLike,
@@ -29,6 +30,8 @@ import type {
 } from './host/dsh.ts'
 import { SessionSyncService } from './host/service.ts'
 import { pluginVersion } from './host/version.ts'
+import Schema from '@deepseek-ai/schemastery'
+import { buildConfigSchema, type Config } from './host/config-schema.ts'
 
 export const name = 'dsh-session-sync'
 
@@ -37,27 +40,55 @@ export const name = 'dsh-session-sync'
  *
  * A profile install has no way to ask a running plugin what it is — the manifest
  * on disk says what was installed, not what this process loaded — so the answer
- * is exported here, where `node -e "import('…/lib/index.js')"` can read it.
+ * is exported here, where `node -e "import('…/lib/index.js")"` can read it.
  */
 export { pluginVersion }
+
+/**
+ * The configuration schema the DSH Plugins page renders.
+ *
+ * This export is the migration: the Loader validates the profile row's `config`
+ * against it, and the `settings` service projects its volatile fields into an
+ * auto-generated form. It is deliberately **not** accompanied by a
+ * `settings.configure({ auto: false })` call — an automatic page is exactly what
+ * the user asked for, and suppressing it would leave the plugin's row with no
+ * config again.
+ */
+export const Config = buildConfigSchema(Schema as Parameters<typeof buildConfigSchema>[0])
 
 /** Largest accepted browser request body, in bytes. */
 const MAX_BODY_BYTES = 1024 * 1024
 
-/** Register the sync engine and its browser surface. */
-export function apply(ctx: HostContext): void {
+/**
+ * Register the sync engine and its browser surface.
+ * @param ctx - the Host context.
+ * @param config - the validated row config; the engine prefers it over the JSON
+ *   document when the settings service has a configurable row for this plugin.
+ */
+export function apply(ctx: HostContext, config: Config): void {
   // A composition without the Session control service has no Sessions to sync;
   // staying parked is the honest outcome, not a failure.
   ctx.inject(['sessionController'], (scoped) => {
-    void initialize(scoped)
+    void initialize(scoped, config)
   })
 }
 
 /** Build the engine, start it, and expose it over HTTP. */
-async function initialize(ctx: HostContext): Promise<void> {
+async function initialize(ctx: HostContext, config: Config): Promise<void> {
   try {
-    const service = await SessionSyncService.create(ctx, resolveHome())
-    ctx.logger.info(`dsh-session-sync: engine ready (config ${configPath(resolveHome())})`)
+    const home = resolveHome()
+    const service = await SessionSyncService.create(ctx, home, config)
+    ctx.logger.info(`dsh-session-sync: engine ready (settings "${SETTINGS_NAMESPACE}", fallback ${configPath(home)})`)
+    // The settings service hot-commits a form edit into the running plugin, but
+    // that reaches the plugin's own Config references — not the engine's snapshot.
+    // This is what carries an edit made on the Plugins page into the engine, so a
+    // role change there starts the listener instead of only being stored.
+    ctx.effect(() => ctx.on('settings/document-updated', (ns) => {
+      if (ns !== SETTINGS_NAMESPACE) return
+      void service.adoptSettings().catch((error: unknown) => {
+        ctx.logger.warn(`dsh-session-sync: could not adopt a settings change: ${describe(error)}`)
+      })
+    }), 'dsh-session-sync: settings changes')
     ctx.effect(() => () => { void service.dispose() }, 'dsh-session-sync: engine')
     // Registered here rather than inside the engine because it is a listener on
     // the composition's own waterfall: the engine decides *what* happens when a
