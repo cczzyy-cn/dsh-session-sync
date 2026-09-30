@@ -20,13 +20,18 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 8px calc(var(--dsh-composer-side-clearance) + 16px) 12px;
+  /* The gutter belongs to the console's own composer root, not to this frame —
+     see the question card's sheet for the same note. */
+  padding: 0;
 }
 
 .card {
   overflow: hidden;
   width: 100%;
-  max-width: var(--dsh-chat-content-width);
+  /* Matches the console's own input box, which these cards sit above; the
+     shipped `--dsh-chat-content-width` would make the card narrower than it. */
+  max-width: calc(min(920px, 100%) + 32px);
+  margin-bottom: 8px;
   border: 1px solid var(--dsw-alias-state-warn-secondary);
   border-radius: var(--dsw-radius-xl);
   background: var(--dsw-specific-input-major);

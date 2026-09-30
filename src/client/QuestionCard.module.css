@@ -21,16 +21,28 @@
 .frame {
   display: flex;
   justify-content: center;
-  padding: 6px calc(var(--dsh-composer-side-clearance) + 16px) 10px;
+  /* The gutter belongs to the console's own composer root (`.composerRoot`,
+     16px), not to this frame: the shipped rule above wanted the composer seat's
+     `--dsh-composer-side-clearance`, and applying either here as well would inset
+     the card 16px more than the input box on each side. */
+  padding: 0;
 }
 
 .card {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: var(--dsh-chat-content-width);
+  /* The console's own input box (`composerCard`) is `calc(min(920px, 100%) + 32px)`
+     wide inside the same 16px gutter, and these cards sit *above* it in that
+     column — so the shipped `--dsh-chat-content-width` (748px) is replaced rather
+     than kept: two `max-width` declarations in one rule would leave the shipped
+     one winning, which is exactly the narrower-than-the-input-box card. */
+  max-width: calc(min(920px, 100%) + 32px);
   max-height: min(60vh, 520px);
   padding: 0 0 10px;
+  /* Breathing room above the input box; the shipped seat had the composer's own
+     margin to do this and this console's card has nothing. */
+  margin-bottom: 8px;
   border: 0;
   --dsw-elevation-stroke-color: var(--dsw-alias-border-l2-darkmode-thin);
   border-radius: var(--dsw-radius-xl);
