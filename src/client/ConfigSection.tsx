@@ -1,9 +1,17 @@
 /**
- * The Session sync settings page.
+ * The Session sync configuration, as the Plugins page renders it.
  *
- * Registered into `settings.section`, so it gets a navigation entry of its own
- * rather than a card inside the plugin tab: the page carries a per-Session list
- * that needs the full column.
+ * Registered into `plugins.row.config` under this bundle's row key. That page
+ * asks a configuration entry twice with different `view` values: `'summary'` for
+ * the one-liner under the row's title (a fallback the page uses when the row
+ * declares no description of its own), and `'page'` for the form itself. A
+ * summary that rendered the form would put the whole page inside a paragraph, so
+ * the two views are separate returns.
+ *
+ * The form keeps talking to this plugin's own `/config` route rather than the
+ * Host `form` the page offers: the form's second half is a per-Session publish
+ * list, which is a patch the Host's field-by-field `mutate` cannot express, and
+ * the route is the same channel `/state` already arrives on.
  *
  * Edits are staged and written on save. Each write is a durable document
  * mutation on the Host, and the switch list is long enough that committing per
@@ -13,15 +21,21 @@ import * as React from 'react'
 import { Button, Input, StateDot, Switch } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { ConfigPatch, LocalSessionRow, SyncConfig } from '../shared/protocol.ts'
 import type { SyncClientSnapshot } from './api.ts'
+import { summaryOf } from './config-entry.ts'
 import type { SessionSyncKey } from './locales.ts'
 import css from './sync.module.css'
 
-/** Props the renderer binds for a `settings.section` entry. */
+/** Props the renderer binds for a `plugins.row.config` entry. */
 export interface ConfigSectionProps {
   /** Localized copy, from the registration's `locale` namespace. */
   t: (key: SessionSyncKey) => string
-  /** Close the settings panel; supplied by the section's owner. */
-  close: () => void
+  /**
+   * Which half of the entry to render. Absent on a build whose page passes no
+   * view, which is the form: that is what the entry is for.
+   */
+  view?: 'summary' | 'page'
+  /** Host values and write actions, when the page supplies them; unused, see above. */
+  form?: unknown
   /** The bound snapshot hook, from the registration's `hooks` compartment. */
   useSync: <Value>(selector: (snapshot: SyncClientSnapshot) => Value) => Value
   /** Write one partial configuration change. */
@@ -58,9 +72,9 @@ function draftOf(config: SyncConfig): Draft {
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'failed'
 
 /**
- * Render the Session sync settings page.
- * @param props - copy, the snapshot hook, and the write actions.
- * @returns the section.
+ * Render the Session sync configuration entry.
+ * @param props - copy, the view the page asked for, the snapshot hook, and the write actions.
+ * @returns the summary line, or the form.
  */
 export function ConfigSection(props: ConfigSectionProps): React.ReactElement {
   const state = props.useSync(snapshot => snapshot)
@@ -80,6 +94,8 @@ export function ConfigSection(props: ConfigSectionProps): React.ReactElement {
     if (dirtyRef.current) return
     setDraft(draftOf(state.config))
   }, [state.config])
+
+  if (props.view === 'summary') return <span>{summaryOf(t, state.config)}</span>
 
   const edit = (patch: Partial<Draft>): void => {
     setDraft(current => ({ ...current, ...patch }))

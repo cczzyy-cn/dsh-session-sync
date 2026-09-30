@@ -9,7 +9,6 @@
 export const NS = 'sessionSync'
 
 export const zh = {
-  sectionNav: '会话同步',
   sectionTitle: '会话同步',
   sectionDescription: '把本机选定的会话实时同步到同步服务器；也可以让本机作为服务器，接受其他机器的会话。',
 
@@ -353,7 +352,6 @@ export type SessionSyncKey = keyof typeof zh
 export type SessionSyncTranslate = (key: SessionSyncKey, values?: Record<string, string | number>) => string
 
 export const en: Record<SessionSyncKey, string> = {
-  sectionNav: 'Session sync',
   sectionTitle: 'Session sync',
   sectionDescription: 'Publish selected Sessions on this machine to a sync server, or serve as that server for other machines.',
 

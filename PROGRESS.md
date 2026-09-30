@@ -8,12 +8,13 @@
 | 项 | 值 |
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
-| 版本 | **`0.10.32`**（tag `v0.10.32` → `15bc8e9`）· 内容是把 0.10.29–0.10.31 落地 + 文档中文化，**无代码改动** |
-| 部署面 | **2026-09-30 晚已落地**：服务器与本机 profile 都钉 `#v0.10.32`（lock → `15bc8e98…`），两端 `lib/index.js` 与 `client/client.js` 的 sha256 **逐字节相同**；服务器 `dsh-web.service` 已重启（12:38:55 UTC）⇒ 那边**已在跑 0.10.32**。**本机运行进程仍是 0.10.28**（pid 884 启于 20:11:45，早于这次安装）⇒ Host 半边要一次本机重启才生效，会杀掉正在跑的会话，留给用户。实时读数用 `scripts/deploy-status.ps1` 取，不要看这一行 |
-| 服务器（远端） | **已上线 `0.10.28`**（profile 依赖钉 `github:cczzyy-cn/dsh-session-sync#v0.10.28`）· DSH **`0.2.0-rc.1`** · unit `dsh-web.service` active · 3080（绑 `127.0.0.1`）与 8791 都在听（实测 `ss -lntp`） |
-| 本机（源站） | profile 装 **`0.10.28`**（其 `lib/index.js` 里 `settings.describe` 命中 **0** 次，`cordis.patch.yml` 无 `config:` ⇒ 设置层确实没跑起来）· **本机依赖是裸 `github:cczzyy-cn/dsh-session-sync`（无 tag）**，服务器是 `#v0.10.28`，两边漂移 |
-| 本机 DSH | checkout `C:\Users\14339\Desktop\git\deepseek-harness` = **`0.2.0-rc.1`**（与服务器同版）· `packages/settings/settings` 在树里 ⇒ 设置层这条真源在本机具备条件，但**从未被激活过**（`~/.dsh/settings.yaml` 不存在，只有 9-19 的 `settings.yaml.imported`） |
-| 测试 | **156 通过 / 0 失败**（38 suites，7.3 s）· 本版新增 `settings-config` **27 例 / 7 suites**（单独跑也是 27） |
+| 版本 | **`0.10.33`**（本版：配置入口从 `settings.section` 迁到插件页的 `plugins.row.config`）· 上一版 `0.10.32`（tag `v0.10.32` → `1fb4efc`，落地 0.10.29–0.10.31 + 文档中文化） |
+| 部署面 | **2026-09-30 晚**：服务器与本机两个 profile（`web` / `desktop`）都曾钉到 `#v0.10.32`，两端产物 sha256 逐字节相同；服务器 unit 已重启 ⇒ 跑 0.10.32。**0.10.33 的落地读数见 §2 该节**。实时读数用 `scripts/deploy-status.ps1` 取，不要看这一行 |
+| 服务器（远端） | **已上线 `0.10.32`**（依赖 `#v0.10.32`，lock → `1fb4efc`）· DSH **`0.2.0-rc.1`** · unit `dsh-web.service` active · 3080（绑 `127.0.0.1`）与 8791 都在听 |
+| 本机宿主 | **这个 GUI 跑的是打包版** `DeepSeek Harness.exe`（`resources\app.asar\dsh`，DSH 0.2.0-rc.1），**不是源码 checkout**；它加载的 profile 是 `~/.dsh/profiles/desktop`。`profiles/web` 与 `profiles/desktop` 两个 profile 里都装着本插件 |
+| 本机 DSH checkout | `C:\Users\14339\Desktop\git\deepseek-harness` = **`0.2.0-rc.1`**（与服务器、与打包版同版）· `packages/settings/settings` 与 `packages/client/ui-plugin-manager` 都在树里，是本插件两条契约的**参考实现** |
+| 设置层真源 | **profile 的 `cordis.patch.yml`**（不是 `~/.dsh/settings.yaml`）。实测：迁移成功，`~/.dsh/dsh-session-sync.json` 已归档为 `dsh-session-sync.json.imported-2026-09-30T12-45-17-595Z.json`，值出现在 `profiles/desktop/cordis.patch.yml` 的 `session-sync` 行里 |
+| 测试 | **159 通过 / 0 失败**（39 suites）· 本版新增 `config-entry-view` **3 例**（摘要行的口径：服务器按监听地址、客户端按 serverUrl、空名字不留前导分隔符） |
 | 真机验证 | 仍停在 0.10.5 那批：提问竞速（0.10.4）、控制台**放行**与**拒绝**审批（0.10.5）见 §2。**0.10.29–0.10.31 无真机验证** |
 | 产物 | `lib/index.js` **248,713 B**（sha256 `479fc3cb…`）· `client/client.js` **366,347 B**（sha256 `00921724…`）；两个产物均已含设置层标记（`settings.describe`、`expectedRevision` 命中）。客户端产物自 **0.10.29** 起字节未变 |
 | 编码门禁 | `node scripts/check-encoding.mjs` **clean（60 文件）**；0.10.29 之前它在空转（只扫 3 个文件却报 clean），见 §2 |
@@ -94,6 +95,39 @@
 
 > 2026-09-25 及以前的推进日志（从"② 的答案"一路到 0.3.x）已归档到 `docs/history-2026-09.md`。
 > 这一段只留本版（0.8.x/0.9.x/0.10.x）的改动与验证；历史文件是当时的推理记录，不要照它实现。
+
+### v0.10.33：配置入口从 `settings.section` 迁到插件页（`plugins.row.config`）（2026-09-30 晚）
+
+**症状（用户报）**：设置没有出现在新版官方插件配置页。**先查清了这不是"等重启"。**
+
+- **设置层本来就是活的。** 本机这个 GUI 跑的是**打包版**宿主（`DeepSeek Harness.exe`，
+  `resources\app.asar\dsh`），它加载 `~/.dsh/profiles/desktop`；那个 profile 里装的
+  0.10.32 Host 半边 sha256 `479fc3cb…`（与仓库产物一致，写入时间早于宿主启动）。宿主
+  启动后 1.4 秒，迁移**成功**执行并归档了 `~/.dsh/dsh-session-sync.json`
+  （`…imported-2026-09-30T12-45-17-595Z.json` 里就是用户原来的 machineName/serverUrl/
+  password/两个 syncSessions），值落进 **`profiles/desktop/cordis.patch.yml`** 的
+  `session-sync` 行——20:57:31 还写入过一次（用户在界面上勾选了一个发布会话）。
+- **真凶在插槽契约**（`packages/client/ui-plugin-manager/src/client/slot-contract.ts`）：
+  插件页把"哪些行有配置页"读成 `plugins.row.config` 的**键集合**（`config-ledger.ts` 的
+  `rowConfigKey` = `<包名>#<row id>`），只有键存在，那一行才会多出一个配置控件；而
+  `plugins.item` 的注释直接写着 **OCCUPIED**——那是官方设置页的座位，一个 Host 命名空间
+  配一个伴生包。本插件过去只注册 `settings.section`（旧设置导航里的独立一节），
+  所以插件页判定"这个包没有配置页"，卡片上只有名字、版本、描述和「包含的组件」。
+- **改法**：客户端注册改为 `ctx.slots.inject('plugins.row.config', …)`，
+  `key: 'dsh-session-sync#session-sync'`，删掉 `settings.section` 那条（同一份数据不留两个
+  入口）。用**声明式 inject** 而不是直接 register：这样在没有声明该插槽的旧构建上，注册
+  根本不会发生——保功能、丢外观，与 `retainAgentScope` 那条缝的降级原则一致。
+- **表单仍走本插件自己的 `/config` 路由**，忽略插件页递下来的 Host `form`：这张表单的
+  后半是逐会话发布列表，是 Host 的逐字段 `mutate` 表达不了的补丁，而 `/config` 是同源的
+  既有通道。但**必须处理 `view: 'summary'`**：插件页会拿它当那一行的描述兜底
+  （`RowDetail` 在无描述时渲染 `plugins.row.config` 的 summary），若不区分，整张表单会被
+  塞进那个 `<p>` 里。摘要因此抽成纯函数 `src/client/config-entry.ts` 的 `summaryOf`，
+  由新增的 3 个用例钉住口径（服务器按 `listenHost:listenPort`、客户端按 `serverUrl`、
+  机器名为空时不留前导 `·`）——放在 `.ts` 而不是组件里，是因为测试跑不了 `.tsx`。
+- 验证：`client/client.js` 366,347 → **367,578 B**（新 bundle 里 `plugins.row.config` 命中
+  3 次、`dsh-session-sync#session-sync` 1 次、`settings.section` **0** 次）；`lib/index.js`
+  字节未变（`479fc3cb…`）⇒ **只有浏览器半边变，刷新页面即可，不用重启宿主**；
+  测试 **159/159**（39 suites）；类型门禁 69 文件 / 0 致命；编码门禁 clean（64 文件）。
 
 ### v0.10.32：说明文件中文化、发版与读数固化、以及"产物=源码"这条判据被修对（2026-09-30 晚）
 

@@ -3,9 +3,13 @@
  *
  * Three additive contributions, none of which replaces a shipped cell:
  *
- *  - `settings.section` — the configuration page (machine name, server
- *    address, the server switch, the password, and the per-Session publish
- *    list).
+ *  - `plugins.row.config` — this bundle's configuration, registered under the
+ *    row's key (`dsh-session-sync#session-sync`): machine name, server address,
+ *    the server switch, the password, and the per-Session publish list. It is
+ *    the Plugins page's own slot for a bundle's row, so the page gains a
+ *    configure control on this row; the registration is declared against the
+ *    slot, which is what makes an older build — one that declares no such slot —
+ *    keep working with no contribution rather than a broken one.
  *  - `sidebar.panellist` — the panel row that opens the console. It needs no
  *    host patch and renders in both column widths, which is what makes the panel
  *    reachable in the collapsed rail.
@@ -78,11 +82,15 @@ export function apply(ctx: ClientContext): void {
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'dsh-session-sync: dictionaries')
   const t = ctx.locale.bind(NS)
 
-  ctx.slots.inject('settings.section', () => ctx.slots.register({
-    name: 'settings.section',
-    id: PANEL_ID,
-    order: 30,
-    label: () => t('sectionNav'),
+  ctx.slots.inject('plugins.row.config', () => ctx.slots.register({
+    name: 'plugins.row.config',
+    // `<package name>#<row id>` — the row this bundle's patch inserts. The
+    // Plugins page draws a configure control on that row only when this key is
+    // registered (`config-ledger.ts` collects exactly these keys), so without it
+    // the package's page shows a description and no way to configure it. The
+    // declared slot also caps what the page will look for: `plugins.item` is the
+    // official settings pages' slot and is occupied.
+    key: 'dsh-session-sync#session-sync',
     locale: NS,
     inject: () => ({
       hooks: { sync: client.snapshot },
