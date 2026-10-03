@@ -96,6 +96,74 @@
 > 2026-09-25 及以前的推进日志（从"② 的答案"一路到 0.3.x）已归档到 `docs/history-2026-09.md`。
 > 这一段只留本版（0.8.x/0.9.x/0.10.x）的改动与验证；历史文件是当时的推理记录，不要照它实现。
 
+### 部署面：同步口改为 nginx 在 8791 上终结 TLS，插件监听退回 `127.0.0.1:8792`（2026-10-03）
+
+服务器 `sg-cczzyy` / `dsh.c-zy.cc` / `210.16.120.228`。
+
+**问题（结构性，不是配置疏漏）**：`serverOrigin()`（`src/shared/protocol.ts`）在
+`serverUrl` 不带 scheme 时补 `http://`——这是给局域网与回环准备的默认值。所以一个把
+同步口绑在公网接口上的部署（本次：`0.0.0.0:8791`），会把这台服务器的握手密码与每一段
+被镜像的正文**明文**发过公网。
+
+**改了什么**：
+
+1. 服务器插件设置改成 `listenHost: 127.0.0.1`、`listenPort: 8792`。这两个字段是
+   `.volatile()` 的（`src/host/config-schema.ts`），所以经设置层热提交给正在运行的插件，
+   **不需要重启**。
+2. 新增 `/www/server/panel/vhost/nginx/dsh-session-sync.conf`：`listen 8791 ssl`、
+   `proxy_pass http://127.0.0.1:8792`，证书用
+   `/www/server/panel/vhost/cert/dsh.c-zy.cc/{fullchain,privkey}.pem`。它放在面板自己的
+   站点模板之外，所以面板不会重写它；而面板的 `nginx.conf` 会 include
+   `/www/server/panel/vhost/nginx/*.conf`。
+3. 源站 `serverUrl` 改成 `https://dsh.c-zy.cc:8791`。
+
+**两条承重指令（从本插件自己的设计推出来的）**：
+
+| 指令 | 为什么必须是它 |
+| --- | --- |
+| `client_max_body_size 8m` | 发送方按 `FRAMES_BODY_BYTES`（`src/shared/protocol.ts`，= `MAX_BODY_BYTES` 4 MiB 的一半）切批，单批最大约 **2 MiB**，而服务器量的是**整个 JSON 信封**，比事件数组更大。nginx 默认 1 MiB ⇒ **413**，而发送方会**永远重试同一批** ⇒ 表现成"镜像再也不前进"，不是一次孤立失败 |
+| `proxy_buffering off` + `proxy_read_timeout/proxy_send_timeout 3600s` | 命令通道是一条**单条长连接 SSE**（`GET /stream`，每 `KEEPALIVE_MS` = 15 秒一个 keepalive）。缓冲会压住每一条下行命令；短的读超时会掐断这条本就长期空闲的连接 |
+
+**实测读数**：
+
+| 检查 | 结果 |
+| --- | --- |
+| `ss -lnt`（改设置前 → 改后） | `0.0.0.0:8791` → `127.0.0.1:8792`，**进程没有重启** |
+| `ss -lnt`（加 nginx 后） | `0.0.0.0:8791` 由 **nginx** 持有，插件在 `127.0.0.1:8792` |
+| `curl -sk https://127.0.0.1:8791/` | **401**（TLS 通、插件被到达、未认证） |
+| `curl -s http://127.0.0.1:8791/` | **400**（nginx 的 "plain HTTP request was sent to HTTPS port"） |
+| 外部 `curl -s https://dsh.c-zy.cc:8791/` | **401** |
+| `nginx -T` | 这个 server block 已在加载的配置里 |
+| `/www/wwwlogs/dsh.c-zy.cc.sync.log` | `POST /frames 200`、`POST /publish 200`，client 为 `node` ⇒ 源站的上传是**穿过** TLS 监听者被接受的（也顺带证明没有 413） |
+| 源站 | 重新连上，镜像回到 `holes 0 / behind 0` |
+
+**安全效果**：插件不再绑定任何公网接口——公网只剩 nginx。
+
+**版本读数与随后的对齐**：变更期间服务器插件是 **`0.10.38`**、源站 **`0.10.39`**——两端
+自报版本不同，正是版本握手要暴露的那一类倾斜。同日稍后把服务器也更新了：spec 从
+`#v0.10.38` 改钉 `#v0.10.39`（tag `v0.10.39` → `bfbb2ab`），`pnpm install` 之后**先校验
+产物再重启**——`node_modules/dsh-session-sync/package.json` 报到 `0.10.39`，且
+`lib/index.js` 里 `SETTINGS_CONFLICT` 出现 **2 次**（更新前 **0 次**，即"陈旧 revision
+重读一次再重试"的那处修复确实随这次更新进了服务器半边）。重启 `dsh-web` 后源站自动
+重连：`online true`，同步口日志 `POST /handshake 200`、`POST /publish 200`，镜像约 20 秒
+内重建到 `events 2481 / holes 0 / behind 0`（`behind` 期间瞬时读到 2475，那是 hub 内存
+镜像被清空后的正常重建，不是缺口）。两端版本偏斜至此消除。**注意**：重启会更换控制台
+token，但浏览器 cookie 跨重启仍然有效。
+
+**安全的迁移顺序（在一对活着的两端上）与弄错的失败模式**：
+
+1. 先改插件监听（热生效）：插件必须先**让出公网端口**，nginx 才绑得上 8791；
+2. 再加 nginx 的 TLS server block，让它接管那个端口；
+3. **紧接着**改源站 `serverUrl`——只切换了一半时，仍写着 `http://…:8791` 的源站会拿到
+   **400**（那个端口此刻是 TLS-only 的 nginx），所以这一步不能拖；
+4. 源站多的时候：**先用另一个 TLS 端口**（例如 8793）起 block，把源站**一台一台**迁过去，
+   最后再回收 8791。
+
+**读者最容易弄错的两件事**：① `8m` 不是"客户端一次可以发 8 MiB"的许可，它是给**信封与
+估算偏差**留的余量，事件数组本身仍按 2 MiB 切；② `proxy_buffering off` **不是可选优化**
+——它是单条长连接 SSE 的命令通道能即时到达的前提，缺了它会表现成"接管 prompt 要等很久
+或干脆断"。
+
 ### v0.10.35：问答与审批的卡片改用**官方那两套面板的样式与标记**（2026-10-01 凌晨）
 
 用户要"复制原版 DSH 的 UI"。查清后的结论与做法：

@@ -373,6 +373,104 @@ DSH 围绕镜像会话自己的外壳，而在构建提供 `ctx.sessions.retainA
   dsh --profile web --port 3080 --trusted-host dsh.example.com
   ```
 
+### 一次真实部署：TLS 在 8791 上由 nginx 终结（2026-10-03）
+
+同步传输默认是**明文**的：`serverOrigin()`（`src/shared/protocol.ts`）在配置的
+`serverUrl` 不带 scheme 时补上 `http://`——这是给局域网与回环部署准备的默认值。所以
+一个把同步口绑在公网接口上的部署，会把握手密码与每一段被镜像的正文明文发过公网。
+下面这一次就是这么暴露的（服务器 `dsh.c-zy.cc` / `210.16.120.228`，监听 `0.0.0.0:8791`），
+而修法把一个通用问题答成了可复用的形状：**插件的监听者退到回环，TLS 交给已经在管
+证书的那个反向代理。**
+
+| 面 | 值 |
+| --- | --- |
+| nginx | `listen 8791 ssl`（`server_name dsh.c-zy.cc`），证书用 `/www/server/panel/vhost/cert/dsh.c-zy.cc/{fullchain,privkey}.pem` |
+| 插件监听者 | `listenHost: 127.0.0.1`、`listenPort: 8792` |
+| 源站 | `serverUrl: https://dsh.c-zy.cc:8791` |
+
+三步，每步都有一件必须知道的事：
+
+1. **先把插件的监听地址与端口改成回环。** 这两个字段是 `.volatile()` 的
+   （`src/host/config-schema.ts`），所以改动经设置层**热提交**给正在运行的插件、
+   **不需要重启**——实测：进程没有重启，`ss -lnt` 里那一行就从 `0.0.0.0:8791` 变成
+   `127.0.0.1:8792`。这一步必须在前面：插件没有先让出那个端口，nginx 就绑不上 8791。
+2. **再加这个 server block。** 它放在 `/www/server/panel/vhost/nginx/dsh-session-sync.conf`，
+   而不是面板自己的站点模板里：面板不会重写这个目录之外的文件，而面板的 `nginx.conf`
+   会 `include /www/server/panel/vhost/nginx/*.conf`。
+
+   ```nginx
+   server {
+       listen 8791 ssl;
+       server_name dsh.c-zy.cc;
+
+       ssl_certificate     /www/server/panel/vhost/cert/dsh.c-zy.cc/fullchain.pem;
+       ssl_certificate_key /www/server/panel/vhost/cert/dsh.c-zy.cc/privkey.pem;
+       ssl_protocols TLSv1.2 TLSv1.3;
+       ssl_session_cache shared:SSL:10m;
+       ssl_session_timeout 10m;
+
+       access_log /www/wwwlogs/dsh.c-zy.cc.sync.log;
+       error_log  /www/wwwlogs/dsh.c-zy.cc.sync.error.log;
+
+       client_max_body_size 8m;
+
+       location / {
+           proxy_pass http://127.0.0.1:8792;
+           proxy_http_version 1.1;
+           proxy_set_header Host $http_host;
+           proxy_set_header X-Real-IP $remote_addr;
+           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+           proxy_set_header X-Forwarded-Proto $scheme;
+           proxy_buffering off;
+           proxy_cache off;
+           proxy_connect_timeout 30s;
+           proxy_send_timeout 3600s;
+           proxy_read_timeout 3600s;
+       }
+   }
+   ```
+
+3. **最后把源站的 `serverUrl` 改成 `https://dsh.c-zy.cc:8791`。** `serverOrigin()`
+   见到显式 scheme 就原样保留，所以这一改同时换了协议与端口。
+
+两条指令是**承重**的，各自都能从本插件自己的设计推出来：
+
+- **`client_max_body_size 8m`。** 发送方按 `FRAMES_BODY_BYTES`
+  （`src/shared/protocol.ts`，= `MAX_BODY_BYTES` 4 MiB 的一半）切分一批已发布事件，
+  所以单批最大约 2 MiB；而服务器量的是**整个 JSON 信封**，它比事件数组更大。nginx
+  默认的 1 MiB 装不下：**413** 之后发送方会**永远重试同一批**，表现成"镜像再也不前进"，
+  而不是一次孤立的失败。8 MiB 留的是信封与估算偏差的余量，不是"一次可以发 8 MiB"。
+- **`proxy_buffering off` 加长超时。** 命令通道是一条**单条长连接 SSE**
+  （`GET /stream`，每 `KEEPALIVE_MS` = 15 秒一个 keepalive）。缓冲会把每一条下行命令
+  压到缓冲满或连接关闭才放行；而一个短的读超时会掐断这条本就长期空闲的连接。两者一起，
+  才让"接管 prompt"保持即时。
+
+验证读数（在这台服务器上实测）：
+
+| 检查 | 结果 |
+| --- | --- |
+| `curl -sk https://127.0.0.1:8791/` | **401** —— TLS 通、插件被到达、未认证 |
+| `curl -s http://127.0.0.1:8791/` | **400** —— nginx 的 "plain HTTP request was sent to HTTPS port" |
+| 从外部 `curl -s https://dsh.c-zy.cc:8791/` | **401** |
+| `nginx -T` | 这个 server block 在已加载的配置里 |
+| `ss -lnt` | `0.0.0.0:8791` 由 nginx 持有，插件在 `127.0.0.1:8792` |
+| `/www/wwwlogs/dsh.c-zy.cc.sync.log` | 出现 `POST /frames 200` 与 `POST /publish 200`，client 为 `node` —— 源站的上传确实**穿过** TLS 监听者被接受（也顺带证明没有 413） |
+| 源站 | 重新连上，镜像回到 `holes 0 / behind 0` |
+
+安全效果是这一层最直接的好处：**插件不再绑定任何公网接口**，公网只看得到 nginx。
+
+**安全的迁移顺序**（在一对活着的两端上）：① 先改插件监听，让它不再占用公网端口；
+② 再加 nginx 的 TLS server block，让它接管那个端口；③ **紧接着**改源站的 `serverUrl`。
+第 ③ 步不能拖：只切换了一半的时候，仍写着 `http://…:8791` 的源站会拿到 **400**，因为
+那个端口此刻是 TLS-only 的 nginx。源站多的时候用更稳的做法——**先用另一个 TLS 端口**
+（例如 8793）起这个 block，把源站**一台一台**迁过去，最后再回收 8791：这样任何时刻都
+只有一台源站在切换窗口里。
+
+这不是唯一一种做法，也不该被当成默认。等价的三条：**VPN / 内网**（同步口留在私网里，
+`serverUrl` 继续写明文也可以）、**防火墙加源站白名单**（只放已知源站的 IP 到 8791）、
+**SSH 隧道**（源站经隧道指向服务器的回环端口）。nginx 方案换来的是
+"复用一个已经在管的证书与域名"，代价是多一个必须与插件的两个上限对齐的配置面。
+
 ## 安全
 
 - 插件的浏览器路由要求与 GUI 相同的浏览器会话（`ctx.connection.requestRejection`），
