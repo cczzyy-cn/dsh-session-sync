@@ -19,13 +19,18 @@ import * as React from 'react'
 import { Button, Input, StateDot, Switch } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { ConfigPatch, LocalSessionRow, SyncConfig } from '../shared/protocol.ts'
 import type { SyncClientSnapshot } from './api.ts'
-import type { SessionSyncKey } from './locales.ts'
+import type { SessionSyncKey, SessionSyncTranslate } from './locales.ts'
 import css from './sync.module.css'
 
 /** Props the renderer binds for this entry. */
 export interface ConfigSectionProps {
-  /** Localized copy, from the registration's `locale` namespace. */
-  t: (key: SessionSyncKey) => string
+  /**
+   * Localized copy, from the registration's `locale` namespace.
+   *
+   * The same `{name}`-interpolating seat the console's panel takes, because the
+   * failure line composes the Host's own sentence into a localized frame.
+   */
+  t: SessionSyncTranslate
   /** The bound snapshot hook, from the registration's `hooks` compartment. */
   useSync: <Value>(selector: (snapshot: SyncClientSnapshot) => Value) => Value
   /** Write one partial configuration change. */
@@ -198,7 +203,22 @@ export function ConfigSection(props: ConfigSectionProps): React.ReactElement {
             {t('discard')}
           </Button>
           {status === 'saved' && <span className={css.saved}>{t('saved')}</span>}
-          {status === 'failed' && <span className={css.failed}>{t('saveFailed')}</span>}
+          {status === 'failed' && (
+            <span className={css.failed}>
+              {/* The key is kept and the Host's own sentence is added to it rather
+                  than replaced: that sentence names the field, the revision, or the
+                  refusal, which no generic copy can say. */}
+              {t('saveFailed')}
+              {state.error === undefined ? '' : ` · ${state.error}`}
+            </span>
+          )}
+          {status === 'failed' && state.errorConflict === true && (
+            // Only a conflict that survived the Host's own re-read and retry reaches
+            // this line, and reloading is the one thing that clears it: this form
+            // was seeded from the values it read before the other writer's save, so
+            // pressing save again would lose the same race.
+            <span className={css.failed}>{t('saveConflictHint')}</span>
+          )}
           {dirty && status === 'idle' && <span className={css.dirty}>{t('unsaved')}</span>}
         </div>
       </div>

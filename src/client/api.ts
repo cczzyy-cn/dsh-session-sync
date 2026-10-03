@@ -159,6 +159,16 @@ export interface SyncClientSnapshot {
   decisions: Record<string, { sent?: boolean; error?: string }>
   /** Last failure text, cleared by the next successful action. */
   error?: string
+  /**
+   * Whether that failure was a settings revision conflict the Host already re-read
+   * and retried.
+   *
+   * The one failure a page reload recovers: the values this page's form was seeded
+   * from are behind another writer's save, so saving the same edit again loses the
+   * same race. Taken from the Host's own classification of the refusal, never
+   * guessed from the message text.
+   */
+  errorConflict?: boolean
 }
 
 /** The neutral state rendered before the Host has answered. */
@@ -342,10 +352,14 @@ export class SyncClient {
         config: configResponse.config,
         state: configResponse.state,
         sessions: sessionsResponse.sessions,
+        // Cleared together: a conflict is a property of the failure that is being
+        // cleared, and leaving it behind would keep offering the reload hint for a
+        // failure nothing on screen describes any more.
         error: undefined,
+        errorConflict: false,
       })
     } catch (error: unknown) {
-      this.update({ ready: true, error: describe(error) })
+      this.update({ ready: true, error: describe(error), errorConflict: false })
     }
   }
 
@@ -387,10 +401,20 @@ export class SyncClient {
         state: result.state,
         sessions: result.sessions,
         error: undefined,
+        errorConflict: false,
       })
       return true
     } catch (error: unknown) {
-      this.update({ error: describe(error) })
+      // Re-read before reporting. A refused save means this page's snapshot is what
+      // the Host no longer holds — another writer replaced it, or a half-applied
+      // write landed — and the next attempt must start from the values in force
+      // rather than from the ones that just lost. The read comes first because a
+      // successful one clears `error`, which is what carries the failure text.
+      await this.refresh()
+      this.update({
+        error: describe(error),
+        errorConflict: error instanceof HostFailure && error.conflict,
+      })
       return false
     }
   }
@@ -452,7 +476,7 @@ export class SyncClient {
       this.notify(observer => { observer.loaded(open, transcript) })
       this.update({ transcript, loadingTranscript: false, error: undefined })
     } catch (error: unknown) {
-      this.update({ loadingTranscript: false, error: describe(error) })
+      this.update({ loadingTranscript: false, error: describe(error), errorConflict: false })
     }
   }
 
@@ -529,7 +553,7 @@ export class SyncClient {
           + `&before=${String(first)}`,
         ))
       } catch (error: unknown) {
-        this.update({ loadingOlder: false, error: describe(error) })
+        this.update({ loadingOlder: false, error: describe(error), errorConflict: false })
         return
       }
       if (older.events.length > 0) {
@@ -598,7 +622,7 @@ export class SyncClient {
       })
       return true
     } catch (error: unknown) {
-      this.update({ error: describe(error) })
+      this.update({ error: describe(error), errorConflict: false })
       return false
     }
   }
@@ -843,7 +867,7 @@ export class SyncClient {
       }
       return
     }
-    this.update({ error: frame.message })
+    this.update({ error: frame.message, errorConflict: false })
   }
 
   /**
@@ -876,7 +900,7 @@ export class SyncClient {
       deliver(observer)
     } catch (error: unknown) {
       this.observer = undefined
-      this.update({ error: describe(error) })
+      this.update({ error: describe(error), errorConflict: false })
     }
   }
 
@@ -905,6 +929,27 @@ export class SyncClient {
   }
 }
 
+/**
+ * One refused Host response, with the Host's own classification of it.
+ *
+ * `conflict` is the settings-revision conflict the Host already re-read and retried:
+ * the only refusal here that reloading the page recovers, and therefore the only one
+ * the page may tell the reader to reload for. Every other refusal — a field the form
+ * sent that the schema will not take, a settings row that is gone, a service that
+ * went away — is a fact about the request itself, and a page reload changes nothing
+ * about it.
+ */
+class HostFailure extends Error {
+  /**
+   * @param message - the Host's own sentence, shown to the reader verbatim.
+   * @param conflict - whether the Host classified the refusal as a conflict.
+   */
+  constructor(message: string, readonly conflict: boolean) {
+    super(message)
+    this.name = 'HostFailure'
+  }
+}
+
 /** Read one JSON response, turning a non-2xx into a thrown error carrying the server's reason. */
 async function getJson<T>(path: string): Promise<T> {
   const response = await fetch(path, { cache: 'no-store' })
@@ -926,14 +971,16 @@ async function decode<T>(response: Response): Promise<T> {
   const text = await response.text()
   if (!response.ok) {
     let reason = `HTTP ${String(response.status)}`
+    let conflict = false
     try {
-      const parsed = JSON.parse(text) as { error?: unknown; reason?: unknown }
+      const parsed = JSON.parse(text) as { error?: unknown; reason?: unknown; conflict?: unknown }
       if (typeof parsed.reason === 'string') reason = parsed.reason
       else if (typeof parsed.error === 'string') reason = parsed.error
+      conflict = parsed.conflict === true
     } catch {
       // A non-JSON failure body leaves the status as the reason.
     }
-    throw new Error(reason)
+    throw new HostFailure(reason, conflict)
   }
   return JSON.parse(text) as T
 }

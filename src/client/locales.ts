@@ -27,6 +27,7 @@ export const zh = {
   save: '保存',
   saved: '已保存',
   saveFailed: '保存失败',
+  saveConflictHint: '这些设置在同一时间被别处改动，重新读取后再保存仍被拒绝。请刷新页面，然后重新保存。',
   unsaved: '有未保存的修改',
   discard: '放弃修改',
 
@@ -371,6 +372,7 @@ export const en: Record<SessionSyncKey, string> = {
   save: 'Save',
   saved: 'Saved',
   saveFailed: 'Save failed',
+  saveConflictHint: 'These settings were changed elsewhere at the same time, and saving again after re-reading them was refused too. Reload the page, then save once more.',
   unsaved: 'Unsaved changes',
   discard: 'Discard',
 

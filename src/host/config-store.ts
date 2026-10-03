@@ -336,6 +336,40 @@ export function planPatch(previous: SyncConfig, patch: ConfigPatch): PlannedPatc
 }
 
 /**
+ * The failure after a revision conflict survived the one retry.
+ *
+ * Deliberately its own error rather than the service's own object: the message
+ * carries the upstream sentence — the namespace and both revisions, which is what
+ * names the reason — and then says that a re-read and a second attempt already
+ * happened. That second half is the part the reader needs, because it is what
+ * makes "reload the page" the honest instruction instead of "try again". `code` is
+ * the same marker the service's own refusal carries, so a caller that classifies
+ * conflicts still recognises this one.
+ */
+class SettingsWriteConflictError extends Error {
+  readonly code = 'SETTINGS_CONFLICT'
+  /** The revision the second attempt sent. */
+  readonly expected: number
+  /** The revision the namespace stood at when that attempt was refused. */
+  readonly actual: number
+
+  /**
+   * @param ns - the namespace whose write was refused.
+   * @param expected - the revision the retry sent.
+   * @param actual - the revision now stored.
+   */
+  constructor(ns: string, expected: number, actual: number) {
+    super(
+      `settings namespace "${ns}" changed since it was read (expected revision ${String(expected)}, `
+      + `now ${String(actual)}); a second attempt with the freshly read revision was refused as well`,
+    )
+    this.name = 'SettingsWriteConflictError'
+    this.expected = expected
+    this.actual = actual
+  }
+}
+
+/**
  * The DSH settings document, as this plugin's primary store.
  *
  * The descriptor is cached between reads on purpose: state broadcasts call the
@@ -439,31 +473,79 @@ export class SettingsDocument {
    * Every call carries the revision read immediately before it, so a concurrent
    * edit — from the generated form on the Plugins page, or from `dsh` itself — is
    * refused with a conflict rather than silently overwritten.
+   *
+   * A refusal that *is* that conflict is retried exactly once with a freshly read
+   * revision. Measured on the live deployment: the revision a write carries can go
+   * stale between the read that produced it and the service's own comparison —
+   * the write takes the profile's file lock first, and an earlier write's hot
+   * commit of the row's config can land inside that window — so a save the user
+   * asked for was refused, nothing was written, and the only recovery was a page
+   * reload. One re-read closes that window; a second conflict is reported instead
+   * of retried, because a form seeded from values that are now behind would lose
+   * the same race again.
    * @param planned - the exact changes to persist.
    * @returns the configuration after the write.
    */
   async write(planned: PlannedPatch): Promise<SyncConfig> {
-    const descriptor = await this.refresh()
-    if (descriptor === undefined) {
-      // Named rather than generic: this is either a composition with no row for us
-      // or a row that lost its Config, and the caller's fallback depends on being
-      // able to tell "the settings path is unavailable" from "the write was bad".
-      throw new Error(`dsh-session-sync: settings namespace "${this.namespace}" is not configurable`)
+    const first = await this.refresh()
+    if (first === undefined) throw this.notConfigurable()
+    try {
+      await this.attempt(planned, first.revision)
+    } catch (error: unknown) {
+      // Only a revision conflict, and only once. A schema refusal, a row that is
+      // gone, or a service that went away are different facts about this write,
+      // and re-sending them would produce the same refusal a second time.
+      const refused = settingsConflictOf(error)
+      if (refused === undefined) throw error
+      const retry = await this.refresh()
+      if (retry === undefined) throw this.notConfigurable()
+      try {
+        // The same planned write, not a re-planned one: `planPatch` ran against
+        // the caller's values, and recomputing it against what was just read would
+        // silently drop the edit whenever another writer touched a different field.
+        await this.attempt(planned, retry.revision)
+      } catch (again: unknown) {
+        const repeated = settingsConflictOf(again)
+        if (repeated === undefined) throw again
+        throw new SettingsWriteConflictError(this.namespace, repeated.expected, repeated.actual)
+      }
     }
+    return this.current()
+  }
+
+  /**
+   * One write attempt, with a revision that is current for each of its two calls.
+   *
+   * `update` does not report the revision it left behind, and the `mutate` that
+   * follows must carry it, so the descriptor is re-read between them. Re-reading is
+   * also the only way to see what the merge actually stored.
+   * @param planned - the exact changes to persist.
+   * @param revision - the revision read immediately before this attempt.
+   */
+  private async attempt(planned: PlannedPatch, revision: number): Promise<void> {
+    let current = revision
     if (Object.keys(planned.scalars).length > 0) {
-      await this.requireService().update(this.namespace, planned.scalars, descriptor.revision)
-      // `update` does not report the new revision, and a second write must carry
-      // it. Re-reading is also the only way to see what the merge actually stored.
-      await this.requireRefresh()
+      await this.requireService().update(this.namespace, planned.scalars, current)
+      current = await this.requireRefresh()
     }
     const ops: SettingsPathOp[] = []
     for (const change of planned.syncSessions) ops.push(switchOp(['syncSessions'], change))
     for (const change of planned.approveSessions) ops.push(switchOp(['approveSessions'], change))
     if (ops.length > 0) {
-      await this.requireService().mutate(this.namespace, ops, this.revision)
+      await this.requireService().mutate(this.namespace, ops, current)
       await this.requireRefresh()
     }
-    return this.current()
+  }
+
+  /**
+   * The one error for "this composition has no configurable row for us".
+   *
+   * Named rather than generic: this is either a composition with no row for us or a
+   * row that lost its Config, and the caller's fallback depends on being able to
+   * tell "the settings path is unavailable" from "the write was bad".
+   */
+  private notConfigurable(): Error {
+    return new Error(`dsh-session-sync: settings namespace "${this.namespace}" is not configurable`)
   }
 
   /**
@@ -474,13 +556,15 @@ export class SettingsDocument {
    * exactly as the row had it. That is what makes a second import — after a crash
    * between the writes and the rename — harmless, and what keeps the migration from
    * blanking a field the user set on the Plugins page before the first start.
+   *
+   * No conflict retry here, unlike {@link write}: nobody is waiting on this save,
+   * the write is idempotent, and a refusal leaves the document untouched — so the
+   * next start is already the retry (see {@link importLegacyDocument}).
    * @param legacy - the document, with the keys it actually carried.
    */
   async importLegacy(legacy: LegacyDocument): Promise<void> {
     await this.refresh()
-    if (this.cache === undefined) {
-      throw new Error(`dsh-session-sync: settings namespace "${this.namespace}" is not configurable`)
-    }
+    if (this.cache === undefined) throw this.notConfigurable()
     const current = this.current()
     const scalars: Partial<SyncConfig> = {}
     const fields: (keyof SyncConfig)[] = [
@@ -524,11 +608,15 @@ export class SettingsDocument {
     return settings
   }
 
-  /** Re-read the namespace, refusing to continue when the row has gone. */
-  private async requireRefresh(): Promise<void> {
-    if (await this.refresh() === undefined) {
+  /** Re-read the namespace, refusing to continue when the row has gone.
+   * @returns the revision the descriptor now stands at, for the next call.
+   */
+  private async requireRefresh(): Promise<number> {
+    const descriptor = await this.refresh()
+    if (descriptor === undefined) {
       throw new Error(`dsh-session-sync: settings namespace "${this.namespace}" disappeared mid-write`)
     }
+    return descriptor.revision
   }
 }
 
@@ -547,6 +635,47 @@ export function settingsServiceOf(ctx: ConfigHostLike): SettingsServiceLike | un
   if (typeof candidate.update !== 'function') return undefined
   if (typeof candidate.mutate !== 'function') return undefined
   return candidate as SettingsServiceLike
+}
+
+/**
+ * One refusal that says the write's `expectedRevision` was stale.
+ *
+ * Only the members a caller must read to tell it from every other refusal. The
+ * shape is `SettingsConflictError` from
+ * `@deepseek-ai/dsh-settings` (`packages/settings/settings/src/index.ts`), which a
+ * write raises *inside* `configEditor.edit` and which therefore reaches this plugin
+ * unchanged.
+ */
+export interface SettingsConflictLike {
+  /** The stable machine marker the service attaches to this refusal only. */
+  readonly code: 'SETTINGS_CONFLICT'
+  readonly message: string
+  /** The revision the refused write sent. */
+  readonly expected: number
+  /** The revision the namespace actually stood at. */
+  readonly actual: number
+}
+
+/**
+ * Classify one refusal as a stale-revision conflict, or as something else.
+ *
+ * Keyed on `code`, never on the message: the service documents the code as the
+ * stable marker for this failure, and its sentence is presentation — a plugin that
+ * matched the wording would start retrying (or stop retrying) the day the wording
+ * changed, and the two mistakes are not symmetric. `expected` and `actual` are
+ * required as well, exactly as the shipped settings controller requires them
+ * (`packages/api/settings-controller/src/index.ts`), because they are what makes a
+ * conflict reportable and what a caller needs to log.
+ * @param error - whatever a `settings.update`/`mutate` call threw.
+ * @returns the conflict, or undefined when the refusal means something else.
+ */
+export function settingsConflictOf(error: unknown): SettingsConflictLike | undefined {
+  if (typeof error !== 'object' || error === null) return undefined
+  if (Reflect.get(error, 'code') !== 'SETTINGS_CONFLICT') return undefined
+  if (typeof Reflect.get(error, 'message') !== 'string') return undefined
+  if (typeof Reflect.get(error, 'expected') !== 'number') return undefined
+  if (typeof Reflect.get(error, 'actual') !== 'number') return undefined
+  return error as SettingsConflictLike
 }
 
 /**

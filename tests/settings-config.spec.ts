@@ -8,6 +8,10 @@
  *    (the per-Session maps), each carrying the revision that was last read. The
  *    revision is the whole conflict story: without it a concurrent edit on the
  *    Plugins page is silently overwritten instead of refused.
+ *  - a write refused *for that reason* is retried exactly once with a freshly read
+ *    revision, and a refusal that is not a conflict is not retried at all. A stale
+ *    revision used to wedge a save the user had already made: nothing was written,
+ *    and the only recovery was reloading the page.
  *  - a first start with a legacy `dsh-session-sync.json` imports it and renames it
  *    aside — never deletes it — and a second start imports nothing.
  *  - a composition with no `settings` service still reads and writes the file.
@@ -15,7 +19,10 @@
  * The `settings` stand-in below is deliberately a small state machine rather than
  * a mock that returns canned values: the revision handed to `mutate` is only
  * meaningful if an earlier `update` actually moved it, and a canned value would
- * let a broken stitch pass.
+ * let a broken stitch pass. Its refusal carries the real `SettingsConflictError`
+ * members — `code`, `expected`, `actual` — because the store's retry keys on the
+ * code, and a message-only stand-in would let a text-matching store pass here and
+ * fail against the service.
  */
 import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { homedir, tmpdir } from 'node:os'
@@ -30,6 +37,7 @@ import {
   engineConfigFrom,
   planPatch,
   readConfigDocument,
+  settingsConflictOf,
   type SettingsDescriptorLike,
   type SettingsPathOp,
   type SettingsServiceLike,
@@ -60,6 +68,32 @@ interface RecordedCall {
 }
 
 /**
+ * The refusal the settings service raises for a stale write.
+ *
+ * `SettingsConflictError` in `packages/settings/settings/src/index.ts`: the
+ * sentence, plus the `code`, `expected`, and `actual` members the shipped settings
+ * controller keys its own classification on. Spelled out rather than thrown as a
+ * bare `Error`, because a store that recognised a conflict by its message would
+ * pass against a message-only stand-in here and fail against the real service — the
+ * `code` is the part the service documents as stable.
+ */
+class FakeSettingsConflict extends Error {
+  readonly code = 'SETTINGS_CONFLICT'
+  readonly expected: number
+  readonly actual: number
+
+  constructor(ns: string, expected: number, actual: number) {
+    super(
+      `settings namespace "${ns}" changed since it was read (expected revision ${String(expected)}, `
+      + `now ${String(actual)})`,
+    )
+    this.name = 'SettingsConflictError'
+    this.expected = expected
+    this.actual = actual
+  }
+}
+
+/**
  * A `settings` service with one configurable namespace.
  *
  * It models the three facts the real one imposes on this plugin: the value is the
@@ -74,6 +108,8 @@ interface RecordedCall {
  */
 class FakeSettings implements SettingsServiceLike {
   readonly calls: RecordedCall[] = []
+  /** Concurrent edits queued to land just before this caller's next write. */
+  private readonly pending: (() => void)[] = []
   revision = 0
   actual = 0
   value: Record<string, unknown>
@@ -114,6 +150,23 @@ class FakeSettings implements SettingsServiceLike {
     this.bump()
   }
 
+  /**
+   * Another writer saves once, immediately before this caller's next write.
+   *
+   * The real service always reports the revision it currently stands at, so a
+   * caller's read can only be stale if the document moved *between* that read and
+   * the write — a window a test cannot reach by racing, and the one the store's
+   * retry exists for. Queued one per attempt: two calls model two writers, one
+   * before the first attempt and one before the retry.
+   * @param patch - what the other writer changed, merged the way a save merges.
+   */
+  editElsewhere(patch: Record<string, unknown> = {}): void {
+    this.pending.push(() => {
+      this.value = { ...this.value, ...patch }
+      this.bump()
+    })
+  }
+
   /** Move the service on, as a save elsewhere would. */
   bump(): void {
     this.revision += 1
@@ -123,12 +176,13 @@ class FakeSettings implements SettingsServiceLike {
   /** Refuse a stale revision the way `SettingsConflictError` does. */
   private guard(ns: string, expectedRevision?: number): void {
     assert.equal(ns, SETTINGS_NAMESPACE)
+    // The queued edit lands here and nowhere else: after this caller read its
+    // revision, before the service compares that revision with what it holds.
+    const landed = this.pending.shift()
+    if (landed !== undefined) landed()
     if (expectedRevision === undefined) return
     if (expectedRevision === this.actual) return
-    throw new Error(
-      `settings namespace "${ns}" changed since it was read (expected revision ${String(expectedRevision)}, `
-      + `now ${String(this.actual)})`,
-    )
+    throw new FakeSettingsConflict(ns, expectedRevision, this.actual)
   }
 }
 /** A Host context whose only service is the settings stand-in (or nothing). */
@@ -412,6 +466,110 @@ describe('a patch through the settings document', () => {
     )
     // Nothing was written, so the other writer's value is intact.
     assert.equal(settings.value['machineName'], DOCUMENT.machineName)
+  })
+
+  it('re-reads the revision and retries the same write once when it is refused', async () => {
+    const settings = new FakeSettings({ ...DOCUMENT })
+    const store = await ConfigStore.create(context(settings), await home())
+    // A save lands elsewhere after this caller's read and before its write, so the
+    // revision it sends is stale at the moment the service compares them. This is
+    // the live failure: the descriptor read and the write's own check are not
+    // atomic, because the write takes the profile's file lock in between.
+    settings.editElsewhere({ machineName: 'OTHER-WRITER' })
+
+    const next = await store.patch({
+      serverUrl: 'afterwards.test:8791',
+      sessionSync: { sessionId: 'session-two', synced: true },
+    })
+
+    // Two attempts, and the second carried the revision read in between: a retry
+    // that re-sent the stale one would be refused all over again, and the mutate
+    // after the successful update must carry the revision that update left.
+    assert.deepEqual(settings.calls.map(call => [call.kind, call.revision]), [
+      ['update', 0],
+      ['update', 1],
+      ['mutate', 2],
+    ])
+    // The user's edit landed, and the concurrent writer's field was not clobbered:
+    // the retry re-sends the same plan rather than one recomputed from the section.
+    assert.equal(settings.value['serverUrl'], 'afterwards.test:8791')
+    assert.equal(settings.value['machineName'], 'OTHER-WRITER')
+    assert.equal(next.serverUrl, 'afterwards.test:8791')
+    assert.equal(next.machineName, 'OTHER-WRITER')
+    assert.deepEqual(next.syncSessions, { 'session-one': true, 'session-two': true })
+  })
+
+  it('reports the conflict when the retry is refused too, and never writes the file', async () => {
+    const settings = new FakeSettings({ ...DOCUMENT })
+    const directory = await home()
+    const store = await ConfigStore.create(context(settings), directory)
+    // Two writers, one before each attempt: the retry's freshly read revision is
+    // stale by the time it lands as well, which is the state a third attempt from
+    // the same page would lose again.
+    settings.editElsewhere({ machineName: 'FIRST-WRITER' })
+    settings.editElsewhere({ machineName: 'SECOND-WRITER' })
+
+    await assert.rejects(
+      () => store.patch({ serverUrl: 'never-landed.test:8791' }),
+      (error: Error) => {
+        // The reason, named: not a generic "save failed", and not the service's own
+        // sentence alone either — it also says a re-read and a second attempt
+        // already happened, which is what makes reloading the honest instruction.
+        assert.match(
+          error.message,
+          /settings namespace "session-sync" changed since it was read \(expected revision 1, now 2\)/,
+        )
+        assert.match(error.message, /a second attempt with the freshly read revision was refused as well/)
+        // Still classifiable as a conflict, so a caller reading the code sees the
+        // same kind of failure the service reported.
+        assert.equal(settingsConflictOf(error)?.expected, 1)
+        assert.equal(settingsConflictOf(error)?.actual, 2)
+        return true
+      },
+    )
+    // Exactly two attempts: one retry is the bound, and neither is a loop.
+    assert.equal(settings.calls.filter(call => call.kind === 'update').length, 2)
+    assert.equal(settings.value['serverUrl'], DOCUMENT.serverUrl)
+    // No silent fallback to the JSON document. A settings-enabled store that cannot
+    // write must leave the file alone rather than keep a second source of truth the
+    // settings service never accepted.
+    const names = await readdir(directory)
+    assert.equal(names.includes('dsh-session-sync.json'), false)
+    // What did land — the other writers' saves — is what the engine now holds, so a
+    // refused patch cannot leave memory and storage disagreeing.
+    assert.equal(store.current().machineName, 'SECOND-WRITER')
+    assert.equal(store.current().serverUrl, DOCUMENT.serverUrl)
+  })
+
+  it('does not retry a refusal that is not a revision conflict', async () => {
+    const settings = new FakeSettings({ ...DOCUMENT })
+    const store = await ConfigStore.create(context(settings), await home())
+    let attempts = 0
+    // The shipped refusal for an edit to a field that is not volatile: a fact about
+    // the request, which a second identical request would answer identically.
+    settings.update = async () => {
+      attempts += 1
+      throw new Error('Config field "serverUrl" is not volatile')
+    }
+    await assert.rejects(() => store.patch({ serverUrl: 'x.test:8791' }), /is not volatile/)
+    assert.equal(attempts, 1)
+  })
+
+  it('tells a conflict apart by its code, not by the shape of its sentence', async () => {
+    const settings = new FakeSettings({ ...DOCUMENT })
+    const store = await ConfigStore.create(context(settings), await home())
+    let attempts = 0
+    // A conflict's exact sentence with no `SETTINGS_CONFLICT` code. Matching on the
+    // wording would retry a refusal that has nothing to do with a stale revision —
+    // and would stop retrying the real one the day the service reworded it.
+    settings.update = async () => {
+      attempts += 1
+      throw new Error(
+        'settings namespace "session-sync" changed since it was read (expected revision 0, now 1)',
+      )
+    }
+    await assert.rejects(() => store.patch({ machineName: 'RENAMED' }))
+    assert.equal(attempts, 1)
   })
 
   it('adopts a value the settings page wrote, without touching the file', async () => {

@@ -17,9 +17,10 @@ import {
   type ConfigPatch,
   type RelayedAnswerItem,
   type RelayedApprovalDecision,
+  type SyncConfig,
   type SyncStreamFrame,
 } from './shared/protocol.ts'
-import { SETTINGS_NAMESPACE } from './host/config-store.ts'
+import { SETTINGS_NAMESPACE, settingsConflictOf } from './host/config-store.ts'
 import { configPath, resolveHome } from './host/config.ts'
 import type {
   ConnectionLike,
@@ -167,7 +168,24 @@ async function dispatch(
       return
     }
     const patch = body as ConfigPatch
-    const config = await service.patch(patch)
+    let config: SyncConfig
+    try {
+      config = await service.patch(patch)
+    } catch (error: unknown) {
+      // The reason crosses the wire rather than being flattened to `internal`: the
+      // page could only say "save failed" about a write the settings service
+      // refused for a named reason — a stale revision, a field that is not
+      // volatile — so a failure the user could act on read as an unexplained one.
+      const conflict = settingsConflictOf(error) !== undefined
+      sendJson(response, conflict ? 409 : 500, {
+        error: describe(error),
+        // The classification the page needs in order to tell a lost race apart from
+        // a write that was wrong on its own terms: reloading recovers the first and
+        // does nothing for the second, and the page must not invite a guess.
+        conflict,
+      })
+      return
+    }
     sendJson(response, 200, {
       config,
       state: service.view(),
