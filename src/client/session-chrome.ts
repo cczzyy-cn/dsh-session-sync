@@ -10,7 +10,6 @@
  * nothing here reads a live DSH object: every accessor takes `data` as unknown
  * and falls through to "unknown" rather than throwing.
  */
-import { isDelegationTool } from './delegation.ts'
 import { logStats, type LogContext, type LogStats, type LogUsage } from '../shared/log-stats.ts'
 import type { MirrorEvent } from '../shared/protocol.ts'
 
@@ -32,16 +31,6 @@ export type SessionUsage = LogUsage
 /** Totals the composer's status row renders. */
 export type SessionStats = LogStats
 
-/** One subagent delegation seen in the log. */
-export interface SeenSubagent {
-  callId: string
-  label: string
-  time: number
-  /** Whether a result for the call is in the mirrored window. */
-  done: boolean
-  isError: boolean
-}
-
 /** The policy events a Session writes at its head. */
 export interface SessionPolicy {
   preset?: string
@@ -55,7 +44,6 @@ export interface SessionChrome {
   context?: SessionContext
   policy: SessionPolicy
   stats: SessionStats
-  subagents: SeenSubagent[]
   title?: string
   /** True while the log's last turn has no `turn/end`. */
   running: boolean
@@ -95,9 +83,6 @@ export interface TrajectoryCell {
 /** Longest content excerpt kept for one cell. */
 const EXCERPT_LIMIT = 400
 
-/** Longest subagent label kept. */
-const LABEL_LIMIT = 60
-
 /** Event types the ledger does not show: bookkeeping the reader never asked for. */
 const HIDDEN_EVENTS = new Set([
   'session/end-seed',
@@ -116,7 +101,6 @@ export function sessionChrome(events: readonly MirrorEvent[]): SessionChrome {
   const policy: SessionPolicy = {}
   let title: string | undefined
   let openTurn = false
-  const subagents = new Map<string, SeenSubagent>()
   // Occupancy comes from the shared walk, not from a second reading here: the footer,
   // the ring, and the machine's own answer all have to be one number for one fact.
   const stats = logStats(events)
@@ -187,31 +171,6 @@ export function sessionChrome(events: readonly MirrorEvent[]): SessionChrome {
       title = text(data?.['title']) ?? title
       continue
     }
-
-    if (event.type === 'tool/call') {
-      const callId = text(data?.['callId'])
-      const name = text(data?.['name'])
-      if (callId === undefined || name === undefined) continue
-      // One definition, shared with the ledger's presentation: this used to be a
-      // two-name list, so workflow-driven delegations were drawn above and counted
-      // as zero here.
-      if (!isDelegationTool(name)) continue
-      subagents.set(callId, {
-        callId,
-        label: delegationLabel(data?.['arguments']) ?? name,
-        time: event.time,
-        done: false,
-        isError: false,
-      })
-      continue
-    }
-    if (event.type === 'tool/result') {
-      const callId = text(asRecord(asRecord(data?.['message'])?.['source'])?.['callId'])
-      const seen = callId === undefined ? undefined : subagents.get(callId)
-      if (seen === undefined) continue
-      seen.done = true
-      seen.isError = data?.['error'] !== undefined
-    }
   }
 
   const context: SessionContext | undefined = stats.context
@@ -224,7 +183,6 @@ export function sessionChrome(events: readonly MirrorEvent[]): SessionChrome {
     // machine that owns a Session and a console holding part of it cannot disagree
     // about what the arithmetic *is* — only about how much log each of them has.
     stats,
-    subagents: [...subagents.values()],
     ...(title === undefined ? {} : { title }),
     running: openTurn,
   }
@@ -608,22 +566,6 @@ function summarizeArguments(raw: string): string {
     // Fall through: unparsable arguments are still worth showing verbatim.
   }
   return excerpt(oneLine(raw), 160)
-}
-
-/** The label a subagent delegation carries in its arguments. */
-function delegationLabel(raw: unknown): string | undefined {
-  const args = typeof raw === 'string' ? raw : ''
-  if (args === '') return undefined
-  try {
-    const record = asRecord(JSON.parse(args) as unknown)
-    const description = record === undefined ? undefined : text(record['description'])
-    if (description !== undefined) return excerpt(oneLine(description), LABEL_LIMIT)
-    const prompt = record === undefined ? undefined : text(record['prompt'])
-    if (prompt !== undefined) return excerpt(oneLine(prompt), LABEL_LIMIT)
-  } catch {
-    return undefined
-  }
-  return undefined
 }
 
 /** Every visible result block's text, bounded. */

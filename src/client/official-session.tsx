@@ -885,11 +885,6 @@ export class OfficialSessions implements OfficialBridgeFace, SyncTransportObserv
     this.current?.mirror.setRunning(running)
   }
 
-  /** The panel left its Session. */
-  closed(): void {
-    this.release()
-  }
-
   /** Release the Session the console was drawing, if any. Idempotent. */
   release(): void {
     const current = this.current

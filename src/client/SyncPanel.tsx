@@ -168,8 +168,6 @@ export interface SyncPanelProps {
    * action — a long Session is several round trips through the machine that owns it.
    */
   loadAllOlder: () => Promise<void>
-  /** Leave the open Session. */
-  closeSession: () => void
   /** Send one takeover prompt to the open Session's machine. */
   sendPrompt: (text: string) => Promise<boolean>
   /**
@@ -519,7 +517,6 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
               session={session}
               machineName={open.machineName}
               online={online}
-              closeSession={props.closeSession}
               sendPrompt={props.sendPrompt}
               answerQuestion={props.answerQuestion}
               decideApproval={props.decideApproval}
@@ -596,7 +593,6 @@ function Conversation(props: {
   session: MirroredSession
   machineName: string
   online: boolean
-  closeSession: () => void
   sendPrompt: (text: string) => Promise<boolean>
   /** Send this console's answer to a question the machine relayed. */
   answerQuestion: (machineName: string, questionId: string, answers: RelayedAnswerItem[]) => Promise<boolean>
@@ -909,19 +905,8 @@ function Conversation(props: {
               />
             </Tooltip>
           )}
-          {/* Closing the Session is its own act, and on a narrow panel it is the
-              other way back to the list: it drops the Session rather than covering
-              it, which is what the reader means after finishing with one. */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className={css.narrowOnly}
-            icon={<IconChevronLeftOutlineRegular />}
-            aria-label={t('back')}
-            onClick={props.closeSession}
-          />
           <h2 className={css.viewTitle}>{session.title}</h2>
-          <span className={css.viewMachine}>{props.machineName}</span>
+          <span className={`${css.viewMachine} ${css.viewMachineName}`}>{props.machineName}</span>
           {session.running && (
             <>
               <StateDot state="ongoing" />
@@ -1200,8 +1185,7 @@ function Conversation(props: {
 }
 
 /**
- * The header's right-hand cluster: the model, preset and subagent facts the log
- * reports.
+ * The header's right-hand cluster: the model and preset facts the log reports.
  *
  * Every one of these is a **reading**, not a control: the mirror can see what
  * the owning machine is doing and cannot change it. The shipped session header
@@ -1212,21 +1196,21 @@ function Conversation(props: {
  * shipped meter wherever the shipped pane draws the page, the console's own row
  * otherwise — and the same fact printed twice on one screen reads as two
  * measurements of one window rather than as one reading. It was a ring in this
- * cluster until 0.10.41.
+ * cluster until 0.10.41. A subagent count sat here until 0.10.45: a number that
+ * said how many delegations the mirrored window happened to hold, which is a
+ * reading about the window rather than about the Session, and the delegation rows
+ * themselves already say what was delegated.
  */
 function ChromeChips({ t, chrome }: {
   t: SessionSyncTranslate
   chrome: SessionChrome
 }): React.ReactElement {
-  const { model, policy, subagents } = chrome
+  const { model, policy } = chrome
   const preset = policy.preset === undefined
     ? undefined
     : policy.preset === 'danger-full-access'
       ? t('presetDangerFullAccess')
       : policy.preset
-  const subagentLabel = subagents.length === 0
-    ? t('chromeSubagentsNone')
-    : subagents.map(seen => `${seen.label}${seen.isError ? ' !' : ''}`).join('\n')
   return (
     <span className={css.chromeCluster}>
       {model !== undefined && (
@@ -1242,11 +1226,6 @@ function ChromeChips({ t, chrome }: {
           <span className={css.chromeChip}>{preset}</span>
         </Tooltip>
       )}
-      <Tooltip label={subagentLabel} side="bottom" delayMs={200}>
-        <span className={css.chromeChip}>
-          {`${t('chromeSubagents')} ${String(subagents.length)}`}
-        </span>
-      </Tooltip>
     </span>
   )
 }

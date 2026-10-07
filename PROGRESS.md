@@ -96,6 +96,41 @@
 > 2026-09-25 及以前的推进日志（从"② 的答案"一路到 0.3.x）已归档到 `docs/history-2026-09.md`。
 > 这一段只留本版（0.8.x/0.9.x/0.10.x）的改动与验证；历史文件是当时的推理记录，不要照它实现。
 
+### v0.10.45：控制台头部瘦身——删返回箭头、删子代理计数、窄屏让标题拿到整行（2026-10-07）
+
+用户贴来一张窄屏头部截图（`▤ ‹ Git... DESKTOP-E3OV3NS 原件·scope 整份日志 deepseek-flash·high 子代理 0`），
+三句话："删除原 返回图标按钮，删除子代理显示，优化标题窄屏显示。"
+
+**1. 返回箭头删掉，连带它唯一的那条链路。** `‹` 是 `closeSession` 的**唯一**调用者，所以一起删：面板注入的
+`closeSession`、`SyncPanelProps` 与 `Conversation` 的 prop、`SyncClient.closeSession()`、`SyncTransportObserver.closed()`、
+`official-session.tsx` 的 `closed()` 实现，以及只被它用的 `back` 词条（中英）。`release()` 仍从 `opened()` 与插件卸载
+触达（`index.ts` 的 effect），保留的会话不会因为少了这条路而泄漏。窄屏回列表现在只有一条路：头部那颗 ▤ 让列表整屏盖上来。
+
+**2. 子代理计数删掉，连带它的整个扫描。** 那颗 chip 显示的是"镜像窗口里恰好有多少条委派"，这是关于**窗口**的读数而不是
+关于**会话**的读数（翻页会让它变化），而委派本身在正文里已经是一行行工具卡。所以删 chip 之外还删了 `SeenSubagent`、
+`sessionChrome()` 里的 subagent Map 与它的 `tool/call`/`tool/result` 分支、`delegationLabel`、`LABEL_LIMIT`，以及
+`chromeSubagents`/`chromeSubagentsNone` 两条词条。`delegation.ts` 的 `isDelegationTool` 留着——工具行呈现仍在用。
+
+**3. 窄屏让标题拿到整行**（`sync.module.css` 的 `data-narrow` 块）。让位的是两样**别处已经有**的读数：
+- 机器名：读者刚点的树行的父级就是机器；
+- 模型/预设 chip：输入栏自己那条上就有（官方模型选择器 + 权限控件）。
+
+留给窄屏头部的是路由 chip（`原件 · scope`）、`整份日志` 控件与 `缺 N 条 / 落后 N` 徽标——这三样别处没有。
+
+**实测读数**（隔离的两台真 `dsh web` + Chrome CDP 驱动，同一套装置见 v0.10.44 一节）：
+
+| 读数 | 窄屏 420 | 同尺寸下改动前 | 宽屏 1280 |
+| --- | --- | --- | --- |
+| 标题实际绘制 / 需要 | **151 / 151（完整）** | 0–40 / 106（`Git...`） | 106 / 106 |
+| 机器名显示 | false | true | **true** |
+| 模型/预设 chip | false | true | **true** |
+| 头部按钮 | 只剩「展开会话列表」 | ▤ + ‹ | 只剩「展开会话列表」 |
+| 头部含「子代理」 | **false** | true | **false** |
+| 头部高度 | 76px | 76px | 76px |
+
+门禁：`check-encoding` clean(69 文件) · `tsc` 79 文件（undeclared 0 / 相对导入全解析 / 类型不匹配 0）· 测试 **204 通过 / 0 失败**。
+净改动 +57 / −256。顺带把 `src/client/session-chrome.ts` 整份 CRLF 按 `.gitattributes` 归一为 LF（diff 形状未变）。
+
 ### v0.10.44：窄屏不再问窗口，问**面板自己有多宽**；列表在窄屏整屏接管，收起按钮按官方那一对重排（2026-10-07）
 
 用户贴来一张控制台截图，要求："优化同步会话列表收起按钮，在手机和窄屏状态打开占满全屏。"

@@ -110,8 +110,6 @@ export const zh = {
   ledgerTurn: '轮次',
   chromeModel: '模型',
   chromePreset: '预设',
-  chromeSubagents: '子代理',
-  chromeSubagentsNone: '没有子代理',
   presetDangerFullAccess: '完全权限',
   statusTurns: '轮',
   statusSteps: '步',
@@ -160,7 +158,6 @@ export const zh = {
   tjCacheHit: '缓存命中',
   tjClose: '关闭',
 
-  back: '返回',
   transcriptEmpty: '该会话在服务器侧还没有可显示的内容。',
   transcriptLoading: '读取会话内容…',
   transcriptGone: '该会话已停止同步，内容已从服务器移除。',
@@ -452,8 +449,6 @@ export const en: Record<SessionSyncKey, string> = {
   ledgerTurn: 'Turn',
   chromeModel: 'Model',
   chromePreset: 'Preset',
-  chromeSubagents: 'Subagents',
-  chromeSubagentsNone: 'No subagents',
   presetDangerFullAccess: 'Full access',
   statusTurns: 'turns',
   statusSteps: 'steps',
@@ -502,7 +497,6 @@ export const en: Record<SessionSyncKey, string> = {
   tjCacheHit: 'Cache hit',
   tjClose: 'Close',
 
-  back: 'Back',
   transcriptEmpty: 'This Session has nothing to show on the server yet.',
   transcriptLoading: 'Loading Session…',
   transcriptGone: 'This Session stopped syncing and was removed from the server.',

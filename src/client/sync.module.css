@@ -1500,6 +1500,10 @@
   white-space: nowrap;
 }
 
+/* The header's quiet readings: the machine this Session lives on, and the running
+   label beside its dot. The machine name carries its own class as well, because a
+   narrow header drops it while the running label stays (see the `data-narrow`
+   block at the foot of this sheet). */
 .viewMachine {
   flex: none;
   color: var(--dsw-alias-label-tertiary);
@@ -2108,12 +2112,29 @@
  * console happens to own the whole window — in a narrow centre column of a wide
  * window it kept the 280px column and squeezed the talk column into the remainder.
  *
- * The back chevron shares this mode, but it is not this mode's control: it closes
- * the Session, which is a different act from putting the list over it.
+ * The header wears the same reading, the way the shipped one does: its occupants
+ * shed what the row cannot hold rather than squeezing the title into an ellipsis.
  */
 .panel[data-narrow='true'] .listPane {
   width: 100%;
   border-right: 0;
+}
+
+/*
+ * What steps aside for the title on a narrow header, and why each one can:
+ *
+ *  - the machine name, because the tree row the reader just came from is drawn
+ *    under its machine (a Session's parent level *is* the machine);
+ *  - the model/preset chips, because the composer's own bar carries both — the
+ *    shipped model picker and the permission control sit under this pane already,
+ *    so nothing is only stated here.
+ *
+ * The route chip, the whole-log control and the gap/behind badges stay: those are
+ * readings and controls nothing else on the screen states.
+ */
+.panel[data-narrow='true'] .viewMachineName,
+.panel[data-narrow='true'] .chromeCluster {
+  display: none;
 }
 
 /*
@@ -2135,15 +2156,6 @@
 
 .panel[data-narrow='true'][data-list='hidden'] .listPane {
   display: none;
-}
-
-/* Drawn only where it has something to do: closing a Session the reader is in. */
-.narrowOnly {
-  display: none;
-}
-
-.panel[data-narrow='true'] .narrowOnly {
-  display: inline-flex;
 }
 
 @media (prefers-reduced-motion: reduce) {

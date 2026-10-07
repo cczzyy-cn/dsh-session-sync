@@ -250,8 +250,6 @@ export interface SyncTransportObserver {
   streamed(open: OpenSession, frame: SyncLiveDelta): void
   /** The mirror moved the open Session's running flag. */
   running(open: OpenSession, running: boolean): void
-  /** The console left its remote Session. */
-  closed(): void
 }
 
 /** The sync plugin's browser client. */
@@ -586,12 +584,6 @@ export class SyncClient {
       await new Promise(resolve => { setTimeout(resolve, OLDER_WAIT_MS) })
     }
     this.update({ loadingOlder: false })
-  }
-
-  /** Leave the open remote Session. */
-  closeSession(): void {
-    this.notify(observer => { observer.closed() })
-    this.update({ open: undefined, transcript: undefined, delivery: undefined, live: noLive(), loadingOlder: false })
   }
 
   /**
