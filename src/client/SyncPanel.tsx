@@ -59,6 +59,7 @@ import type { SessionSyncKey, SessionSyncTranslate } from './locales.ts'
 import { ApprovalCard } from './ApprovalCard.tsx'
 import { QuestionCard, QuestionElsewhere } from './QuestionCard.tsx'
 import { pagingScrollTop, type PagingMetrics } from './paging-anchor.ts'
+import { isNarrowPanel, listOverlaysConversation, listPaneShown } from './panel-width.ts'
 import { logCoverage } from './log-coverage.ts'
 import { buildTree } from './tree.ts'
 import { draftKey, type ComposerDrafts } from './composer-draft.ts'
@@ -242,6 +243,33 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
    * then gets the whole width, which is what reading a mirrored Session wants.
    */
   const [listHidden, setListHidden] = React.useState(false)
+  /**
+   * Whether the panel is too narrow for two panes.
+   *
+   * Measured on the panel rather than asked of the window: this console is a
+   * surface inside the Host's frame, so its width is the window's minus whatever
+   * else is docked, and a wide window with a narrow centre column is narrow here.
+   * `panel-width.ts` holds the boundary and what follows from it.
+   */
+  const [narrow, setNarrow] = React.useState(false)
+  const panelRef = React.useRef<HTMLDivElement | null>(null)
+  React.useLayoutEffect(() => {
+    const node = panelRef.current
+    if (node === null || typeof ResizeObserver === 'undefined') return
+    // Measured here, in a layout effect, rather than waited for: this runs before
+    // the browser paints, so a narrow panel never draws the two-pane layout first
+    // and then jumps out of it.
+    const read = (): void => {
+      const width = node.clientWidth
+      // Not laid out (another panel of the frame is showing) is not a width.
+      if (width === 0) return
+      setNarrow(isNarrowPanel(width))
+    }
+    read()
+    const observer = new ResizeObserver(read)
+    observer.observe(node)
+    return () => { observer.disconnect() }
+  }, [])
 
   const machines = state.state.machines
   const open = state.open
@@ -285,17 +313,60 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
     ? questions
     : questions.filter(question => question.machineName !== open.machineName || question.sessionId !== open.sessionId)
 
+  // The list is on screen unless the reader put it away — and always while nothing
+  // is open, because then it is the only pane there is.
+  const hasSession = open !== undefined
+  const listShown = listPaneShown(hasSession, listHidden)
+  const listOverlays = listOverlaysConversation(narrow, listShown)
+  /**
+   * Open a Session, and on a narrow panel put the list away with it.
+   *
+   * There the list is an overlay covering the conversation, so picking a row is
+   * what the reader means by "show me this one" — leaving the overlay up would
+   * answer nothing. Beside a column the list stays where it is, which is the whole
+   * point of the wide layout.
+   */
+  const pick = (machineName: string, sessionId: string): void => {
+    if (narrow) setListHidden(true)
+    void props.openSession(machineName, sessionId)
+  }
+
   return (
-    <div className={css.panel} data-open={open === undefined ? 'false' : 'true'} data-list={listHidden ? 'hidden' : 'shown'}>
-      <aside className={css.listPane} aria-label={t('sessionsTitle')} aria-hidden={listHidden}>
+    <div
+      ref={panelRef}
+      className={css.panel}
+      data-narrow={narrow ? 'true' : 'false'}
+      data-open={open === undefined ? 'false' : 'true'}
+      data-list={listShown ? 'shown' : 'hidden'}
+    >
+      <aside className={css.listPane} aria-label={t('sessionsTitle')} aria-hidden={!listShown}>
         <div className={css.listHead}>
-          <Input
-            icon={<IconSearchOutlineRegular />}
-            value={query}
-            placeholder={t('searchSessions')}
-            aria-label={t('searchSessions')}
-            onChange={(event) => { setQuery(event.target.value) }}
-          />
+          <div className={css.listHeadRow}>
+            <Input
+              icon={<IconSearchOutlineRegular />}
+              value={query}
+              placeholder={t('searchSessions')}
+              aria-label={t('searchSessions')}
+              onChange={(event) => { setQuery(event.target.value) }}
+            />
+            {/* The control sits on the pane it puts away, the way the shipped right
+                sidebar's collapse control sits in that panel's own strip. It is only
+                drawn with a Session open, because putting the list away with nothing
+                open would leave the hero on screen and no control to bring the list
+                back — the way back lives in the conversation header. */}
+            {hasSession && (
+              <Tooltip label={t('listHide')} side="bottom" delayMs={200}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={css.listCollapse}
+                  icon={<IconPanelLeftOutlineRegular />}
+                  aria-label={t('listHide')}
+                  onClick={() => { setListHidden(true) }}
+                />
+              </Tooltip>
+            )}
+          </div>
           <span className={css.listStatus}>
             {state.stream === 'connecting'
               ? `${roleLine(state, t)} · ${t('streamReconnecting')}`
@@ -389,9 +460,7 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
                               ? `${t('openSession')}: ${candidate.title}`
                               : `${t('openSession')}: ${candidate.title} — ${gap}`}
                             title={candidate.title}
-                            onClick={() => {
-                              void props.openSession(group.machine.machineName, candidate.sessionId)
-                            }}
+                            onClick={() => { pick(group.machine.machineName, candidate.sessionId) }}
                           >
                             <span className={css.treeSlot}>
                               {candidate.running && <StateDot state="ongoing" />}
@@ -424,7 +493,10 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
         </div>
       </aside>
 
-      <section className={css.viewPane} aria-label={t('panelTitle')}>
+      {/* On a narrow panel the list is an overlay, so the pane underneath it is not
+          part of what the reader can reach: `aria-hidden` keeps a screen reader in
+          the pane that owns the screen. */}
+      <section className={css.viewPane} aria-label={t('panelTitle')} aria-hidden={listOverlays}>
         {/* Questions for a Session this reader is *not* looking at. The card
             itself can only appear in the pane of the Session that asked, so
             without this line a machine could wait out its whole TTL unseen. */}
@@ -434,7 +506,7 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
             count={elsewhere.length}
             onShow={() => {
               const first = elsewhere[0]
-              if (first !== undefined) void props.openSession(first.machineName, first.sessionId)
+              if (first !== undefined) pick(first.machineName, first.sessionId)
             }}
           />
         )}
@@ -458,8 +530,8 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
               SessionProvider={props.SessionProvider}
               drafts={props.drafts}
               hasTrajectoryView={props.hasTrajectoryView}
-              listHidden={listHidden}
-              toggleList={() => { setListHidden(current => !current) }}
+              listShown={listShown}
+              showList={() => { setListHidden(false) }}
             />
           )}
       </section>
@@ -551,8 +623,10 @@ function Conversation(props: {
   drafts: ComposerDrafts
   /** Whether this build registers the shipped trajectory page. */
   hasTrajectoryView: () => boolean
-  listHidden: boolean
-  toggleList: () => void
+  /** Whether the console's list pane is on screen. */
+  listShown: boolean
+  /** Bring the list pane back, which on a narrow panel means back over this pane. */
+  showList: () => void
 }): React.ReactElement {
   const { t, state, session } = props
   const [tab, setTab] = React.useState<'chat' | 'trajectory'>('chat')
@@ -818,17 +892,27 @@ function Conversation(props: {
     <>
       <header className={css.viewHeader}>
         <div className={css.viewTitleRow}>
-          {/* The list is this console's own column, so putting it away is a
-              control here rather than in the Host sidebar. It sits first, where
-              the eye already looks for the column it controls. */}
+          {/* The way back into the list, in the conversation's own header — the
+              seat the shipped right sidebar gives its expand control, and drawn
+              only while the column is away, as that control is (`ExpandButton`).
+              Putting the list away is the list's own control, on the pane it
+              clears, so this button never has to mean both directions at once. */}
+          {!props.listShown && (
+            <Tooltip label={t('listShow')} side="bottom" delayMs={200}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={css.listExpand}
+                icon={<IconPanelLeftOutlineRegular />}
+                aria-label={t('listShow')}
+                onClick={props.showList}
+              />
+            </Tooltip>
+          )}
+          {/* Closing the Session is its own act, and on a narrow panel it is the
+              other way back to the list: it drops the Session rather than covering
+              it, which is what the reader means after finishing with one. */}
           <Button
-            variant="ghost"
-            size="sm"
-            className={css.listToggle}
-            icon={<IconPanelLeftOutlineRegular />}
-            aria-label={props.listHidden ? t('listShow') : t('listHide')}
-            onClick={props.toggleList}
-          />          <Button
             variant="ghost"
             size="sm"
             className={css.narrowOnly}

@@ -96,6 +96,67 @@
 > 2026-09-25 及以前的推进日志（从"② 的答案"一路到 0.3.x）已归档到 `docs/history-2026-09.md`。
 > 这一段只留本版（0.8.x/0.9.x/0.10.x）的改动与验证；历史文件是当时的推理记录，不要照它实现。
 
+### v0.10.44：窄屏不再问窗口，问**面板自己有多宽**；列表在窄屏整屏接管，收起按钮按官方那一对重排（2026-10-07）
+
+用户贴来一张控制台截图，要求："优化同步会话列表收起按钮，在手机和窄屏状态打开占满全屏。"
+
+**根因一：那条 719px 规则问错了对象。** 旧规则是 `@media (max-width: 719px)`，量的是**窗口**；
+而这个控制台只是 Host 框架里的一个 surface，它的宽度是窗口减去别人占掉的（侧栏展开、分栏、
+手机壳里的中列）。窗口 1280 而面板只有 420 时，媒体查询答"宽"，于是 `flex: none; width: 280px`
+的列表列照留，对话只剩 **139px**（截图上表现为正文逐字换行）。这就是截图里那种"挤成一条"。
+
+**根因二：窄屏下那个 ▤ 按钮是空操作。** `data-open='true'` 时 `.panel[data-open='true'] .listPane
+{ display: none }`（媒体查询块内、位于 `data-list` 规则之后，同特异性下后者生效），所以窄屏开着
+会话时点它什么都不会发生——一个图标同时表示"收起"和"展开"，而且其中一个方向已经死了。
+
+**改了什么**（客户端半边，`src/client/**`，Host 半边未动）：
+
+- 宽度由面板自己量：`ResizeObserver` 写 `data-narrow`（`SyncPanel.tsx` 的 layout effect，
+  阈值与派生结论在 `panel-width.ts`，纯函数、有 8 条用例）。首帧在 layout effect 里同步量，
+  窄面板不会先画两列再跳；0px（另一个面板在显示）不算读数。
+- 窄屏且列表在屏上 → 列表 `position: absolute; inset: 0` 覆盖整屏，对话留在下面（滚动位置不丢）；
+  同时 `.viewPane` 被 `position: relative; z-index: 0` 封成层叠上下文，否则正文里那些 sticky/浮层
+  会盖到列表上。
+- 收起按钮按官方那一对重排：官方右侧栏是「展开按钮在对话头部（**仅收起时**出现）+ 收起按钮在
+  面板自己的条上」（`ExpandButton.tsx` / `SidebarRight.tsx`），照此把收起按钮放到列表头部、
+  搜索框右侧（28×28 方块，抄 `ExpandButton.module.css .button` / `TaskManagerPage.module.css
+  .searchClear`），对话头部只在列表被收起时才画展开按钮。图标不镜像：官方左侧栏
+  （`SidebarRoot` / `HeaderLeadingControls`）开与关用同一个 `IconPanelLeftOutlineRegular`，
+  它表示"面板在哪一侧"，只有右侧栏才镜像。
+- 窄屏点一行会话即收起列表（master-detail）；没有会话打开时列表不可收起（收起后只剩一张 hero
+  且没有控件可拉回——头部那个按钮只存在于有会话的时候）。
+
+**改完的真机读数**（不是推断）：本机两个隔离 home 的真 `dsh web` 实例（`scripts/e2e-dsh.ps1 -Keep`
+的阶段产物）+ Chrome CDP 驱动（`Emulation.setDeviceMetricsOverride` 设视口、真鼠标事件点控件、
+拦截 `/state` 与 `/config` 伪造一台机器两个会话、把 `/events` 挂住不让真空镜像覆盖）：
+
+| 场景 | data-narrow | 列表 | 对话 |
+| --- | --- | --- | --- |
+| 窗口 1280，会话打开 | false | 281px 静态列 | 943px |
+| 视口 420，会话打开 | true | **420px 绝对定位，覆盖整屏** | 420px（在下层） |
+| 420，点列表自己的收起 | true | `display: none` | 420px（头部出现展开按钮） |
+| **窗口 1280、面板 420** | true | **420px 覆盖整屏** | 420px |
+| 同一 420 面板、强制 `narrow=false`（旧口径） | false | 281px 列 | **139px** |
+
+门禁：`check-encoding` clean（69 文件）· `tsc` 79 文件、undeclared 0 / 相对导入全解析 / 类型不匹配 0
+· `node --test` **204 通过 / 0 失败**（新增 `tests/panel-width.spec.ts` 8 例：719/720 边界、
+未布局的 0px、无会话时列表不可收起、覆盖只在窄屏）。产物已重建（`client/client.js`），`lib/` 未变
+⇒ 本机不需要重启（只改客户端）。
+
+**顺手记两条装置事实**（都没改仓库脚本，只在这里留证据）：
+
+1. `scripts/e2e-dsh.ps1` 在这台机器上起不来：`New-StagedProfile` 会整份复制真实的
+   `profiles/web`，其中 `cordis.patch.yml` 钉了 `webserver: { host: "0.0.0.0", port: 3080 }`
+   （那份补丁的注释写着"replace 整个 config"），于是 staged 实例去抢 3080，撞上正在跑的本地
+   `dsh web`，报 `webserver (required) did not activate / EADDRINUSE 0.0.0.0:3080`，`--port 3099`
+   救不了。本次绕法是只改 **staged 副本**的这两行（用完随临时目录删掉）。要修就该在
+   `New-StagedProfile` 里改写 staged 的 webserver host/port。
+2. **客户端改动在本机真浏览器里怎么验**（补上 §2 v0.10.41 那条"控制台只存在于服务器侧、本机
+   验不了"的缺口）：不需要部署到服务器——`e2e-dsh.ps1 -Keep` 起的那台**服务器实例**就装着工作树
+   的字节，用 Chrome 的 `--remote-debugging-port` + `Fetch.enable` 伪造 `/state`/`/config`
+   （只拦这三条数据路由，绝不能拦 `/dsh-session-sync/client.js`，否则插件包本身被吞、页面报
+   "import failed"）、把 `/events` 挂住，就能在任意视口/任意容器宽度下点真控件、看真布局。
+
 ### v0.10.41：轨迹页改用**自带那一页**（ui-trajectory）· 头部占用率环删除 · 输入卡片加左右留白（2026-10-07）
 
 用户先问："同步会话的轨迹页内容，能否与官方 dsh 一致"；改完之后贴来一张服务器控制台的

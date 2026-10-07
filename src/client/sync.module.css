@@ -203,7 +203,13 @@
 
 /* ── console: the two panes ────────────────────────────────────────────── */
 
+/*
+ * `relative` is load-bearing twice over: the list pane rides on top of the
+ * conversation as an absolutely positioned overlay while the panel is narrow, and
+ * this is the box it covers — the panel's own, not the frame's.
+ */
 .panel {
+  position: relative;
   display: flex;
   height: 100%;
   min-height: 0;
@@ -233,6 +239,44 @@
   padding: 10px 10px 8px;
 }
 
+/* The search field and the list's own collapse control share one line: the control
+   sits on the pane it puts away, the way the shipped right sidebar's collapse
+   control sits in that panel's top strip (`SidebarRight`).
+
+   The row is the flex box and the field's own root is stretched into it, rather
+   than the field being handed a class of this sheet's — the same shape the shipped
+   task manager gives a search box with a trailing control
+   (`TaskManagerPage.module.css` `.searchField` and its `> :first-child` rule), so
+   the atom keeps owning its own box and this row only says how wide it may be. */
+.listHeadRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.listHeadRow > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The collapse glyph is the expand glyph: both say where the panel is, not which
+   way it is about to go — the shipped left sidebar wears the same unmirrored
+   `IconPanelLeftOutlineRegular` for closing and for reopening itself
+   (`ui-sidebar` `SidebarRoot` and `HeaderLeadingControls`), and only the right
+   sidebar mirrors it, because there the panel really is on the other side.
+
+   Both controls are also icon-only, so both take the shipped square: 28px with no
+   side padding, which is what the shipped pair does (`ExpandButton.module.css`
+   `.button`) and also the seat-mate rule for a field with a trailing control
+   (`TaskManagerPage.module.css` `.searchClear`). */
+.listCollapse,
+.listExpand {
+  flex: none;
+  width: 28px;
+  padding: 0;
+}
+
 /* Placeholder text is a hint, not content: it wears the caption label the
    shipped inputs use, rather than the browser's default of the value colour. */
 .panel ::placeholder,
@@ -242,9 +286,11 @@
   opacity: 1;
 }
 
-/* The list control reads as an action, so it wears the same light blue the
-   composer's send control does. */
-.listToggle {
+/* The way back into the list reads as an action, so it wears the same light blue
+   the composer's send control does. It is the only one of the pair that does: on a
+   narrow panel it is the affordance a reader hunts for after the list is gone,
+   while the collapse control sits in plain sight on the pane it clears. */
+.listExpand {
   color: var(--dsw-alias-button-info-fill);
 }
 
@@ -2052,31 +2098,52 @@
 }
 
 /*
- * The two panes cannot both be usable in a phone-width column, so one of them
- * owns the width: the list while nothing is open, the conversation once
- * something is. The back button exists only in that mode.
+ * The two panes cannot both be usable in a narrow panel, so one of them owns it:
+ * the list while nothing is open, the list over the conversation once the reader
+ * asks for it with the header's expand control, and the conversation otherwise.
+ *
+ * Narrow is the *panel's* own width, measured by the component and written here as
+ * `data-narrow` (`panel-width.ts` holds the boundary and the reasoning). The media
+ * query this replaces asked the window, which is the same question only while the
+ * console happens to own the whole window — in a narrow centre column of a wide
+ * window it kept the 280px column and squeezed the talk column into the remainder.
+ *
+ * The back chevron shares this mode, but it is not this mode's control: it closes
+ * the Session, which is a different act from putting the list over it.
  */
+.panel[data-narrow='true'] .listPane {
+  width: 100%;
+  border-right: 0;
+}
+
+/*
+ * The conversation's own stacking is sealed inside its pane while the list covers
+ * it. The shipped transcript and composer carry sticky rows, floating controls and
+ * overlays with z-indexes of their own, and this pane is not a stacking context —
+ * without this, one of them would paint over the list.
+ */
+.panel[data-narrow='true'] .viewPane {
+  position: relative;
+  z-index: 0;
+}
+
+.panel[data-narrow='true'][data-list='shown'] .listPane {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.panel[data-narrow='true'][data-list='hidden'] .listPane {
+  display: none;
+}
+
+/* Drawn only where it has something to do: closing a Session the reader is in. */
 .narrowOnly {
   display: none;
 }
 
-@media (max-width: 719px) {
-  .listPane {
-    width: 100%;
-    border-right: 0;
-  }
-
-  .panel[data-open='true'] .listPane {
-    display: none;
-  }
-
-  .panel[data-open='false'] .viewPane {
-    display: none;
-  }
-
-  .narrowOnly {
-    display: inline-flex;
-  }
+.panel[data-narrow='true'] .narrowOnly {
+  display: inline-flex;
 }
 
 @media (prefers-reduced-motion: reduce) {
