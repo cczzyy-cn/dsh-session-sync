@@ -41,6 +41,7 @@ import { ComposerDrafts } from './composer-draft.ts'
 import { ownsSubject, type PluginsSubjectLike } from './config-entry.ts'
 import { MirrorComposerDock } from './MirrorComposer.tsx'
 import { OFFICIAL_SLOT, OfficialConversation, OfficialSessions } from './official-session.tsx'
+import { hasViewEntry, TRAJECTORY_VIEW } from './official-views.ts'
 import { PanelIcon } from './PanelIcon.tsx'
 import { SyncPanel } from './SyncPanel.tsx'
 import { SyncClient } from './api.ts'
@@ -167,6 +168,12 @@ export function apply(ctx: ClientContext): void {
         client.decideApproval(machineName, approvalId, decision),
       official,
       drafts,
+      // Asked on every render rather than answered once: `conversation.view` is a
+      // list slot another plugin registers into, so whether the shipped trajectory
+      // page exists depends on load order — and the console has to fall back to its
+      // own ledger on a build whose ui-trajectory never arrives. `entries()` answers
+      // an undeclared key with an empty list exactly so this probe is safe.
+      hasTrajectoryView: () => hasViewEntry(ctx.slots.entries('conversation.view'), TRAJECTORY_VIEW),
     }),
   }, SyncPanel))
 

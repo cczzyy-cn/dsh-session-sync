@@ -1206,76 +1206,6 @@
   white-space: nowrap;
 }
 
-/* Context-occupancy ring: 14px viewBox, 2px stroke — the shipped meter's own
-   figure (ContextMeter.tsx). */
-.ringRoot {
-  position: relative;
-  display: inline-flex;
-  flex: none;
-}
-
-.ringTrigger {
-  display: grid;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  corner-shape: round;
-  background: transparent;
-  cursor: pointer;
-}
-
-.ringTrigger:hover {
-  background: var(--dsw-alias-interactive-bg-hover);
-}
-
-.ringTrigger:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--dsw-alias-state-business-primary);
-}
-
-.ringTrack {
-  fill: none;
-  stroke: var(--dsw-alias-border-l3);
-  stroke-width: 2;
-}
-
-.ringFill {
-  fill: none;
-  stroke: var(--dsw-alias-state-business-primary);
-  stroke-width: 2;
-  stroke-linecap: round;
-}
-
-.ringPanel {
-  position: absolute;
-  z-index: 9;
-  top: 26px;
-  right: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 8px 10px;
-  border: 0;
-  --dsw-elevation-stroke-color: var(--dsw-alias-border-l1);
-  border-radius: 10px;
-  background: var(--dsw-alias-bg-overlay);
-  box-shadow: var(--dsw-elevation-prominent);
-  white-space: nowrap;
-}
-
-.ringHeadline {
-  color: var(--dsw-alias-label-secondary);
-  font: var(--dsw-font-xxs-12);
-}
-
-.ringFigures {
-  color: var(--dsw-alias-label-tertiary);
-  font: var(--dsw-font-xxxs-11);
-}
-
 /* ── console: the composer's status row ────────────────────────────────── */
 
 .statusRow {
@@ -1912,11 +1842,15 @@
 }
 
 /* The card inside the console's own footer: the footer block already centers and
-   spaces what it holds, so the card itself only has to fill the width it is given. */
+   spaces what it holds, so the card only has to fill the width it is given. */
 .composerRootInner {
   display: flex;
   justify-content: center;
   width: 100%;
+  /* The console's own side inset, on top of the footer block's 16px: the shipped
+     stack below pads 16px too, so the card ends up the same distance from the
+     pane's edge in both seats. */
+  padding: 0 16px;
 }
 
 /*
@@ -1935,6 +1869,8 @@
   display: flex;
   justify-content: center;
   width: 100%;
+  /* The same side inset the console's own footer uses, over the stack's clearance. */
+  padding: 0 16px;
   margin-bottom: calc(-1 * var(--dsh-composer-stack-gap, 6px));
 }
 

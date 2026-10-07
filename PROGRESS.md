@@ -96,6 +96,125 @@
 > 2026-09-25 及以前的推进日志（从"② 的答案"一路到 0.3.x）已归档到 `docs/history-2026-09.md`。
 > 这一段只留本版（0.8.x/0.9.x/0.10.x）的改动与验证；历史文件是当时的推理记录，不要照它实现。
 
+### v0.10.41：轨迹页改用**自带那一页**（ui-trajectory）· 头部占用率环删除 · 输入卡片加左右留白（2026-10-07）
+
+用户先问："同步会话的轨迹页内容，能否与官方 dsh 一致"；改完之后贴来一张服务器控制台的
+轨迹页截图，报了三件事："有空内容，且显示输入框和旧的底部数据，右上角的上下文显示删除。
+同步会话页输入框增加左右外边距"。**那张截图是 `dsh.c-zy.cc` 上的控制台，那时服务器还是
+0.10.40** —— 而 0.10.40 的轨迹页按设计就是控制台自绘那版（自绘台账 + 自绘底部），所以三件事
+里前两件的根因是"这一版还没上线"，不是缺陷。截图里的字可以直接判身份：`步骤 #5/1`、
+`搜索事件…`、`事件/内容` 都是**本插件字典**里的词；自带轨迹页的占位符是 `搜索`
+（`ui-trajectory/src/client/locales.ts:21`），也**没有**裸的 `步骤` 标签。第三件（"空内容"）
+是自绘台账的老毛病：它给没有任何正文的助手节点画一个空的 `助手` 行，而自带那页对这种单元格
+有话说（`record.noContent: '无内容'`、`record.toolCallOnly: '（仅工具调用）'`）。
+后两件（删环、加留白）是本版新做的。
+
+**顺带查清了"为什么前两次改动一直没法在浏览器里验"**：本机 `profiles/desktop` 是**客户端**
+角色，而按线路定义客户端角色的 `machines` 恒为空（`protocol.ts`：`Server role: … Client
+role: empty`），控制台因此在客户端上只有一句"本机不是同步服务器…"和一棵空树 —— 控制台这个
+界面只存在于**服务器**那一侧。所以任何客户端改动，只有在服务器上装出来才看得见；本机能验的
+只有源码、产物和打包版 app 里的字符串。
+
+**改了什么**（通道与 0.10.40 那次同一套）：官方轨迹页是一个注册条目，`conversation.view`
+槽里 `id: 'trajectory'`、`order: 10`（`ui-trajectory/src/client/index.ts:79-112`），而这个槽由
+`conversation.session` 声明（`ui-conversation/src/client/apply.ts:315-317`）。挑哪一条**就是
+owner prop**：
+
+```
+// ui-conversation/src/client/skeleton/DefaultConversationViews.tsx:36-45
+const viewId = view ?? active?.id
+renderSlot('conversation.view', { … }, { only: viewId })
+```
+
+本插件原来那句 `renderSlot('conversation.session', { view: 'chat' })` 已经在拉这根杆（把
+sidebar chat 的 `chat` 钉住是照抄来的），所以这一版只是把它接到控制台自己的页签上：
+`RequestedView` 从 `OfficialViewContext` 读当前页签，面板把那句话包在 provider 里。数据面
+同一个：官方 `TrajectoryView` 读 `useTrajectory` → `uiConversation.binding(binding).target('trajectory')`，
+而 `target()` 的**第一个订阅者就会激活它**（`conversation/assembly.ts:68-85`），装的是镜像
+正在喂的那个事件窗口。
+
+**兜底不靠猜**：`conversation.view` 是 list 槽，`slots.entries(key)` 对未声明的键答**空表**
+（"renderers may probe ahead of plugin load order"，`ui-slots/src/index.ts:1328-1338`），所以
+`hasTrajectoryView()` 是在渲染时现问的；答否时页签落回控制台自己那版 `TrajectoryView`
+（老构建、或 `ui-trajectory` 被禁用）。判定本身是纯函数 `hasViewEntry`，5 例测试盯着它
+（含"更长但同前缀的 id 不算命中"与"没有 options 的条目不算命中"）。
+
+**删掉头部那枚占用率环**（`ContextRing` 组件 + `.ringRoot/.ringTrigger/.ringTrack/.ringFill/
+.ringPanel/.ringHeadline/.ringFigures` 七条样式 + `chromeContext`/`chromeContextUsed` 两个字典键，
+zh/en 各一对）：占用率现在只由底部那件官方 meter 陈述，而同一屏印两次会被读成对同一个窗口的
+两次测量。这也是 0.10.40 那节自己留下来的重复（当时为了让头部环与底部同口径，专门把它的读数
+接到同一份 `totals` 上）。
+
+**输入卡片加左右留白**：`.composerRootInner`（控制台自绘底部那条路）与 `.dockComposer`
+（自带 composer stack 那条路）各加 `padding: 0 16px`。两条路本来就各自有 16px（前者是
+`.composerRoot` 的 padding，后者是自带 stack 的 `--dsh-composer-side-clearance`），所以卡片
+在两处离面板边缘一样远 —— 这是"同一个卡片两个座位"的又一处必须对齐的量。
+
+**三条代价，写在这里免得下次当成 bug**：
+
+1. 自带轨迹页自己的"加载更早"是 `inject` 面里的 `loadOlder` → `session.loadOlder()`
+   （`ui-trajectory/src/client/index.ts:100-104`），对合成会话是一次到不了源站的 Host 读取；
+   它先按 50 节点翻 resident 窗口（`HISTORY_PAGE_NODES`），翻到底后控件停住。真正能翻镜像的
+   是控制台自己那行 `加载更早的消息`（同一链路、同一组装器，所以官方表跟着长）。
+2. 图片走 `ctx.uiConversation.imageUrl(sessionId, …)` 的 Host 授权读 —— 但**自带对话页用的是
+   同一个 `loadImage`**（`ui-chat/src/client/apply.ts:205-207` vs `ui-trajectory/…/index.ts:105-107`），
+   所以这不是轨迹页新带来的，是官方面板在镜像会话上早就有的性质。
+3. 自带轨迹页根节点带 `data-conversation-composer-overlay`（`TrajectoryView.tsx:511`），会切到
+   shell 的"视图自带 composer 覆盖层"布局：`.scrollBody` 不再滚动、`.composerSeat` 变绝对定位。
+   控制台那个 dock 输入卡片与官方统计行/占用率环因此以覆盖层形态压在台账上 —— 这是官方给这类
+   视图设计的模式，**但只有真机看一眼才算数**（见下面的未验证项）。
+
+另外两条已知的小口径差异：自带页给的是**逐请求**编号/用量/累计用量/系统提示词行/调用 schema，
+控制台自绘那版给的是**机器报的整份日志总量**（共 N tok / 缓存命中%）与它自己的台账注解；
+换成自带页后，后者只留在兜底路径上。还有：自带对话页的"在轨迹里查看这次调用"深链会调
+`openView('trajectory', callId)`，而面板是**用 owner prop 钉住视图**的，所以这个深链翻不动
+控制台的页签（0.10.40 之前钉的是 `chat`，同样翻不动）。
+
+**验证**：
+
+| 检查 | 结果 |
+| --- | --- |
+| `npm run check-encoding` | clean（68 文件） |
+| `scripts/typecheck.ps1` | 77 文件 / **772** 诊断 / **undeclared 0 · relative imports 全解析 · 类型不匹配 0**（删掉头部环后少了 17 条 JSX 诊断；0.10.40 是 75/789） |
+| `npm test` | **196 通过 / 0 失败**（46 suites；新增 `official-views` 5 例） |
+| `scripts/build-and-install.ps1 -Profile desktop -ForceCopy` | 构建通过，自报 `0.10.41`；`lib/index.js` 253,788 B（sha256 `56f82889…`，与 0.10.40 逐字节相同 —— 这次只动客户端）、`client/client.js` **399,814 B**（sha256 `6c290619…`，比只做轨迹页那版 403,816 B 小 4 kB：环的 JSX/样式/字典键一起没了）、map；装进 `profiles/desktop` 后两份产物逐字节 MATCH |
+| 产物内实测 | `const CHAT_VIEW = "chat"; const TRAJECTORY_VIEW = "trajectory";`、`const OfficialViewContext = react.createContext(CHAT_VIEW);`、`hasTrajectoryView: () => hasViewEntry(ctx.slots.entries("conversation.view"), TRAJECTORY_VIEW)` |
+| 打包版 app 探测 | 对 121 MB 的 `app.asar` 逐串确认自带轨迹页真的在跑的这套里：`conversation.view`、`view.trajectory`、`group.compaction`、`record.wrapLines`、`TrajectoryToolbar`、`data-conversation-composer-overlay`、`conversation.trajectory.images` **全部 PRESENT** ⇒ 真机上 `hasTrajectoryView()` 会答"是"，页签走官方页 |
+| 构建期真拦下一次 | `sync.module.css` 里那段新注释漏了收尾 `*/`，lightningcss 报 `Invalid token in pseudo element: WhiteSpace(" ")`、tsdown 退出 1 —— 门禁链里 CSS 也有编译期把关 |
+
+**未验证（服务器上线后才有意义）**：本机 `profiles/desktop` 是**客户端**角色，控制台在客户端
+上只有一句"本机不是同步服务器…"和一棵空树（客户端角色的 `machines` 恒为空），**所以这一版在
+本机根本画不出镜像会话**，浏览器里无从复现。要看到效果只能把 0.10.41 装到服务器（`dsh.c-zy.cc`）
+那一侧 —— 也就是用户截图里的那个面。按 §6 的规矩，"客户端改动要真打开一次"这条至今**仍未兑现**，
+原因就是验证面不在本机。
+
+### v0.10.40 的落地读数（2026-10-07，发版 + 上线已做完）
+
+- **发版**：提交 `970cfc9`（`main`，作者 `unknown <1433919893@qq.com>`，与本仓库历史一致）·
+  附注标签 `v0.10.40` 对象 `2c43830…` → commit `970cfc9`，远端同名对象 sha **完全相同** ·
+  origin `main` 与本地逐字一致。`release.ps1` 的校验全过（版本未被本地/远端打过 tag、产物=源码、
+  两道门禁 + 191 测试）。**注意**：这台机器的凭据管理器里**没有** `gh:github.com:cczzyy-cn`
+  那个目标（`release.ps1` 的默认值），只有 `git:https://github.com`；所以是 `-NoPush` 跑完校验
+  并打本地 tag，再用仓库已配的 `credential.helper=manager` 推送。
+- **服务器**（`dsh.c-zy.cc`，unit `dsh-web.service`）：spec `#v0.10.39` → `#v0.10.40`；lock 解析到
+  `970cfc9…`（= 刚推的 commit）；安装版本 `0.10.40`；`lib/index.js` 253,788 B sha256 `56f82889…`、
+  `client/client.js` 399,795 B sha256 `2653b6b2…` —— 与本地**逐字节相同**；重启后 `active`、
+  3080/8791 都在听；镜像 `holes 0 / behind 0 / missingEvents 0`，源站 `DESKTOP-VC1SGPH`（仍报
+  `0.10.39`）自动重连（`/publish` 两次 401 旧 token → `/handshake` 200 → 之后全 200，与
+  §2 nginx 那节记的现象一致）。备份：`/root/package.json.bak-20261007-082147`、
+  `/root/pnpm-lock.yaml.bak-20261007-082147`。
+- **本机 profile**：`profiles/desktop` 已用 `-ForceCopy` 装到 0.10.40（装前把 0.10.28 的四份文件
+  备份到 `%TEMP%\dsh-session-sync-0.10.28-backup-20261007-161651\`）；但它的 **lock 仍钉在
+  commit `9c49de0`（= 0.10.28）**、spec 也没有 tag，所以下次插件管理器/pnpm 重装会把这份覆盖
+  回去 —— 要耐久得把 spec 移到 `#v0.10.40`（GUI 插件页，或用 app 自带 pnpm）。
+- **这台机器上两处与脚本假设不符**（都不是本次改动引入）：`deploy-status.ps1` 的服务器段要
+  `~/.dsh/skills/remote-ssh-ops/scripts/invoke-remote.ps1`（不存在）与默认私钥
+  `id_ed25519_dsh`（不存在，这里只有 `id_ed25519`），所以它打印 `cannot check the server`，
+  服务器读数是用 `ssh -o BatchMode=yes -i ~/.ssh/id_ed25519 root@dsh.c-zy.cc` 手工取的；
+  另外它的 `-Profile` 默认是 `web`，而活动 profile 是 `desktop`。
+- **仍未在浏览器里打开过**（0.10.40 的底部改动）：本机 app 的接口要 token（401），命令行取不到
+  "实际下发的那份 bundle"，所以只有产物级证据 —— 而 §6 那条规矩要的正是这一眼。
+
 ### v0.10.40：底部状态行改用**官方那两件**（官方统计胶囊 + 官方占用率环），插件只负责喂数（2026-10-07）
 
 用户原话："同步会话页底部改用原 dsh 官方组件"，并贴出当时底部渲染的三行

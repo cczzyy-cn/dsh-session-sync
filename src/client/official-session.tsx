@@ -26,6 +26,7 @@ import {
 import { envelopePlacement, highestOf } from './envelope-placement.ts'
 import { nextWatermark } from './footer-projections.ts'
 import { LiveText, liveChunkOf } from './live-text.ts'
+import { CHAT_VIEW } from './official-views.ts'
 import { scopeCapable } from './routing.ts'
 
 /**
@@ -985,14 +986,30 @@ export interface OfficialConversationProps {
 }
 
 /**
- * The shipped Conversation's chat View, selected at this occurrence.
+ * Which shipped conversation page the pane below is asked to draw.
  *
- * The Factory's own default local Component renders `conversation.session` with
- * no View request; the sidebar chat pins `chat`, so a Session whose roster would
- * open elsewhere still lands on its conversation.
+ * The choice travels by context rather than by props because the two ends live in
+ * different trees: the console's tab is panel state, while the place the request
+ * has to be made — a local Factory position — is rendered by the occurrence the
+ * panel dispatches. The panel wraps that dispatch in this provider; a pane that
+ * was never asked for anything keeps the chat page, which is what every other
+ * caller of the shipped content wants.
  */
-function ChatView(props: { renderSlot: RenderSlotLike }): React.ReactElement {
-  return <>{props.renderSlot('conversation.session', { view: 'chat' })}</>
+export const OfficialViewContext = React.createContext<string>(CHAT_VIEW)
+
+/**
+ * The shipped Conversation's View, requested at this occurrence.
+ *
+ * The Factory's own default local Component renders `conversation.session` with no
+ * View request, which resolves to whichever tab the shell has selected; asking for
+ * one explicitly is what keeps a Session whose roster would open elsewhere on the
+ * page the console is actually showing — the sidebar chat pins `chat` for the same
+ * reason, and this pane asks for the console's tab (`chat`, or the shipped
+ * trajectory page, where that page is registered at all).
+ */
+function RequestedView(props: { renderSlot: RenderSlotLike }): React.ReactElement {
+  const view = React.useContext(OfficialViewContext)
+  return <>{props.renderSlot('conversation.session', { view })}</>
 }
 
 /**
@@ -1008,7 +1025,9 @@ function ChatView(props: { renderSlot: RenderSlotLike }): React.ReactElement {
  * and draws an empty pane, because the shell is what supplies the context that
  * View is written against. So this pane hides the furniture instead of omitting
  * it, and accepts that a session-scoped integration behind it may still start a
- * Host read that cannot succeed (see the README's limitations).
+ * Host read that cannot succeed (see the README's limitations) — the shipped
+ * trajectory page's own "load earlier" is one of those, which is why the console
+ * keeps its own paging control above the pane.
  * @param props - the renderer's Factory dispatcher.
  * @returns the shipped content occurrence.
  */
@@ -1016,7 +1035,7 @@ export function OfficialConversation({ renderFactorySlot }: OfficialConversation
   return (
     <>
       {renderFactorySlot('conversation.content', { variant: 'embedded', phase: 'active', hero: false }, {
-        slots: { views: ChatView },
+        slots: { views: RequestedView },
       })}
     </>
   )

@@ -77,6 +77,20 @@ checkout 里还留着已应用的补丁，它现在是**惰性**的，可以用
   | --- | --- | --- |
   | `scope` | `ctx.sessions.retainAgentScope` + `binding` | 自带面板，且完全不需要 Host I/O；控制台自己的接管输入栏顶替自带输入胶囊，自带的统计行与占用率环留在原地做底部 |
 
+  **两个页签都是自带的那一页。** 自带 shell 从面板传下去的 owner prop 里挑
+  `conversation.view` 条目（`DefaultConversationViews`：`viewId = view ?? active?.id`），
+  而这个 prop 只能由控制台提供给自带内容工厂的本地位置——所以"对话/轨迹"这两个页签就是
+  把 `chat` 或 `trajectory` 递下去。轨迹页因此是 `ui-trajectory` 那一页本身：逐请求编号与
+  累计用量、系统提示词行、调用 schema、JSON 折叠、时间线框选与搜索、台账表，都是它渲染的，
+  数据来自镜像正在喂的同一个组装器。构建里没有那个条目时（`ui-trajectory` 缺失或被禁用；
+  `conversation.view` 是 list 槽，`entries()` 对未声明的键答空表），页签落回控制台自己那版
+  台账，和底部一样的兜底形状。
+
+  自带轨迹页自己的"加载更早"会先翻它持有的窗口、再向 Session 要更多——那是一次到不了源站的
+  Host 读取，所以那一页上真正能翻镜像的是控制台自己那行 `加载更早的消息`（它翻的是同一条
+  链路、同一个组装器）。同样地，自带轨迹页里的图片走的是与自带对话页**完全相同**的那条
+  Host 授权读，所以这一点不是轨迹页新带来的。
+
   只有当构建没有这条接缝时，控制台才保留上面描述的手绘面板，且原样不变——所以原版
   构建失去的是**像不像**，绝不是**能不能用**。路线在 `src/client/official-session.tsx`
   里做特性探测，判断本身是一个受测试约束的纯函数（`src/client/routing.ts` 里的
@@ -639,6 +653,7 @@ src/client/official-session.tsx  被 retain 的会话：自带渲染器的面板
 src/client/MirrorComposer.tsx    接管输入卡片：两个座位（自带 composer stack 与控制台自己的底部）共用的同一个组件
 src/client/composer-draft.ts     未发出的接管 prompt，按会话立案，跨两个座位共享
 src/client/footer-projections.ts 底部数字映射成自带 footer 读的那三个投影形状，以及发布水位
+src/client/official-views.ts    控制台向自带 shell 请求哪一页（chat / trajectory），以及兜底判定
 src/client/QuestionCard.tsx  一个转达来的提问，提供给这位读者
 src/client/transcript.ts 镜像事件投影成可读的行
 src/client/tool-cards.ts 工具行模型：卡片选择、标签、上限

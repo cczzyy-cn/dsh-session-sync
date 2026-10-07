@@ -100,6 +100,7 @@ import { toRows, type AssistantBlock, type NoticeRow, type RetryRow, type ToolRo
 import { toolPresentation, type ToolGlyph } from './tool-presentation.ts'
 import {
   OFFICIAL_SLOT,
+  OfficialViewContext,
   type OfficialBridgeFace,
   type RenderSlotLike,
   type SessionProviderComponent,
@@ -210,6 +211,15 @@ export interface SyncPanelProps {
    * that draws the same card on the route where the shipped pane is the footer.
    */
   drafts: ComposerDrafts
+  /**
+   * Whether this build registers the shipped trajectory page.
+   *
+   * A question rather than a value because the answer depends on plugin load
+   * order: `conversation.view` is a list slot other plugins register into, and the
+   * console has to keep drawing its own ledger on a build where that entry never
+   * arrives.
+   */
+  hasTrajectoryView: () => boolean
 }
 
 /**
@@ -447,6 +457,7 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
               renderSlot={props.renderSlot}
               SessionProvider={props.SessionProvider}
               drafts={props.drafts}
+              hasTrajectoryView={props.hasTrajectoryView}
               listHidden={listHidden}
               toggleList={() => { setListHidden(current => !current) }}
             />
@@ -538,6 +549,8 @@ function Conversation(props: {
   SessionProvider: SessionProviderComponent
   /** The takeover prompt, shared with the shipped composer stack's own occurrence. */
   drafts: ComposerDrafts
+  /** Whether this build registers the shipped trajectory page. */
+  hasTrajectoryView: () => boolean
   listHidden: boolean
   toggleList: () => void
 }): React.ReactElement {
@@ -711,17 +724,33 @@ function Conversation(props: {
     ? props.official.referenceFor(props.machineName, session.sessionId)
     : undefined
   /**
+   * The shipped conversation page the console asks for, or undefined when the
+   * shipped content cannot draw the page the console's tab is on.
+   *
+   * Both tabs are shipped pages where the build has them — `chat`, and the
+   * trajectory ledger `ui-trajectory` registers — and the pane requests one by id.
+   * The fallbacks are the two cases the console has to keep drawing itself: a build
+   * with no retention seam (no shipped content at all), and the trajectory tab on a
+   * build whose `conversation.view` has no trajectory entry. Asking is what makes
+   * the console's ledger stay the fallback rather than the default.
+   */
+  const shippedView = shipped === undefined
+    ? undefined
+    : tab === 'chat' || props.hasTrajectoryView()
+      ? tab
+      : undefined
+  /**
    * Whether the shipped pane is drawing this Session's footer right now.
    *
-   * The chat tab on a build that renders the retained Session: there the console
-   * hides only the shipped input capsule, the shipped statistics row and context
-   * meter stay mounted below it, and this console's own card rides the shipped
-   * composer stack (`conversation.input.dock`) instead of the footer block below.
-   * Everything else — the trajectory tab, which the shipped content does not draw,
-   * and a build with no retention seam at all — keeps the console's own card and
-   * its own status row, which is also the only footer those two have.
+   * Wherever the shipped content draws the page, the console hides only the shipped
+   * input capsule: the shipped statistics row and context meter stay mounted below
+   * it, and this console's own card rides the shipped composer stack
+   * (`conversation.input.dock`) instead of the footer block below. A build with no
+   * retention seam — or a trajectory tab the shipped view cannot draw — keeps the
+   * console's own card and its own status row, which is also the only footer those
+   * have.
    */
-  const shippedFooter = tab === 'chat' && shipped !== undefined
+  const shippedFooter = shippedView !== undefined
   /**
    * Whether the scope badge is also the control that changes what it states.
    *
@@ -875,7 +904,7 @@ function Conversation(props: {
           )}
           <span className={css.viewSpacer} />
 
-          <ChromeChips t={t} chrome={chrome} context={reportedStats?.context ?? chrome.context} />
+          <ChromeChips t={t} chrome={chrome} />
         </div>
         {/* The two views the shipped header switches between (figma Tab_Group):
             13/16 wt500, a 2px bar under the active one. */}
@@ -900,49 +929,61 @@ function Conversation(props: {
           </button>
         </div>
       </header>
-      {tab === 'trajectory'
-        ? <TrajectoryView t={t} cells={cells} stats={chrome.stats} labels={labels} />
-        : shipped !== undefined
-          ? (
-            // The shipped conversation draws the Session, its own scroll body,
-            // and its own composer: this pane hands it the reference and nothing
-            // else. The one exception is a route that drives the window itself —
-            // there the shipped composer would carry its prompt to a Host that
-            // has never heard of this Session, so its seat is hidden and the
-            // console's own takeover composer stands in.
-            <>
-              {/* The shipped conversation's own older-end control asks the Host,
-                  which has never heard of this Session, so the window it is given
-                  never claims more. Paging is this console's own road — it reads
-                  the older page over the sync link and hands it to the same
-                  window — and this is its control. Shown only while the reader is
-                  at the top of that window: it marks where the fetched range
-                  begins, so beside the pane it would sit above the conversation
-                  forever instead of at the end it belongs to. */}
-              {state.transcript?.hasMore === true && atPaneTop && (
-                <div className={css.olderRow}>
-                  <button
-                    type="button"
-                    className={css.olderButton}
-                    disabled={state.loadingOlder}
-                    onClick={() => { void props.loadOlder() }}
-                  >
-                    {state.loadingOlder ? t('loadingOlder') : t('loadOlder')}
-                  </button>
-                </div>
-              )}
-              <div
-                ref={pane}
-                className={props.official.composerOwned ? `${css.officialPane} ${css.drivesWindow}` : css.officialPane}
+      {shippedView !== undefined && (
+        // The shipped conversation draws the Session, its own scroll body, its
+        // own view — chat, or the trajectory ledger, per the owner prop the pane
+        // asks with — and its own composer: this pane hands it the reference and
+        // the page id and nothing else. The one exception is a route that drives
+        // the window itself — there the shipped composer would carry its prompt
+        // to a Host that has never heard of this Session, so its capsule is
+        // hidden and the console's own takeover composer stands in.
+        <>
+          {/* The shipped conversation's own older-end control asks the Host,
+              which has never heard of this Session, so the window it is given
+              never claims more. Paging is this console's own road — it reads
+              the older page over the sync link and hands it to the same
+              window — and this is its control. Shown only while the reader is
+              at the top of that window: it marks where the fetched range
+              begins, so beside the pane it would sit above the conversation
+              forever instead of at the end it belongs to.
+
+              This is also the only older-end control that works on the shipped
+              trajectory page, whose own "load earlier" pages the resident window
+              and then asks the Session for more — a Host read this Session
+              cannot answer. */}
+          {state.transcript?.hasMore === true && atPaneTop && (
+            <div className={css.olderRow}>
+              <button
+                type="button"
+                className={css.olderButton}
+                disabled={state.loadingOlder}
+                onClick={() => { void props.loadOlder() }}
               >
-                <props.SessionProvider session={shipped}>
-                  {props.renderSlot(OFFICIAL_SLOT, {})}
-                </props.SessionProvider>
-              </div>
-            </>
-          )
-          : (
-            <div className={css.viewScroll} ref={body}>
+                {state.loadingOlder ? t('loadingOlder') : t('loadOlder')}
+              </button>
+            </div>
+          )}
+          <div
+            ref={pane}
+            className={props.official.composerOwned ? `${css.officialPane} ${css.drivesWindow}` : css.officialPane}
+          >
+            <props.SessionProvider session={shipped}>
+              <OfficialViewContext.Provider value={shippedView}>
+                {props.renderSlot(OFFICIAL_SLOT, {})}
+              </OfficialViewContext.Provider>
+            </props.SessionProvider>
+          </div>
+        </>
+      )}
+      {/* No shipped page for this tab: the console's own. The trajectory tab on a
+          build whose `conversation.view` has no trajectory entry gets the ledger;
+          anything else (no retention seam, no window yet) gets the hand-drawn
+          transcript. */}
+      {shippedView === undefined && tab === 'trajectory' && (
+        <TrajectoryView t={t} cells={cells} stats={chrome.stats} labels={labels} />
+      )}
+      {shippedView === undefined && tab !== 'trajectory' && (
+        <div className={css.viewScroll} ref={body}>
               <div className={css.viewColumn} ref={column}>
                 {state.error !== undefined && <div className={css.error}>{state.error}</div>}
                 {/* The mirror serves the newest window, so the older end is a
@@ -995,7 +1036,7 @@ function Conversation(props: {
                 </div>
               )}
             </div>
-          )}
+      )}
       {/* The questions this Session is waiting on, offered to whoever is reading
           it here as well as to whoever is at the machine. Above the composer
           because that is what they interrupt: the model is stopped mid-turn until
@@ -1075,23 +1116,23 @@ function Conversation(props: {
 }
 
 /**
- * The header's right-hand cluster: the context-occupancy ring, and the model,
- * preset and subagent facts the log reports.
+ * The header's right-hand cluster: the model, preset and subagent facts the log
+ * reports.
  *
  * Every one of these is a **reading**, not a control: the mirror can see what
  * the owning machine is doing and cannot change it. The shipped session header
  * carries selectors in these seats; this console shows the same facts without
  * pretending a click would do something.
  *
- * The ring is handed its reading rather than reading the log again, because the
- * footer states the same fact: one scope for one number, or the header and the
- * footer of the same page would print two percentages for one window.
+ * Context occupancy is deliberately *not* here. The footer states it — the
+ * shipped meter wherever the shipped pane draws the page, the console's own row
+ * otherwise — and the same fact printed twice on one screen reads as two
+ * measurements of one window rather than as one reading. It was a ring in this
+ * cluster until 0.10.41.
  */
-function ChromeChips({ t, chrome, context }: {
+function ChromeChips({ t, chrome }: {
   t: SessionSyncTranslate
   chrome: SessionChrome
-  /** Context occupancy, already resolved to the scope the footer reports. */
-  context?: SessionContext
 }): React.ReactElement {
   const { model, policy, subagents } = chrome
   const preset = policy.preset === undefined
@@ -1122,61 +1163,6 @@ function ChromeChips({ t, chrome, context }: {
           {`${t('chromeSubagents')} ${String(subagents.length)}`}
         </span>
       </Tooltip>
-      {context !== undefined && <ContextRing t={t} context={context} />}
-    </span>
-  )
-}
-
-/**
- * The composer's context-occupancy ring (14px, 2px stroke) and the panel its
- * click opens: the shipped meter's geometry, fed by the last request's own
- * numbers instead of the projection.
- */
-function ContextRing({ t, context }: {
-  t: SessionSyncTranslate
-  context: SessionContext
-}): React.ReactElement {
-  const [open, setOpen] = React.useState(false)
-  const radius = 5.5
-  const circumference = 2 * Math.PI * radius
-  const reading = `${String(context.percent)}%`
-  const label = `${t('chromeContextUsed')} ${reading}`
-  return (
-    <span className={css.ringRoot}>
-      <Tooltip label={label} side="bottom" delayMs={200} disabled={open}>
-        <button
-          type="button"
-          className={css.ringTrigger}
-          aria-label={label}
-          aria-haspopup="dialog"
-          aria-expanded={open}
-          onClick={() => { setOpen(current => !current) }}
-        >
-          <svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true">
-            <circle className={css.ringTrack} cx="7" cy="7" r={radius} />
-            <circle
-              className={css.ringFill}
-              cx="7"
-              cy="7"
-              r={radius}
-              strokeDasharray={`${String(circumference * context.percent / 100)} ${String(circumference)}`}
-              transform="rotate(-90 7 7)"
-            />
-          </svg>
-        </button>
-      </Tooltip>
-      {open && (
-        <span className={css.ringPanel} role="dialog" aria-label={label}>
-          <span className={css.ringHeadline}>
-            {t('chromeContextUsed')}
-            {' '}
-            <b>{reading}</b>
-          </span>
-          <span className={css.ringFigures}>
-            {`~${compactTokens(context.used)} / ${compactTokens(context.window)}`}
-          </span>
-        </span>
-      )}
     </span>
   )
 }
