@@ -34,8 +34,8 @@ the hand-drawn pane"（`README.md:100-101`）。插件自己的头部在**每一
 | 没有轮次导航轨。 | 缺失；`TrajectoryView` 是另一个界面 | `TurnNavigator.tsx`，投影 `turn-navigation.ts:79-97` | 是 | 中 |
 | **多出来**的轮次用时胶囊，官方自带没有对应物。 | `SyncPanel.tsx:1050-1052` → `stat-panels.tsx:183-236` | 官方自带尾部只带 `usageAction`，受 `performanceUsage==='detailed'` 门控：`TurnTailNodeView.tsx:73-75` | 是 —— 一个自造控件 | 中 |
 | 轮次用时弹窗按**每轮**显示 TPS + TTFT；官方自带只把这些作为会话总量显示。 | `stat-panels.tsx:218-230` | `StatsPills.tsx:200-227`（`stats.dialog.ttft` = 平均值，`stats.dialog.speed`） | 是 | 低 |
-| 输入栏状态行不是官方自带的胶囊行。官方自带在 `StatsPills` 里渲染图标胶囊（compact：只有速度 + 缓存，**没有**轮次/步数）。 | `SyncPanel.tsx:846-864` 纯文本，恒显示 `{turns} 轮 · {steps} 步` | `StatsPills.tsx:332-346` compact 分支；`StatsPills.tsx:143,150-158` | 是 | 中 |
-| 上下文指示器：插件自绘 14px/2px 圆环 + 面板。 | `SyncPanel.tsx:797-843`（`radius=5.5`、`viewBox 0 0 14 14`、stroke 2） | `ContextMeter.tsx` —— 官方自带用量表，带 system/tools/messages 细分 `locale.ts:66-68` | 是 | 中 |
+| ~~输入栏状态行不是官方自带的胶囊行。~~ **已修（0.10.40）**：chat 页且走官方 footer 时，底部就是 `StatsPills` 自己渲染（含官方 compact 分支的行为）；插件自绘的纯文本行只剩轨迹页与无 `retainAgentScope` 的老构建。 | `footer-projections.ts`（把总量映射成官方投影形状）、`official-session.tsx` 的 `publishFooter` | `StatsPills.tsx:332-346` compact 分支；`StatsPills.tsx:143,150-158` | 否（官方件本身） | — |
+| 上下文指示器：插件自绘 14px/2px 圆环 + 面板（**头部**这一枚仍在；**底部**那一枚自 0.10.40 起是官方 `ContextMeter` 自己渲染，两者读同一份读数）。 | `SyncPanel.tsx:797-843`（`radius=5.5`、`viewBox 0 0 14 14`、stroke 2）；底部：`footer-projections.ts` 的 `contextPressure` | `ContextMeter.tsx` —— 官方自带用量表，带 system/tools/messages 细分 `locale.ts:66-68` | 头部是；底部已修 | 中 |
 | 头部外壳是手绘芯片，不是官方自带头部。 | `SyncPanel.tsx:557-601`、`ChromeChips` `:754-790` | `ConversationHeader.tsx` | 是 | 中 |
 | `已停止` 芯片：样式逐字节相同，但位置不同 —— 插件把它作为各块的兄弟节点追加。 | `SyncPanel.tsx:953`；`sync.module.css` 的 `.stopped` == 官方自带 `AssistantMarkdown.module.css:63-71`（已核对相同） | 渲染在 markdown 正文内部：`AssistantMarkdown.tsx:148`；轮过程标题也是 `TurnProcessNodeView.tsx:37,42` | 边缘 | 低 |
 | 重试行由五个片段手工拼成。 | `SyncPanel.tsx:1097` 拼出 `第 3 次，共 5 次` | 一个模板 `locale.ts:152`：`{label}（{retry}/{maximum}） · {seconds}s` | 是 —— 标点/间距不同 | 低 |

@@ -44,7 +44,6 @@ import {
   IconGlobeOutlineRegular,
   IconPanelLeftOutlineRegular,
   IconQuestionOutlineRegular,
-  IconRightUpOutlineRegular,
   IconSearchOutlineRegular,
   IconShareOutlineRegular,
   IconSparkleRegular,
@@ -62,6 +61,9 @@ import { QuestionCard, QuestionElsewhere } from './QuestionCard.tsx'
 import { pagingScrollTop, type PagingMetrics } from './paging-anchor.ts'
 import { logCoverage } from './log-coverage.ts'
 import { buildTree } from './tree.ts'
+import { draftKey, type ComposerDrafts } from './composer-draft.ts'
+import { footerProjections, projectionRecord } from './footer-projections.ts'
+import { MirrorComposer } from './MirrorComposer.tsx'
 import {
   compactTokens,
   sessionChrome,
@@ -203,6 +205,11 @@ export interface SyncPanelProps {
   renderSlot: RenderSlotLike
   /** The session-scope provider the child slot's declaration seats here. */
   SessionProvider: SessionProviderComponent
+  /**
+   * The takeover prompt, shared with the occurrence of the shipped composer stack
+   * that draws the same card on the route where the shipped pane is the footer.
+   */
+  drafts: ComposerDrafts
 }
 
 /**
@@ -439,6 +446,7 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
               official={props.official}
               renderSlot={props.renderSlot}
               SessionProvider={props.SessionProvider}
+              drafts={props.drafts}
               listHidden={listHidden}
               toggleList={() => { setListHidden(current => !current) }}
             />
@@ -528,12 +536,12 @@ function Conversation(props: {
   official: OfficialBridgeFace
   renderSlot: RenderSlotLike
   SessionProvider: SessionProviderComponent
+  /** The takeover prompt, shared with the shipped composer stack's own occurrence. */
+  drafts: ComposerDrafts
   listHidden: boolean
   toggleList: () => void
 }): React.ReactElement {
   const { t, state, session } = props
-  const [draft, setDraft] = React.useState('')
-  const [sending, setSending] = React.useState(false)
   const [tab, setTab] = React.useState<'chat' | 'trajectory'>('chat')
   const body = React.useRef<HTMLDivElement | null>(null)
   /** The reading column, whose height is what growth moves. */
@@ -690,16 +698,6 @@ function Conversation(props: {
     [t],
   )
 
-  const send = (): void => {
-    const text = draft.trim()
-    if (text === '' || sending) return
-    setSending(true)
-    void props.sendPrompt(text).then((accepted) => {
-      setSending(false)
-      if (accepted) setDraft('')
-    })
-  }
-
   const delivery = state.delivery
   // The shipped conversation, when this DSH build can retain the open Session,
   // the mirror has something to replace it with, and the renderer gave this
@@ -712,6 +710,52 @@ function Conversation(props: {
     && state.transcript !== undefined
     ? props.official.referenceFor(props.machineName, session.sessionId)
     : undefined
+  /**
+   * Whether the shipped pane is drawing this Session's footer right now.
+   *
+   * The chat tab on a build that renders the retained Session: there the console
+   * hides only the shipped input capsule, the shipped statistics row and context
+   * meter stay mounted below it, and this console's own card rides the shipped
+   * composer stack (`conversation.input.dock`) instead of the footer block below.
+   * Everything else — the trajectory tab, which the shipped content does not draw,
+   * and a build with no retention seam at all — keeps the console's own card and
+   * its own status row, which is also the only footer those two have.
+   */
+  const shippedFooter = tab === 'chat' && shipped !== undefined
+  /**
+   * Whether the scope badge is also the control that changes what it states.
+   *
+   * Only while the console is the one counting: the machine's own totals are
+   * already over the whole log, so there is nothing for paging to do, and a click
+   * that silently did nothing would be worse than no click at all.
+   */
+  const scopeActionable = shippedFooter && reportedStats === undefined && !wholeLog
+  /**
+   * The totals every footer on this page states.
+   *
+   * One binding, read by the console's own status row and published to the shipped
+   * footer's projection store, so the two can never disagree about which scope
+   * they are reporting: the machine's whole-log answer when it states one, this
+   * console's count over what it holds otherwise.
+   */
+  const totals = reportedStats ?? chrome.stats
+  // Hand the shipped footer the numbers it would otherwise have no source for.
+  //
+  // The shipped statistics row and context meter read *projections*, which only a
+  // Host computes, and this Session's Host has never heard of it — so without this
+  // the row would fold the window the mirror holds and the meter would render
+  // nothing at all. Laid out rather than effected so the values are in the store
+  // before the browser paints: the shipped components render once with whatever is
+  // there, and a plain effect would put the empty fold on screen for a frame. The
+  // floor is the newest durable sequence held; `nextWatermark` owns what the store
+  // does with it.
+  React.useLayoutEffect(() => {
+    if (shipped === undefined) return
+    props.official.publishFooter(
+      projectionRecord(footerProjections(totals)),
+      coverage.last ?? 0,
+    )
+  }, [props.official, shipped, totals, coverage.last])
   // Read on every render of an open pane: the low end is what moves when older
   // history is paged in, and a frame arriving is what re-renders this panel.
   const paneRange = shipped === undefined ? undefined : props.official.windowRange()
@@ -798,9 +842,40 @@ function Conversation(props: {
               {t('paneRoute', { route: props.official.route })}
             </span>
           )}
+          {/* Where the numbers come from. The footer itself is the product's own
+              now (or the console's own row on the two seats that have no shipped
+              footer), and neither can say which log its figures counted — the
+              shipped one has no place for it, and the console's own row states it
+              in the document order a reader scanning the header has already left.
+              So the statement lives here, beside the other facts about this pane,
+              and it is also where the one action that changes it lives: while the
+              console is counting its own window, the badge is the control that
+              pages the log back to its start.
+
+              A `button` in both states, but `aria-disabled` rather than `disabled`
+              when there is nothing to do: a disabled control swallows the pointer,
+              and the tooltip is the only place the authoritative case explains
+              itself. */}
+          {shippedFooter && (
+            <button
+              type="button"
+              className={scopeActionable
+                ? `${css.scopeBadge} ${css.scopeBadgeAction}`
+                : css.scopeBadge}
+              {...(scopeActionable ? {} : { 'aria-disabled': true })}
+              title={reportedStats !== undefined
+                ? t('statusAuthoritativeHint')
+                : coverage.gaps > 0
+                  ? `${t('statusScopeHint')} · ${t('statusScopeGap', { n: coverage.gaps })}`
+                  : t('statusCountHint')}
+              onClick={scopeActionable ? () => { void props.loadAllOlder() } : undefined}
+            >
+              {reportedStats !== undefined || wholeLog ? t('statusWholeLog') : t('statusCount')}
+            </button>
+          )}
           <span className={css.viewSpacer} />
 
-          <ChromeChips t={t} chrome={chrome} />
+          <ChromeChips t={t} chrome={chrome} context={reportedStats?.context ?? chrome.context} />
         </div>
         {/* The two views the shipped header switches between (figma Tab_Group):
             13/16 wt500, a 2px bar under the active one. */}
@@ -962,81 +1037,63 @@ function Conversation(props: {
             }}
           />
         ))}
-      {/* One composer per Session: the shipped one rides inside the shipped
-          conversation, so the console's own card stands down on the chat tab —
-          except on a route that blocked the shipped composer, where this card is
-          the only way to speak in the Session, and on the trajectory tab, which
-          the shipped content does not draw at all. */}
-      {(shipped === undefined || props.official.composerOwned || tab === 'trajectory') && (
-        <div className={css.composerRoot}>
-          <form
-            className={css.composerCard}
-            onSubmit={(event) => { event.preventDefault(); send() }}
-          >
-            <textarea
-              className={css.composerText}
-              value={draft}
-              rows={2}
-              placeholder={t('composerPlaceholder')}
-              aria-label={t('composerPlaceholder')}
-              onChange={(event) => { setDraft(event.target.value) }}
-              onKeyDown={(event) => {
-                if (event.key !== 'Enter' || event.shiftKey) return
-                event.preventDefault()
-                send()
-              }}
-            />
-            <div className={css.composerBar}>
-              <span className={css.composerTarget}>
-                {t('composerTarget')}
-                {' '}
-                {props.machineName}
-              </span>
-              {delivery !== undefined && (
-                <span className={css.composerDelivery}>{deliveryLine(delivery, t)}</span>
-              )}
-              {!props.online && <span className={css.composerOffline}>{t('offlineQueueHint')}</span>}
-              <span className={css.composerSpacer} />
-              <button
-                type="submit"
-                className={css.sendButton}
-                disabled={sending || draft.trim() === ''}
-                aria-label={sending ? t('sending') : t('send')}
-              >
-                <IconRightUpOutlineRegular />
-              </button>
-            </div>
-          </form>
-          {/* The machine's totals when it states them, this console's count otherwise. */}
-          <StatusRow
-            t={t}
-            stats={reportedStats ?? chrome.stats}
-            context={reportedStats?.context ?? chrome.context}
-            all={wholeLog}
-            gaps={coverage.gaps}
-            authoritative={reportedStats !== undefined}
-            onCount={() => { void props.loadAllOlder() }}
-          />
-        </div>
-      )}
+      {/* The console's own composer block, and its own footer, on every seat that
+          has no shipped one: the trajectory tab (which the shipped content does not
+          draw) and a build with no retention seam. On the chat tab of a build that
+          draws the retained Session it is *also* mounted — and hidden by CSS — for
+          one reason only: the card that takes over lives inside the shipped
+          composer stack, an occurrence whose mounting rules this panel cannot see
+          (`ConversationContent` renders that seat only while it can resolve the
+          Session's input shell). Keeping this one mounted means an unusable
+          composer is not a state this page can reach: the shipped card wins while
+          it is there, and this one is what is left if it never arrives.
+          `data-sync-composer` marks the shipped copy; the rule that hides this one
+          is on `.officialPane:has(...)` in `sync.module.css`. */}
+      <div className={css.composerRoot}>
+        <MirrorComposer
+          t={t}
+          drafts={props.drafts}
+          draftKey={draftKey(props.machineName, session.sessionId)}
+          machineName={props.machineName}
+          delivery={delivery}
+          online={props.online}
+          send={props.sendPrompt}
+        />
+        {/* The machine's totals when it states them, this console's count otherwise. */}
+        <StatusRow
+          t={t}
+          stats={totals}
+          context={reportedStats?.context ?? chrome.context}
+          all={wholeLog}
+          gaps={coverage.gaps}
+          authoritative={reportedStats !== undefined}
+          onCount={() => { void props.loadAllOlder() }}
+        />
+      </div>
     </>
   )
 }
 
 /**
- * The header's right-hand cluster:上下文占用率 ring, and the model, preset and
- * subagent facts the log reports.
+ * The header's right-hand cluster: the context-occupancy ring, and the model,
+ * preset and subagent facts the log reports.
  *
  * Every one of these is a **reading**, not a control: the mirror can see what
  * the owning machine is doing and cannot change it. The shipped session header
  * carries selectors in these seats; this console shows the same facts without
  * pretending a click would do something.
+ *
+ * The ring is handed its reading rather than reading the log again, because the
+ * footer states the same fact: one scope for one number, or the header and the
+ * footer of the same page would print two percentages for one window.
  */
-function ChromeChips({ t, chrome }: {
+function ChromeChips({ t, chrome, context }: {
   t: SessionSyncTranslate
   chrome: SessionChrome
+  /** Context occupancy, already resolved to the scope the footer reports. */
+  context?: SessionContext
 }): React.ReactElement {
-  const { model, context, policy, subagents } = chrome
+  const { model, policy, subagents } = chrome
   const preset = policy.preset === undefined
     ? undefined
     : policy.preset === 'danger-full-access'
@@ -1701,17 +1758,6 @@ function machineTrailing(machine: MirroredMachine, t: (key: SessionSyncKey) => s
   const running = machine.sessions.filter(session => session.running).length
   if (running > 0) return `${String(running)} ${t('sessionsRunning')}`
   return `${String(machine.sessions.length)} ${t('machineSessions')}`
-}
-
-/** The delivery state of the last prompt, as the composer renders it. */
-function deliveryLine(delivery: CommandDelivery, t: (key: SessionSyncKey) => string): string {
-  if (delivery.state === 'queued') return t('deliveryQueued')
-  if (delivery.state === 'delivered') return t('deliveryDelivered')
-  if (delivery.state === 'accepted') return t('deliveryAccepted')
-  if (delivery.state === 'expired') return t('deliveryExpired')
-  return delivery.error === undefined
-    ? t('deliveryFailed')
-    : `${t('deliveryFailed')}: ${delivery.error}`
 }
 
 /**

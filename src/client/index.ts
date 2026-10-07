@@ -16,6 +16,11 @@
  *    reachable in the collapsed rail.
  *  - `main` — the console: a machine → directory → Session tree beside the
  *    opened Session's conversation and the takeover composer.
+ *  - `conversation.input.dock` — the takeover composer itself, on the route that
+ *    draws the shipped conversation: the console hides the shipped input capsule
+ *    so that the shipped statistics row and context meter beneath it become the
+ *    footer, and its own card takes the seat directly above them. Null for every
+ *    Session this console has not retained.
  *
  * The conversation itself is the shipped renderer where the build supports it:
  * when the client context offers `ctx.sessions.retainAgentScope`, the open
@@ -32,7 +37,9 @@ import * as React from 'react'
 import type { ConfigPatch, RelayedAnswerItem, RelayedApprovalDecision } from '../shared/protocol.ts'
 import { ConfigSection } from './ConfigSection.tsx'
 import type { ConfigSectionProps } from './ConfigSection.tsx'
+import { ComposerDrafts } from './composer-draft.ts'
 import { ownsSubject, type PluginsSubjectLike } from './config-entry.ts'
+import { MirrorComposerDock } from './MirrorComposer.tsx'
 import { OFFICIAL_SLOT, OfficialConversation, OfficialSessions } from './official-session.tsx'
 import { PanelIcon } from './PanelIcon.tsx'
 import { SyncPanel } from './SyncPanel.tsx'
@@ -72,6 +79,10 @@ function ConfigSectionForDetail(props: ConfigSectionProps & { subject?: PluginsS
  */
 export function apply(ctx: ClientContext): void {
   const client = new SyncClient()
+  // The takeover prompt, held outside either of the two seats that can draw it:
+  // switching tabs moves the card between the shipped composer stack and the
+  // console's own footer, and the draft has to survive the move.
+  const drafts = new ComposerDrafts()
 
   // The shipped-renderer mirror, feature-detected: the bridge takes the one
   // route a released build offers — a Session retained through
@@ -155,6 +166,7 @@ export function apply(ctx: ClientContext): void {
       decideApproval: (machineName: string, approvalId: string, decision: RelayedApprovalDecision) =>
         client.decideApproval(machineName, approvalId, decision),
       official,
+      drafts,
     }),
   }, SyncPanel))
 
@@ -163,4 +175,33 @@ export function apply(ctx: ClientContext): void {
   ctx.slots.inject(OFFICIAL_SLOT, () => ctx.slots.register({
     name: OFFICIAL_SLOT,
   }, OfficialConversation))
+
+  // The takeover composer, as an occurrence of the shipped composer stack.
+  //
+  // Where the shipped conversation is drawn the console hides the shipped *input
+  // capsule* and nothing else, so the shipped statistics row and context meter
+  // below it render themselves and become the footer. That leaves the console's
+  // own card needing a seat in that stack, directly above the capsule it stands
+  // in for — and `conversation.input.dock` is exactly that seat: the shipped
+  // stack's own list of cards, one slot above the composer bar.
+  //
+  // Registered rather than drawn by the panel because the panel cannot render a
+  // slot another registration owns (one declarer per slot, and
+  // `conversation.composer.bar` is the shipped content Factory's). The entry
+  // answers null for every Session this console has not retained, which is what
+  // keeps it out of the product's own sessions.
+  ctx.slots.inject('conversation.input.dock', () => ctx.slots.register({
+    name: 'conversation.input.dock',
+    id: PANEL_ID,
+    // Last in the stack: the shipped goal bar is 10 and the queue dock 20, and
+    // this card is the one nearest the capsule it replaces.
+    order: 100,
+    locale: NS,
+    inject: () => ({
+      hooks: { sync: client.snapshot },
+      sendPrompt: (text: string) => client.sendPrompt(text),
+      official,
+      drafts,
+    }),
+  }, MirrorComposerDock))
 }

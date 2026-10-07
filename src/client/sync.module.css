@@ -472,6 +472,41 @@
 }
 
 /*
+ * Which log the footer's numbers counted.
+ *
+ * The shipped footer has no room for this and the console's own row states it in
+ * a place a reader has already scrolled past, so it sits in the header beside the
+ * other facts about the pane — wearing the same quiet chip the route badge does,
+ * because it is the same kind of statement. While the console is the one counting
+ * it becomes a control as well (`按整份日志重算`), which is why it is a button in
+ * both states: the element must not change identity when it gains an action, or
+ * the reader's place and the focus ring move with it. */
+.scopeBadge {
+  flex: none;
+  margin-right: 6px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 4px;
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-text-secondary);
+  font: var(--dsw-font-xxs-12);
+  white-space: nowrap;
+  /* A reading most of the time, a control the rest of the time: the pointer says
+     which, and `aria-disabled` (rather than `disabled`) is what keeps the tooltip
+     alive for the reading. */
+  cursor: default;
+}
+
+.scopeBadgeAction {
+  cursor: pointer;
+}
+
+.scopeBadgeAction:hover {
+  background: var(--dsw-alias-interactive-bg-active);
+  color: var(--dsw-alias-label-primary);
+}
+
+/*
  * The top of a transcript page.
  *
  * The mirror serves its newest window, so this is where the older end is asked
@@ -1551,18 +1586,22 @@
 /* This pane drives the Session's window itself — the routes other than `adopt`.
    Two pieces of the shipped furniture have to go with it:
 
-   - the composer seat, because its prompt would be sent to a Host that has never
-     heard of this Session (the console's own takeover composer replaces it);
+   - the input *capsule* only, not the whole composer seat: the seat also holds the
+     shipped statistics row and the context meter, and those are the footer this
+     pane wants. What is hidden is the capsule whose prompt would be sent to a Host
+     that has never heard of this Session; the console's own card is registered as
+     an occurrence of `conversation.input.dock`, the stack slot directly above it,
+     so the shipped row and meter keep their place below;
    - the open-history banner, because that read is one this pane does not use and
      cannot satisfy: a session-scoped integration behind the hidden composer may
      still start it, and the answer is always "no such Session". The transcript
      comes from the mirror, and the pane states its route in the header chip, so
      the fact is moved out of the way rather than hidden.
 
-   `data-composer-seat` is the shipped content's own marker, and the shipped
-   CSS-module name keeps its readable half (`<hash>_openError`), which is what the
-   second selector matches. */
-.drivesWindow [data-composer-seat],
+   `data-composer-card` and `data-composer-seat` are the shipped content's own
+   markers, and the shipped CSS-module name keeps its readable half
+   (`<hash>_openError`), which is what the second selector matches. */
+.drivesWindow [data-composer-card],
 .drivesWindow [class*="openError"] {
   display: none;
 }
@@ -1870,6 +1909,53 @@
   align-items: center;
   flex: none;
   padding: 0 16px 8px;
+}
+
+/* The card inside the console's own footer: the footer block already centers and
+   spaces what it holds, so the card itself only has to fill the width it is given. */
+.composerRootInner {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+/*
+ * The same card, as an occurrence of the shipped composer stack
+ * (`conversation.input.dock`, ui-conversation ConversationContent).
+ *
+ * The stack is a flex column with a gap, and the shipped input root below it pads
+ * itself 4px above its dock: the capsule this card replaces sat *inside* that root,
+ * so the gap the stack now puts between the two is spacing the shipped card never
+ * had. Cancelling exactly that gap is what leaves the shipped statistics row the
+ * same 4px under the card it sits under on a local Session. Read off the stack's
+ * own custom property with its documented value as the fallback, so the card
+ * follows an upstream change to the rhythm instead of fighting it.
+ */
+.dockComposer {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: calc(-1 * var(--dsh-composer-stack-gap, 6px));
+}
+
+/*
+ * Exactly one of the console's two composer cards is on screen.
+ *
+ * Both are the same component bound to the same draft, so both are always
+ * mounted: the console's own block is the seat that needs no shipped content at
+ * all (the trajectory tab, an old build), and the occurrence inside the shipped
+ * stack only exists while the shipped content can resolve the Session's input
+ * shell — a mounting rule this pane cannot ask about from the outside. Declarative
+ * presence is what settles it: while the shipped card is there, this one stands
+ * down, and if the shipped seat ever stops rendering, this one is already in place
+ * rather than leaving a Session with no way to speak in it.
+ *
+ * `display: none` rather than unmounting is deliberate: the hidden seat leaves the
+ * tab order and the accessibility tree with it, so there is no second text box to
+ * tab into, and the draft it holds is the same object either way.
+ */
+.officialPane:has([data-sync-composer]) ~ .composerRoot {
+  display: none;
 }
 
 /*

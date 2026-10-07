@@ -33,7 +33,7 @@ window.__ModuleLoader__.load({
 		let _deepseek_ai_dsh_client_store = require("@deepseek-ai/dsh-client-store");
 		let react_dom = require("react-dom");
 		//#region \0dsh-css:C:\Users\C\Desktop\git\dsh-session-sync\src\client\sync.module.css.mjs
-		const css$8 = ".SnSagW_section{flex-direction:column;gap:14px;padding:4px 0 8px;display:flex}.SnSagW_lede{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xs-13);margin:0}.SnSagW_group{flex-direction:column;gap:10px;display:flex}.SnSagW_groupTitle{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-strong-13);margin:0}.SnSagW_card{border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);border-radius:10px;flex-direction:column;gap:10px;padding:12px 14px;display:flex}.SnSagW_field{flex-direction:column;gap:4px;display:flex}.SnSagW_fieldRow{justify-content:space-between;align-items:center;gap:12px;display:flex}.SnSagW_fieldText{flex-direction:column;gap:2px;min-width:0;display:flex}.SnSagW_label{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13)}.SnSagW_hint{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12)}.SnSagW_pair{grid-template-columns:minmax(0,1fr) 120px;gap:10px;display:grid}.SnSagW_actions{align-items:center;gap:8px;display:flex}.SnSagW_saved{color:var(--dsw-alias-state-success-primary);font:var(--dsw-font-xxs-12)}.SnSagW_dirty{color:var(--dsw-alias-state-warn-primary);font:var(--dsw-font-xxs-12)}.SnSagW_failed{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12)}.SnSagW_sessionList{flex-direction:column;max-height:280px;display:flex;overflow-y:auto}.SnSagW_sessionRow{justify-content:space-between;align-items:center;gap:12px;min-height:40px;padding:5px 2px;display:flex}.SnSagW_sessionRow+.SnSagW_sessionRow{border-top:.5px solid var(--dsw-alias-border-l1)}.SnSagW_sessionText{flex-direction:column;gap:2px;min-width:0;display:flex}.SnSagW_sessionTitle{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.SnSagW_sessionMeta{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);align-items:center;gap:6px;display:flex}.SnSagW_empty{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);padding:12px 2px}.SnSagW_status{flex-wrap:wrap;gap:6px 18px;display:flex}.SnSagW_statusItem{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12);align-items:center;gap:6px;display:flex}.SnSagW_statusValue{color:var(--dsw-alias-label-primary)}.SnSagW_statusBad{color:var(--dsw-alias-state-error-primary)}.SnSagW_statusGood{color:var(--dsw-alias-state-success-primary)}.SnSagW_panel{height:100%;min-height:0;color:var(--dsw-alias-label-primary);display:flex}.SnSagW_listPane{background:var(--dsw-specific-sidebar-fill);border-right:.5px solid var(--dsw-alias-border-l3);flex-direction:column;flex:none;width:280px;min-height:0;display:flex}.SnSagW_listHead{flex-direction:column;flex:none;gap:6px;padding:10px 10px 8px;display:flex}.SnSagW_panel ::placeholder,.SnSagW_panel input::placeholder,.SnSagW_panel textarea::placeholder{color:var(--dsw-alias-label-caption);opacity:1}.SnSagW_listToggle{color:var(--dsw-alias-button-info-fill)}.SnSagW_panel[data-list=hidden] .SnSagW_listPane{display:none}.SnSagW_listStatus{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.SnSagW_list{flex-direction:column;flex:1;gap:3px;min-height:0;margin-right:2px;padding:0 6px 8px;display:flex;overflow-y:auto}.SnSagW_notice{background:var(--dsw-alias-state-warn-tertiary);color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);border-radius:8px;align-items:flex-start;gap:6px;margin:2px 2px 6px;padding:6px 8px;display:flex}.SnSagW_noticeText{flex:1;min-width:0}.SnSagW_noticeClose{width:14px;height:14px;color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:0;border-radius:4px;flex:none;justify-content:center;align-items:center;padding:0;font-size:13px;line-height:13px;display:inline-flex}.SnSagW_noticeClose:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.SnSagW_treeRow,.SnSagW_treeSession{box-sizing:border-box;width:100%;color:var(--dsw-alias-label-primary);text-align:left;cursor:pointer;user-select:none;transition:background var(--ds-transition-duration-fast) var(--ds-ease-in-out);background:0 0;border:0;border-radius:8px;align-items:center;gap:6px;padding:0 8px;display:flex}.SnSagW_treeRow{height:34px}.SnSagW_treeSession{gap:0;height:32px}.SnSagW_treeRow:hover,.SnSagW_treeSession:hover,.SnSagW_treeSessionSelected{background:var(--dsw-alias-interactive-bg-hover)}.SnSagW_treeRow:focus-visible,.SnSagW_treeSession:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.SnSagW_panel [data-level=\"1\"]{padding-left:24px}.SnSagW_panel [data-level=\"2\"]{padding-left:40px}.SnSagW_treeSlot{width:16px;height:20px;color:var(--dsw-alias-label-tertiary);flex:none;justify-content:center;align-items:center;display:inline-flex}.SnSagW_treeChevron{color:var(--dsw-alias-label-caption);display:none}.SnSagW_treeRow:hover .SnSagW_treeFolder,.SnSagW_treeRow:focus-visible .SnSagW_treeFolder{display:none}.SnSagW_treeRow:hover .SnSagW_treeChevron,.SnSagW_treeRow:focus-visible .SnSagW_treeChevron{display:inline-flex}.SnSagW_arrowOpen{transform:rotate(90deg)}.SnSagW_treeChevron svg{transition:transform .15s var(--ds-ease-in-out)}.SnSagW_rowTitle{min-width:0;font:var(--dsw-font-s-14);text-overflow:ellipsis;white-space:nowrap;flex:1;overflow:hidden}.SnSagW_treeSession .SnSagW_rowTitle{margin:0 6px 0 4px}.SnSagW_rowTime{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);flex:none}.SnSagW_gapBadge{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12);white-space:nowrap;flex:none;margin-right:6px}.SnSagW_realBadge,.SnSagW_routeBadge{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-text-secondary);font:var(--dsw-font-xxs-12);white-space:nowrap;border-radius:4px;flex:none;margin-right:6px;padding:0 6px}.SnSagW_olderRow{justify-content:center;padding:2px 0 12px;display:flex}.SnSagW_olderButton{border:.5px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12);cursor:pointer;background:0 0;border-radius:999px;padding:4px 12px}.SnSagW_olderButton:hover:not(:disabled){border-color:var(--dsw-alias-border-l4);color:var(--dsw-alias-label-primary)}.SnSagW_olderButton:disabled{cursor:default;opacity:.6}.SnSagW_treeRowDim .SnSagW_rowTitle,.SnSagW_treeRowDim .SnSagW_rowTime{color:var(--dsw-alias-label-secondary)}.SnSagW_heroRoot{justify-content:center;align-items:center;min-width:0;height:100%;padding:0 24px;display:flex}.SnSagW_heroStack{flex-direction:column;align-items:center;gap:12px;width:100%;max-width:calc(min(920px,100%) + 32px);display:flex}.SnSagW_heroHeadline{color:var(--dsw-alias-label-primary);flex-wrap:wrap;justify-content:center;align-items:center;gap:12px 10px;font-size:26px;font-weight:500;line-height:32px;display:flex}.SnSagW_heroFish{color:var(--dsw-alias-label-primary);flex:none;justify-content:center;align-items:center;display:inline-flex}.SnSagW_heroTitleGroup{flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 7px;min-width:0;display:flex}.SnSagW_heroBadge{border:.5px solid var(--dsw-alias-interactive-bg-hover);background:var(--dsw-alias-state-business-tertiary);color:var(--dsw-alias-label-primary-bluish);font-family:var(--ds-font-family-code);white-space:nowrap;border-radius:24px;align-self:flex-start;margin-top:2px;padding:1px 7px 0;font-size:12px;font-weight:500;line-height:18px}.SnSagW_heroHint{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);text-align:center;margin:0}.SnSagW_tjRoot{width:100%;min-height:0;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-1);flex-direction:column;flex:1;display:flex;overflow:hidden}.SnSagW_tjToolbar{z-index:4;box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);flex:none;align-items:center;gap:2px;height:32px;padding:0 6px;display:flex;position:sticky;top:0}.SnSagW_tjToggle{height:20px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);cursor:pointer;background:0 0;border:0;border-radius:3px;flex:none;align-items:center;gap:4px;padding:0 7px;display:inline-flex}.SnSagW_tjToggleIcon{stroke:currentColor;stroke-width:1.25px;stroke-linecap:round;stroke-linejoin:round;flex:none;width:12px;height:12px}.SnSagW_tjToggle:hover,.SnSagW_tjToggle[aria-pressed=true],.SnSagW_tjAction:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.SnSagW_tjToggle:focus-visible,.SnSagW_tjAction:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary);outline-offset:1px}.SnSagW_tjAction{height:20px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);cursor:pointer;background:0 0;border:0;border-radius:3px;flex:none;align-items:center;gap:4px;padding:0 5px;display:inline-flex}.SnSagW_tjActionIcon{color:var(--dsw-alias-label-tertiary);font:14px/14px var(--ds-font-family-code)}.SnSagW_tjSearch{border:.5px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-bg-layer-2);min-width:84px;height:22px;color:var(--dsw-alias-label-caption);border-radius:4px;flex:0 164px;align-items:center;gap:4px;margin-left:auto;padding:0 6px;display:flex}.SnSagW_tjSearch:focus-within{border-color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-bg-layer-1)}.SnSagW_tjSearchIcon{flex:none}.SnSagW_tjSearchInput{width:100%;min-width:0;color:var(--dsw-alias-label-primary);font:var(--dsw-font-xxs-12);background:0 0;border:0;outline:0;padding:0}.SnSagW_tjSearchInput::placeholder{color:var(--dsw-alias-label-caption)}.SnSagW_tjStrip{border-bottom:.5px solid var(--dsw-alias-border-l2);flex:none}.SnSagW_tjPlot{background:var(--dsw-alias-bg-layer-2);grid-template-columns:44px minmax(0,1fr);height:50px;display:grid;overflow:hidden}.SnSagW_tjLaneLabels{border-right:.5px solid var(--dsw-alias-border-l1);color:var(--dsw-alias-label-caption);font-size:10px;line-height:1;position:relative}.SnSagW_tjLaneLabels span{justify-content:flex-end;align-items:center;height:8px;display:flex;position:absolute;right:3px}.SnSagW_tjLaneLabels span:first-child{top:7px}.SnSagW_tjLaneLabels span:nth-child(2){top:21px}.SnSagW_tjLaneLabels span:nth-child(3){top:35px}.SnSagW_tjTrack{position:relative;overflow:hidden}.SnSagW_tjLanes,.SnSagW_tjTurnBoundaries{position:absolute;inset:7px 0}.SnSagW_tjSpan{top:calc(var(--tj-span-lane) * 14px);left:var(--tj-span-left);width:max(2px, var(--tj-span-width));background:var(--dsw-alias-label-secondary);opacity:.78;cursor:pointer;border:0;border-radius:1px;min-width:2px;height:8px;padding:0;position:absolute}.SnSagW_tjSpan[data-kind=user]{background:var(--dsw-alias-state-business-primary)}.SnSagW_tjSpan[data-kind=assistant],.SnSagW_tjSpan[data-kind=think]{background:var(--dsw-alias-label-primary);opacity:1}.SnSagW_tjSpan[data-kind=tool]{background:var(--dsw-alias-state-warn-label);opacity:1}.SnSagW_tjSpan[data-kind=context]{background:var(--dsw-alias-state-success-primary)}.SnSagW_tjSpan[data-error=true]{background:var(--dsw-alias-state-error-primary)}.SnSagW_tjSpan[data-selected=false]{opacity:.14}.SnSagW_tjSpan[data-current=true]{z-index:1;box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary)}.SnSagW_tjTurnBoundary{background:var(--dsw-alias-border-l2);width:.5px;position:absolute;top:0;bottom:0}.SnSagW_tjSplit{background:var(--dsw-alias-bg-layer-1);flex:1;min-width:0;min-height:0;display:flex;overflow:hidden}.SnSagW_tjTablePane{flex:1;min-width:0;overflow:hidden auto}.SnSagW_ledgerTable tbody tr[data-selected=true]{background:var(--dsw-alias-interactive-bg-active)}.SnSagW_ledgerTable tbody tr[data-dimmed=true]{opacity:.3}.SnSagW_ledgerTable tbody tr[data-folded=true]{cursor:pointer}.SnSagW_ledgerTable tbody tr[data-folded=true] td{height:20px}.SnSagW_tjFolded{min-width:0;color:var(--dsw-alias-label-secondary);align-items:center;gap:6px;font-size:12px;line-height:16px;display:flex}.SnSagW_tjFoldedEllipsis{color:var(--dsw-alias-label-tertiary);flex:none;font-weight:600}.SnSagW_tjFoldedText{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.SnSagW_tjDetails{border-left:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);flex-direction:column;flex:none;width:clamp(320px,38%,440px);min-width:0;min-height:0;display:flex}.SnSagW_tjDetailsHeader{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);flex:none;justify-content:space-between;align-items:center;height:42px;padding:0 8px 0 12px;display:flex}.SnSagW_tjDetailsTitle{align-items:center;gap:8px;min-width:0;display:flex}.SnSagW_tjDetailsDot{corner-shape:round;background:var(--dsw-alias-label-secondary);border-radius:50%;flex:none;width:5px;height:5px}.SnSagW_tjDetailsName{font:500 12px/16px var(--ds-font-family-code);flex:none}.SnSagW_tjDetailsLocation{min-width:0;color:var(--dsw-alias-label-tertiary);font:11px/16px var(--ds-font-family-code);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.SnSagW_tjClose{width:28px;height:28px;color:var(--dsw-alias-label-secondary);cursor:pointer;background:0 0;border:0;border-radius:6px;flex:none;justify-content:center;align-items:center;padding:0;font-size:18px;line-height:18px;display:inline-flex}.SnSagW_tjClose:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.SnSagW_tjDetailTabs{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);white-space:nowrap;flex:none;gap:1px;width:100%;height:34px;padding:0 8px;display:flex;overflow-x:auto}.SnSagW_tjDetailTab{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);cursor:pointer;background:0 0;border:0;flex:none;padding:0 9px;position:relative}.SnSagW_tjDetailTab:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.SnSagW_tjDetailTabActive{color:var(--dsw-alias-state-business-primary)}.SnSagW_tjDetailTabActive:after{background:var(--dsw-alias-state-business-primary);content:\"\";border-radius:1px 1px 0 0;height:2px;position:absolute;bottom:0;left:9px;right:9px}.SnSagW_tjDetailBody{flex:1;min-height:0;overflow:hidden auto}.SnSagW_tjOverview{font:var(--dsw-font-xs-13);margin:0;padding:8px 0}.SnSagW_tjOverview>div{grid-template-columns:94px minmax(0,1fr);align-items:center;min-height:22px;padding:0 14px;display:grid}.SnSagW_tjOverview dt{color:var(--dsw-alias-label-tertiary)}.SnSagW_tjOverview dd{min-width:0;color:var(--dsw-alias-label-primary);text-overflow:ellipsis;white-space:nowrap;margin:0;overflow:hidden}.SnSagW_tjPayload{box-sizing:border-box;overflow-wrap:anywhere;background:var(--dsw-alias-markdown-code-block);min-height:100%;color:var(--dsw-alias-label-primary);font:12px/19px var(--ds-font-family-code);tab-size:2;white-space:pre-wrap;margin:0;padding:14px}.SnSagW_tjMarkdown{padding:6px 14px 8px}.SnSagW_viewPane{background:var(--dsw-alias-bg-base);flex-direction:column;flex:1;min-width:0;min-height:0;display:flex}.SnSagW_viewHeader{border-bottom:.5px solid var(--dsw-alias-border-l3);flex-direction:column;flex:none;padding:10px 20px 0;display:flex}.SnSagW_viewTitleRow{align-items:center;gap:8px;min-width:0;min-height:30px;display:flex}.SnSagW_viewSpacer{flex:1}.SnSagW_viewTabs{z-index:1;gap:36px;margin-top:10px;padding-left:8px;display:flex;position:relative}.SnSagW_viewTab{color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:0;padding:0 0 9px;font-size:13px;font-weight:500;line-height:16px;position:relative}.SnSagW_viewTab:after{content:\"\";background:0 0;border-radius:2px;height:2px;position:absolute;bottom:-1px;left:0;right:0}.SnSagW_viewTabActive{color:var(--dsw-alias-state-business-primary)}.SnSagW_viewTabActive:after{background:var(--dsw-alias-state-business-primary)}.SnSagW_viewTab:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.SnSagW_chromeCluster{flex:none;align-items:center;gap:8px;min-width:0;display:flex}.SnSagW_chromeChip{border:.5px solid var(--dsw-alias-border-l2);corner-shape:round;max-width:200px;min-height:24px;color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);text-overflow:ellipsis;white-space:nowrap;border-radius:999px;align-items:center;gap:4px;padding:0 8px;display:inline-flex;overflow:hidden}.SnSagW_ringRoot{flex:none;display:inline-flex;position:relative}.SnSagW_ringTrigger{corner-shape:round;cursor:pointer;background:0 0;border:0;border-radius:50%;place-items:center;width:20px;height:20px;padding:0;display:grid}.SnSagW_ringTrigger:hover{background:var(--dsw-alias-interactive-bg-hover)}.SnSagW_ringTrigger:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.SnSagW_ringTrack{fill:none;stroke:var(--dsw-alias-border-l3);stroke-width:2px}.SnSagW_ringFill{fill:none;stroke:var(--dsw-alias-state-business-primary);stroke-width:2px;stroke-linecap:round}.SnSagW_ringPanel{z-index:9;--dsw-elevation-stroke-color:var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-overlay);box-shadow:var(--dsw-elevation-prominent);white-space:nowrap;border:0;border-radius:10px;flex-direction:column;gap:2px;padding:8px 10px;display:flex;position:absolute;top:26px;right:0}.SnSagW_ringHeadline{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12)}.SnSagW_ringFigures{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11)}.SnSagW_statusRow{width:100%;max-width:calc(min(920px,100%) + 32px);color:var(--dsw-alias-label-caption);font:var(--dsw-font-xxxs-11);font-variant-numeric:tabular-nums;flex-wrap:wrap;justify-content:center;gap:12px;padding:6px 0 0;display:flex}.SnSagW_ledger{background:var(--dsw-alias-bg-layer-1);flex:1;min-height:0;margin-right:2px;overflow-y:auto}.SnSagW_ledgerTable{border-spacing:0;table-layout:fixed;width:100%;color:var(--dsw-alias-label-primary);font:var(--dsw-font-xxs-12)}.SnSagW_ledgerTable th{z-index:3;box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-specific-sidebar-fill);height:30px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);text-align:left;text-overflow:ellipsis;white-space:nowrap;padding:0 8px;font-weight:500;position:sticky;top:0;overflow:hidden}.SnSagW_ledgerEventHead{text-align:right;width:122px;padding-right:4px}.SnSagW_ledgerTable td{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l1);text-overflow:ellipsis;white-space:nowrap;height:30px;padding:0 8px;overflow:hidden}.SnSagW_ledgerTable tbody tr:hover{background:var(--dsw-alias-interactive-bg-hover)}.SnSagW_ledgerEventCell{text-align:right;padding-left:36px;padding-right:4px;position:relative;overflow:visible}.SnSagW_ledgerRail{z-index:4;background:var(--dsw-alias-border-l3);pointer-events:none;width:2px;position:absolute;top:-1px;bottom:-1px;left:0}.SnSagW_ledgerTable tbody tr[data-error=true] .SnSagW_ledgerRail{background:var(--dsw-alias-state-error-primary)}.SnSagW_ledgerTable tbody tr[data-turn-start=true] td:before{z-index:1;background:var(--dsw-alias-border-l1);content:\"\";pointer-events:none;height:2px;position:absolute;top:0;left:0;right:0;transform:translateY(-50%)}.SnSagW_ledgerTable tbody tr[data-turn-start=true]:first-child td:before{content:none}.SnSagW_ledgerTurnLabel{z-index:3;box-sizing:border-box;background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-tertiary);font:8px/10px var(--ds-font-family-code);font-variant-numeric:tabular-nums;white-space:nowrap;border-radius:0 0 2px;align-items:center;padding:1px 5px;display:inline-grid;position:absolute;top:0;left:0}.SnSagW_ledgerKindSlot{justify-content:flex-end;align-items:center;width:76px;display:inline-flex}.SnSagW_ledgerKind{box-sizing:border-box;letter-spacing:.035em;user-select:none;border:1px solid #0000;border-radius:4px;align-items:center;height:19px;padding:0 5px;font-size:10px;font-weight:650;line-height:16px;display:inline-flex}.SnSagW_kind_user{color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-state-business-tertiary)}.SnSagW_kind_assistant,.SnSagW_kind_think{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-2)}.SnSagW_kind_tool{color:var(--dsw-alias-state-warn-label);background:var(--dsw-alias-state-warn-tertiary)}.SnSagW_kind_error{color:var(--dsw-alias-state-error-primary);background:var(--dsw-alias-bg-layer-2)}.SnSagW_kind_system,.SnSagW_kind_policy,.SnSagW_kind_title,.SnSagW_kind_other,.SnSagW_kind_compaction{color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-bg-module-platform)}.SnSagW_kind_turn,.SnSagW_kind_step,.SnSagW_kind_context{color:var(--dsw-alias-label-tertiary);background:var(--dsw-alias-bg-layer-2)}.SnSagW_ledgerContentCell{padding-left:4px}.SnSagW_ledgerText{color:var(--dsw-alias-label-primary)}.SnSagW_ledgerMono{color:var(--dsw-alias-label-secondary);font-family:var(--ds-font-family-code);font-size:12px}.SnSagW_ledgerResult{grid-template-columns:clamp(180px,36cqw,480px) minmax(0,1fr);align-items:center;gap:8px;min-width:0;display:grid}.SnSagW_ledgerResult>*{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.SnSagW_ledgerErrorText{color:var(--dsw-alias-state-error-primary)}.SnSagW_ledgerDuration{color:var(--dsw-alias-label-caption);font:var(--dsw-font-xxxs-11);font-variant-numeric:tabular-nums;margin-left:8px}.SnSagW_viewTitle{min-width:0;font:var(--dsw-font-s-strong-14);text-overflow:ellipsis;white-space:nowrap;flex:0 auto;margin:0;overflow:hidden}.SnSagW_viewMachine{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);white-space:nowrap;flex:none}.SnSagW_viewScroll{flex:1;min-height:0;margin-right:2px;padding:16px 32px;overflow-y:auto}.SnSagW_officialPane{flex-direction:column;flex:1;min-height:0;display:flex;overflow:hidden}.SnSagW_officialPane>*{flex:1;min-height:0}.SnSagW_officialPane [aria-label=好的回答],.SnSagW_officialPane [aria-label=取消标记],.SnSagW_officialPane [aria-label=有问题的回答],.SnSagW_officialPane [aria-label=Good\\ response],.SnSagW_officialPane [aria-label=Remove\\ rating],.SnSagW_officialPane [aria-label=Bad\\ response],.SnSagW_officialPane [aria-label=在新对话中分支],.SnSagW_officialPane [aria-label=\"Branch into a new conversation\"],.SnSagW_drivesWindow [data-composer-seat],.SnSagW_drivesWindow [class*=openError]{display:none}.SnSagW_viewColumn{flex-direction:column;width:100%;max-width:min(920px,100%);margin:0 auto;display:flex}.SnSagW_viewColumn>*+*{margin-top:16px}.SnSagW_userRow{flex-direction:column;align-items:flex-end;gap:6px;display:flex}.SnSagW_bubble{max-width:min(calc(var(--dsh-chat-content-width,748px) * .702), 82%);background:var(--dsw-specific-bubble);font-size:var(--dsh-content-font-size,14px);line-height:calc(22px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-primary);white-space:pre-wrap;word-break:break-word;border-radius:22px;padding:10px 16px}.SnSagW_assistantRow{flex-direction:column;gap:16px;min-width:0;display:flex}.SnSagW_messageActions{margin-top:4px;margin-left:-6px}.SnSagW_stopped,.SnSagW_mediaChip{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-tertiary);border-radius:6px;align-self:flex-start;padding:0 6px;font-size:11px;line-height:18px}.SnSagW_action{width:calc(28px + var(--dsh-content-font-delta,0px));height:calc(28px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;border-radius:28px;justify-content:center;align-items:center;padding:6px;display:inline-flex}.SnSagW_action svg{width:calc(15px + var(--dsh-content-font-delta,0px));height:calc(15px + var(--dsh-content-font-delta,0px))}.SnSagW_action:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary)}.SnSagW_timeStart{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);white-space:nowrap;padding-right:12px}.SnSagW_timeEnd{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);white-space:nowrap}.SnSagW_noticeRow{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px));grid-template-columns:10px minmax(0,1fr) auto;align-items:start;gap:8px;padding:2px 0;display:grid}.SnSagW_noticeDot{margin-top:5px}.SnSagW_noticeCopy{overflow-wrap:anywhere;min-width:0}.SnSagW_noticeTitleError{color:var(--dsw-alias-state-error-primary);margin-right:6px;font-weight:600}.SnSagW_noticeTitleWarn{color:var(--dsw-alias-state-warn-primary);margin-right:6px;font-weight:600}.SnSagW_noticeMessage{color:var(--dsw-alias-label-secondary)}.SnSagW_noticeCode{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-markdown-code-block-small)}.SnSagW_retryRow{color:var(--dsw-alias-label-tertiary);font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px))}.SnSagW_retrySummary{width:fit-content;color:inherit;cursor:pointer;user-select:none;border-radius:3px;align-items:center;gap:7px;padding:2px 0;list-style:none;display:inline-flex}.SnSagW_retrySummary::-webkit-details-marker{display:none}.SnSagW_retrySummary:after{content:\"\";opacity:.8;border-bottom:1.5px solid;border-right:1.5px solid;width:6px;height:6px;transition:transform .12s;transform:rotate(-45deg)}.SnSagW_retrySummary:hover{color:var(--dsw-alias-label-secondary)}.SnSagW_retrySummary:focus-visible{outline:1.5px solid var(--dsw-alias-button-info-fill);outline-offset:2px}.SnSagW_retryText{color:inherit}.SnSagW_retryRow[data-active] .SnSagW_retryText{background:linear-gradient(90deg, var(--dsw-alias-label-tertiary) 0%, var(--dsw-alias-label-tertiary) 40%, var(--dsw-alias-label-secondary) 50%, var(--dsw-alias-label-tertiary) 60%, var(--dsw-alias-label-tertiary) 100%);color:#0000;background-position:100%;background-size:200% 100%;background-clip:text;animation:1.6s ease-in-out infinite SnSagW_dsh-sync-retry-shimmer}@keyframes SnSagW_dsh-sync-retry-shimmer{0%{background-position:100%}to{background-position:0%}}@media (prefers-reduced-motion:reduce){.SnSagW_retryRow[data-active] .SnSagW_retryText{color:inherit;background:0 0;animation:none}}.SnSagW_retryRow[open] .SnSagW_retrySummary:after{transform:rotate(45deg)}.SnSagW_retryDetails{overflow-wrap:anywhere;font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(18px + var(--dsh-content-font-delta-secondary,0px));gap:2px;margin-top:3px;padding-left:14px;display:grid}.SnSagW_retryDetailLabel{color:var(--dsw-alias-label-secondary)}.SnSagW_toBottomSlot{z-index:2;pointer-events:none;justify-content:flex-end;height:0;padding-right:8px;display:flex;position:sticky;bottom:16px}.SnSagW_toBottom{--dsw-elevation-stroke-color:var(--dsw-alias-border-l3);corner-shape:round;width:34px;height:34px;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-button-floating-fill);box-shadow:var(--dsw-elevation-panel);cursor:pointer;pointer-events:auto;border:0;border-radius:100px;justify-content:center;align-items:center;margin-top:-34px;padding:0;display:flex}.SnSagW_toBottom:hover{background:var(--dsw-alias-button-floating-hover)}.SnSagW_composerRoot{flex-direction:column;flex:none;align-items:center;padding:0 16px 8px;display:flex}.SnSagW_composerCard{box-sizing:border-box;--dsw-elevation-stroke-color:var(--dsw-alias-border-l2);background:var(--dsw-specific-input-major);width:100%;max-width:calc(min(920px,100%) + 32px);box-shadow:var(--dsw-elevation-soft);font:var(--dsw-font-s-14);border:0;border-radius:22px;flex-direction:column;gap:12px;padding-top:8px;display:flex}.SnSagW_composerText{box-sizing:border-box;width:100%;min-height:44px;max-height:200px;color:var(--dsw-alias-label-primary);font:inherit;resize:none;background:0 0;border:0;margin:0;padding:8px 16px 0}.SnSagW_composerText::placeholder{color:var(--dsw-alias-placeholder)}.SnSagW_composerText:focus-visible{outline:none}.SnSagW_composerBar{align-items:center;gap:8px;padding:0 10px 10px 16px;display:flex}.SnSagW_composerTarget{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);flex:none}.SnSagW_composerDelivery{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11)}.SnSagW_composerOffline{color:var(--dsw-alias-state-warn-label);font:var(--dsw-font-xxxs-11)}.SnSagW_composerSpacer{flex:1}.SnSagW_sendButton{corner-shape:round;background:var(--dsw-alias-button-info-fill);color:#fff;cursor:pointer;width:34px;height:34px;transition:background-color var(--ds-transition-duration-fast) var(--ds-ease-in-out);border:0;border-radius:999px;flex:none;place-items:center;display:grid}.SnSagW_sendButton:hover:not(:disabled){background:var(--dsw-alias-button-info-hover)}.SnSagW_sendButton:disabled{opacity:.4;cursor:default}.SnSagW_sendButton:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.SnSagW_error{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12);margin-bottom:10px}.SnSagW_narrowOnly{display:none}@media (width<=719px){.SnSagW_listPane{border-right:0;width:100%}.SnSagW_panel[data-open=true] .SnSagW_listPane,.SnSagW_panel[data-open=false] .SnSagW_viewPane{display:none}.SnSagW_narrowOnly{display:inline-flex}}@media (prefers-reduced-motion:reduce){.SnSagW_treeRow,.SnSagW_treeSession,.SnSagW_treeChevron svg,.SnSagW_sendButton{transition:none}}";
+		const css$8 = ".SnSagW_section{flex-direction:column;gap:14px;padding:4px 0 8px;display:flex}.SnSagW_lede{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xs-13);margin:0}.SnSagW_group{flex-direction:column;gap:10px;display:flex}.SnSagW_groupTitle{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-strong-13);margin:0}.SnSagW_card{border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);border-radius:10px;flex-direction:column;gap:10px;padding:12px 14px;display:flex}.SnSagW_field{flex-direction:column;gap:4px;display:flex}.SnSagW_fieldRow{justify-content:space-between;align-items:center;gap:12px;display:flex}.SnSagW_fieldText{flex-direction:column;gap:2px;min-width:0;display:flex}.SnSagW_label{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13)}.SnSagW_hint{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12)}.SnSagW_pair{grid-template-columns:minmax(0,1fr) 120px;gap:10px;display:grid}.SnSagW_actions{align-items:center;gap:8px;display:flex}.SnSagW_saved{color:var(--dsw-alias-state-success-primary);font:var(--dsw-font-xxs-12)}.SnSagW_dirty{color:var(--dsw-alias-state-warn-primary);font:var(--dsw-font-xxs-12)}.SnSagW_failed{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12)}.SnSagW_sessionList{flex-direction:column;max-height:280px;display:flex;overflow-y:auto}.SnSagW_sessionRow{justify-content:space-between;align-items:center;gap:12px;min-height:40px;padding:5px 2px;display:flex}.SnSagW_sessionRow+.SnSagW_sessionRow{border-top:.5px solid var(--dsw-alias-border-l1)}.SnSagW_sessionText{flex-direction:column;gap:2px;min-width:0;display:flex}.SnSagW_sessionTitle{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.SnSagW_sessionMeta{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);align-items:center;gap:6px;display:flex}.SnSagW_empty{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);padding:12px 2px}.SnSagW_status{flex-wrap:wrap;gap:6px 18px;display:flex}.SnSagW_statusItem{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12);align-items:center;gap:6px;display:flex}.SnSagW_statusValue{color:var(--dsw-alias-label-primary)}.SnSagW_statusBad{color:var(--dsw-alias-state-error-primary)}.SnSagW_statusGood{color:var(--dsw-alias-state-success-primary)}.SnSagW_panel{height:100%;min-height:0;color:var(--dsw-alias-label-primary);display:flex}.SnSagW_listPane{background:var(--dsw-specific-sidebar-fill);border-right:.5px solid var(--dsw-alias-border-l3);flex-direction:column;flex:none;width:280px;min-height:0;display:flex}.SnSagW_listHead{flex-direction:column;flex:none;gap:6px;padding:10px 10px 8px;display:flex}.SnSagW_panel ::placeholder,.SnSagW_panel input::placeholder,.SnSagW_panel textarea::placeholder{color:var(--dsw-alias-label-caption);opacity:1}.SnSagW_listToggle{color:var(--dsw-alias-button-info-fill)}.SnSagW_panel[data-list=hidden] .SnSagW_listPane{display:none}.SnSagW_listStatus{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.SnSagW_list{flex-direction:column;flex:1;gap:3px;min-height:0;margin-right:2px;padding:0 6px 8px;display:flex;overflow-y:auto}.SnSagW_notice{background:var(--dsw-alias-state-warn-tertiary);color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);border-radius:8px;align-items:flex-start;gap:6px;margin:2px 2px 6px;padding:6px 8px;display:flex}.SnSagW_noticeText{flex:1;min-width:0}.SnSagW_noticeClose{width:14px;height:14px;color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:0;border-radius:4px;flex:none;justify-content:center;align-items:center;padding:0;font-size:13px;line-height:13px;display:inline-flex}.SnSagW_noticeClose:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.SnSagW_treeRow,.SnSagW_treeSession{box-sizing:border-box;width:100%;color:var(--dsw-alias-label-primary);text-align:left;cursor:pointer;user-select:none;transition:background var(--ds-transition-duration-fast) var(--ds-ease-in-out);background:0 0;border:0;border-radius:8px;align-items:center;gap:6px;padding:0 8px;display:flex}.SnSagW_treeRow{height:34px}.SnSagW_treeSession{gap:0;height:32px}.SnSagW_treeRow:hover,.SnSagW_treeSession:hover,.SnSagW_treeSessionSelected{background:var(--dsw-alias-interactive-bg-hover)}.SnSagW_treeRow:focus-visible,.SnSagW_treeSession:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.SnSagW_panel [data-level=\"1\"]{padding-left:24px}.SnSagW_panel [data-level=\"2\"]{padding-left:40px}.SnSagW_treeSlot{width:16px;height:20px;color:var(--dsw-alias-label-tertiary);flex:none;justify-content:center;align-items:center;display:inline-flex}.SnSagW_treeChevron{color:var(--dsw-alias-label-caption);display:none}.SnSagW_treeRow:hover .SnSagW_treeFolder,.SnSagW_treeRow:focus-visible .SnSagW_treeFolder{display:none}.SnSagW_treeRow:hover .SnSagW_treeChevron,.SnSagW_treeRow:focus-visible .SnSagW_treeChevron{display:inline-flex}.SnSagW_arrowOpen{transform:rotate(90deg)}.SnSagW_treeChevron svg{transition:transform .15s var(--ds-ease-in-out)}.SnSagW_rowTitle{min-width:0;font:var(--dsw-font-s-14);text-overflow:ellipsis;white-space:nowrap;flex:1;overflow:hidden}.SnSagW_treeSession .SnSagW_rowTitle{margin:0 6px 0 4px}.SnSagW_rowTime{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);flex:none}.SnSagW_gapBadge{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12);white-space:nowrap;flex:none;margin-right:6px}.SnSagW_realBadge,.SnSagW_routeBadge{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-text-secondary);font:var(--dsw-font-xxs-12);white-space:nowrap;border-radius:4px;flex:none;margin-right:6px;padding:0 6px}.SnSagW_scopeBadge{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-text-secondary);font:var(--dsw-font-xxs-12);white-space:nowrap;cursor:default;border:0;border-radius:4px;flex:none;margin-right:6px;padding:0 6px}.SnSagW_scopeBadgeAction{cursor:pointer}.SnSagW_scopeBadgeAction:hover{background:var(--dsw-alias-interactive-bg-active);color:var(--dsw-alias-label-primary)}.SnSagW_olderRow{justify-content:center;padding:2px 0 12px;display:flex}.SnSagW_olderButton{border:.5px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12);cursor:pointer;background:0 0;border-radius:999px;padding:4px 12px}.SnSagW_olderButton:hover:not(:disabled){border-color:var(--dsw-alias-border-l4);color:var(--dsw-alias-label-primary)}.SnSagW_olderButton:disabled{cursor:default;opacity:.6}.SnSagW_treeRowDim .SnSagW_rowTitle,.SnSagW_treeRowDim .SnSagW_rowTime{color:var(--dsw-alias-label-secondary)}.SnSagW_heroRoot{justify-content:center;align-items:center;min-width:0;height:100%;padding:0 24px;display:flex}.SnSagW_heroStack{flex-direction:column;align-items:center;gap:12px;width:100%;max-width:calc(min(920px,100%) + 32px);display:flex}.SnSagW_heroHeadline{color:var(--dsw-alias-label-primary);flex-wrap:wrap;justify-content:center;align-items:center;gap:12px 10px;font-size:26px;font-weight:500;line-height:32px;display:flex}.SnSagW_heroFish{color:var(--dsw-alias-label-primary);flex:none;justify-content:center;align-items:center;display:inline-flex}.SnSagW_heroTitleGroup{flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 7px;min-width:0;display:flex}.SnSagW_heroBadge{border:.5px solid var(--dsw-alias-interactive-bg-hover);background:var(--dsw-alias-state-business-tertiary);color:var(--dsw-alias-label-primary-bluish);font-family:var(--ds-font-family-code);white-space:nowrap;border-radius:24px;align-self:flex-start;margin-top:2px;padding:1px 7px 0;font-size:12px;font-weight:500;line-height:18px}.SnSagW_heroHint{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);text-align:center;margin:0}.SnSagW_tjRoot{width:100%;min-height:0;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-1);flex-direction:column;flex:1;display:flex;overflow:hidden}.SnSagW_tjToolbar{z-index:4;box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);flex:none;align-items:center;gap:2px;height:32px;padding:0 6px;display:flex;position:sticky;top:0}.SnSagW_tjToggle{height:20px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);cursor:pointer;background:0 0;border:0;border-radius:3px;flex:none;align-items:center;gap:4px;padding:0 7px;display:inline-flex}.SnSagW_tjToggleIcon{stroke:currentColor;stroke-width:1.25px;stroke-linecap:round;stroke-linejoin:round;flex:none;width:12px;height:12px}.SnSagW_tjToggle:hover,.SnSagW_tjToggle[aria-pressed=true],.SnSagW_tjAction:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.SnSagW_tjToggle:focus-visible,.SnSagW_tjAction:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary);outline-offset:1px}.SnSagW_tjAction{height:20px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);cursor:pointer;background:0 0;border:0;border-radius:3px;flex:none;align-items:center;gap:4px;padding:0 5px;display:inline-flex}.SnSagW_tjActionIcon{color:var(--dsw-alias-label-tertiary);font:14px/14px var(--ds-font-family-code)}.SnSagW_tjSearch{border:.5px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-bg-layer-2);min-width:84px;height:22px;color:var(--dsw-alias-label-caption);border-radius:4px;flex:0 164px;align-items:center;gap:4px;margin-left:auto;padding:0 6px;display:flex}.SnSagW_tjSearch:focus-within{border-color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-bg-layer-1)}.SnSagW_tjSearchIcon{flex:none}.SnSagW_tjSearchInput{width:100%;min-width:0;color:var(--dsw-alias-label-primary);font:var(--dsw-font-xxs-12);background:0 0;border:0;outline:0;padding:0}.SnSagW_tjSearchInput::placeholder{color:var(--dsw-alias-label-caption)}.SnSagW_tjStrip{border-bottom:.5px solid var(--dsw-alias-border-l2);flex:none}.SnSagW_tjPlot{background:var(--dsw-alias-bg-layer-2);grid-template-columns:44px minmax(0,1fr);height:50px;display:grid;overflow:hidden}.SnSagW_tjLaneLabels{border-right:.5px solid var(--dsw-alias-border-l1);color:var(--dsw-alias-label-caption);font-size:10px;line-height:1;position:relative}.SnSagW_tjLaneLabels span{justify-content:flex-end;align-items:center;height:8px;display:flex;position:absolute;right:3px}.SnSagW_tjLaneLabels span:first-child{top:7px}.SnSagW_tjLaneLabels span:nth-child(2){top:21px}.SnSagW_tjLaneLabels span:nth-child(3){top:35px}.SnSagW_tjTrack{position:relative;overflow:hidden}.SnSagW_tjLanes,.SnSagW_tjTurnBoundaries{position:absolute;inset:7px 0}.SnSagW_tjSpan{top:calc(var(--tj-span-lane) * 14px);left:var(--tj-span-left);width:max(2px, var(--tj-span-width));background:var(--dsw-alias-label-secondary);opacity:.78;cursor:pointer;border:0;border-radius:1px;min-width:2px;height:8px;padding:0;position:absolute}.SnSagW_tjSpan[data-kind=user]{background:var(--dsw-alias-state-business-primary)}.SnSagW_tjSpan[data-kind=assistant],.SnSagW_tjSpan[data-kind=think]{background:var(--dsw-alias-label-primary);opacity:1}.SnSagW_tjSpan[data-kind=tool]{background:var(--dsw-alias-state-warn-label);opacity:1}.SnSagW_tjSpan[data-kind=context]{background:var(--dsw-alias-state-success-primary)}.SnSagW_tjSpan[data-error=true]{background:var(--dsw-alias-state-error-primary)}.SnSagW_tjSpan[data-selected=false]{opacity:.14}.SnSagW_tjSpan[data-current=true]{z-index:1;box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary)}.SnSagW_tjTurnBoundary{background:var(--dsw-alias-border-l2);width:.5px;position:absolute;top:0;bottom:0}.SnSagW_tjSplit{background:var(--dsw-alias-bg-layer-1);flex:1;min-width:0;min-height:0;display:flex;overflow:hidden}.SnSagW_tjTablePane{flex:1;min-width:0;overflow:hidden auto}.SnSagW_ledgerTable tbody tr[data-selected=true]{background:var(--dsw-alias-interactive-bg-active)}.SnSagW_ledgerTable tbody tr[data-dimmed=true]{opacity:.3}.SnSagW_ledgerTable tbody tr[data-folded=true]{cursor:pointer}.SnSagW_ledgerTable tbody tr[data-folded=true] td{height:20px}.SnSagW_tjFolded{min-width:0;color:var(--dsw-alias-label-secondary);align-items:center;gap:6px;font-size:12px;line-height:16px;display:flex}.SnSagW_tjFoldedEllipsis{color:var(--dsw-alias-label-tertiary);flex:none;font-weight:600}.SnSagW_tjFoldedText{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.SnSagW_tjDetails{border-left:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);flex-direction:column;flex:none;width:clamp(320px,38%,440px);min-width:0;min-height:0;display:flex}.SnSagW_tjDetailsHeader{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);flex:none;justify-content:space-between;align-items:center;height:42px;padding:0 8px 0 12px;display:flex}.SnSagW_tjDetailsTitle{align-items:center;gap:8px;min-width:0;display:flex}.SnSagW_tjDetailsDot{corner-shape:round;background:var(--dsw-alias-label-secondary);border-radius:50%;flex:none;width:5px;height:5px}.SnSagW_tjDetailsName{font:500 12px/16px var(--ds-font-family-code);flex:none}.SnSagW_tjDetailsLocation{min-width:0;color:var(--dsw-alias-label-tertiary);font:11px/16px var(--ds-font-family-code);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.SnSagW_tjClose{width:28px;height:28px;color:var(--dsw-alias-label-secondary);cursor:pointer;background:0 0;border:0;border-radius:6px;flex:none;justify-content:center;align-items:center;padding:0;font-size:18px;line-height:18px;display:inline-flex}.SnSagW_tjClose:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.SnSagW_tjDetailTabs{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);white-space:nowrap;flex:none;gap:1px;width:100%;height:34px;padding:0 8px;display:flex;overflow-x:auto}.SnSagW_tjDetailTab{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);cursor:pointer;background:0 0;border:0;flex:none;padding:0 9px;position:relative}.SnSagW_tjDetailTab:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.SnSagW_tjDetailTabActive{color:var(--dsw-alias-state-business-primary)}.SnSagW_tjDetailTabActive:after{background:var(--dsw-alias-state-business-primary);content:\"\";border-radius:1px 1px 0 0;height:2px;position:absolute;bottom:0;left:9px;right:9px}.SnSagW_tjDetailBody{flex:1;min-height:0;overflow:hidden auto}.SnSagW_tjOverview{font:var(--dsw-font-xs-13);margin:0;padding:8px 0}.SnSagW_tjOverview>div{grid-template-columns:94px minmax(0,1fr);align-items:center;min-height:22px;padding:0 14px;display:grid}.SnSagW_tjOverview dt{color:var(--dsw-alias-label-tertiary)}.SnSagW_tjOverview dd{min-width:0;color:var(--dsw-alias-label-primary);text-overflow:ellipsis;white-space:nowrap;margin:0;overflow:hidden}.SnSagW_tjPayload{box-sizing:border-box;overflow-wrap:anywhere;background:var(--dsw-alias-markdown-code-block);min-height:100%;color:var(--dsw-alias-label-primary);font:12px/19px var(--ds-font-family-code);tab-size:2;white-space:pre-wrap;margin:0;padding:14px}.SnSagW_tjMarkdown{padding:6px 14px 8px}.SnSagW_viewPane{background:var(--dsw-alias-bg-base);flex-direction:column;flex:1;min-width:0;min-height:0;display:flex}.SnSagW_viewHeader{border-bottom:.5px solid var(--dsw-alias-border-l3);flex-direction:column;flex:none;padding:10px 20px 0;display:flex}.SnSagW_viewTitleRow{align-items:center;gap:8px;min-width:0;min-height:30px;display:flex}.SnSagW_viewSpacer{flex:1}.SnSagW_viewTabs{z-index:1;gap:36px;margin-top:10px;padding-left:8px;display:flex;position:relative}.SnSagW_viewTab{color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:0;padding:0 0 9px;font-size:13px;font-weight:500;line-height:16px;position:relative}.SnSagW_viewTab:after{content:\"\";background:0 0;border-radius:2px;height:2px;position:absolute;bottom:-1px;left:0;right:0}.SnSagW_viewTabActive{color:var(--dsw-alias-state-business-primary)}.SnSagW_viewTabActive:after{background:var(--dsw-alias-state-business-primary)}.SnSagW_viewTab:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.SnSagW_chromeCluster{flex:none;align-items:center;gap:8px;min-width:0;display:flex}.SnSagW_chromeChip{border:.5px solid var(--dsw-alias-border-l2);corner-shape:round;max-width:200px;min-height:24px;color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);text-overflow:ellipsis;white-space:nowrap;border-radius:999px;align-items:center;gap:4px;padding:0 8px;display:inline-flex;overflow:hidden}.SnSagW_ringRoot{flex:none;display:inline-flex;position:relative}.SnSagW_ringTrigger{corner-shape:round;cursor:pointer;background:0 0;border:0;border-radius:50%;place-items:center;width:20px;height:20px;padding:0;display:grid}.SnSagW_ringTrigger:hover{background:var(--dsw-alias-interactive-bg-hover)}.SnSagW_ringTrigger:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.SnSagW_ringTrack{fill:none;stroke:var(--dsw-alias-border-l3);stroke-width:2px}.SnSagW_ringFill{fill:none;stroke:var(--dsw-alias-state-business-primary);stroke-width:2px;stroke-linecap:round}.SnSagW_ringPanel{z-index:9;--dsw-elevation-stroke-color:var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-overlay);box-shadow:var(--dsw-elevation-prominent);white-space:nowrap;border:0;border-radius:10px;flex-direction:column;gap:2px;padding:8px 10px;display:flex;position:absolute;top:26px;right:0}.SnSagW_ringHeadline{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12)}.SnSagW_ringFigures{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11)}.SnSagW_statusRow{width:100%;max-width:calc(min(920px,100%) + 32px);color:var(--dsw-alias-label-caption);font:var(--dsw-font-xxxs-11);font-variant-numeric:tabular-nums;flex-wrap:wrap;justify-content:center;gap:12px;padding:6px 0 0;display:flex}.SnSagW_ledger{background:var(--dsw-alias-bg-layer-1);flex:1;min-height:0;margin-right:2px;overflow-y:auto}.SnSagW_ledgerTable{border-spacing:0;table-layout:fixed;width:100%;color:var(--dsw-alias-label-primary);font:var(--dsw-font-xxs-12)}.SnSagW_ledgerTable th{z-index:3;box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-specific-sidebar-fill);height:30px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);text-align:left;text-overflow:ellipsis;white-space:nowrap;padding:0 8px;font-weight:500;position:sticky;top:0;overflow:hidden}.SnSagW_ledgerEventHead{text-align:right;width:122px;padding-right:4px}.SnSagW_ledgerTable td{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l1);text-overflow:ellipsis;white-space:nowrap;height:30px;padding:0 8px;overflow:hidden}.SnSagW_ledgerTable tbody tr:hover{background:var(--dsw-alias-interactive-bg-hover)}.SnSagW_ledgerEventCell{text-align:right;padding-left:36px;padding-right:4px;position:relative;overflow:visible}.SnSagW_ledgerRail{z-index:4;background:var(--dsw-alias-border-l3);pointer-events:none;width:2px;position:absolute;top:-1px;bottom:-1px;left:0}.SnSagW_ledgerTable tbody tr[data-error=true] .SnSagW_ledgerRail{background:var(--dsw-alias-state-error-primary)}.SnSagW_ledgerTable tbody tr[data-turn-start=true] td:before{z-index:1;background:var(--dsw-alias-border-l1);content:\"\";pointer-events:none;height:2px;position:absolute;top:0;left:0;right:0;transform:translateY(-50%)}.SnSagW_ledgerTable tbody tr[data-turn-start=true]:first-child td:before{content:none}.SnSagW_ledgerTurnLabel{z-index:3;box-sizing:border-box;background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-tertiary);font:8px/10px var(--ds-font-family-code);font-variant-numeric:tabular-nums;white-space:nowrap;border-radius:0 0 2px;align-items:center;padding:1px 5px;display:inline-grid;position:absolute;top:0;left:0}.SnSagW_ledgerKindSlot{justify-content:flex-end;align-items:center;width:76px;display:inline-flex}.SnSagW_ledgerKind{box-sizing:border-box;letter-spacing:.035em;user-select:none;border:1px solid #0000;border-radius:4px;align-items:center;height:19px;padding:0 5px;font-size:10px;font-weight:650;line-height:16px;display:inline-flex}.SnSagW_kind_user{color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-state-business-tertiary)}.SnSagW_kind_assistant,.SnSagW_kind_think{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-2)}.SnSagW_kind_tool{color:var(--dsw-alias-state-warn-label);background:var(--dsw-alias-state-warn-tertiary)}.SnSagW_kind_error{color:var(--dsw-alias-state-error-primary);background:var(--dsw-alias-bg-layer-2)}.SnSagW_kind_system,.SnSagW_kind_policy,.SnSagW_kind_title,.SnSagW_kind_other,.SnSagW_kind_compaction{color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-bg-module-platform)}.SnSagW_kind_turn,.SnSagW_kind_step,.SnSagW_kind_context{color:var(--dsw-alias-label-tertiary);background:var(--dsw-alias-bg-layer-2)}.SnSagW_ledgerContentCell{padding-left:4px}.SnSagW_ledgerText{color:var(--dsw-alias-label-primary)}.SnSagW_ledgerMono{color:var(--dsw-alias-label-secondary);font-family:var(--ds-font-family-code);font-size:12px}.SnSagW_ledgerResult{grid-template-columns:clamp(180px,36cqw,480px) minmax(0,1fr);align-items:center;gap:8px;min-width:0;display:grid}.SnSagW_ledgerResult>*{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.SnSagW_ledgerErrorText{color:var(--dsw-alias-state-error-primary)}.SnSagW_ledgerDuration{color:var(--dsw-alias-label-caption);font:var(--dsw-font-xxxs-11);font-variant-numeric:tabular-nums;margin-left:8px}.SnSagW_viewTitle{min-width:0;font:var(--dsw-font-s-strong-14);text-overflow:ellipsis;white-space:nowrap;flex:0 auto;margin:0;overflow:hidden}.SnSagW_viewMachine{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);white-space:nowrap;flex:none}.SnSagW_viewScroll{flex:1;min-height:0;margin-right:2px;padding:16px 32px;overflow-y:auto}.SnSagW_officialPane{flex-direction:column;flex:1;min-height:0;display:flex;overflow:hidden}.SnSagW_officialPane>*{flex:1;min-height:0}.SnSagW_officialPane [aria-label=好的回答],.SnSagW_officialPane [aria-label=取消标记],.SnSagW_officialPane [aria-label=有问题的回答],.SnSagW_officialPane [aria-label=Good\\ response],.SnSagW_officialPane [aria-label=Remove\\ rating],.SnSagW_officialPane [aria-label=Bad\\ response],.SnSagW_officialPane [aria-label=在新对话中分支],.SnSagW_officialPane [aria-label=\"Branch into a new conversation\"],.SnSagW_drivesWindow [data-composer-card],.SnSagW_drivesWindow [class*=openError]{display:none}.SnSagW_viewColumn{flex-direction:column;width:100%;max-width:min(920px,100%);margin:0 auto;display:flex}.SnSagW_viewColumn>*+*{margin-top:16px}.SnSagW_userRow{flex-direction:column;align-items:flex-end;gap:6px;display:flex}.SnSagW_bubble{max-width:min(calc(var(--dsh-chat-content-width,748px) * .702), 82%);background:var(--dsw-specific-bubble);font-size:var(--dsh-content-font-size,14px);line-height:calc(22px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-primary);white-space:pre-wrap;word-break:break-word;border-radius:22px;padding:10px 16px}.SnSagW_assistantRow{flex-direction:column;gap:16px;min-width:0;display:flex}.SnSagW_messageActions{margin-top:4px;margin-left:-6px}.SnSagW_stopped,.SnSagW_mediaChip{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-tertiary);border-radius:6px;align-self:flex-start;padding:0 6px;font-size:11px;line-height:18px}.SnSagW_action{width:calc(28px + var(--dsh-content-font-delta,0px));height:calc(28px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;border-radius:28px;justify-content:center;align-items:center;padding:6px;display:inline-flex}.SnSagW_action svg{width:calc(15px + var(--dsh-content-font-delta,0px));height:calc(15px + var(--dsh-content-font-delta,0px))}.SnSagW_action:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary)}.SnSagW_timeStart{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);white-space:nowrap;padding-right:12px}.SnSagW_timeEnd{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);white-space:nowrap}.SnSagW_noticeRow{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px));grid-template-columns:10px minmax(0,1fr) auto;align-items:start;gap:8px;padding:2px 0;display:grid}.SnSagW_noticeDot{margin-top:5px}.SnSagW_noticeCopy{overflow-wrap:anywhere;min-width:0}.SnSagW_noticeTitleError{color:var(--dsw-alias-state-error-primary);margin-right:6px;font-weight:600}.SnSagW_noticeTitleWarn{color:var(--dsw-alias-state-warn-primary);margin-right:6px;font-weight:600}.SnSagW_noticeMessage{color:var(--dsw-alias-label-secondary)}.SnSagW_noticeCode{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-markdown-code-block-small)}.SnSagW_retryRow{color:var(--dsw-alias-label-tertiary);font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px))}.SnSagW_retrySummary{width:fit-content;color:inherit;cursor:pointer;user-select:none;border-radius:3px;align-items:center;gap:7px;padding:2px 0;list-style:none;display:inline-flex}.SnSagW_retrySummary::-webkit-details-marker{display:none}.SnSagW_retrySummary:after{content:\"\";opacity:.8;border-bottom:1.5px solid;border-right:1.5px solid;width:6px;height:6px;transition:transform .12s;transform:rotate(-45deg)}.SnSagW_retrySummary:hover{color:var(--dsw-alias-label-secondary)}.SnSagW_retrySummary:focus-visible{outline:1.5px solid var(--dsw-alias-button-info-fill);outline-offset:2px}.SnSagW_retryText{color:inherit}.SnSagW_retryRow[data-active] .SnSagW_retryText{background:linear-gradient(90deg, var(--dsw-alias-label-tertiary) 0%, var(--dsw-alias-label-tertiary) 40%, var(--dsw-alias-label-secondary) 50%, var(--dsw-alias-label-tertiary) 60%, var(--dsw-alias-label-tertiary) 100%);color:#0000;background-position:100%;background-size:200% 100%;background-clip:text;animation:1.6s ease-in-out infinite SnSagW_dsh-sync-retry-shimmer}@keyframes SnSagW_dsh-sync-retry-shimmer{0%{background-position:100%}to{background-position:0%}}@media (prefers-reduced-motion:reduce){.SnSagW_retryRow[data-active] .SnSagW_retryText{color:inherit;background:0 0;animation:none}}.SnSagW_retryRow[open] .SnSagW_retrySummary:after{transform:rotate(45deg)}.SnSagW_retryDetails{overflow-wrap:anywhere;font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(18px + var(--dsh-content-font-delta-secondary,0px));gap:2px;margin-top:3px;padding-left:14px;display:grid}.SnSagW_retryDetailLabel{color:var(--dsw-alias-label-secondary)}.SnSagW_toBottomSlot{z-index:2;pointer-events:none;justify-content:flex-end;height:0;padding-right:8px;display:flex;position:sticky;bottom:16px}.SnSagW_toBottom{--dsw-elevation-stroke-color:var(--dsw-alias-border-l3);corner-shape:round;width:34px;height:34px;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-button-floating-fill);box-shadow:var(--dsw-elevation-panel);cursor:pointer;pointer-events:auto;border:0;border-radius:100px;justify-content:center;align-items:center;margin-top:-34px;padding:0;display:flex}.SnSagW_toBottom:hover{background:var(--dsw-alias-button-floating-hover)}.SnSagW_composerRoot{flex-direction:column;flex:none;align-items:center;padding:0 16px 8px;display:flex}.SnSagW_composerRootInner{justify-content:center;width:100%;display:flex}.SnSagW_dockComposer{width:100%;margin-bottom:calc(-1 * var(--dsh-composer-stack-gap,6px));justify-content:center;display:flex}.SnSagW_officialPane:has([data-sync-composer])~.SnSagW_composerRoot{display:none}.SnSagW_composerCard{box-sizing:border-box;--dsw-elevation-stroke-color:var(--dsw-alias-border-l2);background:var(--dsw-specific-input-major);width:100%;max-width:calc(min(920px,100%) + 32px);box-shadow:var(--dsw-elevation-soft);font:var(--dsw-font-s-14);border:0;border-radius:22px;flex-direction:column;gap:12px;padding-top:8px;display:flex}.SnSagW_composerText{box-sizing:border-box;width:100%;min-height:44px;max-height:200px;color:var(--dsw-alias-label-primary);font:inherit;resize:none;background:0 0;border:0;margin:0;padding:8px 16px 0}.SnSagW_composerText::placeholder{color:var(--dsw-alias-placeholder)}.SnSagW_composerText:focus-visible{outline:none}.SnSagW_composerBar{align-items:center;gap:8px;padding:0 10px 10px 16px;display:flex}.SnSagW_composerTarget{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);flex:none}.SnSagW_composerDelivery{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11)}.SnSagW_composerOffline{color:var(--dsw-alias-state-warn-label);font:var(--dsw-font-xxxs-11)}.SnSagW_composerSpacer{flex:1}.SnSagW_sendButton{corner-shape:round;background:var(--dsw-alias-button-info-fill);color:#fff;cursor:pointer;width:34px;height:34px;transition:background-color var(--ds-transition-duration-fast) var(--ds-ease-in-out);border:0;border-radius:999px;flex:none;place-items:center;display:grid}.SnSagW_sendButton:hover:not(:disabled){background:var(--dsw-alias-button-info-hover)}.SnSagW_sendButton:disabled{opacity:.4;cursor:default}.SnSagW_sendButton:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.SnSagW_error{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12);margin-bottom:10px}.SnSagW_narrowOnly{display:none}@media (width<=719px){.SnSagW_listPane{border-right:0;width:100%}.SnSagW_panel[data-open=true] .SnSagW_listPane,.SnSagW_panel[data-open=false] .SnSagW_viewPane{display:none}.SnSagW_narrowOnly{display:inline-flex}}@media (prefers-reduced-motion:reduce){.SnSagW_treeRow,.SnSagW_treeSession,.SnSagW_treeChevron svg,.SnSagW_sendButton{transition:none}}";
 		const tagId$8 = "dsh-session-sync/sync.module.css";
 		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagId$8) + "]") === null) {
 			const tag = document.createElement("style");
@@ -56,10 +56,12 @@ window.__ModuleLoader__.load({
 			"composerDelivery": "SnSagW_composerDelivery",
 			"composerOffline": "SnSagW_composerOffline",
 			"composerRoot": "SnSagW_composerRoot",
+			"composerRootInner": "SnSagW_composerRootInner",
 			"composerSpacer": "SnSagW_composerSpacer",
 			"composerTarget": "SnSagW_composerTarget",
 			"composerText": "SnSagW_composerText",
 			"dirty": "SnSagW_dirty",
+			"dockComposer": "SnSagW_dockComposer",
 			"drivesWindow": "SnSagW_drivesWindow",
 			"dsh-sync-retry-shimmer": "SnSagW_dsh-sync-retry-shimmer",
 			"empty": "SnSagW_empty",
@@ -148,6 +150,8 @@ window.__ModuleLoader__.load({
 			"rowTime": "SnSagW_rowTime",
 			"rowTitle": "SnSagW_rowTitle",
 			"saved": "SnSagW_saved",
+			"scopeBadge": "SnSagW_scopeBadge",
+			"scopeBadgeAction": "SnSagW_scopeBadgeAction",
 			"section": "SnSagW_section",
 			"sendButton": "SnSagW_sendButton",
 			"sessionList": "SnSagW_sessionList",
@@ -656,6 +660,111 @@ window.__ModuleLoader__.load({
 			});
 		}
 		//#endregion
+		//#region src/client/composer-draft.ts
+		/**
+		* The empty seat.
+		*
+		* One frozen instance for every Session that has never been typed into: the
+		* reader of this store compares snapshot identities, so a fresh object per read
+		* would re-render every seat on every change anywhere.
+		*/
+		const EMPTY = Object.freeze({
+			text: "",
+			sending: false
+		});
+		/**
+		* The drafts of every Session this console has shown, plus the one channel both
+		* seats subscribe to.
+		*
+		* One instance per plugin (built in `apply`), because two registrations — the
+		* console panel and the shipped composer stack's dock entry — have to share it
+		* and neither may reach the other's props.
+		*/
+		var ComposerDrafts = class {
+			byKey = /* @__PURE__ */ new Map();
+			listeners = /* @__PURE__ */ new Set();
+			/**
+			* The state one Session's composer seat renders.
+			* @param key - the Session the draft is addressed to.
+			* @returns the state; the shared empty one until something is typed.
+			*/
+			read(key) {
+				return this.byKey.get(key) ?? EMPTY;
+			}
+			/**
+			* Replace the unsent prompt.
+			* @param key - the Session the draft is addressed to.
+			* @param text - the whole draft, as the textarea holds it.
+			*/
+			setText(key, text) {
+				const current = this.read(key);
+				if (current.text === text) return;
+				this.write(key, {
+					text,
+					sending: current.sending
+				});
+			}
+			/**
+			* Mark a prompt as on its way, or as finished.
+			* @param key - the Session the draft is addressed to.
+			* @param sending - the new reading.
+			*/
+			setSending(key, sending) {
+				const current = this.read(key);
+				if (current.sending === sending) return;
+				this.write(key, {
+					text: current.text,
+					sending
+				});
+			}
+			/**
+			* Take one Session's draft down to the empty seat, keeping nothing behind.
+			*
+			* What a delivered prompt leaves: the text has gone to the machine, and the
+			* next reader of that Session — possibly this one, after looking at something
+			* else — should not find it still sitting in the box.
+			* @param key - the Session the draft was addressed to.
+			*/
+			clear(key) {
+				this.write(key, {
+					text: "",
+					sending: false
+				});
+			}
+			/**
+			* Hear about every seat's change.
+			*
+			* Coarse on purpose: a seat subscribes once and re-reads its own Session's
+			* state, which is one comparison against a frozen object for the Sessions it
+			* does not care about.
+			* @param listener - the change callback.
+			* @returns the unsubscribe function.
+			*/
+			subscribe(listener) {
+				this.listeners.add(listener);
+				return () => {
+					this.listeners.delete(listener);
+				};
+			}
+			write(key, next) {
+				this.byKey.set(key, Object.freeze(next));
+				for (const listener of [...this.listeners]) listener();
+			}
+		};
+		/**
+		* The key one Session's draft is filed under.
+		*
+		* Machine and id together, because two machines can hold Sessions whose ids were
+		* generated independently — a draft written for one of them must not appear in
+		* the other's composer.
+		* @param machineName - the machine that owns the Session.
+		* @param sessionId - the Session's own id.
+		* @returns the stable key.
+		*/
+		function draftKey(machineName, sessionId) {
+			return `${machineName}\u0000${sessionId}`;
+		}
+		//#endregion
 		//#region src/client/config-entry.ts
 		/** This plugin's npm package name, as the Plugins page reports it. */
 		const PACKAGE_NAME = "dsh-session-sync";
@@ -693,6 +802,167 @@ window.__ModuleLoader__.load({
 				label,
 				recommended: false
 			};
+		}
+		//#endregion
+		//#region src/client/MirrorComposer.tsx
+		/**
+		* The console's takeover composer, as one component drawn by two seats.
+		*
+		* The card is the console's own — the shipped composer cannot be used, because
+		* its prompt would be carried to a Host that has never heard of the mirrored
+		* Session — but *where* it is drawn follows what the pane is showing:
+		*
+		*  - on the chat tab of a build that can render a retained Session, it is the
+		*    `conversation.input.dock` occurrence inside the shipped composer stack, so
+		*    the shipped input capsule can be hidden and the shipped statistics row and
+		*    context meter below it become the footer (see `official-session.tsx` and
+		*    `footer-projections.ts`);
+		*  - on the trajectory tab, and on a build with no shipped conversation at all,
+		*    it is the console's own footer, drawn beside its own transcript.
+		*
+		* Both seats render *this*, and both read their draft from the shared
+		* {@link ComposerDrafts} store, so switching between them keeps what the reader
+		* typed.
+		*/
+		/**
+		* The delivery state of the last prompt, as the composer renders it.
+		* @param delivery - the last takeover prompt's progress.
+		* @param t - the localized copy lookup.
+		* @returns the line the card prints beside its target.
+		*/
+		function deliveryLine(delivery, t) {
+			if (delivery.state === "queued") return t("deliveryQueued");
+			if (delivery.state === "delivered") return t("deliveryDelivered");
+			if (delivery.state === "accepted") return t("deliveryAccepted");
+			if (delivery.state === "expired") return t("deliveryExpired");
+			return delivery.error === void 0 ? t("deliveryFailed") : `${t("deliveryFailed")}: ${delivery.error}`;
+		}
+		/**
+		* One Session's draft, as a seat renders it: read once on mount, then re-read on
+		* every change any seat makes.
+		*
+		* A plain subscription rather than `useSyncExternalStore`: the store hands out a
+		* frozen object per Session, so a re-read that changed nothing is one reference
+		* comparison, and React bails out of the re-render on the same identity.
+		* @param drafts - the shared store.
+		* @param key - the Session this seat is addressed to.
+		* @returns the state to render.
+		*/
+		function useDraft(drafts, key) {
+			const [state, setState] = react.useState(() => drafts.read(key));
+			react.useEffect(() => {
+				setState(drafts.read(key));
+				return drafts.subscribe(() => {
+					setState(drafts.read(key));
+				});
+			}, [drafts, key]);
+			return state;
+		}
+		/**
+		* Render the takeover composer card.
+		* @param props - copy, the shared draft store, and the action that sends.
+		* @returns the card.
+		*/
+		function MirrorComposer(props) {
+			const { t, drafts, draftKey, machineName, delivery, online, send } = props;
+			const draft = useDraft(drafts, draftKey);
+			const submit = () => {
+				const text = draft.text.trim();
+				if (text === "" || draft.sending) return;
+				drafts.setSending(draftKey, true);
+				send(text).then((accepted) => {
+					drafts.setSending(draftKey, false);
+					if (accepted) drafts.clear(draftKey);
+				});
+			};
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+				className: props.inShippedStack === true ? sync_module_css_default.dockComposer : sync_module_css_default.composerRootInner,
+				...props.inShippedStack === true ? { "data-sync-composer": "" } : {},
+				children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("form", {
+					className: sync_module_css_default.composerCard,
+					onSubmit: (event) => {
+						event.preventDefault();
+						submit();
+					},
+					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("textarea", {
+						className: sync_module_css_default.composerText,
+						value: draft.text,
+						rows: 2,
+						placeholder: t("composerPlaceholder"),
+						"aria-label": t("composerPlaceholder"),
+						onChange: (event) => {
+							drafts.setText(draftKey, event.target.value);
+						},
+						onKeyDown: (event) => {
+							if (event.key !== "Enter" || event.shiftKey) return;
+							event.preventDefault();
+							submit();
+						}
+					}), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+						className: sync_module_css_default.composerBar,
+						children: [
+							/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
+								className: sync_module_css_default.composerTarget,
+								children: [
+									t("composerTarget"),
+									" ",
+									machineName
+								]
+							}),
+							delivery !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+								className: sync_module_css_default.composerDelivery,
+								children: deliveryLine(delivery, t)
+							}),
+							!online && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+								className: sync_module_css_default.composerOffline,
+								children: t("offlineQueueHint")
+							}),
+							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { className: sync_module_css_default.composerSpacer }),
+							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
+								type: "submit",
+								className: sync_module_css_default.sendButton,
+								disabled: draft.sending || draft.text.trim() === "",
+								"aria-label": draft.sending ? t("sending") : t("send"),
+								children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconRightUpOutlineRegular, {})
+							})
+						]
+					})]
+				})
+			});
+		}
+		/**
+		* The console's composer as an occurrence of the shipped `conversation.input.dock`.
+		*
+		* The seat is the shipped composer stack, one slot above the shipped input
+		* capsule, and it exists for *every* Session the product draws — so this returns
+		* nothing unless the Session in hand is the one the console has retained under a
+		* synthetic identity. That check is also what makes the console's own footer the
+		* fallback: when the shipped conversation is not being drawn (the trajectory tab,
+		* or a build with no retention seam) this entry is not mounted at all.
+		*
+		* `open` is read through the snapshot hook rather than asked of the bridge,
+		* because the bridge is a plain object and this component has to re-render when
+		* the console opens, switches or closes a Session.
+		* @param props - the standard kit and this entry's inject face.
+		* @returns the card, or null for a Session the console does not own.
+		*/
+		function MirrorComposerDock(props) {
+			const { t, useSync, drafts, official, sendPrompt, sessionId } = props;
+			if (typeof useSync !== "function" || sessionId === void 0) return null;
+			const open = useSync((snapshot) => snapshot.open);
+			const machines = useSync((snapshot) => snapshot.state.machines);
+			const delivery = useSync((snapshot) => snapshot.delivery);
+			if (open === void 0 || !official.owns(sessionId)) return null;
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(MirrorComposer, {
+				t,
+				drafts,
+				draftKey: draftKey(open.machineName, open.sessionId),
+				machineName: open.machineName,
+				delivery,
+				online: machines.find((machine) => machine.machineName === open.machineName)?.online === true,
+				send: sendPrompt,
+				inShippedStack: true
+			});
 		}
 		//#endregion
 		//#region src/shared/protocol.ts
@@ -1571,6 +1841,85 @@ window.__ModuleLoader__.load({
 			return current === void 0 || seq > current ? seq : current;
 		}
 		//#endregion
+		//#region src/client/footer-projections.ts
+		/**
+		* Turn one set of footer totals into the values the shipped footer reads.
+		* @param stats - the totals, from the owning machine or from the events held here.
+		* @returns the three projection values; the context one only when the log states
+		*   both a window and a reading.
+		*/
+		function footerProjections(stats) {
+			const context = stats.context;
+			return {
+				sessionStats: {
+					turns: stats.turns,
+					steps: stats.steps,
+					llmMs: 0,
+					toolMs: 0,
+					ttftMs: 0,
+					ttftSteps: 0,
+					decodeMs: stats.generationMs ?? (stats.outputPerSecond === void 0 ? 0 : Math.round(stats.usage.outputTokens / stats.outputPerSecond * 1e3)),
+					decodeTokens: stats.usage.outputTokens
+				},
+				tokenUsage: {
+					uncachedInputTokens: stats.usage.inputTokens,
+					outputTokens: stats.usage.outputTokens,
+					cacheReadTokens: stats.usage.cacheReadTokens,
+					cacheWriteTokens: 0
+				},
+				...context === void 0 ? {} : { contextPressure: {
+					projectedTokens: context.used,
+					contextWindow: context.window
+				} }
+			};
+		}
+		/**
+		* The same values as one plain record, which is the shape a projection store
+		* takes them in. Its own function so the mapping stays the only place a
+		* projection key is named.
+		*
+		* Every key is present even when its value is: the store keeps the last value it
+		* was handed, so *omitting* a key would leave a reading the log no longer states
+		* on screen — a Session whose log has no window would keep showing the previous
+		* one. Writing `undefined` is what the shipped reader calls "capability absent",
+		* and it is how the meter is taken down.
+		* @param projections - the values {@link footerProjections} produced.
+		* @returns one record per projection key, in a stable key order.
+		*/
+		function projectionRecord(projections) {
+			return {
+				sessionStats: projections.sessionStats,
+				tokenUsage: projections.tokenUsage,
+				contextPressure: projections.contextPressure
+			};
+		}
+		/**
+		* The watermark to publish the next value at.
+		*
+		* The store refuses a value whose watermark is not above the one it already
+		* holds, which makes this the one rule a publisher can silently lose to — and
+		* losing it is invisible: the footer keeps the previous reading and looks
+		* perfectly healthy. Two ways to lose it, so two terms:
+		*
+		*  - a Session *re-opened* after its mirror was released. The store outlives the
+		*    mirror, so a per-mirror counter that restarted at 1 would be refused by the
+		*    values the previous open left behind. Hence a counter that never goes
+		*    backwards for the plugin's lifetime, on the object that owns the publication.
+		*  - a *repeated* publication of the same window: the machine restating its
+		*    whole-log totals on a poll, with no new event to move the floor.
+		*
+		* The floor is the newest durable sequence held, which is the log's own order of
+		* magnitude — a Session whose values came from a previous open left watermarks in
+		* that range, so starting above it is what makes the first publication of the new
+		* open land rather than vanish.
+		* @param previous - the last watermark this publisher used, or 0 for none yet.
+		* @param floor - the newest durable sequence the values are consistent with.
+		* @returns the watermark to publish at, strictly above both.
+		*/
+		function nextWatermark(previous, floor) {
+			return Math.max(previous + 1, floor + 1);
+		}
+		//#endregion
 		//#region src/client/live-text.ts
 		/**
 		* The chunk one live delta becomes, in the vocabulary the shipped renderer reads.
@@ -1741,6 +2090,20 @@ window.__ModuleLoader__.load({
 			return value;
 		}
 		/**
+		* The projection sink one Session face carries, when it carries a usable one.
+		*
+		* Checked rather than assumed: `projections` is read off another plugin's Session
+		* object, so a build that renamed it, or that hands out a face with only the read
+		* half, has to end as "no sink here" — the shipped footer then shows the fold over
+		* the window, exactly as it does on a Session whose Host unit is not mounted.
+		* @param session - the Session face of a retained binding, when there is one.
+		* @returns the sink, or undefined when this face cannot take a value.
+		*/
+		function projectionsSink(session) {
+			const candidate = session?.projections;
+			return candidate !== void 0 && typeof candidate.apply === "function" ? candidate : void 0;
+		}
+		/**
 		* One retained remote Session, and the frames fed into it.
 		*
 		* One instance per opened remote Session. Every method is safe to call after
@@ -1754,6 +2117,14 @@ window.__ModuleLoader__.load({
 			source;
 			/** The Session face, when the binding exposes one that reports running. */
 			face;
+			/**
+			* The Session's projection store, when this build hands one out.
+			*
+			* Where the console's footer numbers go so that the *shipped* statistics row and
+			* context meter can render them: those components read the store, and a retained
+			* Session has no Host behind it to fill it.
+			*/
+			projections;
 			/** The live attempt whose text is on screen, by the plugin's turn|step key. */
 			liveAttempt;
 			/**
@@ -1806,6 +2177,22 @@ window.__ModuleLoader__.load({
 				const binding = service.binding(sessionId);
 				this.source = binding?.eventSource;
 				this.face = binding?.session;
+				this.projections = projectionsSink(binding?.session);
+			}
+			/**
+			* Land one finished projection value on the Session's store.
+			*
+			* Safety is in the ordering and the gate, not in the store: a released mirror
+			* writes nothing, and a build whose face carries no sink writes nothing. An
+			* `undefined` value is a real write — it is how a reading the log no longer
+			* states is taken down rather than left on screen.
+			* @param key - the projection key.
+			* @param value - the whole value.
+			* @param seq - the watermark, already above everything published before.
+			*/
+			applyProjection(key, value, seq) {
+				if (this.released) return;
+				this.projections?.apply(key, value, seq);
 			}
 			/**
 			* Replace the whole mirrored window, which is what opening a Session does.
@@ -2033,6 +2420,16 @@ window.__ModuleLoader__.load({
 			/** The Session whose composer this console blocked, if it blocked one. */
 			blockedComposer;
 			/**
+			* The last watermark this bridge published a projection value at.
+			*
+			* One counter for the whole bridge rather than one per mirror, and monotonic for
+			* the plugin's lifetime: a Session's projection store outlives the mirror that
+			* was retained for it, so a counter that restarted would have its first
+			* publication of a re-opened Session refused as stale — and the footer would keep
+			* the previous reading while looking perfectly healthy.
+			*/
+			projectionSeq = 0;
+			/**
 			* @param ctx - the client context, read for the Sessions service and the
 			*   composer-block registry.
 			* @param composerBlockReason - the localized reason shown in a blocked
@@ -2073,6 +2470,27 @@ window.__ModuleLoader__.load({
 				const current = this.current;
 				if (current === void 0) return void 0;
 				return current.key === remoteKey(machineName, sessionId) ? current.mirror.reference : void 0;
+			}
+			/**
+			* Whether the retained Session is one identity.
+			* @param sessionId - the identity an occurrence was mounted for.
+			* @returns true while the mirror holds exactly that Session.
+			*/
+			owns(sessionId) {
+				return this.current?.id === sessionId;
+			}
+			/**
+			* Publish the footer's numbers on the retained Session's projection store.
+			* @param values - whole projection values by key.
+			* @param floor - the sequence the publication is consistent with.
+			*/
+			publishFooter(values, floor) {
+				const mirror = this.current?.mirror;
+				if (mirror === void 0) return;
+				for (const [key, value] of Object.entries(values)) {
+					this.projectionSeq = nextWatermark(this.projectionSeq, floor);
+					mirror.applyProjection(key, value, this.projectionSeq);
+				}
 			}
 			/**
 			* The panel opened a Session: take it up, replacing whatever was before.
@@ -2998,6 +3416,7 @@ window.__ModuleLoader__.load({
 				...context === void 0 ? {} : { context },
 				...inputTotal > 0 ? { cacheHitPercent: Math.round(usage.cacheReadTokens / inputTotal * 1e3) / 10 } : {},
 				stepMs,
+				generationMs,
 				...outputPerSecond === void 0 ? {} : { outputPerSecond },
 				...firstTime === void 0 ? {} : { firstTime },
 				...lastTime === void 0 ? {} : { lastTime }
@@ -6278,6 +6697,7 @@ window.__ModuleLoader__.load({
 						official: props.official,
 						renderSlot: props.renderSlot,
 						SessionProvider: props.SessionProvider,
+						drafts: props.drafts,
 						listHidden,
 						toggleList: () => {
 							setListHidden((current) => !current);
@@ -6336,8 +6756,6 @@ window.__ModuleLoader__.load({
 		*/
 		function Conversation(props) {
 			const { t, state, session } = props;
-			const [draft, setDraft] = react.useState("");
-			const [sending, setSending] = react.useState(false);
 			const [tab, setTab] = react.useState("chat");
 			const body = react.useRef(null);
 			/** The reading column, whose height is what growth moves. */
@@ -6457,17 +6875,46 @@ window.__ModuleLoader__.load({
 				},
 				footnotes: t("footnotes")
 			}), [t]);
-			const send = () => {
-				const text = draft.trim();
-				if (text === "" || sending) return;
-				setSending(true);
-				props.sendPrompt(text).then((accepted) => {
-					setSending(false);
-					if (accepted) setDraft("");
-				});
-			};
 			const delivery = state.delivery;
 			const shipped = props.official.supported && props.renderSlot !== void 0 && props.SessionProvider !== void 0 && state.transcript !== void 0 ? props.official.referenceFor(props.machineName, session.sessionId) : void 0;
+			/**
+			* Whether the shipped pane is drawing this Session's footer right now.
+			*
+			* The chat tab on a build that renders the retained Session: there the console
+			* hides only the shipped input capsule, the shipped statistics row and context
+			* meter stay mounted below it, and this console's own card rides the shipped
+			* composer stack (`conversation.input.dock`) instead of the footer block below.
+			* Everything else — the trajectory tab, which the shipped content does not draw,
+			* and a build with no retention seam at all — keeps the console's own card and
+			* its own status row, which is also the only footer those two have.
+			*/
+			const shippedFooter = tab === "chat" && shipped !== void 0;
+			/**
+			* Whether the scope badge is also the control that changes what it states.
+			*
+			* Only while the console is the one counting: the machine's own totals are
+			* already over the whole log, so there is nothing for paging to do, and a click
+			* that silently did nothing would be worse than no click at all.
+			*/
+			const scopeActionable = shippedFooter && reportedStats === void 0 && !wholeLog;
+			/**
+			* The totals every footer on this page states.
+			*
+			* One binding, read by the console's own status row and published to the shipped
+			* footer's projection store, so the two can never disagree about which scope
+			* they are reporting: the machine's whole-log answer when it states one, this
+			* console's count over what it holds otherwise.
+			*/
+			const totals = reportedStats ?? chrome.stats;
+			react.useLayoutEffect(() => {
+				if (shipped === void 0) return;
+				props.official.publishFooter(projectionRecord(footerProjections(totals)), coverage.last ?? 0);
+			}, [
+				props.official,
+				shipped,
+				totals,
+				coverage.last
+			]);
 			const paneRange = shipped === void 0 ? void 0 : props.official.windowRange();
 			react.useLayoutEffect(() => {
 				const scroller = paneScroller.current;
@@ -6547,10 +6994,21 @@ window.__ModuleLoader__.load({
 								})}`,
 								children: t("paneRoute", { route: props.official.route })
 							}),
+							shippedFooter && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
+								type: "button",
+								className: scopeActionable ? `${sync_module_css_default.scopeBadge} ${sync_module_css_default.scopeBadgeAction}` : sync_module_css_default.scopeBadge,
+								...scopeActionable ? {} : { "aria-disabled": true },
+								title: reportedStats !== void 0 ? t("statusAuthoritativeHint") : coverage.gaps > 0 ? `${t("statusScopeHint")} · ${t("statusScopeGap", { n: coverage.gaps })}` : t("statusCountHint"),
+								onClick: scopeActionable ? () => {
+									props.loadAllOlder();
+								} : void 0,
+								children: reportedStats !== void 0 || wholeLog ? t("statusWholeLog") : t("statusCount")
+							}),
 							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { className: sync_module_css_default.viewSpacer }),
 							/* @__PURE__ */ (0, react_jsx_runtime.jsx)(ChromeChips, {
 								t,
-								chrome
+								chrome,
+								context: reportedStats?.context ?? chrome.context
 							})
 						]
 					}), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
@@ -6681,60 +7139,19 @@ window.__ModuleLoader__.load({
 						props.decideApproval(approval.machineName, approval.approvalId, decision);
 					}
 				}, approval.approvalId)),
-				(shipped === void 0 || props.official.composerOwned || tab === "trajectory") && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+				/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 					className: sync_module_css_default.composerRoot,
-					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("form", {
-						className: sync_module_css_default.composerCard,
-						onSubmit: (event) => {
-							event.preventDefault();
-							send();
-						},
-						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("textarea", {
-							className: sync_module_css_default.composerText,
-							value: draft,
-							rows: 2,
-							placeholder: t("composerPlaceholder"),
-							"aria-label": t("composerPlaceholder"),
-							onChange: (event) => {
-								setDraft(event.target.value);
-							},
-							onKeyDown: (event) => {
-								if (event.key !== "Enter" || event.shiftKey) return;
-								event.preventDefault();
-								send();
-							}
-						}), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-							className: sync_module_css_default.composerBar,
-							children: [
-								/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
-									className: sync_module_css_default.composerTarget,
-									children: [
-										t("composerTarget"),
-										" ",
-										props.machineName
-									]
-								}),
-								delivery !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-									className: sync_module_css_default.composerDelivery,
-									children: deliveryLine(delivery, t)
-								}),
-								!props.online && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-									className: sync_module_css_default.composerOffline,
-									children: t("offlineQueueHint")
-								}),
-								/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { className: sync_module_css_default.composerSpacer }),
-								/* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
-									type: "submit",
-									className: sync_module_css_default.sendButton,
-									disabled: sending || draft.trim() === "",
-									"aria-label": sending ? t("sending") : t("send"),
-									children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconRightUpOutlineRegular, {})
-								})
-							]
-						})]
+					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(MirrorComposer, {
+						t,
+						drafts: props.drafts,
+						draftKey: draftKey(props.machineName, session.sessionId),
+						machineName: props.machineName,
+						delivery,
+						online: props.online,
+						send: props.sendPrompt
 					}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(StatusRow, {
 						t,
-						stats: reportedStats ?? chrome.stats,
+						stats: totals,
 						context: reportedStats?.context ?? chrome.context,
 						all: wholeLog,
 						gaps: coverage.gaps,
@@ -6747,16 +7164,20 @@ window.__ModuleLoader__.load({
 			] });
 		}
 		/**
-		* The header's right-hand cluster:上下文占用率 ring, and the model, preset and
-		* subagent facts the log reports.
+		* The header's right-hand cluster: the context-occupancy ring, and the model,
+		* preset and subagent facts the log reports.
 		*
 		* Every one of these is a **reading**, not a control: the mirror can see what
 		* the owning machine is doing and cannot change it. The shipped session header
 		* carries selectors in these seats; this console shows the same facts without
 		* pretending a click would do something.
+		*
+		* The ring is handed its reading rather than reading the log again, because the
+		* footer states the same fact: one scope for one number, or the header and the
+		* footer of the same page would print two percentages for one window.
 		*/
-		function ChromeChips({ t, chrome }) {
-			const { model, context, policy, subagents } = chrome;
+		function ChromeChips({ t, chrome, context }) {
+			const { model, policy, subagents } = chrome;
 			const preset = policy.preset === void 0 ? void 0 : policy.preset === "danger-full-access" ? t("presetDangerFullAccess") : policy.preset;
 			const subagentLabel = subagents.length === 0 ? t("chromeSubagentsNone") : subagents.map((seen) => `${seen.label}${seen.isError ? " !" : ""}`).join("\n");
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
@@ -7406,14 +7827,6 @@ window.__ModuleLoader__.load({
 			if (running > 0) return `${String(running)} ${t("sessionsRunning")}`;
 			return `${String(machine.sessions.length)} ${t("machineSessions")}`;
 		}
-		/** The delivery state of the last prompt, as the composer renders it. */
-		function deliveryLine(delivery, t) {
-			if (delivery.state === "queued") return t("deliveryQueued");
-			if (delivery.state === "delivered") return t("deliveryDelivered");
-			if (delivery.state === "accepted") return t("deliveryAccepted");
-			if (delivery.state === "expired") return t("deliveryExpired");
-			return delivery.error === void 0 ? t("deliveryFailed") : `${t("deliveryFailed")}: ${delivery.error}`;
-		}
 		/**
 		* One relative-time label, from the shared bucketing and this plugin's words.
 		* @param at - epoch ms of the moment being described.
@@ -7725,6 +8138,7 @@ window.__ModuleLoader__.load({
 			statusCount: "按整份日志重算",
 			statusCountHint: "让控制台把日志翻到开头再统计：数字会与源站本机页面一致；长会话要翻几页，稍等。",
 			statusGaps: "缺 {n} 条",
+			statusScopeGap: "本控制台已载入的这一段里缺 {n} 条",
 			turnTimeTitle: "本轮用时和速度",
 			turnTimeDuration: "本轮总用时",
 			turnTimeSpeed: "输出速度（TPS）",
@@ -8017,6 +8431,7 @@ window.__ModuleLoader__.load({
 			statusCount: "count the whole log",
 			statusCountHint: "Pages this console back to the start of the log before counting, so the numbers match the machine page. A long session takes a few pages.",
 			statusGaps: "{n} missing",
+			statusScopeGap: "{n} missing from the stretch this console has loaded",
 			turnTimeTitle: "Turn time and speed",
 			turnTimeDuration: "Total run time",
 			turnTimeSpeed: "Tokens per second (TPS)",
@@ -8054,6 +8469,7 @@ window.__ModuleLoader__.load({
 		*/
 		function apply(ctx) {
 			const client = new SyncClient();
+			const drafts = new ComposerDrafts();
 			const official = new OfficialSessions(ctx, () => t("composerBlocked"));
 			ctx.effect(() => {
 				const detach = client.observe(official);
@@ -8109,10 +8525,23 @@ window.__ModuleLoader__.load({
 					sendPrompt: (text) => client.sendPrompt(text),
 					answerQuestion: (machineName, questionId, answers) => client.answerQuestion(machineName, questionId, answers),
 					decideApproval: (machineName, approvalId, decision) => client.decideApproval(machineName, approvalId, decision),
-					official
+					official,
+					drafts
 				})
 			}, SyncPanel));
 			ctx.slots.inject(OFFICIAL_SLOT, () => ctx.slots.register({ name: OFFICIAL_SLOT }, OfficialConversation));
+			ctx.slots.inject("conversation.input.dock", () => ctx.slots.register({
+				name: "conversation.input.dock",
+				id: PANEL_ID,
+				order: 100,
+				locale: NS,
+				inject: () => ({
+					hooks: { sync: client.snapshot },
+					sendPrompt: (text) => client.sendPrompt(text),
+					official,
+					drafts
+				})
+			}, MirrorComposerDock));
 		}
 		//#endregion
 		exports.apply = apply;

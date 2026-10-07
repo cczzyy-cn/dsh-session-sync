@@ -61,6 +61,16 @@ export interface LogStats {
   /** Summed wall time of the steps that produced an assistant message. */
   stepMs: number
   /**
+   * Wall time the writing itself had, summed over the steps that produced a message.
+   *
+   * The interval {@link outputPerSecond} is computed from, published as its own
+   * number because a reader of the totals can want the rate *and* the denominator
+   * behind it: the shipped composer's statistics fold takes decode time and decode
+   * tokens, so a footer built on the shipped components needs both rather than the
+   * rate alone.
+   */
+  generationMs: number
+  /**
    * Output tokens per second while a step was writing.
    *
    * Measured from the step's own `step/start` to the message that reported its
@@ -179,6 +189,7 @@ export function logStats(events: readonly MirrorEvent[]): LogStats {
     ...(context === undefined ? {} : { context }),
     ...(inputTotal > 0 ? { cacheHitPercent: Math.round((usage.cacheReadTokens / inputTotal) * 1000) / 10 } : {}),
     stepMs,
+    generationMs,
     ...(outputPerSecond === undefined ? {} : { outputPerSecond }),
     ...(firstTime === undefined ? {} : { firstTime }),
     ...(lastTime === undefined ? {} : { lastTime }),

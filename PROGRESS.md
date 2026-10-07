@@ -96,6 +96,96 @@
 > 2026-09-25 及以前的推进日志（从"② 的答案"一路到 0.3.x）已归档到 `docs/history-2026-09.md`。
 > 这一段只留本版（0.8.x/0.9.x/0.10.x）的改动与验证；历史文件是当时的推理记录，不要照它实现。
 
+### v0.10.40：底部状态行改用**官方那两件**（官方统计胶囊 + 官方占用率环），插件只负责喂数（2026-10-07）
+
+用户原话："同步会话页底部改用原 dsh 官方组件"，并贴出当时底部渲染的三行
+（`41 轮 · 359 步 · 输出 167 tok/s · 上下文 63%` / `共 125M tok · 缓存命中 99.3%` / `~628K / 1M`）——
+那三行**逐字**来自本插件自绘的 `StatusRow`（`SyncPanel.tsx` + `locales.ts:118-122,328-337`），
+不是官方任何组件。
+
+**先纠正 0.10.28 那条结论。** 原文写"直接用官方 UI 做不到"，理由两条：官方 `ContextMeter` 只由
+官方输入栏（`InputBar.tsx:502`）渲染、读 `contextPressure` 投影，而镜像会话挂的是本控制台输入栏；
+且它没有对外导出（`ui-conversation` 的 `exports` 只有 `.` 与 `./client`）。这两条**都仍然成立**，
+但它们只证明了"那个环**取不到**"，没证明"官方 footer 取不到"——官方 footer 是**两件**组件：
+
+| 组件 | 在哪 | 能不能取到 | 怎么取 |
+| --- | --- | --- | --- |
+| `StatsPills`（`ui-chat`，`{turns} 轮 {steps} 步 · {tps} tok/s` + `{total} tok · 缓存命中 {p}%` 两枚胶囊） | 注册在 `conversation.composer.dock`（`ui-chat/src/client/apply.ts:229`） | **不能**用 `renderSlot` 取 | 但它在官方输入栏里，所以**保留输入栏**它就自己渲染 |
+| `ContextMeter`（`ui-conversation`，14px 环 + 点击面板 `~used / window`） | `InputBar.tsx:502` 内联，不在任何 slot 上 | **不能**单独取 | 同上：随输入栏一起留下 |
+
+于是路线变成：**别再把整个 `[data-composer-seat]` 藏掉**，只藏官方那枚**输入胶囊**
+（`[data-composer-card]`，官方自己的标记），官方统计行与占用率环就留在原地自己画；本控制台的接管
+输入框则从"输入栏下面那一块"搬进官方 composer stack 的 **`conversation.input.dock`**
+（`ConversationContent.tsx:161` 渲染、官方文档化的插件插槽，`ui-goal` 的 GoalBar 就是这么用的），
+order 100 排在 goal(10)/queue(20) 之后，正好贴在它顶替的那枚胶囊上方。
+
+**第二件事：官方那两件读的是投影，而合成会话没有 Host 算投影。** `useProjection(key)` 绑的是
+`binding.session.projections.faceOf(key)`（`ui-session/src/client/index.ts:265`），而投影存储是
+"host 是唯一计算点"的推模型（`projection-store.ts` 文件头）。镜像会话是 `retainAgentScope` 出来的
+合成身份，Host 从没听说过它 ⇒ 永远不会有值 ⇒ 官方胶囊会退回"数窗口"，官方环**整个不渲染**。
+所以本版把底部数字**发布进同一个存储**：`footerProjections()` 把已有口径的总量映射成
+`sessionStats` / `tokenUsage` / `contextPressure` 三个键的官方形状，`OfficialSessions.publishFooter`
+用**结构探测**到的 `session.projections.apply` 写进去（探测不到就什么都不做，官方那两件退回原样）。
+两个数字读的是**同一份** `totals`（机器报的整份日志优先，否则数本控制台持有的），头部的占用率环
+也改成读同一份，免得一页上出现两个百分比。
+
+**口径标签与「按整份日志重算」搬到头部徽标**（官方那两件没有地方写"这些数算的是哪份 log"）：
+chat 页且走官方 footer 时，标题行多一枚徽标，内容就是原来的 `整份日志` / `按整份日志重算`，
+提示里再带上本控制台已载入区段的缺口数（`statusScopeGap`，新增键）；`原件 · scope` 与
+`缺 N 条` 两枚原有徽标不动。
+
+**留在原地的**：轨迹页、以及没有 `retainAgentScope` 的老构建——那两处根本没有官方 footer，
+所以仍由控制台自绘输入框 + 自绘 `StatusRow`（口径标签也仍写在那里）。判定就是
+`tab === 'chat' && shipped !== undefined`，它与旧的 `shipped === undefined || composerOwned || tab === 'trajectory'`
+**等价**（因为 `shipped !== undefined` ⇒ `composerOwned === true`），所以这是替换而不是新增条件。
+
+**输入框的草稿因此跨座位共享**：两个座位是两棵树里的两个组件，切换页签会把其中一个卸载掉，
+草稿放在任何一个的 `useState` 里都会丢。新增 `ComposerDrafts`（按机器+会话 id 立案、冻结快照、
+一处订阅）由 `apply()` 建一次，两个座位都读它；发送状态（`sending`）也一起，因为"已经有一条在飞"
+是关于那条 prompt 的事实，不是关于哪个座位在屏幕上的事实。
+
+**两个座位都常驻，谁在屏幕上是 CSS 判定的。** 官方的那个座位能不能挂上，取决于
+`ConversationContent` 能不能解析出这个会话的 input shell（`zone`），那是本面板从外面
+问不到的事；而这一版把"输入框不见了"变成了一个可达状态——只要判定为官方 footer，面板就
+不再画自己的卡片。所以两个卡片**同时挂载**：`[data-sync-composer]` 标记官方那个，
+`.officialPane:has([data-sync-composer]) ~ .composerRoot { display: none }` 是压制规则。
+两者是同一个组件、读同一份草稿，所以"两个输入框"不会同时可见；而一旦官方那个座位不再
+渲染，控制台这一份本来就在，会话不会变得没法说话。`display:none`（而不是卸载）也顺手把
+隐藏的那一份移出 tab 顺序与无障碍树。
+
+**那个 dock 组件是挂在全产品每一个会话的 composer stack 里的，所以它先自证再干活。** 它的
+`useSync` 来自注册的 `hooks: { sync }` 座位——同一个绑定方式现有的 `main` 面板已经在生产里
+跑着（控制台今天就靠它渲染），但一个缺失的钩子在这里的代价是**整个产品的输入栏**一起崩，
+而不是本插件面板崩。所以组件第一件事是 `typeof useSync !== 'function' → return null`，
+其余依赖全部来自本插件自己的 inject face。配合上面那条 `:has()` 规则，这一路的降级是
+"控制台自绘 footer 顶上来"，而不是白屏。
+
+**验证**：
+
+| 检查 | 结果 |
+| --- | --- |
+| `npm run check-encoding` | clean（67 文件）——期间真的拦下一次：注释里写了"那条**路**用"，U+8DEF 正是 `·` 的 GBK 误读码点，被门禁按码点拦下，改成"那一版" |
+| `powershell -File scripts/typecheck.ps1` | 75 文件 / 789 诊断 / **undeclared 0 · relative imports 全解析 · 类型不匹配 0**（基线 69 文件 / 782 诊断；多出的 7 条是新文件的 JSX/上游项） |
+| `npm test` | **191 通过 / 0 失败**（45 suites）——新增 `footer-projections` 12 例、`composer-draft` 8 例、`locales` 2 例 |
+| `scripts/build-and-install.ps1` | 构建通过：`lib/index.js` **253,788 B**（sha256 `56f82889…`，比上一版 +16 B：只多一个可选 wire 字段）、`client/client.js` **399,795 B**（sha256 `2653b6b2…`）、map 638,216 B；自报版本核对通过（`0.10.40`）。产物里实测到那三条承重串：`SnSagW_officialPane:has([data-sync-composer])~.SnSagW_composerRoot{display:none}`、`"data-sync-composer": ""`、以及 dock 组件开头对 `useSync` 的类型检查。profile 依赖是 `github:` ⇒ 默认按设计不拷贝；本机要看效果时显式 `-Profile desktop -ForceCopy` |
+
+**这次新加的测试各盯一条会静默出错的规则**：① 投影记录**每次三个键全发**，缺窗时写
+`undefined` 而不是省略——省略会让存储留着上一次的环，读者看到一个日志已经不存在的占用率；
+② `nextWatermark` **只增不减**且高于日志序号地板——存储拒绝水位不前进的写入，而"写被拒绝"的表现
+是底部数字**停在旧值**、看上去一切正常（会话重开后计数器归零就是这条路）；③ 两份字典的键与占位符
+必须一致——`en` 的 `Record<SessionSyncKey, string>` 只能报成类型不匹配，而类型不匹配**不在类型门禁
+的失败项里**。
+
+**尚未验证（要真在浏览器里打开一次才作数）**：本机 `profiles/desktop` 已用
+`build-and-install.ps1 -Profile desktop -ForceCopy` 装进本版（逐字节核对 MATCH，装前把 0.10.28
+的四份文件备份到 `%TEMP%\dsh-session-sync-0.10.28-backup-20261007-161651\`），但**还没有刷新页面
+看过**——本文件 §6 那条"客户端改动必须真在浏览器里打开一次再看结论"正是针对这一层。
+待验的具体三条：官方那两枚胶囊与占用率环是否真的画出来、隐藏胶囊后底部间距是否与本地会话
+一致、`conversation.input.dock` 是否真的为合成会话挂上（挂了就是官方那个卡片在屏幕上，
+没挂就是控制台这一份，两者都可用）。Host 半边（`lib/index.js`）盘上已是 0.10.40，但**跑着的
+本机进程仍是 0.10.28**，要重启才生效（会杀掉当时正在跑的会话）；本次 Host 改动只有一个新增的
+可选 wire 字段，不重启也能用。
+
 ### 部署面：同步口改为 nginx 在 8791 上终结 TLS，插件监听退回 `127.0.0.1:8792`（2026-10-03）
 
 服务器 `sg-cczzyy` / `dsh.c-zy.cc` / `210.16.120.228`。

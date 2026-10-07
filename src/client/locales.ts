@@ -326,7 +326,7 @@ export const zh = {
   statusAuthoritativeHint: '这些数字来自拥有该会话的机器：它按整份日志算好后随索引发过来，所以不受本控制台加载了多少、也不受镜像保留上限影响。',
   // 速率算的是**输出**，总数含 prompt+缓存读取：两者共用一个 'tok' 会读成自相矛盾。
   statusOutputRate: '输出 {tps} tok/s',
-  // 底部也要有占用率：镜像会话画的是本控制台的输入栏，官方那个 meter 的座位没挂上。
+  // 占用率：镜像会话底部画的是官方输入栏自己的 meter，这里只给控制台自绘那一版用。
   statusContext: '上下文',
   statusContextDetail: '~{used} / {window}',
   statusTotalTokens: '共 {total} tok',
@@ -335,6 +335,9 @@ export const zh = {
   statusCountHint: '让控制台把日志翻到开头再统计：数字会与源站本机页面一致；长会话要翻几页，稍等。',
   // 「整份日志」不是链条的说法，而是本地数出来的事实：这里报出缺口。
   statusGaps: '缺 {n} 条',
+  // 官方那两枚胶囊与占用率环没有地方写口径，所以口径搬到头部徽标上；缺口也放进它的
+  // 提示里，因为头部的「缺 N 条」徽标讲的是镜像自己的洞，不是这一段连续性的证明。
+  statusScopeGap: '本控制台已载入的这一段里缺 {n} 条',
   turnTimeTitle: '本轮用时和速度',
   turnTimeDuration: '本轮总用时',
   turnTimeSpeed: '输出速度（TPS）',
@@ -667,6 +670,7 @@ export const en: Record<SessionSyncKey, string> = {
   statusCount: 'count the whole log',
   statusCountHint: 'Pages this console back to the start of the log before counting, so the numbers match the machine page. A long session takes a few pages.',
   statusGaps: '{n} missing',
+  statusScopeGap: '{n} missing from the stretch this console has loaded',
   turnTimeTitle: 'Turn time and speed',
   turnTimeDuration: 'Total run time',
   turnTimeSpeed: 'Tokens per second (TPS)',

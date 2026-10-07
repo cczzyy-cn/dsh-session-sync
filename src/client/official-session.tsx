@@ -24,6 +24,7 @@ import {
   type SyncTransportObserver,
 } from './api.ts'
 import { envelopePlacement, highestOf } from './envelope-placement.ts'
+import { nextWatermark } from './footer-projections.ts'
 import { LiveText, liveChunkOf } from './live-text.ts'
 import { scopeCapable } from './routing.ts'
 
@@ -90,9 +91,41 @@ export interface SessionEventSourceLike {
 
 /** One retained Session, as `ctx.sessions.binding()` hands it out. */
 export interface SessionBindingLike {
-  /** The Session face; only the running flag is of interest here. */
-  readonly session?: { handleRunning?(running: boolean): void }
+  /** The Session face: the running flag, and the projection store when there is one. */
+  readonly session?: {
+    handleRunning?(running: boolean): void
+    /**
+     * The Session's projection store, when this build hands one out.
+     *
+     * The shipped renderer reads every session projection through exactly this
+     * object — `ui-session` binds `useProjection(key)` to
+     * `session.projections.faceOf(key)` — which is why the console can give the
+     * shipped footer real values for a Session no Host has ever computed one for.
+     * Typed structurally and feature-detected: a build whose Session face does not
+     * carry it simply gets the shipped fold over the window instead.
+     */
+    readonly projections?: ProjectionsSinkLike
+  }
   readonly eventSource?: SessionEventSourceLike
+}
+
+/**
+ * The one projection-store verb this console calls.
+ *
+ * The store is a push model whose only documented writer is the Host, so this is
+ * a seam rather than a public API: it is read structurally off the Session face,
+ * checked for shape where it is used, and its absence costs a reading rather than
+ * a render. `footer-projections.ts` says why the console publishes at all.
+ */
+export interface ProjectionsSinkLike {
+  /**
+   * Land one finished value for a projection key.
+   * @param key - the projection key.
+   * @param value - the whole value; `undefined` means "no such reading".
+   * @param seq - the watermark it is consistent with. A lower-or-equal seq loses
+   *   to a value already held, so a publisher only ever moves forward.
+   */
+  apply(key: string, value: unknown, seq: number): void
 }
 
 /**
@@ -200,6 +233,30 @@ export interface OfficialBridgeFace {
    * @returns the reference while exactly that Session is drawn, else undefined.
    */
   referenceFor(machineName: string, sessionId: string): SessionReferenceLike | undefined
+  /**
+   * Whether the Session being drawn through the shipped renderer is this identity.
+   *
+   * The synthetic id of the retained Session, not the id of the remote one: it is
+   * what a session-scoped occurrence in the shipped composer stack receives as its
+   * own `sessionId`. False when nothing is retained, which is what keeps the
+   * console's composer out of every other Session's composer stack.
+   * @param sessionId - the identity an occurrence was mounted for.
+   * @returns true while the mirror holds exactly that Session.
+   */
+  owns(sessionId: string): boolean
+  /**
+   * Publish the footer's numbers into the retained Session's projection store.
+   *
+   * A no-op unless the shipped renderer is drawing a Session and its face hands
+   * out a projection sink — a build that offers neither keeps the console's own
+   * footer, which reads these totals directly.
+   * @param values - whole projection values by key; a key mapped to `undefined`
+   *   takes that reading down.
+   * @param floor - the sequence this publication is consistent with. The counter
+   *   the store compares against only ever moves forward, and it is seeded above
+   *   this so a re-opened Session's fresh numbers are never refused as stale.
+   */
+  publishFooter(values: Readonly<Record<string, unknown>>, floor: number): void
 }
 
 /**
@@ -259,6 +316,23 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
 }
 
 /**
+ * The projection sink one Session face carries, when it carries a usable one.
+ *
+ * Checked rather than assumed: `projections` is read off another plugin's Session
+ * object, so a build that renamed it, or that hands out a face with only the read
+ * half, has to end as "no sink here" — the shipped footer then shows the fold over
+ * the window, exactly as it does on a Session whose Host unit is not mounted.
+ * @param session - the Session face of a retained binding, when there is one.
+ * @returns the sink, or undefined when this face cannot take a value.
+ */
+function projectionsSink(
+  session: { projections?: ProjectionsSinkLike } | undefined,
+): ProjectionsSinkLike | undefined {
+  const candidate = session?.projections
+  return candidate !== undefined && typeof candidate.apply === 'function' ? candidate : undefined
+}
+
+/**
  * One retained remote Session, and the frames fed into it.
  *
  * One instance per opened remote Session. Every method is safe to call after
@@ -272,6 +346,14 @@ export class OfficialMirror {
   private readonly source: SessionEventSourceLike | undefined
   /** The Session face, when the binding exposes one that reports running. */
   private readonly face: { handleRunning?(running: boolean): void } | undefined
+  /**
+   * The Session's projection store, when this build hands one out.
+   *
+   * Where the console's footer numbers go so that the *shipped* statistics row and
+   * context meter can render them: those components read the store, and a retained
+   * Session has no Host behind it to fill it.
+   */
+  private readonly projections: ProjectionsSinkLike | undefined
   /** The live attempt whose text is on screen, by the plugin's turn|step key. */
   private liveAttempt: string | undefined
   /**
@@ -330,6 +412,23 @@ export class OfficialMirror {
     const binding = service.binding(sessionId)
     this.source = binding?.eventSource
     this.face = binding?.session
+    this.projections = projectionsSink(binding?.session)
+  }
+
+  /**
+   * Land one finished projection value on the Session's store.
+   *
+   * Safety is in the ordering and the gate, not in the store: a released mirror
+   * writes nothing, and a build whose face carries no sink writes nothing. An
+   * `undefined` value is a real write — it is how a reading the log no longer
+   * states is taken down rather than left on screen.
+   * @param key - the projection key.
+   * @param value - the whole value.
+   * @param seq - the watermark, already above everything published before.
+   */
+  applyProjection(key: string, value: unknown, seq: number): void {
+    if (this.released) return
+    this.projections?.apply(key, value, seq)
   }
 
   /**
@@ -629,6 +728,16 @@ export class OfficialSessions implements OfficialBridgeFace, SyncTransportObserv
   private lastRunning: boolean | undefined
   /** The Session whose composer this console blocked, if it blocked one. */
   private blockedComposer: string | undefined
+  /**
+   * The last watermark this bridge published a projection value at.
+   *
+   * One counter for the whole bridge rather than one per mirror, and monotonic for
+   * the plugin's lifetime: a Session's projection store outlives the mirror that
+   * was retained for it, so a counter that restarted would have its first
+   * publication of a re-opened Session refused as stale — and the footer would keep
+   * the previous reading while looking perfectly healthy.
+   */
+  private projectionSeq = 0
 
   /**
    * @param ctx - the client context, read for the Sessions service and the
@@ -676,6 +785,31 @@ export class OfficialSessions implements OfficialBridgeFace, SyncTransportObserv
     const current = this.current
     if (current === undefined) return undefined
     return current.key === remoteKey(machineName, sessionId) ? current.mirror.reference : undefined
+  }
+
+  /**
+   * Whether the retained Session is one identity.
+   * @param sessionId - the identity an occurrence was mounted for.
+   * @returns true while the mirror holds exactly that Session.
+   */
+  owns(sessionId: string): boolean {
+    return this.current?.id === sessionId
+  }
+
+  /**
+   * Publish the footer's numbers on the retained Session's projection store.
+   * @param values - whole projection values by key.
+   * @param floor - the sequence the publication is consistent with.
+   */
+  publishFooter(values: Readonly<Record<string, unknown>>, floor: number): void {
+    const mirror = this.current?.mirror
+    if (mirror === undefined) return
+    for (const [key, value] of Object.entries(values)) {
+      // Above the previous publication *and* above the sequence floor, in one step:
+      // see `nextWatermark`, which owns that rule and the two ways of losing it.
+      this.projectionSeq = nextWatermark(this.projectionSeq, floor)
+      mirror.applyProjection(key, value, this.projectionSeq)
+    }
   }
 
   /**

@@ -959,6 +959,16 @@ export interface MirrorStats {
   }
   cacheHitPercent?: number
   stepMs: number
+  /**
+   * Wall time the writing itself had, summed over the steps that produced a message.
+   *
+   * The denominator of {@link outputPerSecond}, sent beside it for the same reason
+   * the rate is: a console drawing the shipped composer statistics folds decode
+   * time and decode tokens itself, so the pair is what it needs, and a rate alone
+   * cannot be taken apart again. Absent from an older origin, which leaves that
+   * fold without a speed reading rather than with an invented one.
+   */
+  generationMs?: number
   outputPerSecond?: number
   firstTime?: number
   lastTime?: number

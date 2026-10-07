@@ -60,7 +60,7 @@ feature detection 在 `official-session.tsx:1016-1023`（`routeOf`），顺序 `
 | 19 | 手绘 composer 卡：`max-width: calc(min(920px,100%) + 32px)` / `radius 22px` / `padding-top:8px` / `--dsw-elevation-soft` / `--dsw-specific-input-major` —— 与 S 的 `.card` **同值** | `sync.module.css:1866-1880` | `ui-conversation/src/client/skeleton/InputBar.module.css:45-69` | 否 | 低 |
 | 20 | 但卡内是**纯 `<textarea rows=2>`**（`min-height:44px; max-height:200px`），S 是 contenteditable 富文本（`min-height:36px`，上限走 `--dsh-composer-text-max-height:336px`） | `SyncPanel.tsx:704-716`；`sync.module.css:1882-1894` | `ConversationContent.tsx:166-180`、`ConversationRoot.module.css:346-358`、`InputBar.module.css:169-177` | 是 | 中 |
 | 21 | 卡内工具行只有「发送到 <机器名>」+ 投递状态 + 34px 圆发送键；S 工具行是 `+` / 模型 / 权限 / activity / 右侧座位 | `SyncPanel.tsx:717-736`；`.sendButton` `sync.module.css:1934-1946`（34px，同 S `.primary` 34px `InputBar.module.css:377`） | `ui-conversation/apply.ts:380-393`（子座位清单） | 是（**仅 feed 路线**：adopt 路线上 S 控件在） | **高** |
-| 22 | 底部状态行是**纯文本** `N 轮 · M 步 · K tok/s · …`，居中、11px、tabular-nums；S 是图标胶囊（14px svg、`radius 24px`、可点开统计弹窗） | `StatusRow` `SyncPanel.tsx:847-864`；`locales.ts:104-107`；`sync.module.css:1232-1243` | `StatsPills.tsx:137-184`（`stats.counts`＝`{turns} 轮 {steps} 步`，`ui-chat/src/client/locale.ts:78`）+ `StatsPills.module.css:12-54` | 是（仅 feed 路线） | 中 |
+| 22 | ~~底部状态行是**纯文本** `N 轮 · M 步 · K tok/s · …`~~ **已修（0.10.40）**：底部现在是官方那两件自己渲染（统计胶囊 + 占用率环），控制台只把数字发布进投影存储；自绘 `StatusRow` 只留在没有官方 footer 的两处（轨迹页、无 `retainAgentScope` 的构建） | `footer-projections.ts`；`official-session.tsx` 的 `publishFooter`；`sync.module.css` 的 `[data-composer-card]` | `StatsPills.tsx:137-184`（`stats.counts`＝`{turns} 轮 {steps} 步`，`ui-chat/src/client/locale.ts:78`）+ `ContextMeter.tsx:108-178` | 否（官方件本身） | — |
 | 23 | 自造「加载更早的消息」胶囊按钮；S 用 `加载更早`（文案不同） | `SyncPanel.tsx:619-630, 645-656`；`locales.ts:69`；`sync.module.css:467-491`（`padding:4px 12px; radius 999px`） | `ChatView.tsx:241-247`；`ui-chat/src/client/locale.ts:88` | 是（adopt 路线也在） | 中 |
 | 24 | 「回到底部」用的 aria-label 是 `滚动到底部`；S 是 `回到底部` | `locales.ts:80`；`SyncPanel.tsx:684` | `ui-chat/src/client/locale.ts:89` | 是（hover/AT） | 低 |
 | 25 | 空 transcript 显示插件文案；S 什么都不画 | `SyncPanel.tsx:657-662`；`locales.ts:152-154` | `ChatView.tsx:221-247`（无空态节点） | 是 | 中 |
@@ -146,7 +146,7 @@ feature detection 在 `official-session.tsx:1016-1023`（`routeOf`），顺序 `
 3. **`缺 N 条` 红字**（列表行 `SyncPanel.tsx:317-319`、头部 `:565-569`）——shipped 没有这个状态。
 4. **列表上方那行角色/链路状态**（`Client · 已连接到服务器 · 正在发布`，`SyncPanel.tsx:221-225` + `roleLine` `:1346-1369`）——shipped 列表区没有这类系统状态行。
 5. **composer 里是「发送到 <机器名>」而不是模型/权限选择器**（`SyncPanel.tsx:717-736`）——只在 feed 路线出现；一旦出现就极其明显。
-6. **底部状态行没有图标胶囊**（`N 轮 · M 步 · K tok/s` 纯文本，`SyncPanel.tsx:859-862`）——shipped 是两枚带 svg 的圆角胶囊（`StatsPills.tsx:164-184`）。
+6. ~~**底部状态行没有图标胶囊**（`N 轮 · M 步 · K tok/s` 纯文本，`SyncPanel.tsx:859-862`）——shipped 是两枚带 svg 的圆角胶囊（`StatsPills.tsx:164-184`）。~~ **已修（0.10.40）**：chat 页且走官方 footer 时，底部就是 shipped 那两件（两枚胶囊 + 占用率环），插件只发布投影；自绘 `StatusRow` 只剩轨迹页与无接缝的老构建。**代价是头部多了一枚自造徽标**——统计口径（`整份日志` / `按整份日志重算`），因为官方那两件没有地方写"这些数算的是哪一份 log"。
 7. **头部没有面包屑**（本地子会话显示 `父 / 子`），只有 `<h2>` 标题 + 机器名（`SyncPanel.tsx:557-558`）。
 8. **侧栏多一行地球行**（`PanelIcon.tsx:26`）+ 中心面板 key 是 `session-sync`（`client/index.ts:46`）——注意 URL/面板名不写入地址栏，所以这条主要靠侧栏。
 9. **搜索框 placeholder 文案** `搜索会话`（`locales.ts:78`）vs shipped 的 `search.placeholder`。
