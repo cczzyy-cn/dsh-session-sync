@@ -146,9 +146,10 @@ zh/en 各一对）：占用率现在只由底部那件官方 meter 陈述，而�
 接到同一份 `totals` 上）。
 
 **输入卡片加左右留白**：`.composerRootInner`（控制台自绘底部那条路）与 `.dockComposer`
-（自带 composer stack 那条路）各加 `padding: 0 16px`。两条路本来就各自有 16px（前者是
-`.composerRoot` 的 padding，后者是自带 stack 的 `--dsh-composer-side-clearance`），所以卡片
-在两处离面板边缘一样远 —— 这是"同一个卡片两个座位"的又一处必须对齐的量。
+（自带 composer stack 那条路）各加 `padding: 0 16px`。控制台自绘那条路再叠上 `.composerRoot`
+自己的 16px；自带 stack 自己不横向留白（`--dsh-composer-side-clearance` 是它下面输入胶囊的，
+不是 stack 的）。**这一版漏了 `box-sizing: border-box`，因此让整页多出一条横向滚动条 —— 由
+0.10.42 修掉，见下一节。**
 
 **三条代价，写在这里免得下次当成 bug**：
 
@@ -182,11 +183,68 @@ zh/en 各一对）：占用率现在只由底部那件官方 meter 陈述，而�
 | 打包版 app 探测 | 对 121 MB 的 `app.asar` 逐串确认自带轨迹页真的在跑的这套里：`conversation.view`、`view.trajectory`、`group.compaction`、`record.wrapLines`、`TrajectoryToolbar`、`data-conversation-composer-overlay`、`conversation.trajectory.images` **全部 PRESENT** ⇒ 真机上 `hasTrajectoryView()` 会答"是"，页签走官方页 |
 | 构建期真拦下一次 | `sync.module.css` 里那段新注释漏了收尾 `*/`，lightningcss 报 `Invalid token in pseudo element: WhiteSpace(" ")`、tsdown 退出 1 —— 门禁链里 CSS 也有编译期把关 |
 
-**未验证（服务器上线后才有意义）**：本机 `profiles/desktop` 是**客户端**角色，控制台在客户端
-上只有一句"本机不是同步服务器…"和一棵空树（客户端角色的 `machines` 恒为空），**所以这一版在
-本机根本画不出镜像会话**，浏览器里无从复现。要看到效果只能把 0.10.41 装到服务器（`dsh.c-zy.cc`）
-那一侧 —— 也就是用户截图里的那个面。按 §6 的规矩，"客户端改动要真打开一次"这条至今**仍未兑现**，
-原因就是验证面不在本机。
+**落地读数与真机验证（2026-10-07，发版 + 上线已做完）**：
+
+- **发版**：提交 `6d576bb`（`main`，`feat(client): 轨迹页改用自带 ui-trajectory；删掉头部占用率环；输入卡片加左右留白`）·
+  附注标签 `v0.10.41` 对象 `fdfc883a…` → commit `6d576bb`，远端同名对象 sha **完全相同** ·
+  origin `main` 与本地逐字一致。`release.ps1 -NoPush` 的校验全过（版本未被本地/远端打过 tag、
+  产物=源码、两道门禁 + 196 测试），随后用 `credential.helper=manager` 推 main 与 tag
+  （这台机器仍没有 `release.ps1` 默认要的 `gh:github.com:cczzyy-cn` 那个凭据目标）。
+- **服务器**（`dsh.c-zy.cc`）：spec `#v0.10.40` → `#v0.10.41`；lock 解析到 `6d576bb…`；安装版本 `0.10.41`；
+  `lib/index.js` 253,788 B sha256 `56f82889…`（与 0.10.40 **逐字节相同**）、`client/client.js`
+  399,814 B sha256 `6c290619…` —— 与本地逐字节相同；产物内 `OfficialViewContext` ×3、
+  **`ContextRing` ×0**、`hasTrajectoryView` ×3。重启后 `active`、3080/8791 都在听。
+  备份：`/root/package.json.bak-20261007-092938`、`/root/pnpm-lock.yaml.bak-20261007-092938`。
+- **镜像**：重启后两个源站都自动回来。中途读到过一次瞬时 `holes 1998 / missingEvents 1998`
+  （本机那条会话正在被回填），几分钟后即为终态：`DESKTOP-E3OV3NS`（v 报 `0.10.40`）一条
+  `events 2919 / missing 0 / holes 0 / behind 0`、`DESKTOP-VC1SGPH`（v 报 `0.10.39`）一条
+  `events 1673 / missing 0 / holes 0 / behind 0`，服务器自身 `0.10.41`。
+  **注意"报 0.10.40"不是没装上**：Host 半边的版本字符串在启动时读一次就冻结，而 0.10.41 的
+  `lib/index.js` 与 0.10.40 **字节相同**（这次只动客户端），所以本机进程报的是它启动那一刻的
+  名单版本；重启本机 app 即可对齐，功能上无差别。
+- **真机验证（在 `dsh.c-zy.cc` 那个页面上，逐条对照用户报的三件事）**：
+  1. **轨迹页 = 自带那一页**：工具条 `时长 / 轮次 / 调用`、搜索框占位符 **`搜索`**（自绘那版是
+     `搜索事件…`）、时间线三条泳道是 **`输入 / 模型 / 工具`**（自绘那版是 `系统 / 消息 / 工具`）、
+     表上方一条 **`加载更早的历史`**、行首 `第 8 轮` 与 `轮 / 助手 / 用户` 标记 —— 全是自带
+     `ui-trajectory` 的词与结构。
+  2. **"空内容"没了**：没有正文的助手节点不再是一行空白，而是自带那页的
+     **`（仅工具调用）`**（`record.toolCallOnly`）；工具行长这样：
+     `工具 read {"file_path": …} → <path>…PROGRESS.md</path> <type>file/t…`、
+     `工具 pwsh {"command": …} → mojibake check: clean (68 files) | pass 196 | fail 0 …`。
+  3. **底部是官方那两件**：`8 轮 493 步 · 130 tok/s` + `159M tok · 缓存命中 99.5%` + 官方占用率环
+     `62%`（胶囊带图标），而不是自绘那三行。
+  4. **头部右上角没有环了**：右簇以 `子代理 0` 结尾；同时能看到 0.10.40 加的 `整份日志` 口径徽标。
+  5. **输入卡片有左右留白**：卡片与台账列之间能看到那 16px 的额外内缩。
+- **仍未验证的一条**：自带轨迹页自己的 `加载更早的历史` 在镜像会话上翻到底之后是否如预期停住
+  （它先翻 resident 窗口、翻完再问 Session，而合成会话答不了）——这一条要滚动到底才知道，
+  而"能翻镜像"的那条路（控制台自己那行 `加载更早的消息`）在同一页上确实同时存在。
+
+### v0.10.42：修 0.10.41 引入的横向滚动条 —— `width: 100%` 上没有 `border-box`（2026-10-07）
+
+**用户报的症状**："你加输入框左右外边距导致内容页出现横向滚动条了"。
+
+**根因（我的错，且是教科书式的）**：0.10.41 给 `.composerRootInner` 与 `.dockComposer` 各加了
+`padding: 0 16px`，而这两个盒子都是 `width: 100%`；shipped 的样式表里**没有全局 `box-sizing`
+重置**（`ui-conversation/InputBar.module.css` 的 `.card` 是各自显式写 `border-box` 的），所以
+content-box 下这两个盒子的 border-box 宽度 = `100% + 32px` —— 比它们的座位宽 32px。装它们的
+滚动盒子是 `ui-conversation` 的 `.scrollBody{overflow-y:auto}`，而**单轴滚动容器会把另一轴
+计算成 `auto`**，于是那 32px 变成整页内容区的横向滚动条。修法：两个盒子都显式
+`box-sizing: border-box` —— 这样百分比宽度把它自己的 padding 也包进去，也正是"填满座位、再
+减掉控制台自己的内缩"这句话唯一读得通的定义。
+
+**留白本身保留**（那是用户要的），两个座位各 16px：自带 composer stack 自己不横向留白
+（`--dsh-composer-side-clearance` 属于它下面的输入胶囊，而胶囊是那个 root 的子节点，不是 stack
+的子节点），所以那一侧只有这 16px；控制台自绘底部那一侧再叠上 `.composerRoot` 自己的 16px。
+
+**教训（写给下一个改 CSS 的人）**：这个仓库的 CSS 全靠拷贝 shipped 的取值，而 shipped 只在需要
+的类上写 `box-sizing`。所以**只要新加一个带 padding 的盒子且它同时有百分比宽度，就必须自己写
+`border-box`**，否则症状不是"内缩没生效"（那还看得见），而是"整页多一条横向滚动条"——后者更
+不容易联想到 composer。
+
+**验证**：`check-encoding` clean(68) · `typecheck` 77 文件/772 诊断/0 致命 · `npm test` **196 通过** ·
+产物内实测 `SnSagW_composerRootInner{...box-sizing:border-box...padding:0 16px}` 与
+`SnSagW_dockComposer{...box-sizing:border-box...padding:0 16px...}` 都在。真机在
+`dsh.c-zy.cc` 上复核（见本节末尾的落地读数）。
 
 ### v0.10.40 的落地读数（2026-10-07，发版 + 上线已做完）
 
