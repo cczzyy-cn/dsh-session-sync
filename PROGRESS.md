@@ -242,10 +242,68 @@ content-box 下这两个盒子的 border-box 宽度 = `100% + 32px` —— 比�
 不容易联想到 composer。
 
 **验证**：`check-encoding` clean(68) · `typecheck` 77 文件/772 诊断/0 致命 · `npm test` **196 通过** ·
-产物内实测 `SnSagW_composerRootInner{...box-sizing:border-box...padding:0 16px}` 与
-`SnSagW_dockComposer{...box-sizing:border-box...padding:0 16px...}` 都在。真机在
-`dsh.c-zy.cc` 上复核（见本节末尾的落地读数）。
+产物内实测 `SnSagW_composerRootInner{box-sizing:border-box;justify-content:center;width:100%;padding:0 16px;display:flex}`
+与 `SnSagW_dockComposer{box-sizing:border-box;width:100%;margin-bottom:calc(-1 * var(--dsh-composer-stack-gap,6px));justify-content:center;padding:0 16px;display:flex}`
+都在（服务器上装完那份产物里也逐字复核过）。
 
+**落地读数（2026-10-07，发版 + 上线已做完）**：
+
+- **发版**：提交 `c001fb5`；附注标签 `v0.10.42` 对象 `dd567e4d…` → `c001fb5`，远端同名对象 sha **完全相同**；
+  origin `main` 与本地逐字一致。**插曲**：第一次 `git push origin refs/tags/v0.10.42` 被 GitHub
+  退回 `! [remote rejected] … (failed)`（无原因串），**原地重试即成功** —— 同一凭据、同一命令、
+  相隔十几秒，所以这是服务端瞬时拒绝，不是权限或 tag 形状问题（本地 tag 对象当时已核过是完整的
+  附注标签）。下次遇到 `(failed)` 而没带原因，先原样重试一次再怀疑凭据。
+- **服务器**：spec `#v0.10.41` → `#v0.10.42`；lock 解析到 `c001fb54…`；安装版本 `0.10.42`；
+  `lib/index.js` `56f82889…`（与 0.10.40/0.10.41 逐字节相同）、`client/client.js` `ebca9a34…`
+  （与本地逐字相同）；重启后 `active`、3080/8791 在听；镜像 `DESKTOP-E3OV3NS` 3127 条 /
+  `DESKTOP-VC1SGPH` 295 条，两边 `missing 0 / holes 0 / behind 0`。备份
+  `/root/package.json.bak-20261007-094858`。
+- **真机复核（`dsh.c-zy.cc` 那个 Chrome 窗口，刷新后）**：输入卡片左右各 16px 内缩（`.dockComposer`
+  `border-box` 生效：包装盒 = 座位宽，内容盒 = 座位 − 32px，卡片 `width:100%` 落在内容盒上），
+  底部 `9 轮 535 步 · 129 tok/s` / `186M tok · 缓存命中 99.6%` / `66%` 仍是官方那两件，
+  滚动体底部那条带子里**没有横向滚动条**。
+- **这一条没能拿到数字**：本想用 `document.querySelector('[data-conversation-scroll]').scrollWidth
+  - clientWidth` 读一个"溢出 = 0"的硬数字，但 Chrome 的 DevTools 控制台**拒绝粘贴**（"Don't paste
+  code into the DevTools Console…"），而这段代码又是经剪贴板送进去的（本机前台挂着 CJK 输入法，
+  所以逐键输入会被改写）。所以结论是"算术 + 交付产物 + 刷新后的画面"，缺一个脚本读数。
+
+### v0.10.43：会话内容列改成与输入卡片同宽（shipped 的"正文比卡片窄 32px"那条约定）（2026-10-07）
+
+**用户要求**："同步回话内容宽度改为和输入框一样"。
+
+**先找到了 shipped 的那条约定**（这正是两者不等的全部原因，写在这里因为它是"有意为之"）：
+`ui-chat/chat/ChatView.module.css` 的 `.scroll` 是
+`padding: 16px calc(var(--dsh-composer-side-clearance) + 16px)`，它自己的注释写着
+"on narrow viewports the transcript stays exactly 32px narrower than the input card
+（the shared width rule）"；同一份文件里 `.column { max-width: var(--dsh-chat-content-width) }`，
+而 `ConversationRoot.module.css` 的 embedded 变体把它定成 `min(calc(100% - 32px), 920px)`，
+把卡片上限定成 `min(calc(100% - 16px), 952px)`。**两处各让 16px**：正文的盒子左右各多 16px 内缩，
+列宽上限里再各减 16px。所以"内容比输入框窄 32px"是设计，不是 bug。
+
+**改法**：控制台把这两半都收回来，让两者在同一个盒子里都解析成 `min(952px, 100% - 32px)`：
+
+- `.officialPane [data-slot='conversation.view'] { --dsh-composer-side-clearance: 0px }` —— 只作用
+  **视图内部**，于是 `ChatView` 的 padding 退回它自己的 16px（与卡片在本控制台里的内缩相同）。
+  这个变量的其他消费者（shipped 输入胶囊、dock 卡片、审批/提问接管、goal bar、queue dock）
+  全在 composer stack 里，是视图的**兄弟**而不是后代，所以一个都不受影响；
+- `.officialPane [data-conversation-content] { --dsh-chat-content-width: min(952px, 100%) }` ——
+  去掉列宽上限里那 `- 32px`，让列填满它那个已缩进的盒子，同时保留卡片的 952px 天花板。
+
+两个变量都声明在 shipped 自己的元素上（不是它们的祖先），所以选择器必须打到元素本身：一个是渲染
+机制给每个 slot outlet 打的 `data-slot`（`ui-renderer/scoped-slots.tsx`：`<div data-slot={slotKey}>`，
+`display:contents` 但那不影响自定义属性继承），另一个是 shipped 内容给自己打的
+`data-conversation-content`。`\.` 是 lightningcss 给非引号属性值里那个点的转义，合法。
+
+**验证**：`check-encoding` clean(68) · `typecheck` 77 文件/772 诊断/0 致命 · `npm test` **196 通过** ·
+产物内实测两条规则都在：
+`[data-slot=conversation\.view]{--dsh-composer-side-clearance:0px}` 与
+`[data-conversation-content]{--dsh-chat-content-width:min(952px, 100%)}`。
+
+**一条值得记住的工具学教训**：为了快速迭代，我先只把 `client/client.js` 拷到服务器上刷新页面看 ——
+**看不到任何变化**。原因是 DSH 给插件 bundle 的 URL 带 `rev`，而那个 rev 跟着**包版本**走（不是内容
+哈希），所以只换 bundle 不换 `package.json` 时，浏览器一直命中缓存里的旧包。要在别的机器上验客户端
+改动，必须让它走一次真正的版本变化（`pnpm add <新 tag>`），或者硬刷新；否则"没效果"这个读数本身
+是假的。
 ### v0.10.40 的落地读数（2026-10-07，发版 + 上线已做完）
 
 - **发版**：提交 `970cfc9`（`main`，作者 `unknown <1433919893@qq.com>`，与本仓库历史一致）·

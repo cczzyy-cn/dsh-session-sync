@@ -1513,6 +1513,40 @@
   display: none;
 }
 
+/*
+ * The reading column and the composer card are one width.
+ *
+ * The shipped chat is built the other way round, on purpose and twice over: its
+ * transcript scrolls inside `padding: 16px calc(var(--dsh-composer-side-clearance)
+ * + 16px)` and its message column caps at `calc(100% - 32px)` — the file's own
+ * comment says so ("on narrow viewports the transcript stays exactly 32px narrower
+ * than the input card (the shared width rule)",
+ * `ui-chat/chat/ChatView.module.css`). This console's owner wants the two boxes to
+ * line up instead, so the view gives both halves of that leeway back:
+ *
+ *  - the clearance stops counting *inside the view*, which turns that padding into
+ *    its bare 16px — the same inset the card has in this pane. Nothing outside the
+ *    view reads this variable: every other consumer of it (the shipped input
+ *    capsule, the dock cards, the approval and question takeovers, the goal bar,
+ *    the queue dock) lives in the composer stack, which is a sibling of the view,
+ *    not a descendant;
+ *  - the column's cap drops its own `- 32px`, so the column fills that padded box
+ *    instead of stopping 32px short of it, and keeps the card's 952px ceiling.
+ *
+ * With both, column and card resolve to `min(952px, 100% - 32px)` in the same box.
+ * The variables are declared *on* the shipped elements, not above them, so these
+ * selectors reach the elements themselves — by the `data-slot` marker the render
+ * machinery puts on a view outlet and by the marker the shipped content puts on
+ * itself, the same way `.drivesWindow` matches `data-composer-card`.
+ */
+.officialPane [data-slot='conversation.view'] {
+  --dsh-composer-side-clearance: 0px;
+}
+
+.officialPane [data-conversation-content] {
+  --dsh-chat-content-width: min(952px, 100%);
+}
+
 /* This pane drives the Session's window itself — the routes other than `adopt`.
    Two pieces of the shipped furniture have to go with it:
 
