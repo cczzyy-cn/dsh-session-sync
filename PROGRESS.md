@@ -1,23 +1,23 @@
 # dsh-session-sync 推进记录
 
 > 只写被证据支撑的事实：跑过的命令、测到的数字、看到的现象。每条结论都要能指出它是怎么被验证的。
-> 本文件不参与构建。最近更新：2026-09-30（0.10.29–0.10.31：两道门禁真正生效 / 归档会话不再出现在发布列表 / 配置迁入 DSH 设置层）
+> 本文件不参与构建。最近更新：2026-11-19（服务器 DSH 升级到 `0.2.2-rc.5`，控制台在真浏览器里复验通过）
 
 ## 0. 现状一眼看
 
 | 项 | 值 |
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
-| 版本 | **`0.10.37`**（问答/审批卡片：官方样式 + 与控制台输入栏严格同盒模型）· 上一版 `0.10.34`（配置迁到 `plugins.detail.section`） |
+| 版本 | **`0.10.45`**（控制台头部瘦身：删返回箭头与子代理计数，窄屏让标题拿到整行；tag `v0.10.45` = `feeae1c`） |
 | 部署面 | **2026-09-30 晚**：服务器与本机两个 profile（`web` / `desktop`）都曾钉到 `#v0.10.32`，两端产物 sha256 逐字节相同；服务器 unit 已重启 ⇒ 跑 0.10.32。**0.10.33/0.10.34 的落地读数见 §2 那两节**。实时读数用 `scripts/deploy-status.ps1` 取，不要看这一行 |
-| 服务器（远端） | **已上线 `0.10.32`**（依赖 `#v0.10.32`，lock → `1fb4efc`）· DSH **`0.2.0-rc.1`** · unit `dsh-web.service` active · 3080（绑 `127.0.0.1`）与 8791 都在听 |
+| 服务器（远端） | **已上线 `0.10.45`**（依赖 `#v0.10.45`）· DSH **`0.2.2-rc.5`**（2026-11-19 升级，unit 备份 `.bak-20261119-141436`）· unit `dsh-web.service` active · 3080（绑 `127.0.0.1`）与 8791 都在听 |
 | 本机宿主 | **这个 GUI 跑的是打包版** `DeepSeek Harness.exe`（`resources\app.asar\dsh`，DSH 0.2.0-rc.1），**不是源码 checkout**；它加载的 profile 是 `~/.dsh/profiles/desktop`。`profiles/web` 与 `profiles/desktop` 两个 profile 里都装着本插件 |
-| 本机 DSH checkout | `C:\Users\14339\Desktop\git\deepseek-harness` = **`0.2.0-rc.1`**（与服务器、与打包版同版）· `packages/settings/settings` 与 `packages/client/ui-plugin-manager` 都在树里，是本插件两条契约的**参考实现** |
+| 本机 DSH checkout | **此刻不存在**：`C:\Users\14339\Desktop\git\deepseek-harness` 已不在盘上（2026-11-19 实测 `Test-Path` = False），`node_modules` 也不在 ⇒ 构建、`typecheck`、`release.ps1`、`deploy-status -VerifyBuild` 都会拒绝；只有编码门禁与纯 node 测试能跑。要改产物得先把 checkout 与依赖装回来 |
 | 设置层真源 | **profile 的 `cordis.patch.yml`**（不是 `~/.dsh/settings.yaml`）。实测：迁移成功，`~/.dsh/dsh-session-sync.json` 已归档为 `dsh-session-sync.json.imported-2026-09-30T12-45-17-595Z.json`，值出现在 `profiles/desktop/cordis.patch.yml` 的 `session-sync` 行里 |
-| 测试 | **159 通过 / 0 失败**（39 suites）· 本版新增 `config-entry-view` **3 例**（摘要行的口径：服务器按监听地址、客户端按 serverUrl、空名字不留前导分隔符） |
+| 测试 | **204 例：200 通过 / 0 失败 / 4 跳过**（49 suites，约 13 秒，`node --test --experimental-transform-types --test-concurrency=1 "tests/*.spec.ts"`，2026-11-19 实跑） |
 | 真机验证 | 仍停在 0.10.5 那批：提问竞速（0.10.4）、控制台**放行**与**拒绝**审批（0.10.5）见 §2。**0.10.29–0.10.31 无真机验证** |
-| 产物 | `lib/index.js` **248,713 B**（sha256 `479fc3cb…`）· `client/client.js` **366,347 B**（sha256 `00921724…`）；两个产物均已含设置层标记（`settings.describe`、`expectedRevision` 命中）。客户端产物自 **0.10.29** 起字节未变 |
-| 编码门禁 | `node scripts/check-encoding.mjs` **clean（60 文件）**；0.10.29 之前它在空转（只扫 3 个文件却报 clean），见 §2 |
+| 产物 | `lib/index.js` **253,788 B**（sha256 `56f82889…`）· `client/client.js` **400,250 B**（sha256 `1f2d6407…`）；两个产物均已含设置层标记（`settings.describe`、`expectedRevision` 命中） |
+| 编码门禁 | `node scripts/check-encoding.mjs` **clean（69 文件）**（2026-11-19 实跑）；0.10.29 之前它在空转（只扫 3 个文件却报 clean），见 §2 |
 | 类型 | `npm run typecheck` = 67 文件 / 752 诊断 / **undeclared 0 · relative imports 全解析 · 类型不匹配 0**（752 全是无 bundler 解析时的 JSX/上游项） |
 | 控制台路线 | **`scope`**：服务器上 `dsh-api-session-controller/lib/client.js` 命中 `retainAgentScope` ⇒ 特性探测确定走它；`adopt` 在任何已发布构建里都不存在（该路线已从代码删除） |
 | 服务器镜像 | 按需重建：源站 reconcile + follow 快照；此刻本机发布列表为空（`syncSessions: {}`），所以镜像里没有会话 |
@@ -95,6 +95,68 @@
 
 > 2026-09-25 及以前的推进日志（从"② 的答案"一路到 0.3.x）已归档到 `docs/history-2026-09.md`。
 > 这一段只留本版（0.8.x/0.9.x/0.10.x）的改动与验证；历史文件是当时的推理记录，不要照它实现。
+
+### v0.10.46：转方案 C —— 会话页维持官方正文，外壳继续用官方原语（2026-11-19）
+
+方案 B 关闭后按用户选择转 C。C 的收敛面已经很小（0.10.x 期间控件就已基本来自 `ui-primitives`）：
+本轮把提示条的关闭按钮从裸 `<button>` 换成官方 `Button`（`variant="ghost" size="sm"`），
+其余**保持自绘且有意为之**，清单写进 `docs/plan-official-session-page.md`：
+树行是 `role="treeitem"` 的自定义行、输入卡片是与官方输入卡同几何的卡片、`对话/轨迹` 页签没有官方页签原语可借。
+
+同轮落地、与本功能无关但必须留下的：**本机构建链脱离 checkout** —— `pnpm install` + `tsdown` 钉 `0.22.2`，
+`@deepseek-ai/schemastery@3.19.0` 进 devDependencies；`lib/index.js` 253,900 B、`client/client.js` 400,341 B，
+`check-encoding` clean(69 文件)、测试 **204 通过 / 0 失败**。
+### 官方整页路线（方案 B）的 P0 结论：**不可无损落地**（2026-11-19）
+
+隔离实例（`%TEMP%\p0-rig-*`，DSH `0.2.2-rc.5` + 只挂探针包）与生产控制台两次实测，把
+`docs/plan-official-session-page.md` §5 的待验清单答完了：
+
+| 待验项 | 结果 |
+| --- | --- |
+| `ctx.layout.selectPanel(null)` 切到官方 Conversation | ✅ `panelInfo.activePanelId = null` |
+| 合成会话上官方整页 | ✅ 需要两步：`sessions.list.byId` 里有一行 `retainedBy.mainView`（`list.set` 可写），再 `ctx.uiWorkspace.openSession(id)` |
+| 页头 / 正文 / 输入栏是否真渲染 | ✅ 生产实测：`conversation.session.header` / `conversation.session` / `conversation.composer` 都在，**165 个 chat node**、0 console error，正文完整 |
+| 常驻 `conversation.composer` takeover | ✅ 注册成功并接管（卡片显示"发送到 DESKTOP-VC1SGPH"） |
+| 官方页对合成会话的 Host 操作 | ❌ **`openSession()` 内部走 `sessions.retain()` → `Session.open()`**，对镜像会话是一次必然失败的 Host 历史读，页面上留下**常驻红字**「历史加载失败：session … not found (session/not-found)」 |
+| 页头标题 | ❌ 显示合成 id（`dsh-session-sync:<machine>/<session>`）；标题不在会话投影里 |
+| 绕开 Host 读（前置行选举） | ❌ 试过：把合成行插到 `byId` 首位 + `retainAgentScope` + `selectPanel(null)`，不调 `openSession`。结果 `uiSession.publishMain()` 的"当前会话优先"规则让本地空白会话继续胜出（`currentKey` 仍是 `session-5b27…`），合成会话没被选上，页面上什么都没变 |
+
+**第三次实验（决定性）**：在 `reveal()` 里于 `openSession()` 之后用镜像自己的 transcript **再 `replace()` 一次**（立即 + 800ms 各一次），
+想用一次整窗替换把那条失败读的红字冲掉。生产实测：**冲不掉** —— 红字仍在，正文 165 个 node 正常、标题仍是合成 id。
+即失败的是 Session 级的 history 状态，不是窗口里的一行。至此方案 B 的三条退路全部证伪，生产客户端两次回滚到 `v0.10.45`（400,250 B）。
+
+**结论**：官方整页这条路要么经过 `openSession()`（带常驻错误横幅），要么选不上会话（无横幅、但也不显示）。
+这正是官方 `ui-conversation` 文档的 Known Limitation（*"requires a separate Session-provider capability"*）在客户端的表现。
+生产控制台的客户端产物**已回滚**到 `v0.10.45`（400,250 B），没有把红字留给使用中的控制台。
+
+**顺带**：本机构建链已恢复并可脱离 checkout 构建 —— `pnpm install` + `tsdown` 钉死 `0.22.2`，
+`@deepseek-ai/schemastery@3.19.0` 进 devDependencies（原先必须借 checkout 的 vendor 树）。
+
+### 服务器 DSH 升级到 `0.2.2-rc.5`（2026-11-19）
+
+用户要求"更新服务器的 DSH"。上一版 unit 钉的是 `0.2.0-rc.2`（2026-10-19 15:12 UTC 起跑）；本机与服务器上的插件都已是 `0.10.45`，这次只换宿主。
+
+**做法**：趁旧进程还在跑，先把新版本预取进 npx 缓存（`npx -y @deepseek-ai/dsh@0.2.2-rc.5 --version` → `0.2.2-rc.5`，95 秒），再把 unit 的 `ExecStart` 从 `@0.2.0-rc.2` 改成 `@0.2.2-rc.5`（备份 `/etc/systemd/system/dsh-web.service.bak-20261119-141436`），`daemon-reload` + `restart`。
+
+**升级前的契约预检**（0.2.0 → 0.2.2 跨了两个 minor，担心客户端接缝漂移）：在旧、新两份 npx 缓存里各 grep 一次插件依赖的接缝，全部仍在——`retainAgentScope` 仍在 `dsh-api-session-controller/lib/client.js`，`sidebar.panellist`、`conversation.input.dock`、`conversation.view`、`plugins.detail.section` 的命中数都只增不减（`@deepseek-ai` 下分别 32 / 32 / 61 / 14 个文件）。
+
+| 读数 | 值 |
+| --- | --- |
+| 进程 | `npm exec @deepseek-ai/dsh@0.2.2-rc.5 web --port 3080 …`（PID 1626533，14:14:36 UTC 起） |
+| unit / 端口 | active · 3080（绑 `127.0.0.1`）+ 8791 都在听 |
+| 插件 Host 半边 | `/dsh-session-sync/state` 200，`pluginVersion 0.10.45`，两台源站在线（M1EERFC `0.10.45`、VC1SGPH `0.10.39`） |
+| 插件客户端产物 | `plugins/??dsh-session-sync/client.js&rev=ec0928af2faa` → 200 / **400,288 B**，含 `sidebar.panellist` 与 `0.10.45` |
+| boot 清单 | `__DSH_BOOT__` 里有 `{"id":"dsh-session-sync", …,"rev":"ec0928af2faa"}` |
+| 真浏览器 | headless Chrome + CDP 打开 `https://dsh.c-zy.cc/`：**exception 0 · console error 0**；侧边栏有「服务器同步工作区」；图列出两台机器；打开 `Git 拉取与项目分析`（镜像 1,676 条、`missingEvents 0`）后正文 Markdown、`加载更早的消息`、接管输入栏、官方统计行（10 轮 · 246 步 · 185 tok/s · 上下文 45% · 缓存命中 98%）全部渲染 |
+
+**一个不是故障的慢**：首屏 `读取会话内容…` 持续了约 20 秒才换成正文（`transcript` 返回 184 KB，组装 + 首访的「预览版说明」弹窗还在）。关掉弹窗、等满 30 秒即完整渲染——判据是正文出现，不是等够时间。
+
+**回滚**（`0.2.0-rc.2` 仍在 npx 缓存 `7eff65a5cfe9d1d1`，不需要网络）：
+
+```sh
+cp /etc/systemd/system/dsh-web.service.bak-20261119-141436 /etc/systemd/system/dsh-web.service
+systemctl daemon-reload && systemctl restart dsh-web
+```
 
 ### v0.10.45：控制台头部瘦身——删返回箭头、删子代理计数、窄屏让标题拿到整行（2026-10-07）
 

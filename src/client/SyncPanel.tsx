@@ -378,14 +378,15 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
           {state.mirrorResets > dismissedResets && (
             <p className={css.notice} role="status">
               <span className={css.noticeText}>{t('mirrorResetNotice')}</span>
-              <button
-                type="button"
+              <Button
+                variant="ghost"
+                size="sm"
                 className={css.noticeClose}
                 aria-label={t('tjClose')}
                 onClick={() => { setDismissedResets(state.mirrorResets) }}
               >
                 ×
-              </button>
+              </Button>
             </p>
           )}
           {!state.ready && <p className={css.empty}>{t('sessionsLoading')}</p>}

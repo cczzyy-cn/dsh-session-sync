@@ -2098,7 +2098,7 @@ window.__ModuleLoader__.load({
 		* it drives could never render, while the tool rows that actually changed the
 		* files are ordinary events and stay.
 		*/
-		const PANEL_ONLY_TYPES = new Set(["workspace/changes"]);
+		const PANEL_ONLY_TYPES = /* @__PURE__ */ new Set(["workspace/changes"]);
 		/** Whether one envelope feeds a Host-computed panel and nothing else. */
 		function isPanelOnly(event) {
 			return PANEL_ONLY_TYPES.has(event.type);
@@ -3475,7 +3475,7 @@ window.__ModuleLoader__.load({
 		/** Longest content excerpt kept for one cell. */
 		const EXCERPT_LIMIT = 400;
 		/** Event types the ledger does not show: bookkeeping the reader never asked for. */
-		const HIDDEN_EVENTS = new Set([
+		const HIDDEN_EVENTS = /* @__PURE__ */ new Set([
 			"session/end-seed",
 			"agent/inbox/spliced",
 			"session/title-llm-request"
@@ -6627,8 +6627,9 @@ window.__ModuleLoader__.load({
 								children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 									className: sync_module_css_default.noticeText,
 									children: t("mirrorResetNotice")
-								}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
-									type: "button",
+								}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
+									variant: "ghost",
+									size: "sm",
 									className: sync_module_css_default.noticeClose,
 									"aria-label": t("tjClose"),
 									onClick: () => {
