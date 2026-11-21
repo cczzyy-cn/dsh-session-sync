@@ -2238,3 +2238,10 @@
 .settingsTree .treeRow:hover .treeChevron {
   display: none;
 }
+/* The settings list shows no hover wash at all: the row it covers is a rounded box
+   that starts left of the text, and on the desktop that wash stayed under the
+   cursor after a click — reading as "the margin shrank when I opened it". */
+.settingsTree .treeRow:hover,
+.settingsTree .settingsSession:hover {
+  background: transparent;
+}
