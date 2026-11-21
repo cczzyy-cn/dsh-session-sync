@@ -20,6 +20,7 @@ import { Button, Input, StateDot, Switch } from '@deepseek-ai/dsh-client-ui-prim
 import type { ConfigPatch, LocalSessionRow, SyncConfig } from '../shared/protocol.ts'
 import type { SyncClientSnapshot } from './api.ts'
 import type { SessionSyncKey, SessionSyncTranslate } from './locales.ts'
+import { sessionGroupsOf } from './session-groups.ts'
 import css from './sync.module.css'
 
 /** Props the renderer binds for this entry. */
@@ -351,34 +352,42 @@ function SessionList({ t, ready, sessions, setSessionSync, setSessionApprovals }
 }): React.ReactElement {
   if (!ready) return <span className={css.empty}>{t('sessionsLoading')}</span>
   if (sessions.length === 0) return <span className={css.empty}>{t('sessionsEmpty')}</span>
+  const groups = sessionGroupsOf(sessions)
   return (
     <div className={css.sessionList}>
-      {sessions.map(session => (
-        <div key={session.sessionId} className={css.sessionRow}>
-          <span className={css.sessionText}>
-            <span className={css.sessionTitle}>{session.title}</span>
-            <span className={css.sessionMeta}>
-              {session.running && (
-                <>
-                  <StateDot state="ongoing" />
-                  <span>{t('sessionRunning')}</span>
-                </>
-              )}
-              {session.cwd !== undefined && <span>{session.cwd}</span>}
+      {groups.map(group => (
+        <div key={group.cwd ?? ''} className={css.sessionGroup}>
+          <div className={css.sessionGroupHead}>
+            <span className={css.sessionGroupPath} title={group.cwd ?? ''}>
+              {group.cwd ?? t('sessionsNoWorkspace')}
             </span>
-          </span>
-          {session.synced && (
-            <Switch
-              checked={session.approved}
-              label={`${t('sessionApprovalsLabel')}: ${session.title}`}
-              onChange={(next) => { void setSessionApprovals(session.sessionId, next) }}
-            />
-          )}
-          <Switch
-            checked={session.synced}
-            label={`${t('sessionSyncLabel')}: ${session.title}`}
-            onChange={(next) => { void setSessionSync(session.sessionId, next) }}
-          />
+            <span className={css.sessionGroupCount}>{group.sessions.length}</span>
+          </div>
+          {group.sessions.map(session => (
+            <div key={session.sessionId} className={css.sessionRow}>
+              <span className={css.sessionText}>
+                <span className={css.sessionTitle}>{session.title}</span>
+                {session.running && (
+                  <span className={css.sessionMeta}>
+                    <StateDot state="ongoing" />
+                    <span>{t('sessionRunning')}</span>
+                  </span>
+                )}
+              </span>
+              {session.synced && (
+                <Switch
+                  checked={session.approved}
+                  label={`${t('sessionApprovalsLabel')}: ${session.title}`}
+                  onChange={(next) => { void setSessionApprovals(session.sessionId, next) }}
+                />
+              )}
+              <Switch
+                checked={session.synced}
+                label={`${t('sessionSyncLabel')}: ${session.title}`}
+                onChange={(next) => { void setSessionSync(session.sessionId, next) }}
+              />
+            </div>
+          ))}
         </div>
       ))}
     </div>

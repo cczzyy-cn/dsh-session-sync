@@ -144,6 +144,39 @@
   border-top: 0.5px solid var(--dsw-alias-border-l1);
 }
 
+/* One workspace directory's block: the directory heads the Sessions that run in
+   it, so the reader picks a project before picking a Session. */
+.sessionGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.sessionGroup + .sessionGroup {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 0.5px solid var(--dsw-alias-border-l1);
+}
+
+.sessionGroupHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 2px 2px;
+  color: var(--dsw-alias-label-tertiary);
+  font: var(--dsw-font-xxs-12);
+}
+
+.sessionGroupPath {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sessionGroupCount {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
 .sessionText {
   display: flex;
   flex-direction: column;
