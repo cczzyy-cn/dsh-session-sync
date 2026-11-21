@@ -469,13 +469,13 @@
   color: var(--dsw-alias-label-caption);
 }
 
-.treeRow:hover .treeFolder,
-.treeRow:focus-visible .treeFolder {
+/* Hover only: a clicked row keeps focus, and swapping the folder for a chevron
+   there left the directory looking like it had lost its lead-in icon. */
+.treeRow:hover .treeFolder {
   display: none;
 }
 
-.treeRow:hover .treeChevron,
-.treeRow:focus-visible .treeChevron {
+.treeRow:hover .treeChevron {
   display: inline-flex;
 }
 
@@ -2206,10 +2206,17 @@
   padding-left: 24px;
 }
 
+/* Expanding the list is what makes it scroll, and a scrollbar that appears then
+   narrows every row underneath the reader's cursor. Reserving the gutter keeps the
+   rows still and the switches off the scrollbar. */
+.sessionList {
+  scrollbar-gutter: stable;
+}
+
 .settingsControls {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-left: auto;
-  padding-right: 8px;
+  padding-right: 12px;
 }
