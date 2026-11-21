@@ -2202,8 +2202,16 @@
 
 /* A Session row inside the settings list: the console's own 32px session row,
    pushed in under the workspace row it belongs to. */
-.settingsSession {
+/* The settings list has no machine level, so its directories sit where the console
+   puts a project row and its Sessions where the console puts a Session: 24px and
+   40px. Before this they were 8px and 24px — one level short, which read as "the
+   margin shrank" against the console. */
+.settingsTree .treeRow {
   padding-left: 24px;
+}
+
+.settingsSession {
+  padding-left: 40px;
 }
 
 /* Expanding the list is what makes it scroll, and a scrollbar that appears then
