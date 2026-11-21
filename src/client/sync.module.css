@@ -2238,13 +2238,7 @@
 .settingsTree .treeRow:hover .treeChevron {
   display: none;
 }
-/* The settings list shows no hover wash at all: the row it covers is a rounded box
-   that starts left of the text, and on the desktop that wash stayed under the
-   cursor after a click — reading as "the margin shrank when I opened it". */
-.settingsTree .treeRow:hover,
-.settingsTree .settingsSession:hover {
-  background: transparent;
-}
+
 /* Vertical rhythm that does not depend on whether a directory is open: every row
    is 34px (the Session rows used to be 32px, so an expanded block sat tighter than
    the rows above it), and each directory starts 6px below the previous block. */
@@ -2258,4 +2252,18 @@
 
 .settingsTree .treeRow:first-child {
   margin-top: 0;
+}
+/* Hover keeps its wash, but no state may change a row's height: both row kinds in
+   the settings list are pinned to 34px, and the line box inside them is pinned too,
+   so hovering or opening a directory cannot re-flow the text. */
+.settingsTree .treeRow,
+.settingsTree .settingsSession {
+  height: 34px;
+  min-height: 34px;
+  max-height: 34px;
+}
+
+.settingsTree .treeRow .rowTitle,
+.settingsTree .settingsSession .rowTitle {
+  line-height: 20px;
 }
