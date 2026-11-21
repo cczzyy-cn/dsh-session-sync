@@ -60,9 +60,9 @@ window.__ModuleLoader__.load({
 			}));
 		}
 		//#endregion
-		//#region \0dsh-css:C:\Users\14339\Desktop\git\dsh-session-sync\src\client\sync.module.css.mjs
-		const css$8 = ".Emn1LG_section{flex-direction:column;gap:14px;padding:4px 0 8px;display:flex}.Emn1LG_lede{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xs-13);margin:0}.Emn1LG_group{flex-direction:column;gap:10px;display:flex}.Emn1LG_groupTitle{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-strong-13);margin:0}.Emn1LG_card{border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);border-radius:10px;flex-direction:column;gap:10px;padding:12px 14px;display:flex}.Emn1LG_field{flex-direction:column;gap:4px;display:flex}.Emn1LG_fieldRow{justify-content:space-between;align-items:center;gap:12px;display:flex}.Emn1LG_fieldText{flex-direction:column;gap:2px;min-width:0;display:flex}.Emn1LG_label{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13)}.Emn1LG_hint{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12)}.Emn1LG_pair{grid-template-columns:minmax(0,1fr) 120px;gap:10px;display:grid}.Emn1LG_actions{align-items:center;gap:8px;display:flex}.Emn1LG_saved{color:var(--dsw-alias-state-success-primary);font:var(--dsw-font-xxs-12)}.Emn1LG_dirty{color:var(--dsw-alias-state-warn-primary);font:var(--dsw-font-xxs-12)}.Emn1LG_failed{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12)}.Emn1LG_sessionList{flex-direction:column;max-height:280px;display:flex;overflow-y:auto}.Emn1LG_sessionRow{justify-content:space-between;align-items:center;gap:12px;min-height:40px;padding:5px 2px;display:flex}.Emn1LG_sessionRow+.Emn1LG_sessionRow{border-top:.5px solid var(--dsw-alias-border-l1)}.Emn1LG_sessionGroup{flex-direction:column;display:flex}.Emn1LG_sessionGroup+.Emn1LG_sessionGroup{border-top:.5px solid var(--dsw-alias-border-l1);margin-top:6px;padding-top:6px}.Emn1LG_sessionGroupHead{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);align-items:center;gap:8px;padding:4px 2px 2px;display:flex}.Emn1LG_sessionGroupPath{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.Emn1LG_sessionGroupCount{font-variant-numeric:tabular-nums;margin-left:auto}.Emn1LG_sessionText{flex-direction:column;gap:2px;min-width:0;display:flex}.Emn1LG_sessionTitle{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.Emn1LG_sessionMeta{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);align-items:center;gap:6px;display:flex}.Emn1LG_empty{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);padding:12px 2px}.Emn1LG_status{flex-wrap:wrap;gap:6px 18px;display:flex}.Emn1LG_statusItem{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12);align-items:center;gap:6px;display:flex}.Emn1LG_statusValue{color:var(--dsw-alias-label-primary)}.Emn1LG_statusBad{color:var(--dsw-alias-state-error-primary)}.Emn1LG_statusGood{color:var(--dsw-alias-state-success-primary)}.Emn1LG_panel{height:100%;min-height:0;color:var(--dsw-alias-label-primary);display:flex;position:relative}.Emn1LG_listPane{background:var(--dsw-specific-sidebar-fill);border-right:.5px solid var(--dsw-alias-border-l3);flex-direction:column;flex:none;width:280px;min-height:0;display:flex}.Emn1LG_listHead{flex-direction:column;flex:none;gap:6px;padding:10px 10px 8px;display:flex}.Emn1LG_listHeadRow{align-items:center;gap:6px;min-width:0;display:flex}.Emn1LG_listHeadRow>:first-child{flex:1;min-width:0}.Emn1LG_listCollapse,.Emn1LG_listExpand{flex:none;width:28px;padding:0}.Emn1LG_panel ::placeholder,.Emn1LG_panel input::placeholder,.Emn1LG_panel textarea::placeholder{color:var(--dsw-alias-label-caption);opacity:1}.Emn1LG_listExpand{color:var(--dsw-alias-button-info-fill)}.Emn1LG_panel[data-list=hidden] .Emn1LG_listPane{display:none}.Emn1LG_listStatus{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.Emn1LG_list{flex-direction:column;flex:1;gap:3px;min-height:0;margin-right:2px;padding:0 6px 8px;display:flex;overflow-y:auto}.Emn1LG_notice{background:var(--dsw-alias-state-warn-tertiary);color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);border-radius:8px;align-items:flex-start;gap:6px;margin:2px 2px 6px;padding:6px 8px;display:flex}.Emn1LG_noticeText{flex:1;min-width:0}.Emn1LG_noticeClose{width:14px;height:14px;color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:0;border-radius:4px;flex:none;justify-content:center;align-items:center;padding:0;font-size:13px;line-height:13px;display:inline-flex}.Emn1LG_noticeClose:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_treeRow,.Emn1LG_treeSession{box-sizing:border-box;width:100%;color:var(--dsw-alias-label-primary);text-align:left;cursor:pointer;user-select:none;transition:background var(--ds-transition-duration-fast) var(--ds-ease-in-out);background:0 0;border:0;border-radius:8px;align-items:center;gap:6px;padding:0 8px;display:flex}.Emn1LG_treeRow{height:34px}.Emn1LG_treeSession{gap:0;height:32px}.Emn1LG_treeRow:hover,.Emn1LG_treeSession:hover,.Emn1LG_treeSessionSelected{background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_treeRow:focus-visible,.Emn1LG_treeSession:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.Emn1LG_panel [data-level=\"1\"]{padding-left:24px}.Emn1LG_panel [data-level=\"2\"]{padding-left:40px}.Emn1LG_treeSlot{width:16px;height:20px;color:var(--dsw-alias-label-tertiary);flex:none;justify-content:center;align-items:center;display:inline-flex}.Emn1LG_treeChevron{color:var(--dsw-alias-label-caption);display:none}.Emn1LG_treeRow:hover .Emn1LG_treeFolder,.Emn1LG_treeRow:focus-visible .Emn1LG_treeFolder{display:none}.Emn1LG_treeRow:hover .Emn1LG_treeChevron,.Emn1LG_treeRow:focus-visible .Emn1LG_treeChevron{display:inline-flex}.Emn1LG_arrowOpen{transform:rotate(90deg)}.Emn1LG_treeChevron svg{transition:transform .15s var(--ds-ease-in-out)}.Emn1LG_rowTitle{min-width:0;font:var(--dsw-font-s-14);text-overflow:ellipsis;white-space:nowrap;flex:1;overflow:hidden}.Emn1LG_treeSession .Emn1LG_rowTitle{margin:0 6px 0 4px}.Emn1LG_rowTime{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);flex:none}.Emn1LG_gapBadge{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12);white-space:nowrap;flex:none;margin-right:6px}.Emn1LG_realBadge,.Emn1LG_routeBadge{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-text-secondary);font:var(--dsw-font-xxs-12);white-space:nowrap;border-radius:4px;flex:none;margin-right:6px;padding:0 6px}.Emn1LG_scopeBadge{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-text-secondary);font:var(--dsw-font-xxs-12);white-space:nowrap;cursor:default;border:0;border-radius:4px;flex:none;margin-right:6px;padding:0 6px}.Emn1LG_scopeBadgeAction{cursor:pointer}.Emn1LG_scopeBadgeAction:hover{background:var(--dsw-alias-interactive-bg-active);color:var(--dsw-alias-label-primary)}.Emn1LG_olderRow{justify-content:center;padding:2px 0 12px;display:flex}.Emn1LG_olderButton{border:.5px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12);cursor:pointer;background:0 0;border-radius:999px;padding:4px 12px}.Emn1LG_olderButton:hover:not(:disabled){border-color:var(--dsw-alias-border-l4);color:var(--dsw-alias-label-primary)}.Emn1LG_olderButton:disabled{cursor:default;opacity:.6}.Emn1LG_treeRowDim .Emn1LG_rowTitle,.Emn1LG_treeRowDim .Emn1LG_rowTime{color:var(--dsw-alias-label-secondary)}.Emn1LG_heroRoot{justify-content:center;align-items:center;min-width:0;height:100%;padding:0 24px;display:flex}.Emn1LG_heroStack{flex-direction:column;align-items:center;gap:12px;width:100%;max-width:calc(min(920px,100%) + 32px);display:flex}.Emn1LG_heroHeadline{color:var(--dsw-alias-label-primary);flex-wrap:wrap;justify-content:center;align-items:center;gap:12px 10px;font-size:26px;font-weight:500;line-height:32px;display:flex}.Emn1LG_heroFish{color:var(--dsw-alias-label-primary);flex:none;justify-content:center;align-items:center;display:inline-flex}.Emn1LG_heroTitleGroup{flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 7px;min-width:0;display:flex}.Emn1LG_heroBadge{border:.5px solid var(--dsw-alias-interactive-bg-hover);background:var(--dsw-alias-state-business-tertiary);color:var(--dsw-alias-label-primary-bluish);font-family:var(--ds-font-family-code);white-space:nowrap;border-radius:24px;align-self:flex-start;margin-top:2px;padding:1px 7px 0;font-size:12px;font-weight:500;line-height:18px}.Emn1LG_heroHint{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);text-align:center;margin:0}.Emn1LG_tjRoot{width:100%;min-height:0;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-1);flex-direction:column;flex:1;display:flex;overflow:hidden}.Emn1LG_tjToolbar{z-index:4;box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);flex:none;align-items:center;gap:2px;height:32px;padding:0 6px;display:flex;position:sticky;top:0}.Emn1LG_tjToggle{height:20px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);cursor:pointer;background:0 0;border:0;border-radius:3px;flex:none;align-items:center;gap:4px;padding:0 7px;display:inline-flex}.Emn1LG_tjToggleIcon{stroke:currentColor;stroke-width:1.25px;stroke-linecap:round;stroke-linejoin:round;flex:none;width:12px;height:12px}.Emn1LG_tjToggle:hover,.Emn1LG_tjToggle[aria-pressed=true],.Emn1LG_tjAction:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_tjToggle:focus-visible,.Emn1LG_tjAction:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary);outline-offset:1px}.Emn1LG_tjAction{height:20px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);cursor:pointer;background:0 0;border:0;border-radius:3px;flex:none;align-items:center;gap:4px;padding:0 5px;display:inline-flex}.Emn1LG_tjActionIcon{color:var(--dsw-alias-label-tertiary);font:14px/14px var(--ds-font-family-code)}.Emn1LG_tjSearch{border:.5px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-bg-layer-2);min-width:84px;height:22px;color:var(--dsw-alias-label-caption);border-radius:4px;flex:0 164px;align-items:center;gap:4px;margin-left:auto;padding:0 6px;display:flex}.Emn1LG_tjSearch:focus-within{border-color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-bg-layer-1)}.Emn1LG_tjSearchIcon{flex:none}.Emn1LG_tjSearchInput{width:100%;min-width:0;color:var(--dsw-alias-label-primary);font:var(--dsw-font-xxs-12);background:0 0;border:0;outline:0;padding:0}.Emn1LG_tjSearchInput::placeholder{color:var(--dsw-alias-label-caption)}.Emn1LG_tjStrip{border-bottom:.5px solid var(--dsw-alias-border-l2);flex:none}.Emn1LG_tjPlot{background:var(--dsw-alias-bg-layer-2);grid-template-columns:44px minmax(0,1fr);height:50px;display:grid;overflow:hidden}.Emn1LG_tjLaneLabels{border-right:.5px solid var(--dsw-alias-border-l1);color:var(--dsw-alias-label-caption);font-size:10px;line-height:1;position:relative}.Emn1LG_tjLaneLabels span{justify-content:flex-end;align-items:center;height:8px;display:flex;position:absolute;right:3px}.Emn1LG_tjLaneLabels span:first-child{top:7px}.Emn1LG_tjLaneLabels span:nth-child(2){top:21px}.Emn1LG_tjLaneLabels span:nth-child(3){top:35px}.Emn1LG_tjTrack{position:relative;overflow:hidden}.Emn1LG_tjLanes,.Emn1LG_tjTurnBoundaries{position:absolute;inset:7px 0}.Emn1LG_tjSpan{top:calc(var(--tj-span-lane) * 14px);left:var(--tj-span-left);width:max(2px, var(--tj-span-width));background:var(--dsw-alias-label-secondary);opacity:.78;cursor:pointer;border:0;border-radius:1px;min-width:2px;height:8px;padding:0;position:absolute}.Emn1LG_tjSpan[data-kind=user]{background:var(--dsw-alias-state-business-primary)}.Emn1LG_tjSpan[data-kind=assistant],.Emn1LG_tjSpan[data-kind=think]{background:var(--dsw-alias-label-primary);opacity:1}.Emn1LG_tjSpan[data-kind=tool]{background:var(--dsw-alias-state-warn-label);opacity:1}.Emn1LG_tjSpan[data-kind=context]{background:var(--dsw-alias-state-success-primary)}.Emn1LG_tjSpan[data-error=true]{background:var(--dsw-alias-state-error-primary)}.Emn1LG_tjSpan[data-selected=false]{opacity:.14}.Emn1LG_tjSpan[data-current=true]{z-index:1;box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary)}.Emn1LG_tjTurnBoundary{background:var(--dsw-alias-border-l2);width:.5px;position:absolute;top:0;bottom:0}.Emn1LG_tjSplit{background:var(--dsw-alias-bg-layer-1);flex:1;min-width:0;min-height:0;display:flex;overflow:hidden}.Emn1LG_tjTablePane{flex:1;min-width:0;overflow:hidden auto}.Emn1LG_ledgerTable tbody tr[data-selected=true]{background:var(--dsw-alias-interactive-bg-active)}.Emn1LG_ledgerTable tbody tr[data-dimmed=true]{opacity:.3}.Emn1LG_ledgerTable tbody tr[data-folded=true]{cursor:pointer}.Emn1LG_ledgerTable tbody tr[data-folded=true] td{height:20px}.Emn1LG_tjFolded{min-width:0;color:var(--dsw-alias-label-secondary);align-items:center;gap:6px;font-size:12px;line-height:16px;display:flex}.Emn1LG_tjFoldedEllipsis{color:var(--dsw-alias-label-tertiary);flex:none;font-weight:600}.Emn1LG_tjFoldedText{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.Emn1LG_tjDetails{border-left:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);flex-direction:column;flex:none;width:clamp(320px,38%,440px);min-width:0;min-height:0;display:flex}.Emn1LG_tjDetailsHeader{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);flex:none;justify-content:space-between;align-items:center;height:42px;padding:0 8px 0 12px;display:flex}.Emn1LG_tjDetailsTitle{align-items:center;gap:8px;min-width:0;display:flex}.Emn1LG_tjDetailsDot{corner-shape:round;background:var(--dsw-alias-label-secondary);border-radius:50%;flex:none;width:5px;height:5px}.Emn1LG_tjDetailsName{font:500 12px/16px var(--ds-font-family-code);flex:none}.Emn1LG_tjDetailsLocation{min-width:0;color:var(--dsw-alias-label-tertiary);font:11px/16px var(--ds-font-family-code);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.Emn1LG_tjClose{width:28px;height:28px;color:var(--dsw-alias-label-secondary);cursor:pointer;background:0 0;border:0;border-radius:6px;flex:none;justify-content:center;align-items:center;padding:0;font-size:18px;line-height:18px;display:inline-flex}.Emn1LG_tjClose:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_tjDetailTabs{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);white-space:nowrap;flex:none;gap:1px;width:100%;height:34px;padding:0 8px;display:flex;overflow-x:auto}.Emn1LG_tjDetailTab{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);cursor:pointer;background:0 0;border:0;flex:none;padding:0 9px;position:relative}.Emn1LG_tjDetailTab:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_tjDetailTabActive{color:var(--dsw-alias-state-business-primary)}.Emn1LG_tjDetailTabActive:after{background:var(--dsw-alias-state-business-primary);content:\"\";border-radius:1px 1px 0 0;height:2px;position:absolute;bottom:0;left:9px;right:9px}.Emn1LG_tjDetailBody{flex:1;min-height:0;overflow:hidden auto}.Emn1LG_tjOverview{font:var(--dsw-font-xs-13);margin:0;padding:8px 0}.Emn1LG_tjOverview>div{grid-template-columns:94px minmax(0,1fr);align-items:center;min-height:22px;padding:0 14px;display:grid}.Emn1LG_tjOverview dt{color:var(--dsw-alias-label-tertiary)}.Emn1LG_tjOverview dd{min-width:0;color:var(--dsw-alias-label-primary);text-overflow:ellipsis;white-space:nowrap;margin:0;overflow:hidden}.Emn1LG_tjPayload{box-sizing:border-box;overflow-wrap:anywhere;background:var(--dsw-alias-markdown-code-block);min-height:100%;color:var(--dsw-alias-label-primary);font:12px/19px var(--ds-font-family-code);tab-size:2;white-space:pre-wrap;margin:0;padding:14px}.Emn1LG_tjMarkdown{padding:6px 14px 8px}.Emn1LG_viewPane{background:var(--dsw-alias-bg-base);flex-direction:column;flex:1;min-width:0;min-height:0;display:flex}.Emn1LG_viewHeader{border-bottom:.5px solid var(--dsw-alias-border-l3);flex-direction:column;flex:none;padding:10px 20px 0;display:flex}.Emn1LG_viewTitleRow{align-items:center;gap:8px;min-width:0;min-height:30px;display:flex}.Emn1LG_viewSpacer{flex:1}.Emn1LG_viewTabs{z-index:1;gap:36px;margin-top:10px;padding-left:8px;display:flex;position:relative}.Emn1LG_viewTab{color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:0;padding:0 0 9px;font-size:13px;font-weight:500;line-height:16px;position:relative}.Emn1LG_viewTab:after{content:\"\";background:0 0;border-radius:2px;height:2px;position:absolute;bottom:-1px;left:0;right:0}.Emn1LG_viewTabActive{color:var(--dsw-alias-state-business-primary)}.Emn1LG_viewTabActive:after{background:var(--dsw-alias-state-business-primary)}.Emn1LG_viewTab:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.Emn1LG_chromeCluster{flex:none;align-items:center;gap:8px;min-width:0;display:flex}.Emn1LG_chromeChip{border:.5px solid var(--dsw-alias-border-l2);corner-shape:round;max-width:200px;min-height:24px;color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);text-overflow:ellipsis;white-space:nowrap;border-radius:999px;align-items:center;gap:4px;padding:0 8px;display:inline-flex;overflow:hidden}.Emn1LG_statusRow{width:100%;max-width:calc(min(920px,100%) + 32px);color:var(--dsw-alias-label-caption);font:var(--dsw-font-xxxs-11);font-variant-numeric:tabular-nums;flex-wrap:wrap;justify-content:center;gap:12px;padding:6px 0 0;display:flex}.Emn1LG_ledger{background:var(--dsw-alias-bg-layer-1);flex:1;min-height:0;margin-right:2px;overflow-y:auto}.Emn1LG_ledgerTable{border-spacing:0;table-layout:fixed;width:100%;color:var(--dsw-alias-label-primary);font:var(--dsw-font-xxs-12)}.Emn1LG_ledgerTable th{z-index:3;box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-specific-sidebar-fill);height:30px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);text-align:left;text-overflow:ellipsis;white-space:nowrap;padding:0 8px;font-weight:500;position:sticky;top:0;overflow:hidden}.Emn1LG_ledgerEventHead{text-align:right;width:122px;padding-right:4px}.Emn1LG_ledgerTable td{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l1);text-overflow:ellipsis;white-space:nowrap;height:30px;padding:0 8px;overflow:hidden}.Emn1LG_ledgerTable tbody tr:hover{background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_ledgerEventCell{text-align:right;padding-left:36px;padding-right:4px;position:relative;overflow:visible}.Emn1LG_ledgerRail{z-index:4;background:var(--dsw-alias-border-l3);pointer-events:none;width:2px;position:absolute;top:-1px;bottom:-1px;left:0}.Emn1LG_ledgerTable tbody tr[data-error=true] .Emn1LG_ledgerRail{background:var(--dsw-alias-state-error-primary)}.Emn1LG_ledgerTable tbody tr[data-turn-start=true] td:before{z-index:1;background:var(--dsw-alias-border-l1);content:\"\";pointer-events:none;height:2px;position:absolute;top:0;left:0;right:0;transform:translateY(-50%)}.Emn1LG_ledgerTable tbody tr[data-turn-start=true]:first-child td:before{content:none}.Emn1LG_ledgerTurnLabel{z-index:3;box-sizing:border-box;background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-tertiary);font:8px/10px var(--ds-font-family-code);font-variant-numeric:tabular-nums;white-space:nowrap;border-radius:0 0 2px;align-items:center;padding:1px 5px;display:inline-grid;position:absolute;top:0;left:0}.Emn1LG_ledgerKindSlot{justify-content:flex-end;align-items:center;width:76px;display:inline-flex}.Emn1LG_ledgerKind{box-sizing:border-box;letter-spacing:.035em;user-select:none;border:1px solid #0000;border-radius:4px;align-items:center;height:19px;padding:0 5px;font-size:10px;font-weight:650;line-height:16px;display:inline-flex}.Emn1LG_kind_user{color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-state-business-tertiary)}.Emn1LG_kind_assistant,.Emn1LG_kind_think{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-2)}.Emn1LG_kind_tool{color:var(--dsw-alias-state-warn-label);background:var(--dsw-alias-state-warn-tertiary)}.Emn1LG_kind_error{color:var(--dsw-alias-state-error-primary);background:var(--dsw-alias-bg-layer-2)}.Emn1LG_kind_system,.Emn1LG_kind_policy,.Emn1LG_kind_title,.Emn1LG_kind_other,.Emn1LG_kind_compaction{color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-bg-module-platform)}.Emn1LG_kind_turn,.Emn1LG_kind_step,.Emn1LG_kind_context{color:var(--dsw-alias-label-tertiary);background:var(--dsw-alias-bg-layer-2)}.Emn1LG_ledgerContentCell{padding-left:4px}.Emn1LG_ledgerText{color:var(--dsw-alias-label-primary)}.Emn1LG_ledgerMono{color:var(--dsw-alias-label-secondary);font-family:var(--ds-font-family-code);font-size:12px}.Emn1LG_ledgerResult{grid-template-columns:clamp(180px,36cqw,480px) minmax(0,1fr);align-items:center;gap:8px;min-width:0;display:grid}.Emn1LG_ledgerResult>*{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.Emn1LG_ledgerErrorText{color:var(--dsw-alias-state-error-primary)}.Emn1LG_ledgerDuration{color:var(--dsw-alias-label-caption);font:var(--dsw-font-xxxs-11);font-variant-numeric:tabular-nums;margin-left:8px}.Emn1LG_viewTitle{min-width:0;font:var(--dsw-font-s-strong-14);text-overflow:ellipsis;white-space:nowrap;flex:0 auto;margin:0;overflow:hidden}.Emn1LG_viewMachine{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);white-space:nowrap;flex:none}.Emn1LG_viewScroll{flex:1;min-height:0;margin-right:2px;padding:16px 32px;overflow-y:auto}.Emn1LG_officialPane{flex-direction:column;flex:1;min-height:0;display:flex;overflow:hidden}.Emn1LG_officialPane>*{flex:1;min-height:0}.Emn1LG_officialPane [aria-label=好的回答],.Emn1LG_officialPane [aria-label=取消标记],.Emn1LG_officialPane [aria-label=有问题的回答],.Emn1LG_officialPane [aria-label=Good\\ response],.Emn1LG_officialPane [aria-label=Remove\\ rating],.Emn1LG_officialPane [aria-label=Bad\\ response],.Emn1LG_officialPane [aria-label=在新对话中分支],.Emn1LG_officialPane [aria-label=\"Branch into a new conversation\"]{display:none}.Emn1LG_officialPane [data-slot=conversation\\.view]{--dsh-composer-side-clearance:0px}.Emn1LG_officialPane [data-conversation-content]{--dsh-chat-content-width:min(952px, 100%)}.Emn1LG_drivesWindow [data-composer-card],.Emn1LG_drivesWindow [class*=openError]{display:none}.Emn1LG_viewColumn{flex-direction:column;width:100%;max-width:min(920px,100%);margin:0 auto;display:flex}.Emn1LG_viewColumn>*+*{margin-top:16px}.Emn1LG_userRow{flex-direction:column;align-items:flex-end;gap:6px;display:flex}.Emn1LG_bubble{max-width:min(calc(var(--dsh-chat-content-width,748px) * .702), 82%);background:var(--dsw-specific-bubble);font-size:var(--dsh-content-font-size,14px);line-height:calc(22px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-primary);white-space:pre-wrap;word-break:break-word;border-radius:22px;padding:10px 16px}.Emn1LG_assistantRow{flex-direction:column;gap:16px;min-width:0;display:flex}.Emn1LG_messageActions{margin-top:4px;margin-left:-6px}.Emn1LG_stopped,.Emn1LG_mediaChip{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-tertiary);border-radius:6px;align-self:flex-start;padding:0 6px;font-size:11px;line-height:18px}.Emn1LG_action{width:calc(28px + var(--dsh-content-font-delta,0px));height:calc(28px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;border-radius:28px;justify-content:center;align-items:center;padding:6px;display:inline-flex}.Emn1LG_action svg{width:calc(15px + var(--dsh-content-font-delta,0px));height:calc(15px + var(--dsh-content-font-delta,0px))}.Emn1LG_action:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary)}.Emn1LG_timeStart{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);white-space:nowrap;padding-right:12px}.Emn1LG_timeEnd{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);white-space:nowrap}.Emn1LG_noticeRow{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px));grid-template-columns:10px minmax(0,1fr) auto;align-items:start;gap:8px;padding:2px 0;display:grid}.Emn1LG_noticeDot{margin-top:5px}.Emn1LG_noticeCopy{overflow-wrap:anywhere;min-width:0}.Emn1LG_noticeTitleError{color:var(--dsw-alias-state-error-primary);margin-right:6px;font-weight:600}.Emn1LG_noticeTitleWarn{color:var(--dsw-alias-state-warn-primary);margin-right:6px;font-weight:600}.Emn1LG_noticeMessage{color:var(--dsw-alias-label-secondary)}.Emn1LG_noticeCode{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-markdown-code-block-small)}.Emn1LG_retryRow{color:var(--dsw-alias-label-tertiary);font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px))}.Emn1LG_retrySummary{width:fit-content;color:inherit;cursor:pointer;user-select:none;border-radius:3px;align-items:center;gap:7px;padding:2px 0;list-style:none;display:inline-flex}.Emn1LG_retrySummary::-webkit-details-marker{display:none}.Emn1LG_retrySummary:after{content:\"\";opacity:.8;border-bottom:1.5px solid;border-right:1.5px solid;width:6px;height:6px;transition:transform .12s;transform:rotate(-45deg)}.Emn1LG_retrySummary:hover{color:var(--dsw-alias-label-secondary)}.Emn1LG_retrySummary:focus-visible{outline:1.5px solid var(--dsw-alias-button-info-fill);outline-offset:2px}.Emn1LG_retryText{color:inherit}.Emn1LG_retryRow[data-active] .Emn1LG_retryText{background:linear-gradient(90deg, var(--dsw-alias-label-tertiary) 0%, var(--dsw-alias-label-tertiary) 40%, var(--dsw-alias-label-secondary) 50%, var(--dsw-alias-label-tertiary) 60%, var(--dsw-alias-label-tertiary) 100%);color:#0000;background-position:100%;background-size:200% 100%;background-clip:text;animation:1.6s ease-in-out infinite Emn1LG_dsh-sync-retry-shimmer}@keyframes Emn1LG_dsh-sync-retry-shimmer{0%{background-position:100%}to{background-position:0%}}@media (prefers-reduced-motion:reduce){.Emn1LG_retryRow[data-active] .Emn1LG_retryText{color:inherit;background:0 0;animation:none}}.Emn1LG_retryRow[open] .Emn1LG_retrySummary:after{transform:rotate(45deg)}.Emn1LG_retryDetails{overflow-wrap:anywhere;font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(18px + var(--dsh-content-font-delta-secondary,0px));gap:2px;margin-top:3px;padding-left:14px;display:grid}.Emn1LG_retryDetailLabel{color:var(--dsw-alias-label-secondary)}.Emn1LG_toBottomSlot{z-index:2;pointer-events:none;justify-content:flex-end;height:0;padding-right:8px;display:flex;position:sticky;bottom:16px}.Emn1LG_toBottom{--dsw-elevation-stroke-color:var(--dsw-alias-border-l3);corner-shape:round;width:34px;height:34px;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-button-floating-fill);box-shadow:var(--dsw-elevation-panel);cursor:pointer;pointer-events:auto;border:0;border-radius:100px;justify-content:center;align-items:center;margin-top:-34px;padding:0;display:flex}.Emn1LG_toBottom:hover{background:var(--dsw-alias-button-floating-hover)}.Emn1LG_composerRoot{flex-direction:column;flex:none;align-items:center;padding:0 16px 8px;display:flex}.Emn1LG_composerRootInner{box-sizing:border-box;justify-content:center;width:100%;padding:0 16px;display:flex}.Emn1LG_dockComposer{box-sizing:border-box;width:100%;margin-bottom:calc(-1 * var(--dsh-composer-stack-gap,6px));justify-content:center;padding:0 16px;display:flex}.Emn1LG_officialPane:has([data-sync-composer])~.Emn1LG_composerRoot{display:none}.Emn1LG_composerCard{box-sizing:border-box;--dsw-elevation-stroke-color:var(--dsw-alias-border-l2);background:var(--dsw-specific-input-major);width:100%;max-width:calc(min(920px,100%) + 32px);box-shadow:var(--dsw-elevation-soft);font:var(--dsw-font-s-14);border:0;border-radius:22px;flex-direction:column;gap:12px;padding-top:8px;display:flex}.Emn1LG_composerText{box-sizing:border-box;width:100%;min-height:44px;max-height:200px;color:var(--dsw-alias-label-primary);font:inherit;resize:none;background:0 0;border:0;margin:0;padding:8px 16px 0}.Emn1LG_composerText::placeholder{color:var(--dsw-alias-placeholder)}.Emn1LG_composerText:focus-visible{outline:none}.Emn1LG_composerBar{align-items:center;gap:8px;padding:0 10px 10px 16px;display:flex}.Emn1LG_composerTarget{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);flex:none}.Emn1LG_composerDelivery{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11)}.Emn1LG_composerOffline{color:var(--dsw-alias-state-warn-label);font:var(--dsw-font-xxxs-11)}.Emn1LG_composerSpacer{flex:1}.Emn1LG_sendButton{corner-shape:round;background:var(--dsw-alias-button-info-fill);color:#fff;cursor:pointer;width:34px;height:34px;transition:background-color var(--ds-transition-duration-fast) var(--ds-ease-in-out);border:0;border-radius:999px;flex:none;place-items:center;display:grid}.Emn1LG_sendButton:hover:not(:disabled){background:var(--dsw-alias-button-info-hover)}.Emn1LG_sendButton:disabled{opacity:.4;cursor:default}.Emn1LG_sendButton:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.Emn1LG_error{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12);margin-bottom:10px}.Emn1LG_panel[data-narrow=true] .Emn1LG_listPane{border-right:0;width:100%}.Emn1LG_panel[data-narrow=true] .Emn1LG_viewMachineName,.Emn1LG_panel[data-narrow=true] .Emn1LG_chromeCluster{display:none}.Emn1LG_panel[data-narrow=true] .Emn1LG_viewPane{z-index:0;position:relative}.Emn1LG_panel[data-narrow=true][data-list=shown] .Emn1LG_listPane{z-index:1;position:absolute;inset:0}.Emn1LG_panel[data-narrow=true][data-list=hidden] .Emn1LG_listPane{display:none}@media (prefers-reduced-motion:reduce){.Emn1LG_treeRow,.Emn1LG_treeSession,.Emn1LG_treeChevron svg,.Emn1LG_sendButton{transition:none}}";
-		const tagId$8 = "dsh-session-sync/sync.module.css";
+		//#region \0dsh-css:C:\Users\14339\Desktop\git\dsh-session-sync\src\client\ApprovalCard.module.css.mjs
+		const css$8 = ".luWWxG_root{flex-direction:column;align-items:center;padding:0 16px;display:flex}.luWWxG_card{box-sizing:border-box;border:1px solid var(--dsw-alias-state-warn-secondary);border-radius:var(--dsw-radius-xl);background:var(--dsw-specific-input-major);width:100%;max-width:calc(min(920px,100%) + 32px);box-shadow:var(--dsw-shadow-lv2);--dsh-scrollbar-thumb:var(--dsw-alias-scrollbar-bg-l2);--dsh-scrollbar-thumb-hover:var(--dsw-alias-scrollbar-hover-l2);margin-bottom:8px;overflow:hidden}.luWWxG_strip{background:var(--dsw-alias-state-warn-tertiary);color:var(--dsw-alias-state-warn-primary);align-items:center;gap:8px;padding:10px 16px;font-size:13px;line-height:18px;display:flex}.luWWxG_body{box-sizing:border-box;max-height:var(--dsh-composer-text-max-height);flex-direction:column;gap:6px;padding:12px 16px 0;display:flex;overflow-y:auto}.luWWxG_headline{color:var(--dsw-alias-label-primary);font-size:15px;font-weight:500;line-height:24px}.luWWxG_command{color:var(--dsw-alias-label-tertiary);font-family:var(--ds-font-family-code);word-break:break-all;font-size:13px;line-height:20px}.luWWxG_actionRow{justify-content:flex-end;align-items:center;gap:8px;padding:14px 16px;display:flex}.luWWxG_reject:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover-danger);color:var(--dsw-alias-state-error-primary);border-color:#0000}.luWWxG_note{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}.luWWxG_missing{color:var(--dsw-alias-state-warn-primary);font-size:13px;line-height:20px}.luWWxG_error{color:var(--dsw-alias-state-error-primary);margin-right:auto;font-size:12px;line-height:18px}.luWWxG_sent{color:var(--dsw-alias-state-success-primary);margin-right:auto;font-size:12px;line-height:18px}.luWWxG_hint{color:var(--dsw-alias-label-tertiary);margin-right:auto;font-size:12px;line-height:18px}.luWWxG_elsewhere{box-sizing:border-box;background:var(--dsw-alias-state-warn-tertiary);width:100%;max-width:calc(min(920px,100%) + 32px);color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);border-radius:10px;justify-content:center;align-items:center;gap:8px;margin:0 auto 8px;padding:6px 10px;display:flex}.luWWxG_elsewhereGo{color:var(--dsw-alias-button-info-fill);font:inherit;cursor:pointer;background:0 0;border:0;padding:0}";
+		const tagId$8 = "dsh-session-sync/ApprovalCard.module.css";
 		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagId$8) + "]") === null) {
 			const tag = document.createElement("style");
 			tag.dataset.plugin = "dsh-session-sync";
@@ -70,941 +70,23 @@ window.__ModuleLoader__.load({
 			tag.textContent = css$8;
 			document.head.appendChild(tag);
 		}
-		var sync_module_css_default = {
-			"action": "Emn1LG_action",
-			"actions": "Emn1LG_actions",
-			"arrowOpen": "Emn1LG_arrowOpen",
-			"assistantRow": "Emn1LG_assistantRow",
-			"bubble": "Emn1LG_bubble",
-			"card": "Emn1LG_card",
-			"chromeChip": "Emn1LG_chromeChip",
-			"chromeCluster": "Emn1LG_chromeCluster",
-			"composerBar": "Emn1LG_composerBar",
-			"composerCard": "Emn1LG_composerCard",
-			"composerDelivery": "Emn1LG_composerDelivery",
-			"composerOffline": "Emn1LG_composerOffline",
-			"composerRoot": "Emn1LG_composerRoot",
-			"composerRootInner": "Emn1LG_composerRootInner",
-			"composerSpacer": "Emn1LG_composerSpacer",
-			"composerTarget": "Emn1LG_composerTarget",
-			"composerText": "Emn1LG_composerText",
-			"dirty": "Emn1LG_dirty",
-			"dockComposer": "Emn1LG_dockComposer",
-			"drivesWindow": "Emn1LG_drivesWindow",
-			"dsh-sync-retry-shimmer": "Emn1LG_dsh-sync-retry-shimmer",
-			"empty": "Emn1LG_empty",
-			"error": "Emn1LG_error",
-			"failed": "Emn1LG_failed",
-			"field": "Emn1LG_field",
-			"fieldRow": "Emn1LG_fieldRow",
-			"fieldText": "Emn1LG_fieldText",
-			"gapBadge": "Emn1LG_gapBadge",
-			"group": "Emn1LG_group",
-			"groupTitle": "Emn1LG_groupTitle",
-			"heroBadge": "Emn1LG_heroBadge",
-			"heroFish": "Emn1LG_heroFish",
-			"heroHeadline": "Emn1LG_heroHeadline",
-			"heroHint": "Emn1LG_heroHint",
-			"heroRoot": "Emn1LG_heroRoot",
-			"heroStack": "Emn1LG_heroStack",
-			"heroTitleGroup": "Emn1LG_heroTitleGroup",
-			"hint": "Emn1LG_hint",
-			"kind_assistant": "Emn1LG_kind_assistant",
-			"kind_compaction": "Emn1LG_kind_compaction",
-			"kind_context": "Emn1LG_kind_context",
-			"kind_error": "Emn1LG_kind_error",
-			"kind_other": "Emn1LG_kind_other",
-			"kind_policy": "Emn1LG_kind_policy",
-			"kind_step": "Emn1LG_kind_step",
-			"kind_system": "Emn1LG_kind_system",
-			"kind_think": "Emn1LG_kind_think",
-			"kind_title": "Emn1LG_kind_title",
-			"kind_tool": "Emn1LG_kind_tool",
-			"kind_turn": "Emn1LG_kind_turn",
-			"kind_user": "Emn1LG_kind_user",
-			"label": "Emn1LG_label",
-			"lede": "Emn1LG_lede",
-			"ledger": "Emn1LG_ledger",
-			"ledgerContentCell": "Emn1LG_ledgerContentCell",
-			"ledgerDuration": "Emn1LG_ledgerDuration",
-			"ledgerErrorText": "Emn1LG_ledgerErrorText",
-			"ledgerEventCell": "Emn1LG_ledgerEventCell",
-			"ledgerEventHead": "Emn1LG_ledgerEventHead",
-			"ledgerKind": "Emn1LG_ledgerKind",
-			"ledgerKindSlot": "Emn1LG_ledgerKindSlot",
-			"ledgerMono": "Emn1LG_ledgerMono",
-			"ledgerRail": "Emn1LG_ledgerRail",
-			"ledgerResult": "Emn1LG_ledgerResult",
-			"ledgerTable": "Emn1LG_ledgerTable",
-			"ledgerText": "Emn1LG_ledgerText",
-			"ledgerTurnLabel": "Emn1LG_ledgerTurnLabel",
-			"list": "Emn1LG_list",
-			"listCollapse": "Emn1LG_listCollapse",
-			"listExpand": "Emn1LG_listExpand",
-			"listHead": "Emn1LG_listHead",
-			"listHeadRow": "Emn1LG_listHeadRow",
-			"listPane": "Emn1LG_listPane",
-			"listStatus": "Emn1LG_listStatus",
-			"mediaChip": "Emn1LG_mediaChip",
-			"messageActions": "Emn1LG_messageActions",
-			"notice": "Emn1LG_notice",
-			"noticeClose": "Emn1LG_noticeClose",
-			"noticeCode": "Emn1LG_noticeCode",
-			"noticeCopy": "Emn1LG_noticeCopy",
-			"noticeDot": "Emn1LG_noticeDot",
-			"noticeMessage": "Emn1LG_noticeMessage",
-			"noticeRow": "Emn1LG_noticeRow",
-			"noticeText": "Emn1LG_noticeText",
-			"noticeTitleError": "Emn1LG_noticeTitleError",
-			"noticeTitleWarn": "Emn1LG_noticeTitleWarn",
-			"officialPane": "Emn1LG_officialPane",
-			"olderButton": "Emn1LG_olderButton",
-			"olderRow": "Emn1LG_olderRow",
-			"pair": "Emn1LG_pair",
-			"panel": "Emn1LG_panel",
-			"realBadge": "Emn1LG_realBadge",
-			"retryDetailLabel": "Emn1LG_retryDetailLabel",
-			"retryDetails": "Emn1LG_retryDetails",
-			"retryRow": "Emn1LG_retryRow",
-			"retrySummary": "Emn1LG_retrySummary",
-			"retryText": "Emn1LG_retryText",
-			"routeBadge": "Emn1LG_routeBadge",
-			"rowTime": "Emn1LG_rowTime",
-			"rowTitle": "Emn1LG_rowTitle",
-			"saved": "Emn1LG_saved",
-			"scopeBadge": "Emn1LG_scopeBadge",
-			"scopeBadgeAction": "Emn1LG_scopeBadgeAction",
-			"section": "Emn1LG_section",
-			"sendButton": "Emn1LG_sendButton",
-			"sessionGroup": "Emn1LG_sessionGroup",
-			"sessionGroupCount": "Emn1LG_sessionGroupCount",
-			"sessionGroupHead": "Emn1LG_sessionGroupHead",
-			"sessionGroupPath": "Emn1LG_sessionGroupPath",
-			"sessionList": "Emn1LG_sessionList",
-			"sessionMeta": "Emn1LG_sessionMeta",
-			"sessionRow": "Emn1LG_sessionRow",
-			"sessionText": "Emn1LG_sessionText",
-			"sessionTitle": "Emn1LG_sessionTitle",
-			"status": "Emn1LG_status",
-			"statusBad": "Emn1LG_statusBad",
-			"statusGood": "Emn1LG_statusGood",
-			"statusItem": "Emn1LG_statusItem",
-			"statusRow": "Emn1LG_statusRow",
-			"statusValue": "Emn1LG_statusValue",
-			"stopped": "Emn1LG_stopped",
-			"timeEnd": "Emn1LG_timeEnd",
-			"timeStart": "Emn1LG_timeStart",
-			"tjAction": "Emn1LG_tjAction",
-			"tjActionIcon": "Emn1LG_tjActionIcon",
-			"tjClose": "Emn1LG_tjClose",
-			"tjDetailBody": "Emn1LG_tjDetailBody",
-			"tjDetailTab": "Emn1LG_tjDetailTab",
-			"tjDetailTabActive": "Emn1LG_tjDetailTabActive",
-			"tjDetailTabs": "Emn1LG_tjDetailTabs",
-			"tjDetails": "Emn1LG_tjDetails",
-			"tjDetailsDot": "Emn1LG_tjDetailsDot",
-			"tjDetailsHeader": "Emn1LG_tjDetailsHeader",
-			"tjDetailsLocation": "Emn1LG_tjDetailsLocation",
-			"tjDetailsName": "Emn1LG_tjDetailsName",
-			"tjDetailsTitle": "Emn1LG_tjDetailsTitle",
-			"tjFolded": "Emn1LG_tjFolded",
-			"tjFoldedEllipsis": "Emn1LG_tjFoldedEllipsis",
-			"tjFoldedText": "Emn1LG_tjFoldedText",
-			"tjLaneLabels": "Emn1LG_tjLaneLabels",
-			"tjLanes": "Emn1LG_tjLanes",
-			"tjMarkdown": "Emn1LG_tjMarkdown",
-			"tjOverview": "Emn1LG_tjOverview",
-			"tjPayload": "Emn1LG_tjPayload",
-			"tjPlot": "Emn1LG_tjPlot",
-			"tjRoot": "Emn1LG_tjRoot",
-			"tjSearch": "Emn1LG_tjSearch",
-			"tjSearchIcon": "Emn1LG_tjSearchIcon",
-			"tjSearchInput": "Emn1LG_tjSearchInput",
-			"tjSpan": "Emn1LG_tjSpan",
-			"tjSplit": "Emn1LG_tjSplit",
-			"tjStrip": "Emn1LG_tjStrip",
-			"tjTablePane": "Emn1LG_tjTablePane",
-			"tjToggle": "Emn1LG_tjToggle",
-			"tjToggleIcon": "Emn1LG_tjToggleIcon",
-			"tjToolbar": "Emn1LG_tjToolbar",
-			"tjTrack": "Emn1LG_tjTrack",
-			"tjTurnBoundaries": "Emn1LG_tjTurnBoundaries",
-			"tjTurnBoundary": "Emn1LG_tjTurnBoundary",
-			"toBottom": "Emn1LG_toBottom",
-			"toBottomSlot": "Emn1LG_toBottomSlot",
-			"treeChevron": "Emn1LG_treeChevron",
-			"treeFolder": "Emn1LG_treeFolder",
-			"treeRow": "Emn1LG_treeRow",
-			"treeRowDim": "Emn1LG_treeRowDim",
-			"treeSession": "Emn1LG_treeSession",
-			"treeSessionSelected": "Emn1LG_treeSessionSelected",
-			"treeSlot": "Emn1LG_treeSlot",
-			"userRow": "Emn1LG_userRow",
-			"viewColumn": "Emn1LG_viewColumn",
-			"viewHeader": "Emn1LG_viewHeader",
-			"viewMachine": "Emn1LG_viewMachine",
-			"viewMachineName": "Emn1LG_viewMachineName",
-			"viewPane": "Emn1LG_viewPane",
-			"viewScroll": "Emn1LG_viewScroll",
-			"viewSpacer": "Emn1LG_viewSpacer",
-			"viewTab": "Emn1LG_viewTab",
-			"viewTabActive": "Emn1LG_viewTabActive",
-			"viewTabs": "Emn1LG_viewTabs",
-			"viewTitle": "Emn1LG_viewTitle",
-			"viewTitleRow": "Emn1LG_viewTitleRow"
+		var ApprovalCard_module_css_default = {
+			"actionRow": "luWWxG_actionRow",
+			"body": "luWWxG_body",
+			"card": "luWWxG_card",
+			"command": "luWWxG_command",
+			"elsewhere": "luWWxG_elsewhere",
+			"elsewhereGo": "luWWxG_elsewhereGo",
+			"error": "luWWxG_error",
+			"headline": "luWWxG_headline",
+			"hint": "luWWxG_hint",
+			"missing": "luWWxG_missing",
+			"note": "luWWxG_note",
+			"reject": "luWWxG_reject",
+			"root": "luWWxG_root",
+			"sent": "luWWxG_sent",
+			"strip": "luWWxG_strip"
 		};
-		//#endregion
-		//#region src/client/ConfigSection.tsx
-		/**
-		* The Session sync configuration, as the Plugins page renders it.
-		*
-		* Registered into `plugins.detail.section`, which renders under the content of
-		* every detail page — so the entry is handed the open page's subject and this
-		* component is only reached for this plugin's own pages (the guard lives in the
-		* registration, `ownsSubject` in `config-entry.ts`).
-		*
-		* The form keeps talking to this plugin's own `/config` route rather than a Host
-		* `form`: the form's second half is a per-Session publish list, which is a patch
-		* the Host's field-by-field `mutate` cannot express, and the route is the same
-		* channel `/state` already arrives on.
-		*
-		* Edits are staged and written on save. Each write is a durable document
-		* mutation on the Host, and the switch list is long enough that committing per
-		* keystroke would turn one intention into a dozen writes.
-		*/
-		/** Seed the draft from the served configuration. */
-		function draftOf(config) {
-			return {
-				machineName: config.machineName,
-				serverUrl: config.serverUrl,
-				isServer: config.isServer,
-				password: config.password,
-				listenHost: config.listenHost,
-				listenPort: String(config.listenPort)
-			};
-		}
-		/**
-		* Render the Session sync configuration.
-		* @param props - copy, the snapshot hook, and the write actions.
-		* @returns the form.
-		*/
-		function ConfigSection(props) {
-			const state = props.useSync((snapshot) => snapshot);
-			const { t } = props;
-			const [draft, setDraft] = react.useState(() => draftOf(state.config));
-			const [dirty, setDirty] = react.useState(false);
-			const [status, setStatus] = react.useState("idle");
-			const seeded = react.useRef(state.config);
-			const dirtyRef = react.useRef(false);
-			dirtyRef.current = dirty;
-			react.useEffect(() => {
-				if (seeded.current === state.config) return;
-				seeded.current = state.config;
-				if (dirtyRef.current) return;
-				setDraft(draftOf(state.config));
-			}, [state.config]);
-			const edit = (patch) => {
-				setDraft((current) => ({
-					...current,
-					...patch
-				}));
-				setDirty(true);
-				setStatus("idle");
-			};
-			const discard = () => {
-				setDraft(draftOf(state.config));
-				setDirty(false);
-				setStatus("idle");
-			};
-			const save = () => {
-				setStatus("saving");
-				props.configure({
-					machineName: draft.machineName,
-					serverUrl: draft.serverUrl,
-					isServer: draft.isServer,
-					password: draft.password,
-					listenHost: draft.listenHost,
-					listenPort: Number.parseInt(draft.listenPort, 10)
-				}).then((accepted) => {
-					setStatus(accepted ? "saved" : "failed");
-					if (accepted) setDirty(false);
-				});
-			};
-			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("section", {
-				className: sync_module_css_default.section,
-				"aria-label": t("sectionTitle"),
-				children: [
-					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
-						className: sync_module_css_default.lede,
-						children: t("sectionDescription")
-					}),
-					/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-						className: sync_module_css_default.group,
-						children: [
-							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("h3", {
-								className: sync_module_css_default.groupTitle,
-								children: t("machineGroup")
-							}),
-							/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-								className: sync_module_css_default.card,
-								children: [
-									/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("label", {
-										className: sync_module_css_default.field,
-										children: [
-											/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-												className: sync_module_css_default.label,
-												children: t("machineName")
-											}),
-											/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Input, {
-												value: draft.machineName,
-												onChange: (event) => {
-													edit({ machineName: event.target.value });
-												}
-											}),
-											/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-												className: sync_module_css_default.hint,
-												children: t("machineNameHint")
-											})
-										]
-									}),
-									/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("label", {
-										className: sync_module_css_default.field,
-										children: [
-											/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-												className: sync_module_css_default.label,
-												children: t("serverUrl")
-											}),
-											/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Input, {
-												value: draft.serverUrl,
-												placeholder: "192.168.1.10:8791",
-												disabled: draft.isServer,
-												onChange: (event) => {
-													edit({ serverUrl: event.target.value });
-												}
-											}),
-											/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-												className: sync_module_css_default.hint,
-												children: t("serverUrlHint")
-											})
-										]
-									}),
-									/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-										className: sync_module_css_default.fieldRow,
-										children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
-											className: sync_module_css_default.fieldText,
-											children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-												className: sync_module_css_default.label,
-												children: t("isServer")
-											}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-												className: sync_module_css_default.hint,
-												children: t("isServerHint")
-											})]
-										}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Switch, {
-											checked: draft.isServer,
-											label: t("isServer"),
-											onChange: (next) => {
-												edit({ isServer: next });
-											}
-										})]
-									}),
-									/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("label", {
-										className: sync_module_css_default.field,
-										children: [
-											/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-												className: sync_module_css_default.label,
-												children: t("password")
-											}),
-											/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Input, {
-												type: "password",
-												autoComplete: "off",
-												value: draft.password,
-												onChange: (event) => {
-													edit({ password: event.target.value });
-												}
-											}),
-											/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-												className: sync_module_css_default.hint,
-												children: t("passwordHint")
-											})
-										]
-									}),
-									/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-										className: sync_module_css_default.pair,
-										children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("label", {
-											className: sync_module_css_default.field,
-											children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-												className: sync_module_css_default.label,
-												children: t("listenHost")
-											}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Input, {
-												value: draft.listenHost,
-												disabled: !draft.isServer,
-												onChange: (event) => {
-													edit({ listenHost: event.target.value });
-												}
-											})]
-										}), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("label", {
-											className: sync_module_css_default.field,
-											children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-												className: sync_module_css_default.label,
-												children: t("listenPort")
-											}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Input, {
-												inputMode: "numeric",
-												value: draft.listenPort,
-												disabled: !draft.isServer,
-												onChange: (event) => {
-													edit({ listenPort: event.target.value });
-												}
-											})]
-										})]
-									})
-								]
-							}),
-							/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-								className: sync_module_css_default.actions,
-								children: [
-									/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
-										variant: "primary",
-										size: "sm",
-										disabled: !dirty || status === "saving",
-										onClick: save,
-										children: t("save")
-									}),
-									/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
-										variant: "ghost",
-										size: "sm",
-										disabled: !dirty,
-										onClick: discard,
-										children: t("discard")
-									}),
-									status === "saved" && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-										className: sync_module_css_default.saved,
-										children: t("saved")
-									}),
-									status === "failed" && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
-										className: sync_module_css_default.failed,
-										children: [t("saveFailed"), state.error === void 0 ? "" : ` · ${state.error}`]
-									}),
-									status === "failed" && state.errorConflict === true && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-										className: sync_module_css_default.failed,
-										children: t("saveConflictHint")
-									}),
-									dirty && status === "idle" && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-										className: sync_module_css_default.dirty,
-										children: t("unsaved")
-									})
-								]
-							})
-						]
-					}),
-					/* @__PURE__ */ (0, react_jsx_runtime.jsx)(StatusBlock, {
-						t,
-						state
-					}),
-					/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-						className: sync_module_css_default.group,
-						children: [
-							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("h3", {
-								className: sync_module_css_default.groupTitle,
-								children: t("sessions")
-							}),
-							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-								className: sync_module_css_default.hint,
-								children: t("sessionsHint")
-							}),
-							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-								className: sync_module_css_default.hint,
-								children: t("sessionApprovalsHint")
-							}),
-							/* @__PURE__ */ (0, react_jsx_runtime.jsx)(SessionList, {
-								t,
-								ready: state.ready,
-								sessions: state.sessions,
-								setSessionSync: props.setSessionSync,
-								setSessionApprovals: props.setSessionApprovals
-							})
-						]
-					})
-				]
-			});
-		}
-		/** The role, listener, and link facts, gathered in one place. */
-		function StatusBlock({ t, state }) {
-			const { role, listening, linked, machines, published } = state.state;
-			const connected = role === "server" ? listening ? t("statusListening") : t("statusNotListening") : state.config.serverUrl.trim() === "" ? t("statusNotConfigured") : linked ? t("statusLinked") : t("statusUnlinked");
-			const healthy = role === "server" ? listening : linked;
-			const detail = state.state.listenError ?? state.state.linkError;
-			const own = state.state.pluginVersion;
-			const peers = machines.map((machine) => ({
-				name: machine.machineName,
-				version: machine.pluginVersion
-			})).filter((peer) => peer.version !== void 0);
-			const skewed = peers.filter((peer) => peer.version !== own);
-			const total = (pick) => machines.reduce((sum, machine) => sum + machine.sessions.reduce((inner, session) => inner + pick(session), 0), 0);
-			const holes = total((session) => session.holes ?? 0);
-			const behind = total((session) => session.behind ?? 0);
-			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-				className: sync_module_css_default.group,
-				children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("h3", {
-					className: sync_module_css_default.groupTitle,
-					children: t("statusTitle")
-				}), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-					className: sync_module_css_default.card,
-					children: [
-						/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-							className: sync_module_css_default.status,
-							children: [
-								/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
-									className: sync_module_css_default.statusItem,
-									children: [
-										/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.StateDot, { state: healthy ? "done" : "idle" }),
-										t("statusTitle"),
-										/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-											className: healthy ? sync_module_css_default.statusGood : sync_module_css_default.statusBad,
-											children: connected
-										})
-									]
-								}),
-								/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-									className: sync_module_css_default.statusItem,
-									children: role === "server" ? t("roleServer") : t("roleClient")
-								}),
-								/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
-									className: sync_module_css_default.statusItem,
-									children: [t("publishedCount"), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-										className: sync_module_css_default.statusValue,
-										children: String(published)
-									})]
-								}),
-								role === "server" && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
-									className: sync_module_css_default.statusItem,
-									children: [t("machineSessions"), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-										className: sync_module_css_default.statusValue,
-										children: String(machines.length)
-									})]
-								}),
-								role === "server" && holes > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
-									className: sync_module_css_default.statusItem,
-									title: t("mirrorGapsHint"),
-									children: [t("mirrorGaps"), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-										className: sync_module_css_default.statusBad,
-										children: String(holes)
-									})]
-								}),
-								role === "server" && behind > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
-									className: sync_module_css_default.statusItem,
-									title: t("sessionBehindHint"),
-									children: [t("mirrorBehind"), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-										className: sync_module_css_default.statusValue,
-										children: String(behind)
-									})]
-								}),
-								/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
-									className: sync_module_css_default.statusItem,
-									title: t("pluginVersionHint"),
-									children: [
-										t("pluginVersion"),
-										/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-											className: skewed.length === 0 ? sync_module_css_default.statusValue : sync_module_css_default.statusBad,
-											children: own
-										}),
-										peers.length > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
-											className: skewed.length === 0 ? sync_module_css_default.statusValue : sync_module_css_default.statusBad,
-											children: [" · ", peers.map((peer) => `${peer.name} ${peer.version}`).join(", ")]
-										})
-									]
-								}),
-								skewed.length > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-									className: sync_module_css_default.statusItem,
-									children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-										className: sync_module_css_default.statusBad,
-										children: t("pluginVersionSkew")
-									})
-								})
-							]
-						}),
-						detail !== void 0 && detail !== "" && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-							className: sync_module_css_default.failed,
-							children: detail
-						}),
-						state.error !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-							className: sync_module_css_default.failed,
-							children: state.error
-						})
-					]
-				})]
-			});
-		}
-		/**
-		* The per-Session publish switches, and — where a Session is published — the
-		* separate approval switch.
-		*
-		* The second switch is drawn only for a published Session, and that is a statement
-		* rather than a layout choice: an approval card resolves what is being allowed from
-		* the mirrored conversation, so opening a Session to remote approvals without
-		* publishing it would offer a reader a permission over something they cannot see.
-		* The engine refuses that combination, and the page does not pretend otherwise.
-		*/
-		function SessionList({ t, ready, sessions, setSessionSync, setSessionApprovals }) {
-			if (!ready) return /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-				className: sync_module_css_default.empty,
-				children: t("sessionsLoading")
-			});
-			if (sessions.length === 0) return /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-				className: sync_module_css_default.empty,
-				children: t("sessionsEmpty")
-			});
-			const groups = sessionGroupsOf(sessions);
-			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
-				className: sync_module_css_default.sessionList,
-				children: groups.map((group) => /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-					className: sync_module_css_default.sessionGroup,
-					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-						className: sync_module_css_default.sessionGroupHead,
-						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-							className: sync_module_css_default.sessionGroupPath,
-							title: group.cwd ?? "",
-							children: group.cwd ?? t("sessionsNoWorkspace")
-						}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-							className: sync_module_css_default.sessionGroupCount,
-							children: group.sessions.length
-						})]
-					}), group.sessions.map((session) => /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-						className: sync_module_css_default.sessionRow,
-						children: [
-							/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
-								className: sync_module_css_default.sessionText,
-								children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-									className: sync_module_css_default.sessionTitle,
-									children: session.title
-								}), session.running && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
-									className: sync_module_css_default.sessionMeta,
-									children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.StateDot, { state: "ongoing" }), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { children: t("sessionRunning") })]
-								})]
-							}),
-							session.synced && /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Switch, {
-								checked: session.approved,
-								label: `${t("sessionApprovalsLabel")}: ${session.title}`,
-								onChange: (next) => {
-									setSessionApprovals(session.sessionId, next);
-								}
-							}),
-							/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Switch, {
-								checked: session.synced,
-								label: `${t("sessionSyncLabel")}: ${session.title}`,
-								onChange: (next) => {
-									setSessionSync(session.sessionId, next);
-								}
-							})
-						]
-					}, session.sessionId))]
-				}, group.cwd ?? ""))
-			});
-		}
-		//#endregion
-		//#region src/client/composer-draft.ts
-		/**
-		* The empty seat.
-		*
-		* One frozen instance for every Session that has never been typed into: the
-		* reader of this store compares snapshot identities, so a fresh object per read
-		* would re-render every seat on every change anywhere.
-		*/
-		const EMPTY = Object.freeze({
-			text: "",
-			sending: false
-		});
-		/**
-		* The drafts of every Session this console has shown, plus the one channel both
-		* seats subscribe to.
-		*
-		* One instance per plugin (built in `apply`), because two registrations — the
-		* console panel and the shipped composer stack's dock entry — have to share it
-		* and neither may reach the other's props.
-		*/
-		var ComposerDrafts = class {
-			byKey = /* @__PURE__ */ new Map();
-			listeners = /* @__PURE__ */ new Set();
-			/**
-			* The state one Session's composer seat renders.
-			* @param key - the Session the draft is addressed to.
-			* @returns the state; the shared empty one until something is typed.
-			*/
-			read(key) {
-				return this.byKey.get(key) ?? EMPTY;
-			}
-			/**
-			* Replace the unsent prompt.
-			* @param key - the Session the draft is addressed to.
-			* @param text - the whole draft, as the textarea holds it.
-			*/
-			setText(key, text) {
-				const current = this.read(key);
-				if (current.text === text) return;
-				this.write(key, {
-					text,
-					sending: current.sending
-				});
-			}
-			/**
-			* Mark a prompt as on its way, or as finished.
-			* @param key - the Session the draft is addressed to.
-			* @param sending - the new reading.
-			*/
-			setSending(key, sending) {
-				const current = this.read(key);
-				if (current.sending === sending) return;
-				this.write(key, {
-					text: current.text,
-					sending
-				});
-			}
-			/**
-			* Take one Session's draft down to the empty seat, keeping nothing behind.
-			*
-			* What a delivered prompt leaves: the text has gone to the machine, and the
-			* next reader of that Session — possibly this one, after looking at something
-			* else — should not find it still sitting in the box.
-			* @param key - the Session the draft was addressed to.
-			*/
-			clear(key) {
-				this.write(key, {
-					text: "",
-					sending: false
-				});
-			}
-			/**
-			* Hear about every seat's change.
-			*
-			* Coarse on purpose: a seat subscribes once and re-reads its own Session's
-			* state, which is one comparison against a frozen object for the Sessions it
-			* does not care about.
-			* @param listener - the change callback.
-			* @returns the unsubscribe function.
-			*/
-			subscribe(listener) {
-				this.listeners.add(listener);
-				return () => {
-					this.listeners.delete(listener);
-				};
-			}
-			write(key, next) {
-				this.byKey.set(key, Object.freeze(next));
-				for (const listener of [...this.listeners]) listener();
-			}
-		};
-		/**
-		* The key one Session's draft is filed under.
-		*
-		* Machine and id together, because two machines can hold Sessions whose ids were
-		* generated independently — a draft written for one of them must not appear in
-		* the other's composer.
-		* @param machineName - the machine that owns the Session.
-		* @param sessionId - the Session's own id.
-		* @returns the stable key.
-		*/
-		function draftKey(machineName, sessionId) {
-			return `${machineName}\u0000${sessionId}`;
-		}
-		//#endregion
-		//#region src/client/config-entry.ts
-		/** This plugin's npm package name, as the Plugins page reports it. */
-		const PACKAGE_NAME = "dsh-session-sync";
-		/**
-		* Whether the open detail page is this plugin's.
-		*
-		* `plugins.detail.section` renders on *every* detail page — the contribution
-		* decides from the subject whether it has anything to say — so without this the
-		* form would appear under every installed plugin's page.
-		* @param subject - the open page's subject.
-		* @returns true when the page is about this plugin's bundle or its row.
-		*/
-		function ownsSubject(subject) {
-			if (subject === void 0) return false;
-			if (subject.kind === "bundle") return subject.pkg?.name === PACKAGE_NAME;
-			if (subject.kind === "row") return subject.pkg?.name === "dsh-session-sync" && subject.row?.rowId === "session-sync";
-			return false;
-		}
-		/**
-		* Split an option's shipped "recommended" marker off its label.
-		*
-		* The asker marks a suggestion by suffixing its label — `(recommended)` or
-		* `（推荐）` — and the shipped composer renders that marker as its own badge rather
-		* than as part of the text. This console reads the same convention out of the
-		* relayed option, so an option the asking machine flagged looks flagged here too.
-		* @param label - the option's label as the asker wrote it.
-		* @returns the label without the marker, and whether the marker was there.
-		*/
-		function parseRecommendedLabel(label) {
-			const suffix = /\s*(?:\((?:recommended|推荐)\)|（(?:recommended|推荐)）)\s*$/i;
-			return suffix.test(label) ? {
-				label: label.replace(suffix, ""),
-				recommended: true
-			} : {
-				label,
-				recommended: false
-			};
-		}
-		//#endregion
-		//#region src/client/MirrorComposer.tsx
-		/**
-		* The console's takeover composer, as one component drawn by two seats.
-		*
-		* The card is the console's own — the shipped composer cannot be used, because
-		* its prompt would be carried to a Host that has never heard of the mirrored
-		* Session — but *where* it is drawn follows what the pane is showing:
-		*
-		*  - on the chat tab of a build that can render a retained Session, it is the
-		*    `conversation.input.dock` occurrence inside the shipped composer stack, so
-		*    the shipped input capsule can be hidden and the shipped statistics row and
-		*    context meter below it become the footer (see `official-session.tsx` and
-		*    `footer-projections.ts`);
-		*  - on the trajectory tab, and on a build with no shipped conversation at all,
-		*    it is the console's own footer, drawn beside its own transcript.
-		*
-		* Both seats render *this*, and both read their draft from the shared
-		* {@link ComposerDrafts} store, so switching between them keeps what the reader
-		* typed.
-		*/
-		/**
-		* The delivery state of the last prompt, as the composer renders it.
-		* @param delivery - the last takeover prompt's progress.
-		* @param t - the localized copy lookup.
-		* @returns the line the card prints beside its target.
-		*/
-		function deliveryLine(delivery, t) {
-			if (delivery.state === "queued") return t("deliveryQueued");
-			if (delivery.state === "delivered") return t("deliveryDelivered");
-			if (delivery.state === "accepted") return t("deliveryAccepted");
-			if (delivery.state === "expired") return t("deliveryExpired");
-			return delivery.error === void 0 ? t("deliveryFailed") : `${t("deliveryFailed")}: ${delivery.error}`;
-		}
-		/**
-		* One Session's draft, as a seat renders it: read once on mount, then re-read on
-		* every change any seat makes.
-		*
-		* A plain subscription rather than `useSyncExternalStore`: the store hands out a
-		* frozen object per Session, so a re-read that changed nothing is one reference
-		* comparison, and React bails out of the re-render on the same identity.
-		* @param drafts - the shared store.
-		* @param key - the Session this seat is addressed to.
-		* @returns the state to render.
-		*/
-		function useDraft(drafts, key) {
-			const [state, setState] = react.useState(() => drafts.read(key));
-			react.useEffect(() => {
-				setState(drafts.read(key));
-				return drafts.subscribe(() => {
-					setState(drafts.read(key));
-				});
-			}, [drafts, key]);
-			return state;
-		}
-		/**
-		* Render the takeover composer card.
-		* @param props - copy, the shared draft store, and the action that sends.
-		* @returns the card.
-		*/
-		function MirrorComposer(props) {
-			const { t, drafts, draftKey, machineName, delivery, online, send } = props;
-			const draft = useDraft(drafts, draftKey);
-			const submit = () => {
-				const text = draft.text.trim();
-				if (text === "" || draft.sending) return;
-				drafts.setSending(draftKey, true);
-				send(text).then((accepted) => {
-					drafts.setSending(draftKey, false);
-					if (accepted) drafts.clear(draftKey);
-				});
-			};
-			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
-				className: props.inShippedStack === true ? sync_module_css_default.dockComposer : sync_module_css_default.composerRootInner,
-				...props.inShippedStack === true ? { "data-sync-composer": "" } : {},
-				children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("form", {
-					className: sync_module_css_default.composerCard,
-					onSubmit: (event) => {
-						event.preventDefault();
-						submit();
-					},
-					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("textarea", {
-						className: sync_module_css_default.composerText,
-						value: draft.text,
-						rows: 2,
-						placeholder: t("composerPlaceholder"),
-						"aria-label": t("composerPlaceholder"),
-						onChange: (event) => {
-							drafts.setText(draftKey, event.target.value);
-						},
-						onKeyDown: (event) => {
-							if (event.key !== "Enter" || event.shiftKey) return;
-							event.preventDefault();
-							submit();
-						}
-					}), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-						className: sync_module_css_default.composerBar,
-						children: [
-							/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
-								className: sync_module_css_default.composerTarget,
-								children: [
-									t("composerTarget"),
-									" ",
-									machineName
-								]
-							}),
-							delivery !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-								className: sync_module_css_default.composerDelivery,
-								children: deliveryLine(delivery, t)
-							}),
-							!online && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-								className: sync_module_css_default.composerOffline,
-								children: t("offlineQueueHint")
-							}),
-							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { className: sync_module_css_default.composerSpacer }),
-							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
-								type: "submit",
-								className: sync_module_css_default.sendButton,
-								disabled: draft.sending || draft.text.trim() === "",
-								"aria-label": draft.sending ? t("sending") : t("send"),
-								children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconRightUpOutlineRegular, {})
-							})
-						]
-					})]
-				})
-			});
-		}
-		/**
-		* The console's composer as an occurrence of the shipped `conversation.input.dock`.
-		*
-		* The seat is the shipped composer stack, one slot above the shipped input
-		* capsule, and it exists for *every* Session the product draws — so this returns
-		* nothing unless the Session in hand is the one the console has retained under a
-		* synthetic identity. That check is also what makes the console's own footer the
-		* fallback: when the shipped conversation is not being drawn (the trajectory tab,
-		* or a build with no retention seam) this entry is not mounted at all.
-		*
-		* `open` is read through the snapshot hook rather than asked of the bridge,
-		* because the bridge is a plain object and this component has to re-render when
-		* the console opens, switches or closes a Session.
-		* @param props - the standard kit and this entry's inject face.
-		* @returns the card, or null for a Session the console does not own.
-		*/
-		function MirrorComposerDock(props) {
-			const { t, useSync, drafts, official, sendPrompt, sessionId } = props;
-			if (typeof useSync !== "function" || sessionId === void 0) return null;
-			const open = useSync((snapshot) => snapshot.open);
-			const machines = useSync((snapshot) => snapshot.state.machines);
-			const delivery = useSync((snapshot) => snapshot.delivery);
-			if (open === void 0 || !official.owns(sessionId)) return null;
-			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(MirrorComposer, {
-				t,
-				drafts,
-				draftKey: draftKey(open.machineName, open.sessionId),
-				machineName: open.machineName,
-				delivery,
-				online: machines.find((machine) => machine.machineName === open.machineName)?.online === true,
-				send: sendPrompt,
-				inShippedStack: true
-			});
-		}
 		//#endregion
 		//#region src/shared/protocol.ts
 		/**
@@ -1033,1763 +115,6 @@ window.__ModuleLoader__.load({
 				approveSessions: {}
 			};
 		}
-		//#endregion
-		//#region src/client/api.ts
-		/**
-		* Browser-side transport and view state for the sync plugin.
-		*
-		* Everything goes through the Host routes this package registers under
-		* {@link ROUTE_PREFIX}, so the panel is same-origin with the GUI it lives in.
-		* Live state arrives on one `EventSource`; the panel and the settings page both
-		* read the single snapshot this store publishes, which is why a change made on
-		* one surface is already visible on the other.
-		*/
-		/** How often the local Session list is re-read while the panel is mounted. */
-		const SESSION_POLL_MS = 15e3;
-		/**
-		* How long one "load older" click waits for a page the mirror had to fetch.
-		*
-		* The page may not exist in the mirror yet, in which case the server asks the
-		* machine that owns the Session and the events arrive over the ordinary stream:
-		* a read of its log, a POST back, and a trip through a proxy, which measured at
-		* ten to twenty seconds on a cross-border link. Those events also queue behind
-		* everything else that machine is publishing, so the wait has to cover a
-		* backlog and not just one round trip — measured live, a page that had been read
-		* and was sitting 1,766 events deep in the origin's outbox.
-		*
-		* Waiting is also what makes the click reliable: the page arrives as an ordinary
-		* event frame, and the browser's stream to the server is the least dependable leg
-		* of the whole path (`net::ERR_HTTP2_PROTOCOL_ERROR` on a proxied idle SSE).
-		* So the wait re-asks the endpoint and accepts either arrival: the page itself, or
-		* the window having moved below where it started.
-		*/
-		const OLDER_ATTEMPTS = 30;
-		const OLDER_WAIT_MS = 3e3;
-		/**
-		* How many command states to remember for a command this browser has not been
-		* told about yet.
-		*
-		* A status frame and the POST response that mints the command's id travel by
-		* different roads, and the frame routinely wins: the server hands the command to
-		* the owning machine and narrates that immediately, while the response still has
-		* to come back. Dropping those frames left the composer on "submitted" for a
-		* command the machine had already accepted.
-		*/
-		const EARLY_COMMAND_LIMIT = 16;
-		/** The neutral state rendered before the Host has answered. */
-		function idleState() {
-			return {
-				role: "client",
-				machineName: "",
-				serverUrl: "",
-				pluginVersion: "unknown",
-				listening: false,
-				linked: false,
-				machines: [],
-				published: 0
-			};
-		}
-		/** The step number that means "no step is streaming". */
-		const NO_STEP = -1;
-		/**
-		* The empty live row.
-		*
-		* A blank row rather than `undefined`: the panel asks whether either text is
-		* non-empty, and a step's first frame is what fills one.
-		*/
-		function noLive() {
-			return {
-				reasoning: "",
-				text: "",
-				turn: NO_STEP,
-				step: NO_STEP
-			};
-		}
-		/**
-		* Whether one mirrored event settles the attempt a live row belongs to.
-		*
-		* Both spellings matter: a step that produced a message commits
-		* `assistant/message`, while a stream that failed or was aborted with nothing
-		* to keep commits `assistant/attempt`. Clearing only on the first left a
-		* failed step's thinking on screen indefinitely.
-		* @param event - one mirrored durable event.
-		* @returns true when the live row for its step is over.
-		*/
-		function isSettlement(event) {
-			return event.type === "assistant/message" || event.type === "assistant/attempt";
-		}
-		/** The sync plugin's browser client. */
-		var SyncClient = class {
-			store;
-			source;
-			poll;
-			started = false;
-			/** Status frames that arrived before this browser knew their command's id. */
-			earlyCommands = /* @__PURE__ */ new Map();
-			/** Whether this page has ever held an open stream. */
-			sawOpen = false;
-			/** Whether this page has ever seen a machine in the mirror. */
-			sawMachines = false;
-			/**
-			* The one consumer told what the mirror reported as it arrives.
-			*
-			* Held rather than fanned out: it is the console's shipped-renderer mirror,
-			* which is a view of the same stream, not a second reader of it.
-			*/
-			observer;
-			/** The running flag already reported to that consumer. */
-			reportedRunning;
-			constructor() {
-				this.store = (0, _deepseek_ai_dsh_client_store.createSnapshotStore)({
-					ready: false,
-					config: defaultConfig(""),
-					state: idleState(),
-					sessions: [],
-					loadingTranscript: false,
-					loadingOlder: false,
-					live: noLive(),
-					questions: [],
-					answers: {},
-					approvals: [],
-					decisions: {},
-					stream: "connecting",
-					mirrorResets: 0
-				});
-			}
-			/** The observable the slot registrations bind as a renderer-provided hook. */
-			get snapshot() {
-				return this.store;
-			}
-			/**
-			* Register the one consumer told what the mirror reports as it arrives.
-			*
-			* Notifications are delivered before the store publishes the same fact: the
-			* shipped-renderer pane binds its Session reference from the opening, so its
-			* first render after the change already has a Session to draw and never has
-			* to render a reference that has just been released.
-			* @param observer - the consumer; at most one is held at a time.
-			* @returns an idempotent disposer that detaches it.
-			*/
-			observe(observer) {
-				this.observer = observer;
-				return () => {
-					if (this.observer === observer) this.observer = void 0;
-				};
-			}
-			/** Begin reading and hold the live stream open. Idempotent. */
-			start() {
-				if (this.started) return;
-				this.started = true;
-				this.refresh();
-				this.openStream();
-				this.poll = setInterval(() => {
-					this.refreshSessions();
-					this.refreshState();
-				}, SESSION_POLL_MS);
-			}
-			/** Stop polling and close the stream. Idempotent. */
-			stop() {
-				this.started = false;
-				if (this.poll !== void 0) clearInterval(this.poll);
-				this.poll = void 0;
-				this.source?.close();
-				this.source = void 0;
-			}
-			/** Re-read configuration, role state, and the local Session list. */
-			async refresh() {
-				try {
-					const [configResponse, sessionsResponse] = await Promise.all([getJson(`${ROUTE_PREFIX}/config`), getJson(`${ROUTE_PREFIX}/sessions`)]);
-					this.update({
-						ready: true,
-						config: configResponse.config,
-						state: configResponse.state,
-						sessions: sessionsResponse.sessions,
-						error: void 0,
-						errorConflict: false
-					});
-				} catch (error) {
-					this.update({
-						ready: true,
-						error: describe(error),
-						errorConflict: false
-					});
-				}
-			}
-			/** Re-read only the local Session list. */
-			async refreshSessions() {
-				try {
-					const { sessions } = await getJson(`${ROUTE_PREFIX}/sessions`);
-					this.update({ sessions });
-				} catch {}
-			}
-			/** Re-read the authoritative mirror view, which is what retires a stale badge. */
-			async refreshState() {
-				try {
-					const { state } = await getJson(`${ROUTE_PREFIX}/state`);
-					if (!isCompleteState(state)) return;
-					this.update({ state });
-				} catch {}
-			}
-			/**
-			* Write one partial configuration change.
-			* @param patch - fields to change.
-			* @returns true when the Host accepted the write.
-			*/
-			async configure(patch) {
-				try {
-					const result = await postJson(`${ROUTE_PREFIX}/config`, patch);
-					this.update({
-						config: result.config,
-						state: result.state,
-						sessions: result.sessions,
-						error: void 0,
-						errorConflict: false
-					});
-					return true;
-				} catch (error) {
-					await this.refresh();
-					this.update({
-						error: describe(error),
-						errorConflict: error instanceof HostFailure && error.conflict
-					});
-					return false;
-				}
-			}
-			/**
-			* Flip one Session's publish switch.
-			* @param sessionId - the Session to publish or stop publishing.
-			* @param synced - the requested state.
-			* @returns true when the Host accepted the write.
-			*/
-			async setSessionSync(sessionId, synced) {
-				return await this.configure({ sessionSync: {
-					sessionId,
-					synced
-				} });
-			}
-			/**
-			* Flip one Session's approval switch.
-			*
-			* Separate from {@link setSessionSync} on the page and here, because it grants
-			* something publishing does not: the authority, for whoever reads this console, to
-			* *allow* a tool call the machine's own permission preset was gating. The Host
-			* refuses the write for a Session that is not published, since the console could
-			* not show what it was approving.
-			* @param sessionId - the Session to open or close to remote approvals.
-			* @param approved - the requested state.
-			* @returns true when the Host accepted the write.
-			*/
-			async setSessionApprovals(sessionId, approved) {
-				return await this.configure({ sessionApprovals: {
-					sessionId,
-					approved
-				} });
-			}
-			/**
-			* Open one mirrored Session in the centre panel.
-			* @param machineName - owning machine.
-			* @param sessionId - published Session.
-			*/
-			async openSession(machineName, sessionId) {
-				const open = {
-					machineName,
-					sessionId
-				};
-				this.reportedRunning = void 0;
-				this.notify((observer) => {
-					observer.opened(open);
-				});
-				this.update({
-					open,
-					transcript: void 0,
-					loadingTranscript: true,
-					loadingOlder: false,
-					live: noLive(),
-					delivery: void 0
-				});
-				try {
-					const { transcript } = await getJson(`${ROUTE_PREFIX}/transcript?machine=${encodeURIComponent(machineName)}&session=${encodeURIComponent(sessionId)}`);
-					this.notify((observer) => {
-						observer.loaded(open, transcript);
-					});
-					this.update({
-						transcript,
-						loadingTranscript: false,
-						error: void 0
-					});
-				} catch (error) {
-					this.update({
-						loadingTranscript: false,
-						error: describe(error),
-						errorConflict: false
-					});
-				}
-			}
-			/**
-			* Fetch the page of the open Session that sits before the one held.
-			*
-			* A transcript arrives as its newest page, so the older end is one request
-			* away rather than part of every switch. The page is placed before what is
-			* held, never merged into it: the two ranges are adjacent by construction, and
-			* the held page already carries everything above them.
-			* @returns nothing; the store is the result.
-			*/
-			/**
-			* Page this console all the way back to the start of the Session's log.
-			*
-			* The footer counts what this console holds, and the machine's own page counts the
-			* whole log — so the only way the two can agree without the machine sending its own
-			* totals is for the console to *hold* the whole log. Paging does that: every page it
-			* fetches stays in its transcript even after the server's mirror trims its window.
-			* @returns when the log's start is reached, or when a page was already in flight.
-			*/
-			async loadAllOlder() {
-				for (let page = 0; page < 500; page += 1) {
-					for (let wait = 0; wait < 200 && this.store.getSnapshot().loadingOlder; wait += 1) await new Promise((resolve) => {
-						setTimeout(resolve, 50);
-					});
-					const transcript = this.store.getSnapshot().transcript;
-					if (transcript === void 0 || !transcript.hasMore) return;
-					await this.loadOlder();
-					await new Promise((resolve) => {
-						setTimeout(resolve, 350);
-					});
-				}
-			}
-			async loadOlder() {
-				const snapshot = this.store.getSnapshot();
-				const open = snapshot.open;
-				const transcript = snapshot.transcript;
-				if (open === void 0 || transcript === void 0) return;
-				if (!transcript.hasMore || snapshot.loadingOlder) return;
-				const first = transcript.events[0]?.seq;
-				if (first === void 0) return;
-				this.update({ loadingOlder: true });
-				for (let attempt = 0; attempt < OLDER_ATTEMPTS; attempt += 1) {
-					const current = this.store.getSnapshot();
-					if (current.open?.sessionId !== open.sessionId) return;
-					const held = current.transcript;
-					if (held === void 0) return;
-					let older;
-					try {
-						({transcript: older} = await getJson(`${ROUTE_PREFIX}/transcript?machine=${encodeURIComponent(open.machineName)}&session=${encodeURIComponent(open.sessionId)}&limit=${String(Math.max(1, held.events.length))}&before=${String(first)}`));
-					} catch (error) {
-						this.update({
-							loadingOlder: false,
-							error: describe(error),
-							errorConflict: false
-						});
-						return;
-					}
-					if (older.events.length > 0) {
-						this.update({
-							transcript: {
-								...held,
-								events: mergeEvents(held.events, older.events),
-								hasMore: older.hasMore
-							},
-							loadingOlder: false
-						});
-						this.notify((observer) => {
-							observer.older(open, older);
-						});
-						return;
-					}
-					const moved = current.transcript?.events[0]?.seq;
-					if (moved !== void 0 && moved < first) {
-						this.update({ loadingOlder: false });
-						return;
-					}
-					if (!older.hasMore) {
-						this.update({
-							transcript: {
-								...held,
-								hasMore: false
-							},
-							loadingOlder: false
-						});
-						return;
-					}
-					await new Promise((resolve) => {
-						setTimeout(resolve, OLDER_WAIT_MS);
-					});
-				}
-				this.update({ loadingOlder: false });
-			}
-			/**
-			* Send one takeover prompt to the machine that owns the open Session.
-			* @param text - the prompt text.
-			* @returns true when the server accepted and forwarded it.
-			*/
-			async sendPrompt(text) {
-				const open = this.store.getSnapshot().open;
-				if (open === void 0) return false;
-				try {
-					const result = await postJson(`${ROUTE_PREFIX}/command`, {
-						machineName: open.machineName,
-						sessionId: open.sessionId,
-						text
-					});
-					const known = this.earlyCommands.get(result.commandId);
-					this.earlyCommands.delete(result.commandId);
-					this.update({
-						error: void 0,
-						delivery: known ?? {
-							commandId: result.commandId,
-							state: "queued",
-							expiresAt: Date.now() + 12e4
-						}
-					});
-					return true;
-				} catch (error) {
-					this.update({
-						error: describe(error),
-						errorConflict: false
-					});
-					return false;
-				}
-			}
-			/**
-			* Answer one question this console was offered.
-			*
-			* The answer goes to the machine that asked rather than being applied here: it
-			* is a claim on a decision, and the machine is the only side that can say
-			* whether the question was still open when it arrived. So the ordinary refusal
-			* — a 409 carrying "already answered on the machine that asked it" — is shown on
-			* the card, because the honest story is a race that was lost and not a failure
-			* to retry.
-			* @param machineName - the machine that asked.
-			* @param questionId - the question being answered.
-			* @param answers - the choices, one per question the batch asked.
-			* @returns true when the machine's server accepted the answer for delivery.
-			*/
-			async answerQuestion(machineName, questionId, answers) {
-				this.setAnswer(questionId, { sent: true });
-				try {
-					if ((await postJson(`/dsh-session-sync/answer`, {
-						machineName,
-						questionId,
-						answers
-					})).ok !== true) throw new Error("the server did not accept the answer");
-					return true;
-				} catch (error) {
-					this.setAnswer(questionId, { error: describe(error) });
-					return false;
-				}
-			}
-			/** Record one question's answer progress without disturbing the others. */
-			setAnswer(questionId, state) {
-				this.update({ answers: {
-					...this.store.getSnapshot().answers,
-					[questionId]: state
-				} });
-			}
-			/**
-			* Send the console's decision on one relayed approval.
-			*
-			* The ordinary failure is a race already lost — the machine's own human decided —
-			* and the server answers 409 with that sentence. It is *not* an error to retry:
-			* it is the race's honest result, and the approval is gone either way, so the card
-			* is the only place that can say so.
-			* @param machineName - the machine that is blocked.
-			* @param approvalId - the approval being decided.
-			* @param decision - allow once, or reject.
-			* @returns true when the machine's server accepted the decision for delivery.
-			*/
-			async decideApproval(machineName, approvalId, decision) {
-				this.setDecision(approvalId, { sent: true });
-				try {
-					if ((await postJson(`/dsh-session-sync/approval`, {
-						machineName,
-						approvalId,
-						decision
-					})).ok !== true) throw new Error("the server did not accept the decision");
-					return true;
-				} catch (error) {
-					this.setDecision(approvalId, { error: describe(error) });
-					return false;
-				}
-			}
-			/** Record one approval's decision progress without disturbing the others. */
-			setDecision(approvalId, state) {
-				this.update({ decisions: {
-					...this.store.getSnapshot().decisions,
-					[approvalId]: state
-				} });
-			}
-			openStream() {
-				if (typeof EventSource === "undefined") return;
-				const source = new EventSource(`${ROUTE_PREFIX}/events`);
-				source.onopen = () => {
-					const first = !this.sawOpen;
-					this.sawOpen = true;
-					const snapshot = this.store.getSnapshot();
-					const reset = !first && this.sawMachines && snapshot.state.machines.length === 0;
-					this.update({
-						stream: "open",
-						...reset ? { mirrorResets: snapshot.mirrorResets + 1 } : {}
-					});
-					if (!first) this.refresh();
-				};
-				source.onerror = () => {
-					this.update({ stream: "connecting" });
-				};
-				source.onmessage = (event) => {
-					let frame;
-					try {
-						frame = JSON.parse(event.data);
-					} catch {
-						return;
-					}
-					this.consume(frame);
-				};
-				this.source = source;
-			}
-			consume(frame) {
-				if (frame.type === "state") {
-					const previous = this.store.getSnapshot().state;
-					const complete = isCompleteState(frame.state);
-					const state = complete ? frame.state : {
-						...previous,
-						machines: Array.isArray(frame.state.machines) ? frame.state.machines : previous.machines
-					};
-					this.update({
-						state,
-						ready: true,
-						...complete ? { questions: frame.state.questions ?? [] } : {},
-						...complete ? { approvals: frame.state.approvals ?? [] } : {}
-					});
-					if (previous.published !== state.published) this.refreshSessions();
-					return;
-				}
-				if (frame.type === "events") {
-					const snapshot = this.store.getSnapshot();
-					const open = snapshot.open;
-					if (open === void 0) return;
-					if (open.machineName !== frame.machineName || open.sessionId !== frame.sessionId) return;
-					const transcript = snapshot.transcript;
-					if (transcript === void 0) return;
-					this.notify((observer) => {
-						observer.appended(open, frame);
-					});
-					this.update({
-						transcript: {
-							...transcript,
-							events: mergeEvents(transcript.events, frame.events)
-						},
-						...frame.events.some(isSettlement) ? { live: noLive() } : {}
-					});
-					return;
-				}
-				if (frame.type === "stream") {
-					const snapshot = this.store.getSnapshot();
-					const open = snapshot.open;
-					if (open === void 0) return;
-					if (open.machineName !== frame.machineName || open.sessionId !== frame.sessionId) return;
-					const live = snapshot.live;
-					if (frame.turn < live.turn || frame.turn === live.turn && frame.step < live.step) return;
-					const advanced = frame.turn > live.turn || frame.turn === live.turn && frame.step > live.step;
-					const base = advanced ? {
-						...noLive(),
-						turn: frame.turn,
-						step: frame.step
-					} : live;
-					const shown = frame.kind === "reasoning" ? base.reasoning : base.text;
-					if (!advanced && frame.text !== "" && frame.text.length < shown.length && shown.startsWith(frame.text)) return;
-					this.notify((observer) => {
-						observer.streamed(open, frame);
-					});
-					this.update({ live: frame.kind === "reasoning" ? {
-						...base,
-						reasoning: frame.text
-					} : {
-						...base,
-						text: frame.text
-					} });
-					return;
-				}
-				if (frame.type === "question") {
-					const snapshot = this.store.getSnapshot();
-					const view = frame.question;
-					if (view.closed === void 0) {
-						this.update({ questions: upsertQuestion(snapshot.questions, view) });
-						return;
-					}
-					this.update({
-						questions: snapshot.questions.filter((question) => question.questionId !== view.questionId),
-						answers: withoutKey(snapshot.answers, view.questionId)
-					});
-					return;
-				}
-				if (frame.type === "approval") {
-					const snapshot = this.store.getSnapshot();
-					const view = frame.approval;
-					if (view.closed === void 0) {
-						this.update({ approvals: upsertApproval(snapshot.approvals, view) });
-						return;
-					}
-					this.update({
-						approvals: snapshot.approvals.filter((approval) => approval.approvalId !== view.approvalId),
-						decisions: withoutKey(snapshot.decisions, view.approvalId)
-					});
-					return;
-				}
-				if (frame.type === "command") {
-					const delivery = {
-						commandId: frame.command.commandId,
-						state: frame.command.state,
-						expiresAt: frame.command.expiresAt,
-						...frame.command.error === void 0 ? {} : { error: frame.command.error }
-					};
-					const current = this.store.getSnapshot().delivery;
-					if (current !== void 0 && current.commandId === frame.command.commandId) {
-						this.update({ delivery });
-						return;
-					}
-					this.earlyCommands.delete(frame.command.commandId);
-					this.earlyCommands.set(frame.command.commandId, delivery);
-					while (this.earlyCommands.size > EARLY_COMMAND_LIMIT) {
-						const oldest = this.earlyCommands.keys().next();
-						if (oldest.done === true) break;
-						this.earlyCommands.delete(oldest.value);
-					}
-					return;
-				}
-				this.update({
-					error: frame.message,
-					errorConflict: false
-				});
-			}
-			/**
-			* Publish one patch, remembering that this page once held machines.
-			*
-			* That memory is what makes an empty mirror a reset rather than a fleet that
-			* never connected: the empty window itself is only a couple of seconds wide,
-			* so the notice has to be raised by the reconnect rather than by what the
-			* next read happens to find.
-			*/
-			update(patch) {
-				const next = {
-					...this.store.getSnapshot(),
-					...patch
-				};
-				if (next.state.machines.length > 0) this.sawMachines = true;
-				this.store.set(next);
-				this.notifyRunning();
-			}
-			/**
-			* Tell the observer something, and never let it take the transport with it.
-			*
-			* Mirroring into the shipped renderer is an enhancement: a consumer that
-			* cannot be fed is detached (leaving the console on its own pane) and its
-			* failure is reported where every other failure is, rather than thrown into
-			* the action that happened to be running.
-			*/
-			notify(deliver) {
-				const observer = this.observer;
-				if (observer === void 0) return;
-				try {
-					deliver(observer);
-				} catch (error) {
-					this.observer = void 0;
-					this.update({
-						error: describe(error),
-						errorConflict: false
-					});
-				}
-			}
-			/**
-			* Report the open Session's running flag when the mirror moves it.
-			*
-			* The flag is a mirror reading rather than an event, so it has no frame of
-			* its own: every snapshot write funnels through here and the reading is
-			* compared against the last one reported.
-			*/
-			notifyRunning() {
-				if (this.observer === void 0) return;
-				const snapshot = this.store.getSnapshot();
-				const open = snapshot.open;
-				if (open === void 0) {
-					this.reportedRunning = void 0;
-					return;
-				}
-				const running = snapshot.state.machines.find((machine) => machine.machineName === open.machineName)?.sessions.find((candidate) => candidate.sessionId === open.sessionId)?.running ?? snapshot.transcript?.running ?? false;
-				if (running === this.reportedRunning) return;
-				this.reportedRunning = running;
-				this.notify((observer) => {
-					observer.running(open, running);
-				});
-			}
-		};
-		/**
-		* One refused Host response, with the Host's own classification of it.
-		*
-		* `conflict` is the settings-revision conflict the Host already re-read and retried:
-		* the only refusal here that reloading the page recovers, and therefore the only one
-		* the page may tell the reader to reload for. Every other refusal — a field the form
-		* sent that the schema will not take, a settings row that is gone, a service that
-		* went away — is a fact about the request itself, and a page reload changes nothing
-		* about it.
-		*/
-		var HostFailure = class extends Error {
-			conflict;
-			/**
-			* @param message - the Host's own sentence, shown to the reader verbatim.
-			* @param conflict - whether the Host classified the refusal as a conflict.
-			*/
-			constructor(message, conflict) {
-				super(message);
-				this.conflict = conflict;
-				this.name = "HostFailure";
-			}
-		};
-		/** Read one JSON response, turning a non-2xx into a thrown error carrying the server's reason. */
-		async function getJson(path) {
-			return await decode(await fetch(path, { cache: "no-store" }));
-		}
-		/** Post one JSON body and read the JSON response. */
-		async function postJson(path, body) {
-			return await decode(await fetch(path, {
-				method: "POST",
-				headers: { "content-type": "application/json" },
-				body: JSON.stringify(body)
-			}));
-		}
-		/** Decode a response, preferring the server's own failure reason. */
-		async function decode(response) {
-			const text = await response.text();
-			if (!response.ok) {
-				let reason = `HTTP ${String(response.status)}`;
-				let conflict = false;
-				try {
-					const parsed = JSON.parse(text);
-					if (typeof parsed.reason === "string") reason = parsed.reason;
-					else if (typeof parsed.error === "string") reason = parsed.error;
-					conflict = parsed.conflict === true;
-				} catch {}
-				throw new HostFailure(reason, conflict);
-			}
-			return JSON.parse(text);
-		}
-		/** Human-readable one-line failure text. */
-		function describe(error) {
-			return error instanceof Error ? error.message : String(error);
-		}
-		/**
-		* Merge durable events into the open window, in sequence order.
-		*
-		* The same stream carries two arrivals: a live frame, which belongs at the end,
-		* and a page the mirror fetched from behind its window, which belongs in front.
-		* The sequence is the only thing that says which, and membership is what keeps a
-		* replay from doubling a row.
-		* @param held - the events already in the window.
-		* @param incoming - the events just received.
-		* @returns the merged window, in sequence order.
-		*/
-		function mergeEvents(held, incoming) {
-			if (incoming.length === 0) return [...held];
-			const seen = new Set(held.map((event) => event.seq));
-			const fresh = incoming.filter((event) => !seen.has(event.seq));
-			if (fresh.length === 0) return [...held];
-			const last = held[held.length - 1]?.seq;
-			if (last !== void 0 && fresh.every((event) => event.seq > last)) return [...held, ...fresh];
-			return [...held, ...fresh].sort((left, right) => left.seq - right.seq);
-		}
-		/**
-		* Put one question into the open set, in the order the asks arrived.
-		*
-		* A question already held is replaced rather than duplicated: the server may
-		* re-state an open one (a reconnect replays state), and two cards for one
-		* decision is exactly the confusion this feature exists to avoid.
-		* @param held - the questions already on screen.
-		* @param view - the question that just arrived.
-		* @returns the new set, oldest ask first.
-		*/
-		function upsertQuestion(held, view) {
-			return [...held.filter((question) => question.questionId !== view.questionId), view].sort((left, right) => left.openedAt - right.openedAt);
-		}
-		/**
-		* Put one approval into the open set, in the order the offers arrived.
-		*
-		* The same rule as a question's: one card per approval, replaced rather than
-		* duplicated, because two cards for one permission is the confusion this feature
-		* exists to avoid — and here a reader cannot tell which of the two is live.
-		* @param held - the approvals already on screen.
-		* @param view - the approval that just arrived.
-		* @returns the new set, oldest offer first.
-		*/
-		function upsertApproval(held, view) {
-			return [...held.filter((approval) => approval.approvalId !== view.approvalId), view].sort((left, right) => left.openedAt - right.openedAt);
-		}
-		/**
-		* One record's entries except a named key.
-		* @param record - the record to copy.
-		* @param key - the key to drop.
-		* @returns a copy without that key.
-		*/
-		function withoutKey(record, key) {
-			const next = {};
-			for (const [name, value] of Object.entries(record)) if (name !== key) next[name] = value;
-			return next;
-		}
-		/**
-		* Whether a state frame carries the whole view rather than just a mirror slice.
-		* @param state - the frame's state payload.
-		* @returns true when every field the surfaces render is present.
-		*/
-		function isCompleteState(state) {
-			return (state.role === "server" || state.role === "client") && Array.isArray(state.machines) && typeof state.machineName === "string" && typeof state.published === "number";
-		}
-		//#endregion
-		//#region src/client/envelope-placement.ts
-		/**
-		* Decide where one envelope belongs.
-		* @param seq - the envelope's sequence.
-		* @param newestHeld - highest sequence the drawn window holds, or undefined when it holds none.
-		* @param fed - sequences the drawn window has already taken.
-		* @returns the placement; `newer` is the only one the caller may append.
-		*/
-		function envelopePlacement(seq, newestHeld, fed) {
-			if (fed.has(seq)) return "drop";
-			if (newestHeld === void 0) return "newer";
-			return seq > newestHeld ? "newer" : "history";
-		}
-		/**
-		* The higher of two optional sequences, treating "no mark yet" as the other one.
-		*
-		* `Math.max(undefined, seq)` is `NaN`, and every comparison against NaN is false —
-		* so a caller that starts with no mark and reaches for `Math.max` files every live
-		* event as history and the pane silently stops appending. One line, two failure
-		* modes, and no type error to warn you: spelled out, and tested.
-		* @param current - the mark so far, or undefined when nothing has been marked.
-		* @param seq - the sequence to fold in.
-		* @returns the higher of the two, or `seq` when there is no mark yet.
-		*/
-		function highestOf(current, seq) {
-			return current === void 0 || seq > current ? seq : current;
-		}
-		//#endregion
-		//#region src/client/footer-projections.ts
-		/**
-		* Turn one set of footer totals into the values the shipped footer reads.
-		* @param stats - the totals, from the owning machine or from the events held here.
-		* @returns the three projection values; the context one only when the log states
-		*   both a window and a reading.
-		*/
-		function footerProjections(stats) {
-			const context = stats.context;
-			return {
-				sessionStats: {
-					turns: stats.turns,
-					steps: stats.steps,
-					llmMs: 0,
-					toolMs: 0,
-					ttftMs: 0,
-					ttftSteps: 0,
-					decodeMs: stats.generationMs ?? (stats.outputPerSecond === void 0 ? 0 : Math.round(stats.usage.outputTokens / stats.outputPerSecond * 1e3)),
-					decodeTokens: stats.usage.outputTokens
-				},
-				tokenUsage: {
-					uncachedInputTokens: stats.usage.inputTokens,
-					outputTokens: stats.usage.outputTokens,
-					cacheReadTokens: stats.usage.cacheReadTokens,
-					cacheWriteTokens: 0
-				},
-				...context === void 0 ? {} : { contextPressure: {
-					projectedTokens: context.used,
-					contextWindow: context.window
-				} }
-			};
-		}
-		/**
-		* The same values as one plain record, which is the shape a projection store
-		* takes them in. Its own function so the mapping stays the only place a
-		* projection key is named.
-		*
-		* Every key is present even when its value is: the store keeps the last value it
-		* was handed, so *omitting* a key would leave a reading the log no longer states
-		* on screen — a Session whose log has no window would keep showing the previous
-		* one. Writing `undefined` is what the shipped reader calls "capability absent",
-		* and it is how the meter is taken down.
-		* @param projections - the values {@link footerProjections} produced.
-		* @returns one record per projection key, in a stable key order.
-		*/
-		function projectionRecord(projections) {
-			return {
-				sessionStats: projections.sessionStats,
-				tokenUsage: projections.tokenUsage,
-				contextPressure: projections.contextPressure
-			};
-		}
-		/**
-		* The watermark to publish the next value at.
-		*
-		* The store refuses a value whose watermark is not above the one it already
-		* holds, which makes this the one rule a publisher can silently lose to — and
-		* losing it is invisible: the footer keeps the previous reading and looks
-		* perfectly healthy. Two ways to lose it, so two terms:
-		*
-		*  - a Session *re-opened* after its mirror was released. The store outlives the
-		*    mirror, so a per-mirror counter that restarted at 1 would be refused by the
-		*    values the previous open left behind. Hence a counter that never goes
-		*    backwards for the plugin's lifetime, on the object that owns the publication.
-		*  - a *repeated* publication of the same window: the machine restating its
-		*    whole-log totals on a poll, with no new event to move the floor.
-		*
-		* The floor is the newest durable sequence held, which is the log's own order of
-		* magnitude — a Session whose values came from a previous open left watermarks in
-		* that range, so starting above it is what makes the first publication of the new
-		* open land rather than vanish.
-		* @param previous - the last watermark this publisher used, or 0 for none yet.
-		* @param floor - the newest durable sequence the values are consistent with.
-		* @returns the watermark to publish at, strictly above both.
-		*/
-		function nextWatermark(previous, floor) {
-			return Math.max(previous + 1, floor + 1);
-		}
-		//#endregion
-		//#region src/client/live-text.ts
-		/**
-		* The chunk one live delta becomes, in the vocabulary the shipped renderer reads.
-		*
-		* This is the shape the shipped client itself puts in an `assistant/live-chunk`
-		* event: `api/session-controller/src/client/sessions/assistant-stream.ts` wraps the
-		* stream's own `chunk` unchanged, and the live stream's chunks are the singular
-		* `-delta` forms from `llm`'s `StreamChunk`.
-		* @param kind - which of the step's two texts this delta continues.
-		* @param delta - the text to append.
-		* @returns the chunk to put in the live-chunk event.
-		*/
-		function liveChunkOf(kind, delta) {
-			return {
-				type: kind === "reasoning" ? "reasoning-delta" : "text-delta",
-				index: 0,
-				text: delta
-			};
-		}
-		/** The accumulator one mirrored Session keeps for its live text. */
-		var LiveText = class {
-			shown = /* @__PURE__ */ new Map();
-			/**
-			* Take one frame's whole text so far and return the part that is new.
-			* @param attemptId - the attempt the text belongs to.
-			* @param kind - which of the step's two texts it is.
-			* @param text - the whole text so far, as the relay form carries it.
-			* @returns the delta to append, and whether this kind restarted.
-			*/
-			take(attemptId, kind, text) {
-				const key = `${attemptId}\u0000${kind}`;
-				const shown = this.shown.get(key) ?? "";
-				const restarted = !text.startsWith(shown);
-				this.shown.set(key, text);
-				return {
-					delta: text.slice(restarted ? 0 : shown.length),
-					restarted
-				};
-			}
-			/**
-			* Forget every kind of one attempt, because it is no longer live.
-			* @param attemptId - the attempt that settled.
-			*/
-			forget(attemptId) {
-				const prefix = `${attemptId}\u0000`;
-				for (const key of [...this.shown.keys()]) if (key.startsWith(prefix)) this.shown.delete(key);
-			}
-			/** Forget everything, because the whole window was replaced. */
-			clear() {
-				this.shown.clear();
-			}
-		};
-		//#endregion
-		//#region src/client/official-views.ts
-		/**
-		* Which shipped conversation page the console can ask for.
-		*
-		* The shipped shell draws one `conversation.view` entry per tab, chosen from the
-		* owner prop the pane hands down (`ui-conversation`'s `DefaultConversationViews`:
-		* `const viewId = view ?? active?.id`, then
-		* `renderSlot('conversation.view', …, { only: viewId })`). `conversation.session`
-		* belongs to the shipped content Factory, so the local Factory position this
-		* plugin supplies is the only place the choice can come from — which is exactly
-		* how the pane already pinned the chat page.
-		*
-		* The two ids are named here, once, because both the request and the fallback
-		* decision key off them. The *existence* question is asked of the registry rather
-		* than assumed: `conversation.view` is a list slot, so a build whose `ui-trajectory`
-		* is absent — or disabled — simply has no such entry, and `entries()` answers an
-		* undeclared key with an empty list on purpose, so a renderer may probe ahead of
-		* plugin load order.
-		*/
-		/** The `conversation.view` entry id of the shipped chat page. */
-		const CHAT_VIEW = "chat";
-		/** The `conversation.view` entry id of the shipped trajectory page. */
-		const TRAJECTORY_VIEW = "trajectory";
-		/**
-		* Whether one registry listing carries an entry with this id.
-		*
-		* Total by construction: an entry without options, or without an id, is simply not
-		* the one being looked for — the question is "may the console hand this page to the
-		* shipped view", and every answer other than a found id is no.
-		* @param entries - one `slots.entries(key)` listing.
-		* @param id - the entry id to look for.
-		* @returns true when the shipped view for that page is registered here.
-		*/
-		function hasViewEntry(entries, id) {
-			return entries.some((entry) => entry.options?.id === id);
-		}
-		//#endregion
-		//#region src/client/routing.ts
-		/**
-		* The browser half's one decision, in a module with no imports.
-		*
-		* A test here cannot import `SyncPanel.tsx` (it needs `react` and the shipped UI
-		* packages, neither of which resolves from this package), so the part that
-		* decides *whether a build can draw a foreign Session at all* is named and kept
-		* dependency-free. That puts it under `node --test` on both sides of the build,
-		* and it leaves the renderer with nothing but rendering to get wrong.
-		*/
-		/**
-		* Whether a client Sessions service offers the seam the console draws through.
-		*
-		* Both halves are required and neither is enough. `retainAgentScope` is what
-		* makes a Session the Host has never heard of renderable at all; `binding` is
-		* where the window comes from, and a build that retained without one would draw
-		* an empty pane — so a service with only the first is read as "no route", which
-		* keeps the console's own conversation in charge.
-		* @param service - whatever `ctx.get('sessions')` answered, of any shape.
-		* @returns whether the scope route is available.
-		*/
-		function scopeCapable(service) {
-			if (typeof service !== "object" || service === null) return false;
-			const candidate = service;
-			return typeof candidate.retainAgentScope === "function" && typeof candidate.binding === "function";
-		}
-		//#endregion
-		//#region src/client/official-session.tsx
-		/**
-		* The plugin's mirror, projected onto the shipped DSH conversation renderer.
-		*
-		* The console hand-draws a remote Session's conversation because a browser
-		* plugin cannot import another plugin's components. A build that offers
-		* `ctx.sessions.retainAgentScope` removes that limit: the plugin retains the
-		* remote Session under a synthetic local identity, drives the window that
-		* retention hands it with the mirror's own envelopes, and lets the shipped
-		* `conversation.content` factory draw it — so the pane is the product's real
-		* conversation rather than a copy of it.
-		*
-		* Everything in this module is feature-detected and structurally typed. That
-		* seam is not in every build this plugin has to keep working on, so nothing here
-		* may assume it exists: {@link OfficialSessions.supported} is false without it,
-		* and the console then keeps its own pane untouched.
-		*/
-		/**
-		* The child slot the console's `main` entry declares for the shipped
-		* Conversation.
-		*
-		* A non-root child is what hands the panel its `SessionProvider` and
-		* `renderSlot` seats, and `session` is the scope the shipped content needs: the
-		* occurrence is bound to the retained Session the panel holds. This is the
-		* shape ui-subagent's `SidebarChatTab` uses for its own embedded chat.
-		*/
-		const OFFICIAL_SLOT = "session-sync.conversation";
-		/**
-		* Synthetic local identity of one retained remote Session.
-		*
-		* Local identities are minted as `session-<uuid>`; this prefix cannot come out
-		* of that generator, so a retained Session can never collide with a local one —
-		* the one rule the retention seam states about the id it is given.
-		* @param open - the remote Session's own address.
-		* @returns the stable synthetic id.
-		*/
-		function officialSessionId(open) {
-			return `dsh-session-sync:${open.machineName}/${open.sessionId}`;
-		}
-		/**
-		* One live attempt's identity, from the plugin's own live key.
-		*
-		* The transport already keys a live row by turn and step, and both a live frame
-		* and the settlement that ends it carry that pair — so the same attempt id is
-		* derived on both sides with no hidden state to keep in step.
-		* @param turn - the turn the step belongs to.
-		* @param step - the step within the turn.
-		* @returns the attempt id.
-		*/
-		function attemptKey(turn, step) {
-			return `${String(turn)}:${String(step)}`;
-		}
-		/**
-		* The turn|step a settlement event closes, when it names one.
-		* @param event - one durable envelope.
-		* @returns the attempt id, or undefined for an envelope without coordinates.
-		*/
-		function settlementAttemptId(event) {
-			const data = asRecord$5(event.data);
-			const turn = data?.["turn"];
-			const step = data?.["step"];
-			return typeof turn === "number" && typeof step === "number" ? attemptKey(turn, step) : void 0;
-		}
-		/** The adapter key of one remote Session: machine and id, in one string. */
-		function remoteKey(machineName, sessionId) {
-			return `${machineName}\u0000${sessionId}`;
-		}
-		/**
-		* Envelope types that exist only to point a Host-computed panel at its data.
-		*
-		* `workspace/changes` carries a turn number and nothing else; the files and
-		* totals beside it are served by whichever Host owns the Session, which for a
-		* mirrored one is a Host that has never heard of it. Official seats react to the
-		* announcement and ask for a summary that cannot arrive — one failed request per
-		* announcement, and a card left marked unavailable — so the announcement is
-		* dropped from the window this console feeds. Nothing visible is lost: the card
-		* it drives could never render, while the tool rows that actually changed the
-		* files are ordinary events and stay.
-		*/
-		const PANEL_ONLY_TYPES = /* @__PURE__ */ new Set(["workspace/changes"]);
-		/** Whether one envelope feeds a Host-computed panel and nothing else. */
-		function isPanelOnly(event) {
-			return PANEL_ONLY_TYPES.has(event.type);
-		}
-		/** Narrow one unknown value to a plain record. */
-		function asRecord$5(value) {
-			if (typeof value !== "object" || value === null || Array.isArray(value)) return void 0;
-			return value;
-		}
-		/**
-		* The projection sink one Session face carries, when it carries a usable one.
-		*
-		* Checked rather than assumed: `projections` is read off another plugin's Session
-		* object, so a build that renamed it, or that hands out a face with only the read
-		* half, has to end as "no sink here" — the shipped footer then shows the fold over
-		* the window, exactly as it does on a Session whose Host unit is not mounted.
-		* @param session - the Session face of a retained binding, when there is one.
-		* @returns the sink, or undefined when this face cannot take a value.
-		*/
-		function projectionsSink(session) {
-			const candidate = session?.projections;
-			return candidate !== void 0 && typeof candidate.apply === "function" ? candidate : void 0;
-		}
-		/**
-		* One retained remote Session, and the frames fed into it.
-		*
-		* One instance per opened remote Session. Every method is safe to call after
-		* {@link OfficialMirror.release}: a Session switch and the panel closing can
-		* both ask for the end, and a frame that was in flight may still arrive.
-		*/
-		var OfficialMirror = class {
-			/** The reference the shipped pane binds this Session with. */
-			reference;
-			/** The window this console drives directly, which is where the events go. */
-			source;
-			/** The Session face, when the binding exposes one that reports running. */
-			face;
-			/**
-			* The Session's projection store, when this build hands one out.
-			*
-			* Where the console's footer numbers go so that the *shipped* statistics row and
-			* context meter can render them: those components read the store, and a retained
-			* Session has no Host behind it to fill it.
-			*/
-			projections;
-			/** The live attempt whose text is on screen, by the plugin's turn|step key. */
-			liveAttempt;
-			/**
-			* Whole text already shown, per attempt **and per kind**.
-			*
-			* One entry per attempt was wrong, and the symptom was subtle enough to be
-			* reported as "the thinking only appears once it has finished": a step streams its
-			* reasoning and *then* its answer through the same attempt id, so the first answer
-			* delta is never an extension of the reasoning text — which took the restart path
-			* in {@link OfficialSession.feedLive}, and the restart path retires the attempt's
-			* transient rows. The thinking a reader was watching was therefore torn down at the
-			* exact moment the answer began, leaving only the durable reasoning block that
-			* arrives with the settlement. Nothing about an answer means the reasoning before
-			* it stopped being live, so the two accumulate apart.
-			*/
-			liveText = new LiveText();
-			/** Dense transient position, so a live row sorts above the durable window. */
-			transient = 0;
-			/** Highest durable sequence seen, the base of a transient row's position. */
-			lastSeq = -1;
-			/**
-			* Sequences the drawn window already carries.
-			*
-			* An older page reaches the mirror twice — once as the page this console read,
-			* once as ordinary frames when the origin replays it — and the second arrival
-			* must not be appended on top of the first. The shipped conversation's
-			* assembler requires each node's matches in sequence order, so a redelivered
-			* event, like an older one, would break the pane rather than merely duplicate.
-			*/
-			fed = /* @__PURE__ */ new Set();
-			/**
-			* The highest sequence this mirror has handed the shipped assembler.
-			*
-			* Not the same as the window's newest entry: the window is a view, and a page
-			* this console prepends can move its oldest end down while the assembler has
-			* already taken matches from further up. Monotonicity has to be measured
-			* against what the assembler saw, or the window's own shape lies about it.
-			*/
-			highestFed;
-			released = false;
-			/**
-			* Take one remote Session up through the route this build offers.
-			* @param service - the client Sessions service.
-			* @param open - the remote Session's own address.
-			*/
-			constructor(service, open) {
-				const sessionId = officialSessionId(open);
-				this.reference = service.retainAgentScope(sessionId);
-				this.reference.ready?.catch(() => {});
-				const binding = service.binding(sessionId);
-				this.source = binding?.eventSource;
-				this.face = binding?.session;
-				this.projections = projectionsSink(binding?.session);
-			}
-			/**
-			* Land one finished projection value on the Session's store.
-			*
-			* Safety is in the ordering and the gate, not in the store: a released mirror
-			* writes nothing, and a build whose face carries no sink writes nothing. An
-			* `undefined` value is a real write — it is how a reading the log no longer
-			* states is taken down rather than left on screen.
-			* @param key - the projection key.
-			* @param value - the whole value.
-			* @param seq - the watermark, already above everything published before.
-			*/
-			applyProjection(key, value, seq) {
-				if (this.released) return;
-				this.projections?.apply(key, value, seq);
-			}
-			/**
-			* Replace the whole mirrored window, which is what opening a Session does.
-			* @param transcript - the opening window, in log order.
-			*/
-			replace(transcript) {
-				if (this.released) return;
-				this.liveAttempt = void 0;
-				this.liveText.clear();
-				const events = transcript.events.filter((event) => !isPanelOnly(event));
-				this.fed = new Set(events.map((event) => event.seq));
-				this.highestFed = events.reduce((highest, event) => highest === void 0 || event.seq > highest ? event.seq : highest, void 0);
-				this.transient = 0;
-				this.lastSeq = -1;
-				for (const event of transcript.events) this.observe(event.seq);
-				this.source?.replace(events.map(entryOf), false);
-				this.face?.handleRunning?.(transcript.running);
-			}
-			/**
-			* Feed one `events` frame's durable envelopes, in order.
-			*
-			* A settlement goes through `settle` rather than `append`: it is the durable
-			* end of a live attempt, and the plugin's own rule — a settlement clears the
-			* step's streaming text — is exactly that act.
-			*
-			* Two of these envelopes are not news, and neither may be appended:
-			*
-			* - one the window already carries, because an older page reaches this console
-			*   both as the page it read and as the origin's ordinary replay frames;
-			* - one below the window, which is that replay: it is history, and the shipped
-			*   conversation's assembler requires each node's matches in sequence order, so
-			*   appending it breaks the pane instead of merely duplicating a row. The test
-			*   for this is "not newer than everything the window holds" rather than "below
-			*   its first sequence", because a page this console prepended moves that first
-			*   sequence down and the replay then sits *inside* the range.
-			*
-			* @param events - the frame's envelopes.
-			*/
-			appendEvents(events) {
-				if (this.released) return;
-				const history = [];
-				for (const event of events) {
-					if (isPanelOnly(event)) {
-						this.observe(event.seq);
-						continue;
-					}
-					if (this.fed.has(event.seq)) continue;
-					if (envelopePlacement(event.seq, this.highestFed, this.fed) === "history") {
-						history.push(event);
-						continue;
-					}
-					if (isSettlement(event)) {
-						this.settle(event);
-						continue;
-					}
-					this.fed.add(event.seq);
-					this.highestFed = highestOf(this.highestFed, event.seq);
-					this.observe(event.seq);
-					this.source?.append(entryOf(event));
-				}
-				if (history.length > 0) this.prependOlder({
-					events: history,
-					hasMore: true
-				});
-			}
-			/**
-			* The sequence range the window this console drives covers.
-			* @returns the range, or undefined while no window is drawn.
-			*/
-			windowRange() {
-				const entries = this.source?.getSnapshot().entries;
-				if (entries === void 0 || entries.length === 0) return void 0;
-				const first = entries[0]?.event.seq;
-				const last = entries[entries.length - 1]?.event.seq;
-				if (first === void 0 || last === void 0) return void 0;
-				return {
-					first,
-					last
-				};
-			}
-			/**
-			* Put one older page below the window.
-			*
-			* This is the only way the older end is reachable in the shipped pane: the
-			* shipped control asks the Host, which has never heard of this Session, so the
-			* window it is given never claims more (`hasMore` stays false) and the console
-			* pages through its own channel instead. What arrives goes *before* the window
-			* rather than replacing it, so the reader keeps their place.
-			* @param page - the older page, whose events sit below everything held.
-			*/
-			prependOlder(page) {
-				if (this.released) return;
-				const entries = this.source?.getSnapshot().entries ?? [];
-				const held = /* @__PURE__ */ new Set();
-				for (const entry of entries) held.add(entry.event.seq);
-				const events = page.events.filter((event) => !held.has(event.seq) && !isPanelOnly(event) && !this.fed.has(event.seq));
-				if (events.length === 0) return;
-				for (const event of events) {
-					this.fed.add(event.seq);
-					this.observe(event.seq);
-				}
-				this.source?.prepend(events.map(entryOf), page.hasMore);
-			}
-			/**
-			* Feed one live delta frame: the whole step text so far, replaced as it grows.
-			* @param frame - the accepted frame, already ordered by the transport.
-			*/
-			stream(frame) {
-				if (this.released) return;
-				const attemptId = attemptKey(frame.turn, frame.step);
-				if (frame.text === "") {
-					if (this.liveAttempt !== attemptId) return;
-					this.closeLive({ attemptId });
-					return;
-				}
-				this.liveAttempt = attemptId;
-				this.feedLive(attemptId, frame);
-			}
-			/**
-			* Report the origin's running flag, which the mirror tracks apart from events.
-			* @param running - whether the origin reports a turn in flight.
-			*/
-			setRunning(running) {
-				if (this.released) return;
-				this.face?.handleRunning?.(running);
-			}
-			/**
-			* Release the Session and its reference.
-			*
-			* Idempotent, and total: a Session switch and the panel closing can both ask,
-			* and the live attempt is abandoned first so the renderer is not left holding
-			* text for an attempt that will never settle.
-			*/
-			release() {
-				if (this.released) return;
-				this.released = true;
-				const live = this.liveAttempt;
-				this.liveAttempt = void 0;
-				this.liveText.clear();
-				if (live !== void 0) try {
-					this.closeLive({ attemptId: live });
-				} catch {}
-				try {
-					this.reference.release();
-				} catch {}
-			}
-			/**
-			* Append the delta between what is shown and what the origin just sent.
-			*
-			* The wire form of live Assistant text is a dense run of chunks, and the
-			* relay carries the whole text so far instead — so the delta is computed here,
-			* and a text that is not an extension of the last one restarts **that kind**
-			* rather than inventing a chunk the fold would rebaseline on.
-			*
-			* The accumulator is per kind ({@link OfficialSession.liveText} explains why): a
-			* step's reasoning and its answer are two separate streams through one attempt id,
-			* so an answer that begins after a reasoning run is not a restart at all — and
-			* treating it as one is what used to retire the thinking row mid-stream.
-			*/
-			feedLive(attemptId, frame) {
-				const step = this.liveText.take(attemptId, frame.kind, frame.text);
-				if (step.restarted) this.closeLive({ attemptId });
-				const delta = step.delta;
-				if (delta === "") return;
-				const time = Date.now();
-				this.transient += 1;
-				this.source?.append({
-					type: "transient",
-					event: {
-						type: "assistant/live-chunk",
-						seq: this.lastSeq + 1 - 1 / (this.transient + 1),
-						time,
-						data: {
-							attemptId,
-							turn: frame.turn,
-							step: frame.step,
-							chunk: liveChunkOf(frame.kind, delta)
-						}
-					}
-				});
-			}
-			/** Close one live attempt with its durable settlement, or with nothing. */
-			closeLive(o) {
-				this.liveText.forget(o.attemptId);
-				if (o.event === void 0) this.source?.settleAssistant(o.attemptId);
-				else {
-					this.observe(o.event.seq);
-					this.source?.settleAssistant(o.attemptId, entryOf(o.event));
-				}
-				if (this.liveAttempt === o.attemptId) this.liveAttempt = void 0;
-			}
-			/** Settle the attempt one durable event ends. */
-			settle(event) {
-				const attemptId = settlementAttemptId(event) ?? this.liveAttempt ?? `settled:${String(event.seq)}`;
-				this.closeLive({
-					attemptId,
-					event
-				});
-			}
-			observe(seq) {
-				if (seq > this.lastSeq) this.lastSeq = seq;
-			}
-		};
-		/** Wrap one wire envelope as the entry an event window carries. */
-		function entryOf(event) {
-			return {
-				type: "event",
-				event
-			};
-		}
-		/**
-		* The bridge between the console's transport and the shipped renderer.
-		*
-		* It implements the transport observer: the console tells it what the mirror
-		* reported, and it keeps one retained Session for whichever remote Session is
-		* open. The panel binds `referenceFor(...)` around the shipped content, which is
-		* how the pane's Session identity reaches the renderer.
-		*/
-		var OfficialSessions = class {
-			ctx;
-			composerBlockReason;
-			current;
-			/** The running flag already reported, so a poll does not restate it. */
-			lastRunning;
-			/** The Session whose composer this console blocked, if it blocked one. */
-			blockedComposer;
-			/**
-			* The last watermark this bridge published a projection value at.
-			*
-			* One counter for the whole bridge rather than one per mirror, and monotonic for
-			* the plugin's lifetime: a Session's projection store outlives the mirror that
-			* was retained for it, so a counter that restarted would have its first
-			* publication of a re-opened Session refused as stale — and the footer would keep
-			* the previous reading while looking perfectly healthy.
-			*/
-			projectionSeq = 0;
-			/**
-			* @param ctx - the client context, read for the Sessions service and the
-			*   composer-block registry.
-			* @param composerBlockReason - the localized reason shown in a blocked
-			*   composer; read at the moment of blocking so it follows the locale.
-			*/
-			constructor(ctx, composerBlockReason) {
-				this.ctx = ctx;
-				this.composerBlockReason = composerBlockReason;
-			}
-			/** Whether this build can render a Session through the shipped conversation. */
-			get supported() {
-				return this.routeOf() !== void 0;
-			}
-			/** The route this build offers, for the panel to name. */
-			get route() {
-				return this.routeOf();
-			}
-			/** The sequence range the shipped window covers, for the panel to name. */
-			windowRange() {
-				return this.current?.mirror.windowRange();
-			}
-			/**
-			* Whether the console must draw the composer itself.
-			*
-			* The scope route drives the window directly, so the shipped composer would
-			* carry its prompt to a Host that has never heard of this Session.
-			*/
-			get composerOwned() {
-				return this.routeOf() !== void 0;
-			}
-			/**
-			* The reference to bind for one remote Session, for the panel's render.
-			* @param machineName - owning machine.
-			* @param sessionId - the remote Session's own id.
-			* @returns the retained reference while exactly that Session is drawn.
-			*/
-			referenceFor(machineName, sessionId) {
-				const current = this.current;
-				if (current === void 0) return void 0;
-				return current.key === remoteKey(machineName, sessionId) ? current.mirror.reference : void 0;
-			}
-			/**
-			* Whether the retained Session is one identity.
-			* @param sessionId - the identity an occurrence was mounted for.
-			* @returns true while the mirror holds exactly that Session.
-			*/
-			owns(sessionId) {
-				return this.current?.id === sessionId;
-			}
-			/**
-			* Publish the footer's numbers on the retained Session's projection store.
-			* @param values - whole projection values by key.
-			* @param floor - the sequence the publication is consistent with.
-			*/
-			publishFooter(values, floor) {
-				const mirror = this.current?.mirror;
-				if (mirror === void 0) return;
-				for (const [key, value] of Object.entries(values)) {
-					this.projectionSeq = nextWatermark(this.projectionSeq, floor);
-					mirror.applyProjection(key, value, this.projectionSeq);
-				}
-			}
-			/**
-			* The panel opened a Session: take it up, replacing whatever was before.
-			* @param open - the remote Session.
-			*/
-			opened(open) {
-				const service = this.service();
-				const route = this.routeOf();
-				if (service === void 0 || route === void 0) return;
-				const key = remoteKey(open.machineName, open.sessionId);
-				if (this.current?.key === key) return;
-				this.release();
-				const id = officialSessionId(open);
-				this.blockComposer(id);
-				this.current = {
-					key,
-					id,
-					mirror: new OfficialMirror(service, open)
-				};
-			}
-			/**
-			* The opening window arrived.
-			* @param open - the remote Session it belongs to.
-			* @param transcript - the window.
-			*/
-			loaded(open, transcript) {
-				if (this.matches(open)) this.current?.mirror.replace(transcript);
-			}
-			/**
-			* The panel paged up: one older page arrived for the open Session.
-			* @param open - the remote Session it belongs to.
-			* @param page - the page.
-			*/
-			older(open, page) {
-				if (this.matches(open)) this.current?.mirror.prependOlder(page);
-			}
-			/**
-			* One `events` frame arrived.
-			* @param open - the remote Session it belongs to.
-			* @param frame - the frame.
-			*/
-			appended(open, frame) {
-				if (this.matches(open)) this.current?.mirror.appendEvents(frame.events);
-			}
-			/**
-			* One accepted live delta frame arrived.
-			* @param open - the remote Session it belongs to.
-			* @param frame - the frame.
-			*/
-			streamed(open, frame) {
-				if (this.matches(open)) this.current?.mirror.stream(frame);
-			}
-			/**
-			* The mirror moved the open Session's running flag.
-			* @param open - the remote Session it belongs to.
-			* @param running - the new reading.
-			*/
-			running(open, running) {
-				if (!this.matches(open)) return;
-				if (running === this.lastRunning) return;
-				this.lastRunning = running;
-				this.current?.mirror.setRunning(running);
-			}
-			/** Release the Session the console was drawing, if any. Idempotent. */
-			release() {
-				const current = this.current;
-				this.current = void 0;
-				this.lastRunning = void 0;
-				current?.mirror.release();
-				if (current !== void 0) this.unblockComposer(current.id);
-			}
-			/** Block one Session's shipped composer, remembering which one. */
-			blockComposer(id) {
-				this.unblockComposer(this.blockedComposer);
-				const blocks = this.composerBlocks();
-				if (blocks === void 0) return;
-				try {
-					blocks.set(id, { reason: this.composerBlockReason() });
-					this.blockedComposer = id;
-				} catch {}
-			}
-			/** Clear one Session's block, when this console raised it. */
-			unblockComposer(id) {
-				if (id === void 0) return;
-				if (this.blockedComposer === id) this.blockedComposer = void 0;
-				const blocks = this.composerBlocks();
-				if (blocks === void 0) return;
-				try {
-					blocks.set(id, void 0);
-				} catch {}
-			}
-			/**
-			* The composer-block registry, feature-detected on the client context.
-			*
-			* `ctx.conversation.blocks` is the shipped plugin-facing registry for making
-			* one Session's composer inert. It is raised here so the shipped composer
-			* carries the console's own reason while the pane is held — but it is only an
-			* affordance, and another plugin that publishes its own state for the same
-			* Session can clear it, so the pane hides the shipped composer outright on
-			* this route rather than trusting this write to survive.
-			*/
-			composerBlocks() {
-				const conversation = this.ctx.get?.("conversation");
-				if (typeof conversation !== "object" || conversation === null) return void 0;
-				const blocks = conversation.blocks;
-				if (typeof blocks !== "object" || blocks === null) return void 0;
-				const candidate = blocks;
-				return typeof candidate.set === "function" ? candidate : void 0;
-			}
-			/**
-			* The route this build offers.
-			*
-			* One route is all a released DSH has, and {@link service} has already checked
-			* both of its halves, so this is a naming step rather than a search.
-			* @returns the route, or undefined when the build offers none.
-			*/
-			routeOf() {
-				return this.service() === void 0 ? void 0 : "scope";
-			}
-			/**
-			* The Sessions service, feature-detected on the client context.
-			*
-			* `sessions` is deliberately absent from this plugin's `inject` list: the
-			* console has to load on builds that predate the retention seam, and a
-			* required service the half cannot use would stop the whole half from
-			* applying. The lookup is lazy because the service may be registered after
-			* this plugin applies, and cheap because it runs once per panel render.
-			*/
-			service() {
-				const service = this.ctx.get?.("sessions");
-				return scopeCapable(service) ? service : void 0;
-			}
-			/** Whether the Session being drawn is the one a frame names. */
-			matches(open) {
-				return this.current?.key === remoteKey(open.machineName, open.sessionId);
-			}
-		};
-		/**
-		* Which shipped conversation page the pane below is asked to draw.
-		*
-		* The choice travels by context rather than by props because the two ends live in
-		* different trees: the console's tab is panel state, while the place the request
-		* has to be made — a local Factory position — is rendered by the occurrence the
-		* panel dispatches. The panel wraps that dispatch in this provider; a pane that
-		* was never asked for anything keeps the chat page, which is what every other
-		* caller of the shipped content wants.
-		*/
-		const OfficialViewContext = react.createContext(CHAT_VIEW);
-		/**
-		* The shipped Conversation's View, requested at this occurrence.
-		*
-		* The Factory's own default local Component renders `conversation.session` with no
-		* View request, which resolves to whichever tab the shell has selected; asking for
-		* one explicitly is what keeps a Session whose roster would open elsewhere on the
-		* page the console is actually showing — the sidebar chat pins `chat` for the same
-		* reason, and this pane asks for the console's tab (`chat`, or the shipped
-		* trajectory page, where that page is registered at all).
-		*/
-		function RequestedView(props) {
-			const view = react.useContext(OfficialViewContext);
-			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(react_jsx_runtime.Fragment, { children: props.renderSlot("conversation.session", { view }) });
-		}
-		/**
-		* The shipped Conversation content, drawn for the console's open Session.
-		*
-		* `embedded` is the variant the sidebar chat uses for a Session that sits
-		* beside the shell's own; the console's pane is exactly that. The phase is
-		* `active`: what the mirror holds is a conversation, while the hero belongs to
-		* a local new Session, which a remote one never is.
-		*
-		* The content shell is drawn whole, composer included, even though that
-		* composer is then hidden: rendering `conversation.session` directly was tried
-		* and draws an empty pane, because the shell is what supplies the context that
-		* View is written against. So this pane hides the furniture instead of omitting
-		* it, and accepts that a session-scoped integration behind it may still start a
-		* Host read that cannot succeed (see the README's limitations) — the shipped
-		* trajectory page's own "load earlier" is one of those, which is why the console
-		* keeps its own paging control above the pane.
-		* @param props - the renderer's Factory dispatcher.
-		* @returns the shipped content occurrence.
-		*/
-		function OfficialConversation({ renderFactorySlot }) {
-			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(react_jsx_runtime.Fragment, { children: renderFactorySlot("conversation.content", {
-				variant: "embedded",
-				phase: "active",
-				hero: false
-			}, { slots: { views: RequestedView } }) });
-		}
-		//#endregion
-		//#region src/client/PanelIcon.tsx
-		/**
-		* The icon the sidebar renders for this plugin's global panel row.
-		*
-		* The row is the entry that survives the collapsed rail, where the browsing
-		* region's section renders nothing at all, so it exists as its own component
-		* rather than as an inline JSX expression: the registration lives in `index.ts`,
-		* which is a `.ts` module.
-		*/
-		/**
-		* Render the panel row's glyph.
-		* @param props - the requested icon size.
-		* @returns the icon; selection is the row's own styling, not the glyph's.
-		*/
-		function PanelIcon(props) {
-			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconGlobeOutlineRegular, { size: props.size });
-		}
-		//#endregion
-		//#region \0dsh-css:C:\Users\14339\Desktop\git\dsh-session-sync\src\client\ApprovalCard.module.css.mjs
-		const css$7 = ".luWWxG_root{flex-direction:column;align-items:center;padding:0 16px;display:flex}.luWWxG_card{box-sizing:border-box;border:1px solid var(--dsw-alias-state-warn-secondary);border-radius:var(--dsw-radius-xl);background:var(--dsw-specific-input-major);width:100%;max-width:calc(min(920px,100%) + 32px);box-shadow:var(--dsw-shadow-lv2);--dsh-scrollbar-thumb:var(--dsw-alias-scrollbar-bg-l2);--dsh-scrollbar-thumb-hover:var(--dsw-alias-scrollbar-hover-l2);margin-bottom:8px;overflow:hidden}.luWWxG_strip{background:var(--dsw-alias-state-warn-tertiary);color:var(--dsw-alias-state-warn-primary);align-items:center;gap:8px;padding:10px 16px;font-size:13px;line-height:18px;display:flex}.luWWxG_body{box-sizing:border-box;max-height:var(--dsh-composer-text-max-height);flex-direction:column;gap:6px;padding:12px 16px 0;display:flex;overflow-y:auto}.luWWxG_headline{color:var(--dsw-alias-label-primary);font-size:15px;font-weight:500;line-height:24px}.luWWxG_command{color:var(--dsw-alias-label-tertiary);font-family:var(--ds-font-family-code);word-break:break-all;font-size:13px;line-height:20px}.luWWxG_actionRow{justify-content:flex-end;align-items:center;gap:8px;padding:14px 16px;display:flex}.luWWxG_reject:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover-danger);color:var(--dsw-alias-state-error-primary);border-color:#0000}.luWWxG_note{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}.luWWxG_missing{color:var(--dsw-alias-state-warn-primary);font-size:13px;line-height:20px}.luWWxG_error{color:var(--dsw-alias-state-error-primary);margin-right:auto;font-size:12px;line-height:18px}.luWWxG_sent{color:var(--dsw-alias-state-success-primary);margin-right:auto;font-size:12px;line-height:18px}.luWWxG_hint{color:var(--dsw-alias-label-tertiary);margin-right:auto;font-size:12px;line-height:18px}.luWWxG_elsewhere{box-sizing:border-box;background:var(--dsw-alias-state-warn-tertiary);width:100%;max-width:calc(min(920px,100%) + 32px);color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);border-radius:10px;justify-content:center;align-items:center;gap:8px;margin:0 auto 8px;padding:6px 10px;display:flex}.luWWxG_elsewhereGo{color:var(--dsw-alias-button-info-fill);font:inherit;cursor:pointer;background:0 0;border:0;padding:0}";
-		const tagId$7 = "dsh-session-sync/ApprovalCard.module.css";
-		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagId$7) + "]") === null) {
-			const tag = document.createElement("style");
-			tag.dataset.plugin = "dsh-session-sync";
-			tag.dataset.pluginCss = tagId$7;
-			tag.textContent = css$7;
-			document.head.appendChild(tag);
-		}
-		var ApprovalCard_module_css_default = {
-			"actionRow": "luWWxG_actionRow",
-			"body": "luWWxG_body",
-			"card": "luWWxG_card",
-			"command": "luWWxG_command",
-			"elsewhere": "luWWxG_elsewhere",
-			"elsewhereGo": "luWWxG_elsewhereGo",
-			"error": "luWWxG_error",
-			"headline": "luWWxG_headline",
-			"hint": "luWWxG_hint",
-			"missing": "luWWxG_missing",
-			"note": "luWWxG_note",
-			"reject": "luWWxG_reject",
-			"root": "luWWxG_root",
-			"sent": "luWWxG_sent",
-			"strip": "luWWxG_strip"
-		};
 		//#endregion
 		//#region src/client/approval-view.ts
 		/**
@@ -2934,14 +259,53 @@ window.__ModuleLoader__.load({
 			});
 		}
 		//#endregion
+		//#region src/client/config-entry.ts
+		/** This plugin's npm package name, as the Plugins page reports it. */
+		const PACKAGE_NAME = "dsh-session-sync";
+		/**
+		* Whether the open detail page is this plugin's.
+		*
+		* `plugins.detail.section` renders on *every* detail page — the contribution
+		* decides from the subject whether it has anything to say — so without this the
+		* form would appear under every installed plugin's page.
+		* @param subject - the open page's subject.
+		* @returns true when the page is about this plugin's bundle or its row.
+		*/
+		function ownsSubject(subject) {
+			if (subject === void 0) return false;
+			if (subject.kind === "bundle") return subject.pkg?.name === PACKAGE_NAME;
+			if (subject.kind === "row") return subject.pkg?.name === "dsh-session-sync" && subject.row?.rowId === "session-sync";
+			return false;
+		}
+		/**
+		* Split an option's shipped "recommended" marker off its label.
+		*
+		* The asker marks a suggestion by suffixing its label — `(recommended)` or
+		* `（推荐）` — and the shipped composer renders that marker as its own badge rather
+		* than as part of the text. This console reads the same convention out of the
+		* relayed option, so an option the asking machine flagged looks flagged here too.
+		* @param label - the option's label as the asker wrote it.
+		* @returns the label without the marker, and whether the marker was there.
+		*/
+		function parseRecommendedLabel(label) {
+			const suffix = /\s*(?:\((?:recommended|推荐)\)|（(?:recommended|推荐)）)\s*$/i;
+			return suffix.test(label) ? {
+				label: label.replace(suffix, ""),
+				recommended: true
+			} : {
+				label,
+				recommended: false
+			};
+		}
+		//#endregion
 		//#region \0dsh-css:C:\Users\14339\Desktop\git\dsh-session-sync\src\client\QuestionCard.module.css.mjs
-		const css$6 = ".zAWt7G_frame{justify-content:center;padding:0 16px;display:flex}.zAWt7G_card{box-sizing:border-box;--dsw-elevation-stroke-color:var(--dsw-alias-border-l2-darkmode-thin);border-radius:var(--dsw-radius-xl);background:var(--dsw-specific-input-major);width:100%;max-width:calc(min(920px,100%) + 32px);max-height:min(60vh,520px);box-shadow:var(--dsw-elevation-panel);color:var(--dsw-alias-label-primary);--dsh-scrollbar-thumb:var(--dsw-alias-scrollbar-bg-l2);--dsh-scrollbar-thumb-hover:var(--dsw-alias-scrollbar-hover-l2);border:0;flex-direction:column;margin-bottom:8px;padding:0 16px 10px;display:flex;overflow:hidden}.zAWt7G_card,.zAWt7G_card *{box-sizing:border-box}.zAWt7G_header{flex-shrink:0;justify-content:space-between;align-items:flex-start;gap:16px;padding:20px 16px 0 24px;display:flex}.zAWt7G_headingBlock{min-width:0}.zAWt7G_eyebrow{color:var(--dsw-alias-label-tertiary);margin-bottom:5px;font-size:11px;line-height:16px}.zAWt7G_title{margin:0;font-size:16px;font-weight:500;line-height:22px}.zAWt7G_body{overscroll-behavior:contain;flex-direction:column;flex:auto;min-height:0;display:flex;overflow-y:auto}.zAWt7G_options{flex-direction:column;gap:1px;margin:8px 0 0;padding:4px 12px;display:flex}.zAWt7G_option{border-radius:var(--dsw-radius-md);width:100%;min-height:40px;color:inherit;text-align:left;cursor:pointer;background:0 0;border:1px solid #0000;flex-shrink:0;align-items:flex-start;gap:8px;padding:8px 12px 8px 8px;transition:background-color .12s,border-color .12s;display:flex}.zAWt7G_option:hover:not(:disabled),.zAWt7G_optionSelected{background:var(--dsw-alias-interactive-bg-hover)}.zAWt7G_optionSelected{border-color:var(--dsw-alias-border-l2)}.zAWt7G_option:disabled{cursor:default}.zAWt7G_number{border-radius:var(--dsw-radius-xs);background:var(--dsw-alias-bg-overlay);width:20px;height:20px;color:var(--dsw-alias-label-secondary);flex:0 0 20px;place-items:center;margin-top:2px;font-size:12px;font-weight:500;line-height:18px;display:grid}.zAWt7G_checkbox{flex:0 0 20px;place-items:center;width:20px;height:20px;margin-top:2px;display:grid}.zAWt7G_checkbox:before{content:\"\";border:.5px solid var(--dsw-alias-border-l4);border-radius:var(--dsw-radius-xs);grid-area:1/1;width:14px;height:14px;transition:background-color .12s,border-color .12s}.zAWt7G_checkbox>svg{grid-area:1/1}.zAWt7G_checkboxChecked{color:var(--dsw-alias-label-primary-foreground)}.zAWt7G_checkboxChecked:before{border-color:var(--dsw-alias-label-primary);background:var(--dsw-alias-label-primary)}.zAWt7G_optionCopy{flex:1;min-width:0}.zAWt7G_optionLine{flex-wrap:wrap;align-items:baseline;gap:2px 6px;display:flex}.zAWt7G_optionLabel{font-size:14px;font-weight:500;line-height:24px}.zAWt7G_badge{border-radius:var(--dsw-radius-xs);background:var(--dsw-specific-sidebar-nav-item-active-accent);color:var(--dsw-alias-button-info-fill);padding:0 4px;font-size:11px;font-weight:600;line-height:18px}.zAWt7G_description{color:var(--dsw-alias-label-tertiary);font-size:14px;font-weight:400;line-height:24px}.zAWt7G_customRow{border-radius:var(--dsw-radius-md);border:1px solid #0000;flex-shrink:0;align-items:flex-start;gap:8px;width:100%;min-height:40px;padding:8px 12px 8px 8px;transition:background-color .12s,border-color .12s;display:flex}.zAWt7G_customRow:hover,.zAWt7G_customRow:focus-within,.zAWt7G_customRowActive{background:var(--dsw-alias-interactive-bg-hover)}.zAWt7G_customRow:focus-within,.zAWt7G_customRowActive{border-color:var(--dsw-alias-border-l2)}.zAWt7G_field{--dsh-answer-field-padding:0;min-width:0;display:grid}.zAWt7G_field>*{min-width:0;padding:var(--dsh-answer-field-padding);font:inherit;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;grid-area:1/1;font-size:14px;line-height:24px}.zAWt7G_fieldMirror{box-sizing:content-box;visibility:hidden;max-height:144px;overflow:hidden}.zAWt7G_fieldInput{resize:none;color:var(--dsw-alias-label-primary);caret-color:var(--dsw-alias-state-business-primary);background:0 0;border:none;outline:none;overflow-y:auto}.zAWt7G_fieldInput::placeholder{color:var(--dsw-alias-label-caption)}.zAWt7G_customInline{flex:1}.zAWt7G_customBlock{border:.5px solid var(--dsw-alias-border-l4);border-radius:var(--dsw-radius-lg);background:var(--dsw-alias-bg-module-platform);--dsh-answer-field-padding:8px 12px;flex-shrink:0;min-height:64px;margin:0 12px}.zAWt7G_customBlock:focus-within{border-color:var(--dsw-alias-state-business-primary)}.zAWt7G_footer{flex-shrink:0;justify-content:space-between;align-items:center;gap:12px;margin-top:12px;padding:0 10px 0 18px;display:flex}.zAWt7G_footerActions{flex-shrink:0;align-items:center;gap:12px;display:flex}.zAWt7G_feedback{min-height:16px;color:var(--dsw-alias-state-error-primary);text-align:right;flex:1;font-size:11px;line-height:16px}.zAWt7G_elsewhere{box-sizing:border-box;background:var(--dsw-alias-state-warn-tertiary);width:100%;max-width:calc(min(920px,100%) + 32px);color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);border-radius:10px;justify-content:center;align-items:center;gap:8px;margin:0 auto 8px;padding:6px 10px;display:flex}.zAWt7G_elsewhereGo{color:var(--dsw-alias-button-info-fill);font:inherit;cursor:pointer;background:0 0;border:0;padding:0}.zAWt7G_frame{padding:0 16px}.zAWt7G_card{box-sizing:border-box;max-width:calc(min(920px,100%) + 32px);margin-bottom:8px;padding:0 16px 10px}.zAWt7G_header{padding:20px 0 0}.zAWt7G_detail{margin:0 0 8px}.zAWt7G_options{padding:4px 0}.zAWt7G_customBlock{margin:0}.zAWt7G_footer{padding:0}@media (width<=720px){.zAWt7G_header{padding-top:10px}.zAWt7G_title{font-size:15px;line-height:21px}.zAWt7G_option,.zAWt7G_customRow{padding:8px 6px}.zAWt7G_footer{align-items:flex-end}.zAWt7G_footerActions{flex-shrink:0}}@media (prefers-reduced-motion:reduce){.zAWt7G_option,.zAWt7G_customRow{transition:none}}";
-		const tagId$6 = "dsh-session-sync/QuestionCard.module.css";
-		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagId$6) + "]") === null) {
+		const css$7 = ".zAWt7G_frame{justify-content:center;padding:0 16px;display:flex}.zAWt7G_card{box-sizing:border-box;--dsw-elevation-stroke-color:var(--dsw-alias-border-l2-darkmode-thin);border-radius:var(--dsw-radius-xl);background:var(--dsw-specific-input-major);width:100%;max-width:calc(min(920px,100%) + 32px);max-height:min(60vh,520px);box-shadow:var(--dsw-elevation-panel);color:var(--dsw-alias-label-primary);--dsh-scrollbar-thumb:var(--dsw-alias-scrollbar-bg-l2);--dsh-scrollbar-thumb-hover:var(--dsw-alias-scrollbar-hover-l2);border:0;flex-direction:column;margin-bottom:8px;padding:0 16px 10px;display:flex;overflow:hidden}.zAWt7G_card,.zAWt7G_card *{box-sizing:border-box}.zAWt7G_header{flex-shrink:0;justify-content:space-between;align-items:flex-start;gap:16px;padding:20px 16px 0 24px;display:flex}.zAWt7G_headingBlock{min-width:0}.zAWt7G_eyebrow{color:var(--dsw-alias-label-tertiary);margin-bottom:5px;font-size:11px;line-height:16px}.zAWt7G_title{margin:0;font-size:16px;font-weight:500;line-height:22px}.zAWt7G_body{overscroll-behavior:contain;flex-direction:column;flex:auto;min-height:0;display:flex;overflow-y:auto}.zAWt7G_options{flex-direction:column;gap:1px;margin:8px 0 0;padding:4px 12px;display:flex}.zAWt7G_option{border-radius:var(--dsw-radius-md);width:100%;min-height:40px;color:inherit;text-align:left;cursor:pointer;background:0 0;border:1px solid #0000;flex-shrink:0;align-items:flex-start;gap:8px;padding:8px 12px 8px 8px;transition:background-color .12s,border-color .12s;display:flex}.zAWt7G_option:hover:not(:disabled),.zAWt7G_optionSelected{background:var(--dsw-alias-interactive-bg-hover)}.zAWt7G_optionSelected{border-color:var(--dsw-alias-border-l2)}.zAWt7G_option:disabled{cursor:default}.zAWt7G_number{border-radius:var(--dsw-radius-xs);background:var(--dsw-alias-bg-overlay);width:20px;height:20px;color:var(--dsw-alias-label-secondary);flex:0 0 20px;place-items:center;margin-top:2px;font-size:12px;font-weight:500;line-height:18px;display:grid}.zAWt7G_checkbox{flex:0 0 20px;place-items:center;width:20px;height:20px;margin-top:2px;display:grid}.zAWt7G_checkbox:before{content:\"\";border:.5px solid var(--dsw-alias-border-l4);border-radius:var(--dsw-radius-xs);grid-area:1/1;width:14px;height:14px;transition:background-color .12s,border-color .12s}.zAWt7G_checkbox>svg{grid-area:1/1}.zAWt7G_checkboxChecked{color:var(--dsw-alias-label-primary-foreground)}.zAWt7G_checkboxChecked:before{border-color:var(--dsw-alias-label-primary);background:var(--dsw-alias-label-primary)}.zAWt7G_optionCopy{flex:1;min-width:0}.zAWt7G_optionLine{flex-wrap:wrap;align-items:baseline;gap:2px 6px;display:flex}.zAWt7G_optionLabel{font-size:14px;font-weight:500;line-height:24px}.zAWt7G_badge{border-radius:var(--dsw-radius-xs);background:var(--dsw-specific-sidebar-nav-item-active-accent);color:var(--dsw-alias-button-info-fill);padding:0 4px;font-size:11px;font-weight:600;line-height:18px}.zAWt7G_description{color:var(--dsw-alias-label-tertiary);font-size:14px;font-weight:400;line-height:24px}.zAWt7G_customRow{border-radius:var(--dsw-radius-md);border:1px solid #0000;flex-shrink:0;align-items:flex-start;gap:8px;width:100%;min-height:40px;padding:8px 12px 8px 8px;transition:background-color .12s,border-color .12s;display:flex}.zAWt7G_customRow:hover,.zAWt7G_customRow:focus-within,.zAWt7G_customRowActive{background:var(--dsw-alias-interactive-bg-hover)}.zAWt7G_customRow:focus-within,.zAWt7G_customRowActive{border-color:var(--dsw-alias-border-l2)}.zAWt7G_field{--dsh-answer-field-padding:0;min-width:0;display:grid}.zAWt7G_field>*{min-width:0;padding:var(--dsh-answer-field-padding);font:inherit;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;grid-area:1/1;font-size:14px;line-height:24px}.zAWt7G_fieldMirror{box-sizing:content-box;visibility:hidden;max-height:144px;overflow:hidden}.zAWt7G_fieldInput{resize:none;color:var(--dsw-alias-label-primary);caret-color:var(--dsw-alias-state-business-primary);background:0 0;border:none;outline:none;overflow-y:auto}.zAWt7G_fieldInput::placeholder{color:var(--dsw-alias-label-caption)}.zAWt7G_customInline{flex:1}.zAWt7G_customBlock{border:.5px solid var(--dsw-alias-border-l4);border-radius:var(--dsw-radius-lg);background:var(--dsw-alias-bg-module-platform);--dsh-answer-field-padding:8px 12px;flex-shrink:0;min-height:64px;margin:0 12px}.zAWt7G_customBlock:focus-within{border-color:var(--dsw-alias-state-business-primary)}.zAWt7G_footer{flex-shrink:0;justify-content:space-between;align-items:center;gap:12px;margin-top:12px;padding:0 10px 0 18px;display:flex}.zAWt7G_footerActions{flex-shrink:0;align-items:center;gap:12px;display:flex}.zAWt7G_feedback{min-height:16px;color:var(--dsw-alias-state-error-primary);text-align:right;flex:1;font-size:11px;line-height:16px}.zAWt7G_elsewhere{box-sizing:border-box;background:var(--dsw-alias-state-warn-tertiary);width:100%;max-width:calc(min(920px,100%) + 32px);color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);border-radius:10px;justify-content:center;align-items:center;gap:8px;margin:0 auto 8px;padding:6px 10px;display:flex}.zAWt7G_elsewhereGo{color:var(--dsw-alias-button-info-fill);font:inherit;cursor:pointer;background:0 0;border:0;padding:0}.zAWt7G_frame{padding:0 16px}.zAWt7G_card{box-sizing:border-box;max-width:calc(min(920px,100%) + 32px);margin-bottom:8px;padding:0 16px 10px}.zAWt7G_header{padding:20px 0 0}.zAWt7G_detail{margin:0 0 8px}.zAWt7G_options{padding:4px 0}.zAWt7G_customBlock{margin:0}.zAWt7G_footer{padding:0}@media (width<=720px){.zAWt7G_header{padding-top:10px}.zAWt7G_title{font-size:15px;line-height:21px}.zAWt7G_option,.zAWt7G_customRow{padding:8px 6px}.zAWt7G_footer{align-items:flex-end}.zAWt7G_footerActions{flex-shrink:0}}@media (prefers-reduced-motion:reduce){.zAWt7G_option,.zAWt7G_customRow{transition:none}}";
+		const tagId$7 = "dsh-session-sync/QuestionCard.module.css";
+		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagId$7) + "]") === null) {
 			const tag = document.createElement("style");
 			tag.dataset.plugin = "dsh-session-sync";
-			tag.dataset.pluginCss = tagId$6;
-			tag.textContent = css$6;
+			tag.dataset.pluginCss = tagId$7;
+			tag.textContent = css$7;
 			document.head.appendChild(tag);
 		}
 		var QuestionCard_module_css_default = {
@@ -3412,9 +776,550 @@ window.__ModuleLoader__.load({
 			return session.title.toLowerCase().includes(needle) || (session.cwd ?? "").toLowerCase().includes(needle) || session.sessionId.toLowerCase().includes(needle);
 		}
 		//#endregion
+		//#region src/client/composer-draft.ts
+		/**
+		* The empty seat.
+		*
+		* One frozen instance for every Session that has never been typed into: the
+		* reader of this store compares snapshot identities, so a fresh object per read
+		* would re-render every seat on every change anywhere.
+		*/
+		const EMPTY = Object.freeze({
+			text: "",
+			sending: false
+		});
+		/**
+		* The drafts of every Session this console has shown, plus the one channel both
+		* seats subscribe to.
+		*
+		* One instance per plugin (built in `apply`), because two registrations — the
+		* console panel and the shipped composer stack's dock entry — have to share it
+		* and neither may reach the other's props.
+		*/
+		var ComposerDrafts = class {
+			byKey = /* @__PURE__ */ new Map();
+			listeners = /* @__PURE__ */ new Set();
+			/**
+			* The state one Session's composer seat renders.
+			* @param key - the Session the draft is addressed to.
+			* @returns the state; the shared empty one until something is typed.
+			*/
+			read(key) {
+				return this.byKey.get(key) ?? EMPTY;
+			}
+			/**
+			* Replace the unsent prompt.
+			* @param key - the Session the draft is addressed to.
+			* @param text - the whole draft, as the textarea holds it.
+			*/
+			setText(key, text) {
+				const current = this.read(key);
+				if (current.text === text) return;
+				this.write(key, {
+					text,
+					sending: current.sending
+				});
+			}
+			/**
+			* Mark a prompt as on its way, or as finished.
+			* @param key - the Session the draft is addressed to.
+			* @param sending - the new reading.
+			*/
+			setSending(key, sending) {
+				const current = this.read(key);
+				if (current.sending === sending) return;
+				this.write(key, {
+					text: current.text,
+					sending
+				});
+			}
+			/**
+			* Take one Session's draft down to the empty seat, keeping nothing behind.
+			*
+			* What a delivered prompt leaves: the text has gone to the machine, and the
+			* next reader of that Session — possibly this one, after looking at something
+			* else — should not find it still sitting in the box.
+			* @param key - the Session the draft was addressed to.
+			*/
+			clear(key) {
+				this.write(key, {
+					text: "",
+					sending: false
+				});
+			}
+			/**
+			* Hear about every seat's change.
+			*
+			* Coarse on purpose: a seat subscribes once and re-reads its own Session's
+			* state, which is one comparison against a frozen object for the Sessions it
+			* does not care about.
+			* @param listener - the change callback.
+			* @returns the unsubscribe function.
+			*/
+			subscribe(listener) {
+				this.listeners.add(listener);
+				return () => {
+					this.listeners.delete(listener);
+				};
+			}
+			write(key, next) {
+				this.byKey.set(key, Object.freeze(next));
+				for (const listener of [...this.listeners]) listener();
+			}
+		};
+		/**
+		* The key one Session's draft is filed under.
+		*
+		* Machine and id together, because two machines can hold Sessions whose ids were
+		* generated independently — a draft written for one of them must not appear in
+		* the other's composer.
+		* @param machineName - the machine that owns the Session.
+		* @param sessionId - the Session's own id.
+		* @returns the stable key.
+		*/
+		function draftKey(machineName, sessionId) {
+			return `${machineName}\u0000${sessionId}`;
+		}
+		//#endregion
+		//#region src/client/footer-projections.ts
+		/**
+		* Turn one set of footer totals into the values the shipped footer reads.
+		* @param stats - the totals, from the owning machine or from the events held here.
+		* @returns the three projection values; the context one only when the log states
+		*   both a window and a reading.
+		*/
+		function footerProjections(stats) {
+			const context = stats.context;
+			return {
+				sessionStats: {
+					turns: stats.turns,
+					steps: stats.steps,
+					llmMs: 0,
+					toolMs: 0,
+					ttftMs: 0,
+					ttftSteps: 0,
+					decodeMs: stats.generationMs ?? (stats.outputPerSecond === void 0 ? 0 : Math.round(stats.usage.outputTokens / stats.outputPerSecond * 1e3)),
+					decodeTokens: stats.usage.outputTokens
+				},
+				tokenUsage: {
+					uncachedInputTokens: stats.usage.inputTokens,
+					outputTokens: stats.usage.outputTokens,
+					cacheReadTokens: stats.usage.cacheReadTokens,
+					cacheWriteTokens: 0
+				},
+				...context === void 0 ? {} : { contextPressure: {
+					projectedTokens: context.used,
+					contextWindow: context.window
+				} }
+			};
+		}
+		/**
+		* The same values as one plain record, which is the shape a projection store
+		* takes them in. Its own function so the mapping stays the only place a
+		* projection key is named.
+		*
+		* Every key is present even when its value is: the store keeps the last value it
+		* was handed, so *omitting* a key would leave a reading the log no longer states
+		* on screen — a Session whose log has no window would keep showing the previous
+		* one. Writing `undefined` is what the shipped reader calls "capability absent",
+		* and it is how the meter is taken down.
+		* @param projections - the values {@link footerProjections} produced.
+		* @returns one record per projection key, in a stable key order.
+		*/
+		function projectionRecord(projections) {
+			return {
+				sessionStats: projections.sessionStats,
+				tokenUsage: projections.tokenUsage,
+				contextPressure: projections.contextPressure
+			};
+		}
+		/**
+		* The watermark to publish the next value at.
+		*
+		* The store refuses a value whose watermark is not above the one it already
+		* holds, which makes this the one rule a publisher can silently lose to — and
+		* losing it is invisible: the footer keeps the previous reading and looks
+		* perfectly healthy. Two ways to lose it, so two terms:
+		*
+		*  - a Session *re-opened* after its mirror was released. The store outlives the
+		*    mirror, so a per-mirror counter that restarted at 1 would be refused by the
+		*    values the previous open left behind. Hence a counter that never goes
+		*    backwards for the plugin's lifetime, on the object that owns the publication.
+		*  - a *repeated* publication of the same window: the machine restating its
+		*    whole-log totals on a poll, with no new event to move the floor.
+		*
+		* The floor is the newest durable sequence held, which is the log's own order of
+		* magnitude — a Session whose values came from a previous open left watermarks in
+		* that range, so starting above it is what makes the first publication of the new
+		* open land rather than vanish.
+		* @param previous - the last watermark this publisher used, or 0 for none yet.
+		* @param floor - the newest durable sequence the values are consistent with.
+		* @returns the watermark to publish at, strictly above both.
+		*/
+		function nextWatermark(previous, floor) {
+			return Math.max(previous + 1, floor + 1);
+		}
+		//#endregion
+		//#region \0dsh-css:C:\Users\14339\Desktop\git\dsh-session-sync\src\client\sync.module.css.mjs
+		const css$6 = ".Emn1LG_section{flex-direction:column;gap:14px;padding:4px 0 8px;display:flex}.Emn1LG_lede{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xs-13);margin:0}.Emn1LG_group{flex-direction:column;gap:10px;display:flex}.Emn1LG_groupTitle{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-strong-13);margin:0}.Emn1LG_card{border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);border-radius:10px;flex-direction:column;gap:10px;padding:12px 14px;display:flex}.Emn1LG_field{flex-direction:column;gap:4px;display:flex}.Emn1LG_fieldRow{justify-content:space-between;align-items:center;gap:12px;display:flex}.Emn1LG_fieldText{flex-direction:column;gap:2px;min-width:0;display:flex}.Emn1LG_label{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13)}.Emn1LG_hint{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12)}.Emn1LG_pair{grid-template-columns:minmax(0,1fr) 120px;gap:10px;display:grid}.Emn1LG_actions{align-items:center;gap:8px;display:flex}.Emn1LG_saved{color:var(--dsw-alias-state-success-primary);font:var(--dsw-font-xxs-12)}.Emn1LG_dirty{color:var(--dsw-alias-state-warn-primary);font:var(--dsw-font-xxs-12)}.Emn1LG_failed{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12)}.Emn1LG_sessionList{flex-direction:column;max-height:280px;display:flex;overflow-y:auto}.Emn1LG_sessionRow{justify-content:space-between;align-items:center;gap:12px;min-height:40px;padding:5px 2px;display:flex}.Emn1LG_sessionRow+.Emn1LG_sessionRow{border-top:.5px solid var(--dsw-alias-border-l1)}.Emn1LG_sessionGroup{flex-direction:column;display:flex}.Emn1LG_sessionGroup+.Emn1LG_sessionGroup{border-top:.5px solid var(--dsw-alias-border-l1);margin-top:6px;padding-top:6px}.Emn1LG_sessionGroupHead{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);align-items:center;gap:8px;padding:4px 2px 2px;display:flex}.Emn1LG_sessionGroupPath{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.Emn1LG_sessionGroupCount{font-variant-numeric:tabular-nums;margin-left:auto}.Emn1LG_sessionText{flex-direction:column;gap:2px;min-width:0;display:flex}.Emn1LG_sessionTitle{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.Emn1LG_sessionMeta{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);align-items:center;gap:6px;display:flex}.Emn1LG_empty{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);padding:12px 2px}.Emn1LG_status{flex-wrap:wrap;gap:6px 18px;display:flex}.Emn1LG_statusItem{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12);align-items:center;gap:6px;display:flex}.Emn1LG_statusValue{color:var(--dsw-alias-label-primary)}.Emn1LG_statusBad{color:var(--dsw-alias-state-error-primary)}.Emn1LG_statusGood{color:var(--dsw-alias-state-success-primary)}.Emn1LG_panel{height:100%;min-height:0;color:var(--dsw-alias-label-primary);display:flex;position:relative}.Emn1LG_listPane{background:var(--dsw-specific-sidebar-fill);border-right:.5px solid var(--dsw-alias-border-l3);flex-direction:column;flex:none;width:280px;min-height:0;display:flex}.Emn1LG_listHead{flex-direction:column;flex:none;gap:6px;padding:10px 10px 8px;display:flex}.Emn1LG_listHeadRow{align-items:center;gap:6px;min-width:0;display:flex}.Emn1LG_listHeadRow>:first-child{flex:1;min-width:0}.Emn1LG_listCollapse,.Emn1LG_listExpand{flex:none;width:28px;padding:0}.Emn1LG_panel ::placeholder,.Emn1LG_panel input::placeholder,.Emn1LG_panel textarea::placeholder{color:var(--dsw-alias-label-caption);opacity:1}.Emn1LG_listExpand{color:var(--dsw-alias-button-info-fill)}.Emn1LG_panel[data-list=hidden] .Emn1LG_listPane{display:none}.Emn1LG_listStatus{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.Emn1LG_list{flex-direction:column;flex:1;gap:3px;min-height:0;margin-right:2px;padding:0 6px 8px;display:flex;overflow-y:auto}.Emn1LG_notice{background:var(--dsw-alias-state-warn-tertiary);color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);border-radius:8px;align-items:flex-start;gap:6px;margin:2px 2px 6px;padding:6px 8px;display:flex}.Emn1LG_noticeText{flex:1;min-width:0}.Emn1LG_noticeClose{width:14px;height:14px;color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:0;border-radius:4px;flex:none;justify-content:center;align-items:center;padding:0;font-size:13px;line-height:13px;display:inline-flex}.Emn1LG_noticeClose:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_treeRow,.Emn1LG_treeSession{box-sizing:border-box;width:100%;color:var(--dsw-alias-label-primary);text-align:left;cursor:pointer;user-select:none;transition:background var(--ds-transition-duration-fast) var(--ds-ease-in-out);background:0 0;border:0;border-radius:8px;align-items:center;gap:6px;padding:0 8px;display:flex}.Emn1LG_treeRow{height:34px}.Emn1LG_treeSession{gap:0;height:32px}.Emn1LG_treeRow:hover,.Emn1LG_treeSession:hover,.Emn1LG_treeSessionSelected{background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_treeRow:focus-visible,.Emn1LG_treeSession:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.Emn1LG_panel [data-level=\"1\"]{padding-left:24px}.Emn1LG_panel [data-level=\"2\"]{padding-left:40px}.Emn1LG_treeSlot{width:16px;height:20px;color:var(--dsw-alias-label-tertiary);flex:none;justify-content:center;align-items:center;display:inline-flex}.Emn1LG_treeChevron{color:var(--dsw-alias-label-caption);display:none}.Emn1LG_treeRow:hover .Emn1LG_treeFolder,.Emn1LG_treeRow:focus-visible .Emn1LG_treeFolder{display:none}.Emn1LG_treeRow:hover .Emn1LG_treeChevron,.Emn1LG_treeRow:focus-visible .Emn1LG_treeChevron{display:inline-flex}.Emn1LG_arrowOpen{transform:rotate(90deg)}.Emn1LG_treeChevron svg{transition:transform .15s var(--ds-ease-in-out)}.Emn1LG_rowTitle{min-width:0;font:var(--dsw-font-s-14);text-overflow:ellipsis;white-space:nowrap;flex:1;overflow:hidden}.Emn1LG_treeSession .Emn1LG_rowTitle{margin:0 6px 0 4px}.Emn1LG_rowTime{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);flex:none}.Emn1LG_gapBadge{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12);white-space:nowrap;flex:none;margin-right:6px}.Emn1LG_realBadge,.Emn1LG_routeBadge{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-text-secondary);font:var(--dsw-font-xxs-12);white-space:nowrap;border-radius:4px;flex:none;margin-right:6px;padding:0 6px}.Emn1LG_scopeBadge{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-text-secondary);font:var(--dsw-font-xxs-12);white-space:nowrap;cursor:default;border:0;border-radius:4px;flex:none;margin-right:6px;padding:0 6px}.Emn1LG_scopeBadgeAction{cursor:pointer}.Emn1LG_scopeBadgeAction:hover{background:var(--dsw-alias-interactive-bg-active);color:var(--dsw-alias-label-primary)}.Emn1LG_olderRow{justify-content:center;padding:2px 0 12px;display:flex}.Emn1LG_olderButton{border:.5px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12);cursor:pointer;background:0 0;border-radius:999px;padding:4px 12px}.Emn1LG_olderButton:hover:not(:disabled){border-color:var(--dsw-alias-border-l4);color:var(--dsw-alias-label-primary)}.Emn1LG_olderButton:disabled{cursor:default;opacity:.6}.Emn1LG_treeRowDim .Emn1LG_rowTitle,.Emn1LG_treeRowDim .Emn1LG_rowTime{color:var(--dsw-alias-label-secondary)}.Emn1LG_heroRoot{justify-content:center;align-items:center;min-width:0;height:100%;padding:0 24px;display:flex}.Emn1LG_heroStack{flex-direction:column;align-items:center;gap:12px;width:100%;max-width:calc(min(920px,100%) + 32px);display:flex}.Emn1LG_heroHeadline{color:var(--dsw-alias-label-primary);flex-wrap:wrap;justify-content:center;align-items:center;gap:12px 10px;font-size:26px;font-weight:500;line-height:32px;display:flex}.Emn1LG_heroFish{color:var(--dsw-alias-label-primary);flex:none;justify-content:center;align-items:center;display:inline-flex}.Emn1LG_heroTitleGroup{flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 7px;min-width:0;display:flex}.Emn1LG_heroBadge{border:.5px solid var(--dsw-alias-interactive-bg-hover);background:var(--dsw-alias-state-business-tertiary);color:var(--dsw-alias-label-primary-bluish);font-family:var(--ds-font-family-code);white-space:nowrap;border-radius:24px;align-self:flex-start;margin-top:2px;padding:1px 7px 0;font-size:12px;font-weight:500;line-height:18px}.Emn1LG_heroHint{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);text-align:center;margin:0}.Emn1LG_tjRoot{width:100%;min-height:0;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-1);flex-direction:column;flex:1;display:flex;overflow:hidden}.Emn1LG_tjToolbar{z-index:4;box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);flex:none;align-items:center;gap:2px;height:32px;padding:0 6px;display:flex;position:sticky;top:0}.Emn1LG_tjToggle{height:20px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);cursor:pointer;background:0 0;border:0;border-radius:3px;flex:none;align-items:center;gap:4px;padding:0 7px;display:inline-flex}.Emn1LG_tjToggleIcon{stroke:currentColor;stroke-width:1.25px;stroke-linecap:round;stroke-linejoin:round;flex:none;width:12px;height:12px}.Emn1LG_tjToggle:hover,.Emn1LG_tjToggle[aria-pressed=true],.Emn1LG_tjAction:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_tjToggle:focus-visible,.Emn1LG_tjAction:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary);outline-offset:1px}.Emn1LG_tjAction{height:20px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);cursor:pointer;background:0 0;border:0;border-radius:3px;flex:none;align-items:center;gap:4px;padding:0 5px;display:inline-flex}.Emn1LG_tjActionIcon{color:var(--dsw-alias-label-tertiary);font:14px/14px var(--ds-font-family-code)}.Emn1LG_tjSearch{border:.5px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-bg-layer-2);min-width:84px;height:22px;color:var(--dsw-alias-label-caption);border-radius:4px;flex:0 164px;align-items:center;gap:4px;margin-left:auto;padding:0 6px;display:flex}.Emn1LG_tjSearch:focus-within{border-color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-bg-layer-1)}.Emn1LG_tjSearchIcon{flex:none}.Emn1LG_tjSearchInput{width:100%;min-width:0;color:var(--dsw-alias-label-primary);font:var(--dsw-font-xxs-12);background:0 0;border:0;outline:0;padding:0}.Emn1LG_tjSearchInput::placeholder{color:var(--dsw-alias-label-caption)}.Emn1LG_tjStrip{border-bottom:.5px solid var(--dsw-alias-border-l2);flex:none}.Emn1LG_tjPlot{background:var(--dsw-alias-bg-layer-2);grid-template-columns:44px minmax(0,1fr);height:50px;display:grid;overflow:hidden}.Emn1LG_tjLaneLabels{border-right:.5px solid var(--dsw-alias-border-l1);color:var(--dsw-alias-label-caption);font-size:10px;line-height:1;position:relative}.Emn1LG_tjLaneLabels span{justify-content:flex-end;align-items:center;height:8px;display:flex;position:absolute;right:3px}.Emn1LG_tjLaneLabels span:first-child{top:7px}.Emn1LG_tjLaneLabels span:nth-child(2){top:21px}.Emn1LG_tjLaneLabels span:nth-child(3){top:35px}.Emn1LG_tjTrack{position:relative;overflow:hidden}.Emn1LG_tjLanes,.Emn1LG_tjTurnBoundaries{position:absolute;inset:7px 0}.Emn1LG_tjSpan{top:calc(var(--tj-span-lane) * 14px);left:var(--tj-span-left);width:max(2px, var(--tj-span-width));background:var(--dsw-alias-label-secondary);opacity:.78;cursor:pointer;border:0;border-radius:1px;min-width:2px;height:8px;padding:0;position:absolute}.Emn1LG_tjSpan[data-kind=user]{background:var(--dsw-alias-state-business-primary)}.Emn1LG_tjSpan[data-kind=assistant],.Emn1LG_tjSpan[data-kind=think]{background:var(--dsw-alias-label-primary);opacity:1}.Emn1LG_tjSpan[data-kind=tool]{background:var(--dsw-alias-state-warn-label);opacity:1}.Emn1LG_tjSpan[data-kind=context]{background:var(--dsw-alias-state-success-primary)}.Emn1LG_tjSpan[data-error=true]{background:var(--dsw-alias-state-error-primary)}.Emn1LG_tjSpan[data-selected=false]{opacity:.14}.Emn1LG_tjSpan[data-current=true]{z-index:1;box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary)}.Emn1LG_tjTurnBoundary{background:var(--dsw-alias-border-l2);width:.5px;position:absolute;top:0;bottom:0}.Emn1LG_tjSplit{background:var(--dsw-alias-bg-layer-1);flex:1;min-width:0;min-height:0;display:flex;overflow:hidden}.Emn1LG_tjTablePane{flex:1;min-width:0;overflow:hidden auto}.Emn1LG_ledgerTable tbody tr[data-selected=true]{background:var(--dsw-alias-interactive-bg-active)}.Emn1LG_ledgerTable tbody tr[data-dimmed=true]{opacity:.3}.Emn1LG_ledgerTable tbody tr[data-folded=true]{cursor:pointer}.Emn1LG_ledgerTable tbody tr[data-folded=true] td{height:20px}.Emn1LG_tjFolded{min-width:0;color:var(--dsw-alias-label-secondary);align-items:center;gap:6px;font-size:12px;line-height:16px;display:flex}.Emn1LG_tjFoldedEllipsis{color:var(--dsw-alias-label-tertiary);flex:none;font-weight:600}.Emn1LG_tjFoldedText{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.Emn1LG_tjDetails{border-left:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);flex-direction:column;flex:none;width:clamp(320px,38%,440px);min-width:0;min-height:0;display:flex}.Emn1LG_tjDetailsHeader{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);flex:none;justify-content:space-between;align-items:center;height:42px;padding:0 8px 0 12px;display:flex}.Emn1LG_tjDetailsTitle{align-items:center;gap:8px;min-width:0;display:flex}.Emn1LG_tjDetailsDot{corner-shape:round;background:var(--dsw-alias-label-secondary);border-radius:50%;flex:none;width:5px;height:5px}.Emn1LG_tjDetailsName{font:500 12px/16px var(--ds-font-family-code);flex:none}.Emn1LG_tjDetailsLocation{min-width:0;color:var(--dsw-alias-label-tertiary);font:11px/16px var(--ds-font-family-code);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.Emn1LG_tjClose{width:28px;height:28px;color:var(--dsw-alias-label-secondary);cursor:pointer;background:0 0;border:0;border-radius:6px;flex:none;justify-content:center;align-items:center;padding:0;font-size:18px;line-height:18px;display:inline-flex}.Emn1LG_tjClose:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_tjDetailTabs{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);white-space:nowrap;flex:none;gap:1px;width:100%;height:34px;padding:0 8px;display:flex;overflow-x:auto}.Emn1LG_tjDetailTab{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);cursor:pointer;background:0 0;border:0;flex:none;padding:0 9px;position:relative}.Emn1LG_tjDetailTab:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_tjDetailTabActive{color:var(--dsw-alias-state-business-primary)}.Emn1LG_tjDetailTabActive:after{background:var(--dsw-alias-state-business-primary);content:\"\";border-radius:1px 1px 0 0;height:2px;position:absolute;bottom:0;left:9px;right:9px}.Emn1LG_tjDetailBody{flex:1;min-height:0;overflow:hidden auto}.Emn1LG_tjOverview{font:var(--dsw-font-xs-13);margin:0;padding:8px 0}.Emn1LG_tjOverview>div{grid-template-columns:94px minmax(0,1fr);align-items:center;min-height:22px;padding:0 14px;display:grid}.Emn1LG_tjOverview dt{color:var(--dsw-alias-label-tertiary)}.Emn1LG_tjOverview dd{min-width:0;color:var(--dsw-alias-label-primary);text-overflow:ellipsis;white-space:nowrap;margin:0;overflow:hidden}.Emn1LG_tjPayload{box-sizing:border-box;overflow-wrap:anywhere;background:var(--dsw-alias-markdown-code-block);min-height:100%;color:var(--dsw-alias-label-primary);font:12px/19px var(--ds-font-family-code);tab-size:2;white-space:pre-wrap;margin:0;padding:14px}.Emn1LG_tjMarkdown{padding:6px 14px 8px}.Emn1LG_viewPane{background:var(--dsw-alias-bg-base);flex-direction:column;flex:1;min-width:0;min-height:0;display:flex}.Emn1LG_viewHeader{border-bottom:.5px solid var(--dsw-alias-border-l3);flex-direction:column;flex:none;padding:10px 20px 0;display:flex}.Emn1LG_viewTitleRow{align-items:center;gap:8px;min-width:0;min-height:30px;display:flex}.Emn1LG_viewSpacer{flex:1}.Emn1LG_viewTabs{z-index:1;gap:36px;margin-top:10px;padding-left:8px;display:flex;position:relative}.Emn1LG_viewTab{color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:0;padding:0 0 9px;font-size:13px;font-weight:500;line-height:16px;position:relative}.Emn1LG_viewTab:after{content:\"\";background:0 0;border-radius:2px;height:2px;position:absolute;bottom:-1px;left:0;right:0}.Emn1LG_viewTabActive{color:var(--dsw-alias-state-business-primary)}.Emn1LG_viewTabActive:after{background:var(--dsw-alias-state-business-primary)}.Emn1LG_viewTab:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.Emn1LG_chromeCluster{flex:none;align-items:center;gap:8px;min-width:0;display:flex}.Emn1LG_chromeChip{border:.5px solid var(--dsw-alias-border-l2);corner-shape:round;max-width:200px;min-height:24px;color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);text-overflow:ellipsis;white-space:nowrap;border-radius:999px;align-items:center;gap:4px;padding:0 8px;display:inline-flex;overflow:hidden}.Emn1LG_statusRow{width:100%;max-width:calc(min(920px,100%) + 32px);color:var(--dsw-alias-label-caption);font:var(--dsw-font-xxxs-11);font-variant-numeric:tabular-nums;flex-wrap:wrap;justify-content:center;gap:12px;padding:6px 0 0;display:flex}.Emn1LG_ledger{background:var(--dsw-alias-bg-layer-1);flex:1;min-height:0;margin-right:2px;overflow-y:auto}.Emn1LG_ledgerTable{border-spacing:0;table-layout:fixed;width:100%;color:var(--dsw-alias-label-primary);font:var(--dsw-font-xxs-12)}.Emn1LG_ledgerTable th{z-index:3;box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-specific-sidebar-fill);height:30px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);text-align:left;text-overflow:ellipsis;white-space:nowrap;padding:0 8px;font-weight:500;position:sticky;top:0;overflow:hidden}.Emn1LG_ledgerEventHead{text-align:right;width:122px;padding-right:4px}.Emn1LG_ledgerTable td{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l1);text-overflow:ellipsis;white-space:nowrap;height:30px;padding:0 8px;overflow:hidden}.Emn1LG_ledgerTable tbody tr:hover{background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_ledgerEventCell{text-align:right;padding-left:36px;padding-right:4px;position:relative;overflow:visible}.Emn1LG_ledgerRail{z-index:4;background:var(--dsw-alias-border-l3);pointer-events:none;width:2px;position:absolute;top:-1px;bottom:-1px;left:0}.Emn1LG_ledgerTable tbody tr[data-error=true] .Emn1LG_ledgerRail{background:var(--dsw-alias-state-error-primary)}.Emn1LG_ledgerTable tbody tr[data-turn-start=true] td:before{z-index:1;background:var(--dsw-alias-border-l1);content:\"\";pointer-events:none;height:2px;position:absolute;top:0;left:0;right:0;transform:translateY(-50%)}.Emn1LG_ledgerTable tbody tr[data-turn-start=true]:first-child td:before{content:none}.Emn1LG_ledgerTurnLabel{z-index:3;box-sizing:border-box;background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-tertiary);font:8px/10px var(--ds-font-family-code);font-variant-numeric:tabular-nums;white-space:nowrap;border-radius:0 0 2px;align-items:center;padding:1px 5px;display:inline-grid;position:absolute;top:0;left:0}.Emn1LG_ledgerKindSlot{justify-content:flex-end;align-items:center;width:76px;display:inline-flex}.Emn1LG_ledgerKind{box-sizing:border-box;letter-spacing:.035em;user-select:none;border:1px solid #0000;border-radius:4px;align-items:center;height:19px;padding:0 5px;font-size:10px;font-weight:650;line-height:16px;display:inline-flex}.Emn1LG_kind_user{color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-state-business-tertiary)}.Emn1LG_kind_assistant,.Emn1LG_kind_think{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-2)}.Emn1LG_kind_tool{color:var(--dsw-alias-state-warn-label);background:var(--dsw-alias-state-warn-tertiary)}.Emn1LG_kind_error{color:var(--dsw-alias-state-error-primary);background:var(--dsw-alias-bg-layer-2)}.Emn1LG_kind_system,.Emn1LG_kind_policy,.Emn1LG_kind_title,.Emn1LG_kind_other,.Emn1LG_kind_compaction{color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-bg-module-platform)}.Emn1LG_kind_turn,.Emn1LG_kind_step,.Emn1LG_kind_context{color:var(--dsw-alias-label-tertiary);background:var(--dsw-alias-bg-layer-2)}.Emn1LG_ledgerContentCell{padding-left:4px}.Emn1LG_ledgerText{color:var(--dsw-alias-label-primary)}.Emn1LG_ledgerMono{color:var(--dsw-alias-label-secondary);font-family:var(--ds-font-family-code);font-size:12px}.Emn1LG_ledgerResult{grid-template-columns:clamp(180px,36cqw,480px) minmax(0,1fr);align-items:center;gap:8px;min-width:0;display:grid}.Emn1LG_ledgerResult>*{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.Emn1LG_ledgerErrorText{color:var(--dsw-alias-state-error-primary)}.Emn1LG_ledgerDuration{color:var(--dsw-alias-label-caption);font:var(--dsw-font-xxxs-11);font-variant-numeric:tabular-nums;margin-left:8px}.Emn1LG_viewTitle{min-width:0;font:var(--dsw-font-s-strong-14);text-overflow:ellipsis;white-space:nowrap;flex:0 auto;margin:0;overflow:hidden}.Emn1LG_viewMachine{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);white-space:nowrap;flex:none}.Emn1LG_viewScroll{flex:1;min-height:0;margin-right:2px;padding:16px 32px;overflow-y:auto}.Emn1LG_officialPane{flex-direction:column;flex:1;min-height:0;display:flex;overflow:hidden}.Emn1LG_officialPane>*{flex:1;min-height:0}.Emn1LG_officialPane [aria-label=好的回答],.Emn1LG_officialPane [aria-label=取消标记],.Emn1LG_officialPane [aria-label=有问题的回答],.Emn1LG_officialPane [aria-label=Good\\ response],.Emn1LG_officialPane [aria-label=Remove\\ rating],.Emn1LG_officialPane [aria-label=Bad\\ response],.Emn1LG_officialPane [aria-label=在新对话中分支],.Emn1LG_officialPane [aria-label=\"Branch into a new conversation\"]{display:none}.Emn1LG_officialPane [data-slot=conversation\\.view]{--dsh-composer-side-clearance:0px}.Emn1LG_officialPane [data-conversation-content]{--dsh-chat-content-width:min(952px, 100%)}.Emn1LG_drivesWindow [data-composer-card],.Emn1LG_drivesWindow [class*=openError]{display:none}.Emn1LG_viewColumn{flex-direction:column;width:100%;max-width:min(920px,100%);margin:0 auto;display:flex}.Emn1LG_viewColumn>*+*{margin-top:16px}.Emn1LG_userRow{flex-direction:column;align-items:flex-end;gap:6px;display:flex}.Emn1LG_bubble{max-width:min(calc(var(--dsh-chat-content-width,748px) * .702), 82%);background:var(--dsw-specific-bubble);font-size:var(--dsh-content-font-size,14px);line-height:calc(22px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-primary);white-space:pre-wrap;word-break:break-word;border-radius:22px;padding:10px 16px}.Emn1LG_assistantRow{flex-direction:column;gap:16px;min-width:0;display:flex}.Emn1LG_messageActions{margin-top:4px;margin-left:-6px}.Emn1LG_stopped,.Emn1LG_mediaChip{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-tertiary);border-radius:6px;align-self:flex-start;padding:0 6px;font-size:11px;line-height:18px}.Emn1LG_action{width:calc(28px + var(--dsh-content-font-delta,0px));height:calc(28px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;border-radius:28px;justify-content:center;align-items:center;padding:6px;display:inline-flex}.Emn1LG_action svg{width:calc(15px + var(--dsh-content-font-delta,0px));height:calc(15px + var(--dsh-content-font-delta,0px))}.Emn1LG_action:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary)}.Emn1LG_timeStart{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);white-space:nowrap;padding-right:12px}.Emn1LG_timeEnd{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);white-space:nowrap}.Emn1LG_noticeRow{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px));grid-template-columns:10px minmax(0,1fr) auto;align-items:start;gap:8px;padding:2px 0;display:grid}.Emn1LG_noticeDot{margin-top:5px}.Emn1LG_noticeCopy{overflow-wrap:anywhere;min-width:0}.Emn1LG_noticeTitleError{color:var(--dsw-alias-state-error-primary);margin-right:6px;font-weight:600}.Emn1LG_noticeTitleWarn{color:var(--dsw-alias-state-warn-primary);margin-right:6px;font-weight:600}.Emn1LG_noticeMessage{color:var(--dsw-alias-label-secondary)}.Emn1LG_noticeCode{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-markdown-code-block-small)}.Emn1LG_retryRow{color:var(--dsw-alias-label-tertiary);font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px))}.Emn1LG_retrySummary{width:fit-content;color:inherit;cursor:pointer;user-select:none;border-radius:3px;align-items:center;gap:7px;padding:2px 0;list-style:none;display:inline-flex}.Emn1LG_retrySummary::-webkit-details-marker{display:none}.Emn1LG_retrySummary:after{content:\"\";opacity:.8;border-bottom:1.5px solid;border-right:1.5px solid;width:6px;height:6px;transition:transform .12s;transform:rotate(-45deg)}.Emn1LG_retrySummary:hover{color:var(--dsw-alias-label-secondary)}.Emn1LG_retrySummary:focus-visible{outline:1.5px solid var(--dsw-alias-button-info-fill);outline-offset:2px}.Emn1LG_retryText{color:inherit}.Emn1LG_retryRow[data-active] .Emn1LG_retryText{background:linear-gradient(90deg, var(--dsw-alias-label-tertiary) 0%, var(--dsw-alias-label-tertiary) 40%, var(--dsw-alias-label-secondary) 50%, var(--dsw-alias-label-tertiary) 60%, var(--dsw-alias-label-tertiary) 100%);color:#0000;background-position:100%;background-size:200% 100%;background-clip:text;animation:1.6s ease-in-out infinite Emn1LG_dsh-sync-retry-shimmer}@keyframes Emn1LG_dsh-sync-retry-shimmer{0%{background-position:100%}to{background-position:0%}}@media (prefers-reduced-motion:reduce){.Emn1LG_retryRow[data-active] .Emn1LG_retryText{color:inherit;background:0 0;animation:none}}.Emn1LG_retryRow[open] .Emn1LG_retrySummary:after{transform:rotate(45deg)}.Emn1LG_retryDetails{overflow-wrap:anywhere;font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(18px + var(--dsh-content-font-delta-secondary,0px));gap:2px;margin-top:3px;padding-left:14px;display:grid}.Emn1LG_retryDetailLabel{color:var(--dsw-alias-label-secondary)}.Emn1LG_toBottomSlot{z-index:2;pointer-events:none;justify-content:flex-end;height:0;padding-right:8px;display:flex;position:sticky;bottom:16px}.Emn1LG_toBottom{--dsw-elevation-stroke-color:var(--dsw-alias-border-l3);corner-shape:round;width:34px;height:34px;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-button-floating-fill);box-shadow:var(--dsw-elevation-panel);cursor:pointer;pointer-events:auto;border:0;border-radius:100px;justify-content:center;align-items:center;margin-top:-34px;padding:0;display:flex}.Emn1LG_toBottom:hover{background:var(--dsw-alias-button-floating-hover)}.Emn1LG_composerRoot{flex-direction:column;flex:none;align-items:center;padding:0 16px 8px;display:flex}.Emn1LG_composerRootInner{box-sizing:border-box;justify-content:center;width:100%;padding:0 16px;display:flex}.Emn1LG_dockComposer{box-sizing:border-box;width:100%;margin-bottom:calc(-1 * var(--dsh-composer-stack-gap,6px));justify-content:center;padding:0 16px;display:flex}.Emn1LG_officialPane:has([data-sync-composer])~.Emn1LG_composerRoot{display:none}.Emn1LG_composerCard{box-sizing:border-box;--dsw-elevation-stroke-color:var(--dsw-alias-border-l2);background:var(--dsw-specific-input-major);width:100%;max-width:calc(min(920px,100%) + 32px);box-shadow:var(--dsw-elevation-soft);font:var(--dsw-font-s-14);border:0;border-radius:22px;flex-direction:column;gap:12px;padding-top:8px;display:flex}.Emn1LG_composerText{box-sizing:border-box;width:100%;min-height:44px;max-height:200px;color:var(--dsw-alias-label-primary);font:inherit;resize:none;background:0 0;border:0;margin:0;padding:8px 16px 0}.Emn1LG_composerText::placeholder{color:var(--dsw-alias-placeholder)}.Emn1LG_composerText:focus-visible{outline:none}.Emn1LG_composerBar{align-items:center;gap:8px;padding:0 10px 10px 16px;display:flex}.Emn1LG_composerTarget{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);flex:none}.Emn1LG_composerDelivery{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11)}.Emn1LG_composerOffline{color:var(--dsw-alias-state-warn-label);font:var(--dsw-font-xxxs-11)}.Emn1LG_composerSpacer{flex:1}.Emn1LG_sendButton{corner-shape:round;background:var(--dsw-alias-button-info-fill);color:#fff;cursor:pointer;width:34px;height:34px;transition:background-color var(--ds-transition-duration-fast) var(--ds-ease-in-out);border:0;border-radius:999px;flex:none;place-items:center;display:grid}.Emn1LG_sendButton:hover:not(:disabled){background:var(--dsw-alias-button-info-hover)}.Emn1LG_sendButton:disabled{opacity:.4;cursor:default}.Emn1LG_sendButton:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.Emn1LG_error{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12);margin-bottom:10px}.Emn1LG_panel[data-narrow=true] .Emn1LG_listPane{border-right:0;width:100%}.Emn1LG_panel[data-narrow=true] .Emn1LG_viewMachineName,.Emn1LG_panel[data-narrow=true] .Emn1LG_chromeCluster{display:none}.Emn1LG_panel[data-narrow=true] .Emn1LG_viewPane{z-index:0;position:relative}.Emn1LG_panel[data-narrow=true][data-list=shown] .Emn1LG_listPane{z-index:1;position:absolute;inset:0}.Emn1LG_panel[data-narrow=true][data-list=hidden] .Emn1LG_listPane{display:none}@media (prefers-reduced-motion:reduce){.Emn1LG_treeRow,.Emn1LG_treeSession,.Emn1LG_treeChevron svg,.Emn1LG_sendButton{transition:none}}.Emn1LG_settingsSession{padding-left:24px}.Emn1LG_settingsControls{align-items:center;gap:8px;margin-left:auto;padding-right:8px;display:flex}";
+		const tagId$6 = "dsh-session-sync/sync.module.css";
+		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagId$6) + "]") === null) {
+			const tag = document.createElement("style");
+			tag.dataset.plugin = "dsh-session-sync";
+			tag.dataset.pluginCss = tagId$6;
+			tag.textContent = css$6;
+			document.head.appendChild(tag);
+		}
+		var sync_module_css_default = {
+			"action": "Emn1LG_action",
+			"actions": "Emn1LG_actions",
+			"arrowOpen": "Emn1LG_arrowOpen",
+			"assistantRow": "Emn1LG_assistantRow",
+			"bubble": "Emn1LG_bubble",
+			"card": "Emn1LG_card",
+			"chromeChip": "Emn1LG_chromeChip",
+			"chromeCluster": "Emn1LG_chromeCluster",
+			"composerBar": "Emn1LG_composerBar",
+			"composerCard": "Emn1LG_composerCard",
+			"composerDelivery": "Emn1LG_composerDelivery",
+			"composerOffline": "Emn1LG_composerOffline",
+			"composerRoot": "Emn1LG_composerRoot",
+			"composerRootInner": "Emn1LG_composerRootInner",
+			"composerSpacer": "Emn1LG_composerSpacer",
+			"composerTarget": "Emn1LG_composerTarget",
+			"composerText": "Emn1LG_composerText",
+			"dirty": "Emn1LG_dirty",
+			"dockComposer": "Emn1LG_dockComposer",
+			"drivesWindow": "Emn1LG_drivesWindow",
+			"dsh-sync-retry-shimmer": "Emn1LG_dsh-sync-retry-shimmer",
+			"empty": "Emn1LG_empty",
+			"error": "Emn1LG_error",
+			"failed": "Emn1LG_failed",
+			"field": "Emn1LG_field",
+			"fieldRow": "Emn1LG_fieldRow",
+			"fieldText": "Emn1LG_fieldText",
+			"gapBadge": "Emn1LG_gapBadge",
+			"group": "Emn1LG_group",
+			"groupTitle": "Emn1LG_groupTitle",
+			"heroBadge": "Emn1LG_heroBadge",
+			"heroFish": "Emn1LG_heroFish",
+			"heroHeadline": "Emn1LG_heroHeadline",
+			"heroHint": "Emn1LG_heroHint",
+			"heroRoot": "Emn1LG_heroRoot",
+			"heroStack": "Emn1LG_heroStack",
+			"heroTitleGroup": "Emn1LG_heroTitleGroup",
+			"hint": "Emn1LG_hint",
+			"kind_assistant": "Emn1LG_kind_assistant",
+			"kind_compaction": "Emn1LG_kind_compaction",
+			"kind_context": "Emn1LG_kind_context",
+			"kind_error": "Emn1LG_kind_error",
+			"kind_other": "Emn1LG_kind_other",
+			"kind_policy": "Emn1LG_kind_policy",
+			"kind_step": "Emn1LG_kind_step",
+			"kind_system": "Emn1LG_kind_system",
+			"kind_think": "Emn1LG_kind_think",
+			"kind_title": "Emn1LG_kind_title",
+			"kind_tool": "Emn1LG_kind_tool",
+			"kind_turn": "Emn1LG_kind_turn",
+			"kind_user": "Emn1LG_kind_user",
+			"label": "Emn1LG_label",
+			"lede": "Emn1LG_lede",
+			"ledger": "Emn1LG_ledger",
+			"ledgerContentCell": "Emn1LG_ledgerContentCell",
+			"ledgerDuration": "Emn1LG_ledgerDuration",
+			"ledgerErrorText": "Emn1LG_ledgerErrorText",
+			"ledgerEventCell": "Emn1LG_ledgerEventCell",
+			"ledgerEventHead": "Emn1LG_ledgerEventHead",
+			"ledgerKind": "Emn1LG_ledgerKind",
+			"ledgerKindSlot": "Emn1LG_ledgerKindSlot",
+			"ledgerMono": "Emn1LG_ledgerMono",
+			"ledgerRail": "Emn1LG_ledgerRail",
+			"ledgerResult": "Emn1LG_ledgerResult",
+			"ledgerTable": "Emn1LG_ledgerTable",
+			"ledgerText": "Emn1LG_ledgerText",
+			"ledgerTurnLabel": "Emn1LG_ledgerTurnLabel",
+			"list": "Emn1LG_list",
+			"listCollapse": "Emn1LG_listCollapse",
+			"listExpand": "Emn1LG_listExpand",
+			"listHead": "Emn1LG_listHead",
+			"listHeadRow": "Emn1LG_listHeadRow",
+			"listPane": "Emn1LG_listPane",
+			"listStatus": "Emn1LG_listStatus",
+			"mediaChip": "Emn1LG_mediaChip",
+			"messageActions": "Emn1LG_messageActions",
+			"notice": "Emn1LG_notice",
+			"noticeClose": "Emn1LG_noticeClose",
+			"noticeCode": "Emn1LG_noticeCode",
+			"noticeCopy": "Emn1LG_noticeCopy",
+			"noticeDot": "Emn1LG_noticeDot",
+			"noticeMessage": "Emn1LG_noticeMessage",
+			"noticeRow": "Emn1LG_noticeRow",
+			"noticeText": "Emn1LG_noticeText",
+			"noticeTitleError": "Emn1LG_noticeTitleError",
+			"noticeTitleWarn": "Emn1LG_noticeTitleWarn",
+			"officialPane": "Emn1LG_officialPane",
+			"olderButton": "Emn1LG_olderButton",
+			"olderRow": "Emn1LG_olderRow",
+			"pair": "Emn1LG_pair",
+			"panel": "Emn1LG_panel",
+			"realBadge": "Emn1LG_realBadge",
+			"retryDetailLabel": "Emn1LG_retryDetailLabel",
+			"retryDetails": "Emn1LG_retryDetails",
+			"retryRow": "Emn1LG_retryRow",
+			"retrySummary": "Emn1LG_retrySummary",
+			"retryText": "Emn1LG_retryText",
+			"routeBadge": "Emn1LG_routeBadge",
+			"rowTime": "Emn1LG_rowTime",
+			"rowTitle": "Emn1LG_rowTitle",
+			"saved": "Emn1LG_saved",
+			"scopeBadge": "Emn1LG_scopeBadge",
+			"scopeBadgeAction": "Emn1LG_scopeBadgeAction",
+			"section": "Emn1LG_section",
+			"sendButton": "Emn1LG_sendButton",
+			"sessionGroup": "Emn1LG_sessionGroup",
+			"sessionGroupCount": "Emn1LG_sessionGroupCount",
+			"sessionGroupHead": "Emn1LG_sessionGroupHead",
+			"sessionGroupPath": "Emn1LG_sessionGroupPath",
+			"sessionList": "Emn1LG_sessionList",
+			"sessionMeta": "Emn1LG_sessionMeta",
+			"sessionRow": "Emn1LG_sessionRow",
+			"sessionText": "Emn1LG_sessionText",
+			"sessionTitle": "Emn1LG_sessionTitle",
+			"settingsControls": "Emn1LG_settingsControls",
+			"settingsSession": "Emn1LG_settingsSession",
+			"status": "Emn1LG_status",
+			"statusBad": "Emn1LG_statusBad",
+			"statusGood": "Emn1LG_statusGood",
+			"statusItem": "Emn1LG_statusItem",
+			"statusRow": "Emn1LG_statusRow",
+			"statusValue": "Emn1LG_statusValue",
+			"stopped": "Emn1LG_stopped",
+			"timeEnd": "Emn1LG_timeEnd",
+			"timeStart": "Emn1LG_timeStart",
+			"tjAction": "Emn1LG_tjAction",
+			"tjActionIcon": "Emn1LG_tjActionIcon",
+			"tjClose": "Emn1LG_tjClose",
+			"tjDetailBody": "Emn1LG_tjDetailBody",
+			"tjDetailTab": "Emn1LG_tjDetailTab",
+			"tjDetailTabActive": "Emn1LG_tjDetailTabActive",
+			"tjDetailTabs": "Emn1LG_tjDetailTabs",
+			"tjDetails": "Emn1LG_tjDetails",
+			"tjDetailsDot": "Emn1LG_tjDetailsDot",
+			"tjDetailsHeader": "Emn1LG_tjDetailsHeader",
+			"tjDetailsLocation": "Emn1LG_tjDetailsLocation",
+			"tjDetailsName": "Emn1LG_tjDetailsName",
+			"tjDetailsTitle": "Emn1LG_tjDetailsTitle",
+			"tjFolded": "Emn1LG_tjFolded",
+			"tjFoldedEllipsis": "Emn1LG_tjFoldedEllipsis",
+			"tjFoldedText": "Emn1LG_tjFoldedText",
+			"tjLaneLabels": "Emn1LG_tjLaneLabels",
+			"tjLanes": "Emn1LG_tjLanes",
+			"tjMarkdown": "Emn1LG_tjMarkdown",
+			"tjOverview": "Emn1LG_tjOverview",
+			"tjPayload": "Emn1LG_tjPayload",
+			"tjPlot": "Emn1LG_tjPlot",
+			"tjRoot": "Emn1LG_tjRoot",
+			"tjSearch": "Emn1LG_tjSearch",
+			"tjSearchIcon": "Emn1LG_tjSearchIcon",
+			"tjSearchInput": "Emn1LG_tjSearchInput",
+			"tjSpan": "Emn1LG_tjSpan",
+			"tjSplit": "Emn1LG_tjSplit",
+			"tjStrip": "Emn1LG_tjStrip",
+			"tjTablePane": "Emn1LG_tjTablePane",
+			"tjToggle": "Emn1LG_tjToggle",
+			"tjToggleIcon": "Emn1LG_tjToggleIcon",
+			"tjToolbar": "Emn1LG_tjToolbar",
+			"tjTrack": "Emn1LG_tjTrack",
+			"tjTurnBoundaries": "Emn1LG_tjTurnBoundaries",
+			"tjTurnBoundary": "Emn1LG_tjTurnBoundary",
+			"toBottom": "Emn1LG_toBottom",
+			"toBottomSlot": "Emn1LG_toBottomSlot",
+			"treeChevron": "Emn1LG_treeChevron",
+			"treeFolder": "Emn1LG_treeFolder",
+			"treeRow": "Emn1LG_treeRow",
+			"treeRowDim": "Emn1LG_treeRowDim",
+			"treeSession": "Emn1LG_treeSession",
+			"treeSessionSelected": "Emn1LG_treeSessionSelected",
+			"treeSlot": "Emn1LG_treeSlot",
+			"userRow": "Emn1LG_userRow",
+			"viewColumn": "Emn1LG_viewColumn",
+			"viewHeader": "Emn1LG_viewHeader",
+			"viewMachine": "Emn1LG_viewMachine",
+			"viewMachineName": "Emn1LG_viewMachineName",
+			"viewPane": "Emn1LG_viewPane",
+			"viewScroll": "Emn1LG_viewScroll",
+			"viewSpacer": "Emn1LG_viewSpacer",
+			"viewTab": "Emn1LG_viewTab",
+			"viewTabActive": "Emn1LG_viewTabActive",
+			"viewTabs": "Emn1LG_viewTabs",
+			"viewTitle": "Emn1LG_viewTitle",
+			"viewTitleRow": "Emn1LG_viewTitleRow"
+		};
+		//#endregion
+		//#region src/client/MirrorComposer.tsx
+		/**
+		* The console's takeover composer, as one component drawn by two seats.
+		*
+		* The card is the console's own — the shipped composer cannot be used, because
+		* its prompt would be carried to a Host that has never heard of the mirrored
+		* Session — but *where* it is drawn follows what the pane is showing:
+		*
+		*  - on the chat tab of a build that can render a retained Session, it is the
+		*    `conversation.input.dock` occurrence inside the shipped composer stack, so
+		*    the shipped input capsule can be hidden and the shipped statistics row and
+		*    context meter below it become the footer (see `official-session.tsx` and
+		*    `footer-projections.ts`);
+		*  - on the trajectory tab, and on a build with no shipped conversation at all,
+		*    it is the console's own footer, drawn beside its own transcript.
+		*
+		* Both seats render *this*, and both read their draft from the shared
+		* {@link ComposerDrafts} store, so switching between them keeps what the reader
+		* typed.
+		*/
+		/**
+		* The delivery state of the last prompt, as the composer renders it.
+		* @param delivery - the last takeover prompt's progress.
+		* @param t - the localized copy lookup.
+		* @returns the line the card prints beside its target.
+		*/
+		function deliveryLine(delivery, t) {
+			if (delivery.state === "queued") return t("deliveryQueued");
+			if (delivery.state === "delivered") return t("deliveryDelivered");
+			if (delivery.state === "accepted") return t("deliveryAccepted");
+			if (delivery.state === "expired") return t("deliveryExpired");
+			return delivery.error === void 0 ? t("deliveryFailed") : `${t("deliveryFailed")}: ${delivery.error}`;
+		}
+		/**
+		* One Session's draft, as a seat renders it: read once on mount, then re-read on
+		* every change any seat makes.
+		*
+		* A plain subscription rather than `useSyncExternalStore`: the store hands out a
+		* frozen object per Session, so a re-read that changed nothing is one reference
+		* comparison, and React bails out of the re-render on the same identity.
+		* @param drafts - the shared store.
+		* @param key - the Session this seat is addressed to.
+		* @returns the state to render.
+		*/
+		function useDraft(drafts, key) {
+			const [state, setState] = react.useState(() => drafts.read(key));
+			react.useEffect(() => {
+				setState(drafts.read(key));
+				return drafts.subscribe(() => {
+					setState(drafts.read(key));
+				});
+			}, [drafts, key]);
+			return state;
+		}
+		/**
+		* Render the takeover composer card.
+		* @param props - copy, the shared draft store, and the action that sends.
+		* @returns the card.
+		*/
+		function MirrorComposer(props) {
+			const { t, drafts, draftKey, machineName, delivery, online, send } = props;
+			const draft = useDraft(drafts, draftKey);
+			const submit = () => {
+				const text = draft.text.trim();
+				if (text === "" || draft.sending) return;
+				drafts.setSending(draftKey, true);
+				send(text).then((accepted) => {
+					drafts.setSending(draftKey, false);
+					if (accepted) drafts.clear(draftKey);
+				});
+			};
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+				className: props.inShippedStack === true ? sync_module_css_default.dockComposer : sync_module_css_default.composerRootInner,
+				...props.inShippedStack === true ? { "data-sync-composer": "" } : {},
+				children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("form", {
+					className: sync_module_css_default.composerCard,
+					onSubmit: (event) => {
+						event.preventDefault();
+						submit();
+					},
+					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("textarea", {
+						className: sync_module_css_default.composerText,
+						value: draft.text,
+						rows: 2,
+						placeholder: t("composerPlaceholder"),
+						"aria-label": t("composerPlaceholder"),
+						onChange: (event) => {
+							drafts.setText(draftKey, event.target.value);
+						},
+						onKeyDown: (event) => {
+							if (event.key !== "Enter" || event.shiftKey) return;
+							event.preventDefault();
+							submit();
+						}
+					}), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+						className: sync_module_css_default.composerBar,
+						children: [
+							/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
+								className: sync_module_css_default.composerTarget,
+								children: [
+									t("composerTarget"),
+									" ",
+									machineName
+								]
+							}),
+							delivery !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+								className: sync_module_css_default.composerDelivery,
+								children: deliveryLine(delivery, t)
+							}),
+							!online && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+								className: sync_module_css_default.composerOffline,
+								children: t("offlineQueueHint")
+							}),
+							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { className: sync_module_css_default.composerSpacer }),
+							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
+								type: "submit",
+								className: sync_module_css_default.sendButton,
+								disabled: draft.sending || draft.text.trim() === "",
+								"aria-label": draft.sending ? t("sending") : t("send"),
+								children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconRightUpOutlineRegular, {})
+							})
+						]
+					})]
+				})
+			});
+		}
+		/**
+		* The console's composer as an occurrence of the shipped `conversation.input.dock`.
+		*
+		* The seat is the shipped composer stack, one slot above the shipped input
+		* capsule, and it exists for *every* Session the product draws — so this returns
+		* nothing unless the Session in hand is the one the console has retained under a
+		* synthetic identity. That check is also what makes the console's own footer the
+		* fallback: when the shipped conversation is not being drawn (the trajectory tab,
+		* or a build with no retention seam) this entry is not mounted at all.
+		*
+		* `open` is read through the snapshot hook rather than asked of the bridge,
+		* because the bridge is a plain object and this component has to re-render when
+		* the console opens, switches or closes a Session.
+		* @param props - the standard kit and this entry's inject face.
+		* @returns the card, or null for a Session the console does not own.
+		*/
+		function MirrorComposerDock(props) {
+			const { t, useSync, drafts, official, sendPrompt, sessionId } = props;
+			if (typeof useSync !== "function" || sessionId === void 0) return null;
+			const open = useSync((snapshot) => snapshot.open);
+			const machines = useSync((snapshot) => snapshot.state.machines);
+			const delivery = useSync((snapshot) => snapshot.delivery);
+			if (open === void 0 || !official.owns(sessionId)) return null;
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(MirrorComposer, {
+				t,
+				drafts,
+				draftKey: draftKey(open.machineName, open.sessionId),
+				machineName: open.machineName,
+				delivery,
+				online: machines.find((machine) => machine.machineName === open.machineName)?.online === true,
+				send: sendPrompt,
+				inShippedStack: true
+			});
+		}
+		//#endregion
 		//#region src/shared/log-stats.ts
 		/** One record, read as the loose shape these rows arrive in. */
-		function asRecord$4(value) {
+		function asRecord$5(value) {
 			return typeof value === "object" && value !== null && !Array.isArray(value) ? value : void 0;
 		}
 		/** One finite number field, or undefined. */
@@ -3444,7 +1349,7 @@ window.__ModuleLoader__.load({
 			let contextUsed;
 			const stepStarts = /* @__PURE__ */ new Map();
 			for (const event of events) {
-				const data = asRecord$4(event.data);
+				const data = asRecord$5(event.data);
 				if (firstTime === void 0) firstTime = event.time;
 				lastTime = event.time;
 				if (event.type === "turn/start") {
@@ -3474,7 +1379,7 @@ window.__ModuleLoader__.load({
 					continue;
 				}
 				if (event.type === "assistant/message") {
-					const reported = asRecord$4(data?.["usage"]);
+					const reported = asRecord$5(data?.["usage"]);
 					usage.inputTokens += number$3(reported?.["inputTokens"]) ?? 0;
 					usage.outputTokens += number$3(reported?.["outputTokens"]) ?? 0;
 					usage.cacheReadTokens += number$3(reported?.["cacheReadTokens"]) ?? 0;
@@ -3539,9 +1444,9 @@ window.__ModuleLoader__.load({
 			let openTurn = false;
 			const stats = logStats(events);
 			for (const event of events) {
-				const data = asRecord$3(event.data);
+				const data = asRecord$4(event.data);
 				if (event.type === "request/header") {
-					const config = asRecord$3(asRecord$3(data?.["header"])?.["config"]);
+					const config = asRecord$4(asRecord$4(data?.["header"])?.["config"]);
 					const provider = text$1(config?.["provider"]);
 					const name = text$1(config?.["model"]);
 					if (provider !== void 0 && name !== void 0) model = {
@@ -3615,7 +1520,7 @@ window.__ModuleLoader__.load({
 			let currentStep;
 			for (const event of events) {
 				if (HIDDEN_EVENTS.has(event.type)) continue;
-				const data = asRecord$3(event.data);
+				const data = asRecord$4(event.data);
 				if (data === void 0) continue;
 				const key = String(event.seq);
 				if (event.type === "turn/start") {
@@ -3640,7 +1545,7 @@ window.__ModuleLoader__.load({
 					continue;
 				}
 				if (event.type === "turn/end") {
-					const reason = text$1(asRecord$3(data["reason"])?.["kind"]);
+					const reason = text$1(asRecord$4(data["reason"])?.["kind"]);
 					const cell = base(key, "turn", label, event, {
 						turn,
 						step,
@@ -3669,7 +1574,7 @@ window.__ModuleLoader__.load({
 					continue;
 				}
 				if (event.type === "tool/result") {
-					const callId = text$1(asRecord$3(asRecord$3(data["message"])?.["source"])?.["callId"]) ?? "";
+					const callId = text$1(asRecord$4(asRecord$4(data["message"])?.["source"])?.["callId"]) ?? "";
 					const cell = calls.get(callId);
 					if (cell !== void 0) {
 						cell.result = resultExcerpt(data);
@@ -3690,7 +1595,7 @@ window.__ModuleLoader__.load({
 				}
 				const assistant = event.type === "assistant/message";
 				const kind = kindOf(event.type, data);
-				const message = asRecord$3(data["message"]);
+				const message = asRecord$4(data["message"]);
 				const textBody = textOf$1(message?.["content"] ?? data["content"]);
 				const cell = base(key, kind, label, event, {
 					turn,
@@ -3699,7 +1604,7 @@ window.__ModuleLoader__.load({
 				});
 				cell.title = excerpt(textBody);
 				if (assistant) {
-					const output = number$2(asRecord$3(data["usage"])?.["outputTokens"]);
+					const output = number$2(asRecord$4(data["usage"])?.["outputTokens"]);
 					if (output !== void 0 && output > 0) cell.tokens = output;
 					const reasoning = reasoningOf(message?.["content"]);
 					if (cell.title === "" && reasoning !== "") {
@@ -3732,7 +1637,7 @@ window.__ModuleLoader__.load({
 				case "step/start":
 				case "step/end": return "step";
 				case "assistant/message": return "assistant";
-				case "user/message": return asRecord$3(data["source"])?.["kind"] === "user" ? "user" : "system";
+				case "user/message": return asRecord$4(data["source"])?.["kind"] === "user" ? "user" : "system";
 				case "system/message": return "system";
 				case "request/header":
 				case "request/context": return "context";
@@ -3871,8 +1776,8 @@ window.__ModuleLoader__.load({
 		}
 		/** The request header's route and tool count, as one line. */
 		function requestHeaderText(data) {
-			const header = asRecord$3(data["header"]);
-			const config = asRecord$3(header?.["config"]);
+			const header = asRecord$4(data["header"]);
+			const config = asRecord$4(header?.["config"]);
 			const tools = Array.isArray(header?.["tools"]) ? header["tools"].length : void 0;
 			const parts = [];
 			const provider = text$1(config?.["provider"]);
@@ -3909,7 +1814,7 @@ window.__ModuleLoader__.load({
 		function summarizeArguments(raw) {
 			if (raw === "") return "";
 			try {
-				const record = asRecord$3(JSON.parse(raw));
+				const record = asRecord$4(JSON.parse(raw));
 				if (record !== void 0) {
 					for (const key of [
 						"command",
@@ -3935,11 +1840,11 @@ window.__ModuleLoader__.load({
 		}
 		/** Every visible result block's text, bounded. */
 		function resultExcerpt(data) {
-			const message = asRecord$3(data["message"]);
+			const message = asRecord$4(data["message"]);
 			const blocks = Array.isArray(message?.["content"]) ? message["content"] : [];
 			const parts = [];
 			for (const block of blocks) {
-				const record = asRecord$3(block);
+				const record = asRecord$4(block);
 				if (record === void 0) continue;
 				const text = textOf$1(Array.isArray(record["content"]) ? record["content"] : [record]);
 				if (text !== "") parts.push(text);
@@ -3948,15 +1853,15 @@ window.__ModuleLoader__.load({
 		}
 		/** Whether a tool result reports failure on any block. */
 		function resultIsError(data) {
-			const message = asRecord$3(data["message"]);
-			return (Array.isArray(message?.["content"]) ? message["content"] : []).some((block) => asRecord$3(block)?.["isError"] === true);
+			const message = asRecord$4(data["message"]);
+			return (Array.isArray(message?.["content"]) ? message["content"] : []).some((block) => asRecord$4(block)?.["isError"] === true);
 		}
 		/** Join the visible text blocks of one content array. */
 		function textOf$1(content) {
 			if (!Array.isArray(content)) return "";
 			const parts = [];
 			for (const block of content) {
-				const record = asRecord$3(block);
+				const record = asRecord$4(block);
 				if (record === void 0) continue;
 				if (record["type"] === "text" && typeof record["text"] === "string") parts.push(record["text"]);
 			}
@@ -3967,14 +1872,14 @@ window.__ModuleLoader__.load({
 			if (!Array.isArray(content)) return "";
 			const parts = [];
 			for (const block of content) {
-				const record = asRecord$3(block);
+				const record = asRecord$4(block);
 				if (record === void 0) continue;
 				if (record["type"] === "reasoning" && typeof record["text"] === "string") parts.push(record["text"]);
 			}
 			return parts.join("\n").trim();
 		}
 		/** Narrow one unknown value to a plain record. */
-		function asRecord$3(value) {
+		function asRecord$4(value) {
 			if (typeof value !== "object" || value === null || Array.isArray(value)) return void 0;
 			return value;
 		}
@@ -4867,7 +2772,7 @@ window.__ModuleLoader__.load({
 		}
 		/** The read `meta` shape, validated line by line. */
 		function readMeta(row) {
-			const meta = asRecord$2(row.meta);
+			const meta = asRecord$3(row.meta);
 			if (meta === void 0) return void 0;
 			const path = meta["path"];
 			if (typeof path !== "string") return void 0;
@@ -4882,7 +2787,7 @@ window.__ModuleLoader__.load({
 			const lines = [];
 			let previous = offset - 1;
 			for (const candidate of raw) {
-				const line = asRecord$2(candidate);
+				const line = asRecord$3(candidate);
 				if (line === void 0) return void 0;
 				const number = line["number"];
 				if (typeof number !== "number" || !Number.isInteger(number) || number <= previous) return void 0;
@@ -4987,14 +2892,14 @@ window.__ModuleLoader__.load({
 		}
 		/** The applied hunks a result carries, all-or-nothing. */
 		function appliedDiffs(meta) {
-			const record = asRecord$2(meta);
+			const record = asRecord$3(meta);
 			if (record === void 0) return null;
 			const diffs = record["diffs"];
 			if (!Array.isArray(diffs)) return null;
 			if (diffs.length === 0) return "empty";
 			const hunks = [];
 			for (const candidate of diffs) {
-				const hunk = asRecord$2(candidate);
+				const hunk = asRecord$3(candidate);
 				if (hunk === void 0) return null;
 				const path = hunk["path"];
 				const oldText = hunk["oldText"];
@@ -5046,7 +2951,7 @@ window.__ModuleLoader__.load({
 			if (path !== void 0 && (typeof path !== "string" || path.trim() === "")) return null;
 			const include = parsed.args["include"];
 			if (include !== void 0 && (typeof include !== "string" || !validInclude(include))) return null;
-			const meta = asRecord$2(row.meta);
+			const meta = asRecord$3(row.meta);
 			if (meta === void 0) return null;
 			const truncated = meta["truncated"];
 			const total = meta["total"];
@@ -5094,14 +2999,14 @@ window.__ModuleLoader__.load({
 			if (!Array.isArray(value)) return null;
 			const files = [];
 			for (const candidate of value) {
-				const group = asRecord$2(candidate);
+				const group = asRecord$3(candidate);
 				if (group === void 0) return null;
 				const path = group["path"];
 				const matches = group["matches"];
 				if (typeof path !== "string" || !Array.isArray(matches)) return null;
 				const lines = [];
 				for (const entry of matches) {
-					const match = asRecord$2(entry);
+					const match = asRecord$3(entry);
 					if (match === void 0) return null;
 					const lineNumber = match["lineNumber"];
 					if (typeof lineNumber !== "number" || !Number.isInteger(lineNumber) || lineNumber < 1) return null;
@@ -5127,7 +3032,7 @@ window.__ModuleLoader__.load({
 			if (row.pending || row.isError) return null;
 			const parsed = parseCall(row);
 			if (parsed === void 0) return null;
-			const meta = asRecord$2(row.meta);
+			const meta = asRecord$3(row.meta);
 			if (meta === void 0 || typeof meta["truncated"] !== "boolean") return null;
 			const truncated = meta["truncated"];
 			if (parsed.name === "web_search") {
@@ -5165,7 +3070,7 @@ window.__ModuleLoader__.load({
 			if (!Array.isArray(value)) return null;
 			const sources = [];
 			for (const candidate of value) {
-				const source = asRecord$2(candidate);
+				const source = asRecord$3(candidate);
 				if (source === void 0) return null;
 				const url = source["url"];
 				if (typeof url !== "string") return null;
@@ -5280,19 +3185,19 @@ window.__ModuleLoader__.load({
 		}
 		/** Parse a raw arguments string into an object — `parsedToolCall`. */
 		function parseArgs(raw) {
-			return asRecord$2(parseJson$1(raw));
+			return asRecord$3(parseJson$1(raw));
 		}
 		/** The result's text when it is exactly one text block — `singleResultText`. */
 		function singleResultText(row) {
 			if (row.resultBlocks.length !== 1) return void 0;
-			const only = asRecord$2(row.resultBlocks[0]);
+			const only = asRecord$3(row.resultBlocks[0]);
 			return only?.["type"] === "text" && typeof only["text"] === "string" ? only["text"] : void 0;
 		}
 		/** Every text block joined — `flattenContent`. */
 		function flattenContent(row) {
 			const parts = [];
 			for (const block of row.resultBlocks) {
-				const record = asRecord$2(block);
+				const record = asRecord$3(block);
 				if (record?.["type"] === "text" && typeof record["text"] === "string") parts.push(record["text"]);
 			}
 			return parts.join("\n");
@@ -5301,7 +3206,7 @@ window.__ModuleLoader__.load({
 		function resultText(row) {
 			const parts = [];
 			for (const block of row.resultBlocks) {
-				const record = asRecord$2(block);
+				const record = asRecord$3(block);
 				if (record === void 0) continue;
 				if (record["type"] === "text" && typeof record["text"] === "string") parts.push(record["text"]);
 				else parts.push(JSON.stringify(record, null, 2));
@@ -5382,7 +3287,7 @@ window.__ModuleLoader__.load({
 			return path;
 		}
 		/** One optional JSON object. */
-		function asRecord$2(value) {
+		function asRecord$3(value) {
 			if (typeof value !== "object" || value === null || Array.isArray(value)) return void 0;
 			return value;
 		}
@@ -5455,17 +3360,17 @@ window.__ModuleLoader__.load({
 			return typeof value === "number" && Number.isFinite(value) ? value : void 0;
 		}
 		/** One record as a plain object, or undefined. */
-		function asRecord$1(value) {
+		function asRecord$2(value) {
 			return typeof value === "object" && value !== null && !Array.isArray(value) ? value : void 0;
 		}
 		/** Provider-reported completion tokens, or null when unrecorded. */
 		function usageOutputTokens(usage) {
-			const output = number$1(asRecord$1(usage)?.["outputTokens"]);
+			const output = number$1(asRecord$2(usage)?.["outputTokens"]);
 			return output !== void 0 && output >= 0 ? output : null;
 		}
 		/** `provider/model` named by an assistant settlement's message source. */
 		function routeOf(message) {
-			const source = asRecord$1(asRecord$1(message)?.["source"]);
+			const source = asRecord$2(asRecord$2(message)?.["source"]);
 			const provider = source?.["provider"];
 			const model = source?.["model"];
 			return typeof provider === "string" && typeof model === "string" ? `${provider}/${model}` : void 0;
@@ -5483,7 +3388,7 @@ window.__ModuleLoader__.load({
 			const folds = /* @__PURE__ */ new Map();
 			const stepStarts = /* @__PURE__ */ new Map();
 			for (const event of events) {
-				const data = asRecord$1(event.data);
+				const data = asRecord$2(event.data);
 				const turn = number$1(data?.["turn"]);
 				const step = number$1(data?.["step"]);
 				if (turn === void 0) continue;
@@ -5575,7 +3480,7 @@ window.__ModuleLoader__.load({
 			const surface = applySurface(events);
 			const facts = turnFactsOf(surface);
 			for (const event of surface) {
-				const data = asRecord(event.data);
+				const data = asRecord$1(event.data);
 				if (data === void 0) continue;
 				if (event.type === "tool/call") {
 					const row = toolCallRow(event, data);
@@ -5633,10 +3538,10 @@ window.__ModuleLoader__.load({
 				}
 				if (event.type === "turn/end") {
 					for (const row of chains.values()) if (row.state === "scheduled" && row.time <= event.time) row.state = "cancelled";
-					const reason = asRecord(data["reason"]);
+					const reason = asRecord$1(data["reason"]);
 					const kind = reason?.["kind"];
 					if (kind === "error") {
-						const failure = asRecord(reason?.["error"]);
+						const failure = asRecord$1(reason?.["error"]);
 						rows.push({
 							kind: "notice",
 							key: String(event.seq),
@@ -5673,7 +3578,7 @@ window.__ModuleLoader__.load({
 			const facts = /* @__PURE__ */ new Map();
 			const starts = /* @__PURE__ */ new Map();
 			for (const event of events) {
-				const data = asRecord(event.data);
+				const data = asRecord$1(event.data);
 				const turn = number(data?.["turn"]);
 				if (turn === void 0) continue;
 				if (event.type === "turn/start") {
@@ -5696,7 +3601,7 @@ window.__ModuleLoader__.load({
 					usage: emptyUsage(),
 					running: true
 				};
-				const reported = asRecord(data?.["usage"]);
+				const reported = asRecord$1(data?.["usage"]);
 				current.usage.input += number(reported?.["inputTokens"]) ?? 0;
 				current.usage.output += number(reported?.["outputTokens"]) ?? 0;
 				current.usage.cacheRead += number(reported?.["cacheReadTokens"]) ?? 0;
@@ -5778,7 +3683,7 @@ window.__ModuleLoader__.load({
 		function toRow(event, data, facts) {
 			const key = String(event.seq);
 			if (event.type === "user/message") {
-				if (asRecord(data["source"])?.["kind"] !== "user") return void 0;
+				if (asRecord$1(data["source"])?.["kind"] !== "user") return void 0;
 				const text = textOf(data["content"]);
 				return text === "" ? void 0 : {
 					kind: "user",
@@ -5788,7 +3693,7 @@ window.__ModuleLoader__.load({
 				};
 			}
 			if (event.type === "assistant/message") {
-				const blocks = blocksOf(asRecord(data["message"])?.["content"]);
+				const blocks = blocksOf(asRecord$1(data["message"])?.["content"]);
 				const interrupted = data["interrupted"] === true;
 				if (blocks.length === 0 && !interrupted) return void 0;
 				const turn = number(data["turn"]);
@@ -5818,7 +3723,7 @@ window.__ModuleLoader__.load({
 			if (!Array.isArray(content)) return [];
 			const blocks = [];
 			for (const candidate of content) {
-				const record = asRecord(candidate);
+				const record = asRecord$1(candidate);
 				if (record === void 0) continue;
 				const type = record["type"];
 				if (type === "text") {
@@ -5854,7 +3759,7 @@ window.__ModuleLoader__.load({
 		}
 		/** Describe an image block from the facts the mirror does carry. */
 		function imageDetail(record) {
-			const attachment = asRecord(record["attachment"]);
+			const attachment = asRecord$1(record["attachment"]);
 			const mediaType = text(attachment?.["mediaType"]);
 			const bytes = number(attachment?.["bytes"]);
 			const parts = [mediaType];
@@ -5908,27 +3813,27 @@ window.__ModuleLoader__.load({
 		}
 		/** Read the pairing id a `tool/result` carries on its message source. */
 		function callIdOf(data) {
-			const source = asRecord(asRecord(data["message"])?.["source"]);
+			const source = asRecord$1(asRecord$1(data["message"])?.["source"]);
 			return typeof source?.["callId"] === "string" ? source["callId"] : "";
 		}
 		/** The result's content blocks, unwrapped from the `tool-result` envelope. */
 		function resultBlocksOf(data) {
-			const message = asRecord(data["message"]);
-			const first = asRecord((Array.isArray(message?.["content"]) ? message["content"] : [])[0]);
+			const message = asRecord$1(data["message"]);
+			const first = asRecord$1((Array.isArray(message?.["content"]) ? message["content"] : [])[0]);
 			return Array.isArray(first?.["content"]) ? first["content"] : [];
 		}
 		/** The structured failure code a result carries, when it carries one. */
 		function errorCodeOf(data) {
-			const error = asRecord(data["error"]);
+			const error = asRecord$1(data["error"]);
 			return typeof error?.["code"] === "string" ? error["code"] : "";
 		}
 		/** Join every visible text block of one tool result. */
 		function resultTextOf(data) {
-			const message = asRecord(data["message"]);
+			const message = asRecord$1(data["message"]);
 			const blocks = Array.isArray(message?.["content"]) ? message["content"] : [];
 			const parts = [];
 			for (const block of blocks) {
-				const record = asRecord(block);
+				const record = asRecord$1(block);
 				if (record === void 0) continue;
 				const text = textOf(Array.isArray(record["content"]) ? record["content"] : [record]);
 				if (text !== "") parts.push(text);
@@ -5938,12 +3843,12 @@ window.__ModuleLoader__.load({
 		/** Whether one tool result reports failure, in either of the two places it can. */
 		function isErrorOf(data) {
 			if (data["error"] !== void 0) return true;
-			const message = asRecord(data["message"]);
-			return (Array.isArray(message?.["content"]) ? message["content"] : []).some((block) => asRecord(block)?.["isError"] === true);
+			const message = asRecord$1(data["message"]);
+			return (Array.isArray(message?.["content"]) ? message["content"] : []).some((block) => asRecord$1(block)?.["isError"] === true);
 		}
 		/** One-line failure text out of an `LlmFailure`-shaped record. */
 		function failureText(value) {
-			return text(asRecord(value)?.["message"]);
+			return text(asRecord$1(value)?.["message"]);
 		}
 		/**
 		* The call's own one-line description.
@@ -5956,7 +3861,7 @@ window.__ModuleLoader__.load({
 		*/
 		function descriptionOf(raw) {
 			if (raw === "") return "";
-			const description = asRecord(parseJson(raw))?.["description"];
+			const description = asRecord$1(parseJson(raw))?.["description"];
 			return typeof description === "string" ? oneLine(description) : "";
 		}
 		/** The first non-empty line, which is what a failure summary shows. */
@@ -5970,7 +3875,7 @@ window.__ModuleLoader__.load({
 		/** One-line gist of a raw arguments string. */
 		function summarize(raw) {
 			if (raw === "") return "";
-			const record = asRecord(parseJson(raw));
+			const record = asRecord$1(parseJson(raw));
 			if (record !== void 0) {
 				for (const key of SUMMARY_KEYS) {
 					const value = record[key];
@@ -6009,7 +3914,7 @@ window.__ModuleLoader__.load({
 			if (!Array.isArray(content)) return "";
 			const parts = [];
 			for (const block of content) {
-				const record = asRecord(block);
+				const record = asRecord$1(block);
 				if (record === void 0) continue;
 				if (record["type"] === "text" && typeof record["text"] === "string") parts.push(record["text"]);
 			}
@@ -6024,7 +3929,7 @@ window.__ModuleLoader__.load({
 			return typeof value === "number" && Number.isFinite(value) ? value : void 0;
 		}
 		/** Narrow one unknown value to a plain record. */
-		function asRecord(value) {
+		function asRecord$1(value) {
 			if (typeof value !== "object" || value === null || Array.isArray(value)) return void 0;
 			return value;
 		}
@@ -6122,6 +4027,1638 @@ window.__ModuleLoader__.load({
 				labelKey: "toolLabelGeneric",
 				wire: name
 			};
+		}
+		//#endregion
+		//#region src/client/api.ts
+		/**
+		* Browser-side transport and view state for the sync plugin.
+		*
+		* Everything goes through the Host routes this package registers under
+		* {@link ROUTE_PREFIX}, so the panel is same-origin with the GUI it lives in.
+		* Live state arrives on one `EventSource`; the panel and the settings page both
+		* read the single snapshot this store publishes, which is why a change made on
+		* one surface is already visible on the other.
+		*/
+		/** How often the local Session list is re-read while the panel is mounted. */
+		const SESSION_POLL_MS = 15e3;
+		/**
+		* How long one "load older" click waits for a page the mirror had to fetch.
+		*
+		* The page may not exist in the mirror yet, in which case the server asks the
+		* machine that owns the Session and the events arrive over the ordinary stream:
+		* a read of its log, a POST back, and a trip through a proxy, which measured at
+		* ten to twenty seconds on a cross-border link. Those events also queue behind
+		* everything else that machine is publishing, so the wait has to cover a
+		* backlog and not just one round trip — measured live, a page that had been read
+		* and was sitting 1,766 events deep in the origin's outbox.
+		*
+		* Waiting is also what makes the click reliable: the page arrives as an ordinary
+		* event frame, and the browser's stream to the server is the least dependable leg
+		* of the whole path (`net::ERR_HTTP2_PROTOCOL_ERROR` on a proxied idle SSE).
+		* So the wait re-asks the endpoint and accepts either arrival: the page itself, or
+		* the window having moved below where it started.
+		*/
+		const OLDER_ATTEMPTS = 30;
+		const OLDER_WAIT_MS = 3e3;
+		/**
+		* How many command states to remember for a command this browser has not been
+		* told about yet.
+		*
+		* A status frame and the POST response that mints the command's id travel by
+		* different roads, and the frame routinely wins: the server hands the command to
+		* the owning machine and narrates that immediately, while the response still has
+		* to come back. Dropping those frames left the composer on "submitted" for a
+		* command the machine had already accepted.
+		*/
+		const EARLY_COMMAND_LIMIT = 16;
+		/** The neutral state rendered before the Host has answered. */
+		function idleState() {
+			return {
+				role: "client",
+				machineName: "",
+				serverUrl: "",
+				pluginVersion: "unknown",
+				listening: false,
+				linked: false,
+				machines: [],
+				published: 0
+			};
+		}
+		/** The step number that means "no step is streaming". */
+		const NO_STEP = -1;
+		/**
+		* The empty live row.
+		*
+		* A blank row rather than `undefined`: the panel asks whether either text is
+		* non-empty, and a step's first frame is what fills one.
+		*/
+		function noLive() {
+			return {
+				reasoning: "",
+				text: "",
+				turn: NO_STEP,
+				step: NO_STEP
+			};
+		}
+		/**
+		* Whether one mirrored event settles the attempt a live row belongs to.
+		*
+		* Both spellings matter: a step that produced a message commits
+		* `assistant/message`, while a stream that failed or was aborted with nothing
+		* to keep commits `assistant/attempt`. Clearing only on the first left a
+		* failed step's thinking on screen indefinitely.
+		* @param event - one mirrored durable event.
+		* @returns true when the live row for its step is over.
+		*/
+		function isSettlement(event) {
+			return event.type === "assistant/message" || event.type === "assistant/attempt";
+		}
+		/** The sync plugin's browser client. */
+		var SyncClient = class {
+			store;
+			source;
+			poll;
+			started = false;
+			/** Status frames that arrived before this browser knew their command's id. */
+			earlyCommands = /* @__PURE__ */ new Map();
+			/** Whether this page has ever held an open stream. */
+			sawOpen = false;
+			/** Whether this page has ever seen a machine in the mirror. */
+			sawMachines = false;
+			/**
+			* The one consumer told what the mirror reported as it arrives.
+			*
+			* Held rather than fanned out: it is the console's shipped-renderer mirror,
+			* which is a view of the same stream, not a second reader of it.
+			*/
+			observer;
+			/** The running flag already reported to that consumer. */
+			reportedRunning;
+			constructor() {
+				this.store = (0, _deepseek_ai_dsh_client_store.createSnapshotStore)({
+					ready: false,
+					config: defaultConfig(""),
+					state: idleState(),
+					sessions: [],
+					loadingTranscript: false,
+					loadingOlder: false,
+					live: noLive(),
+					questions: [],
+					answers: {},
+					approvals: [],
+					decisions: {},
+					stream: "connecting",
+					mirrorResets: 0
+				});
+			}
+			/** The observable the slot registrations bind as a renderer-provided hook. */
+			get snapshot() {
+				return this.store;
+			}
+			/**
+			* Register the one consumer told what the mirror reports as it arrives.
+			*
+			* Notifications are delivered before the store publishes the same fact: the
+			* shipped-renderer pane binds its Session reference from the opening, so its
+			* first render after the change already has a Session to draw and never has
+			* to render a reference that has just been released.
+			* @param observer - the consumer; at most one is held at a time.
+			* @returns an idempotent disposer that detaches it.
+			*/
+			observe(observer) {
+				this.observer = observer;
+				return () => {
+					if (this.observer === observer) this.observer = void 0;
+				};
+			}
+			/** Begin reading and hold the live stream open. Idempotent. */
+			start() {
+				if (this.started) return;
+				this.started = true;
+				this.refresh();
+				this.openStream();
+				this.poll = setInterval(() => {
+					this.refreshSessions();
+					this.refreshState();
+				}, SESSION_POLL_MS);
+			}
+			/** Stop polling and close the stream. Idempotent. */
+			stop() {
+				this.started = false;
+				if (this.poll !== void 0) clearInterval(this.poll);
+				this.poll = void 0;
+				this.source?.close();
+				this.source = void 0;
+			}
+			/** Re-read configuration, role state, and the local Session list. */
+			async refresh() {
+				try {
+					const [configResponse, sessionsResponse] = await Promise.all([getJson(`${ROUTE_PREFIX}/config`), getJson(`${ROUTE_PREFIX}/sessions`)]);
+					this.update({
+						ready: true,
+						config: configResponse.config,
+						state: configResponse.state,
+						sessions: sessionsResponse.sessions,
+						error: void 0,
+						errorConflict: false
+					});
+				} catch (error) {
+					this.update({
+						ready: true,
+						error: describe(error),
+						errorConflict: false
+					});
+				}
+			}
+			/** Re-read only the local Session list. */
+			async refreshSessions() {
+				try {
+					const { sessions } = await getJson(`${ROUTE_PREFIX}/sessions`);
+					this.update({ sessions });
+				} catch {}
+			}
+			/** Re-read the authoritative mirror view, which is what retires a stale badge. */
+			async refreshState() {
+				try {
+					const { state } = await getJson(`${ROUTE_PREFIX}/state`);
+					if (!isCompleteState(state)) return;
+					this.update({ state });
+				} catch {}
+			}
+			/**
+			* Write one partial configuration change.
+			* @param patch - fields to change.
+			* @returns true when the Host accepted the write.
+			*/
+			async configure(patch) {
+				try {
+					const result = await postJson(`${ROUTE_PREFIX}/config`, patch);
+					this.update({
+						config: result.config,
+						state: result.state,
+						sessions: result.sessions,
+						error: void 0,
+						errorConflict: false
+					});
+					return true;
+				} catch (error) {
+					await this.refresh();
+					this.update({
+						error: describe(error),
+						errorConflict: error instanceof HostFailure && error.conflict
+					});
+					return false;
+				}
+			}
+			/**
+			* Flip one Session's publish switch.
+			* @param sessionId - the Session to publish or stop publishing.
+			* @param synced - the requested state.
+			* @returns true when the Host accepted the write.
+			*/
+			async setSessionSync(sessionId, synced) {
+				return await this.configure({ sessionSync: {
+					sessionId,
+					synced
+				} });
+			}
+			/**
+			* Flip one Session's approval switch.
+			*
+			* Separate from {@link setSessionSync} on the page and here, because it grants
+			* something publishing does not: the authority, for whoever reads this console, to
+			* *allow* a tool call the machine's own permission preset was gating. The Host
+			* refuses the write for a Session that is not published, since the console could
+			* not show what it was approving.
+			* @param sessionId - the Session to open or close to remote approvals.
+			* @param approved - the requested state.
+			* @returns true when the Host accepted the write.
+			*/
+			async setSessionApprovals(sessionId, approved) {
+				return await this.configure({ sessionApprovals: {
+					sessionId,
+					approved
+				} });
+			}
+			/**
+			* Open one mirrored Session in the centre panel.
+			* @param machineName - owning machine.
+			* @param sessionId - published Session.
+			*/
+			async openSession(machineName, sessionId) {
+				const open = {
+					machineName,
+					sessionId
+				};
+				this.reportedRunning = void 0;
+				this.notify((observer) => {
+					observer.opened(open);
+				});
+				this.update({
+					open,
+					transcript: void 0,
+					loadingTranscript: true,
+					loadingOlder: false,
+					live: noLive(),
+					delivery: void 0
+				});
+				try {
+					const { transcript } = await getJson(`${ROUTE_PREFIX}/transcript?machine=${encodeURIComponent(machineName)}&session=${encodeURIComponent(sessionId)}`);
+					this.notify((observer) => {
+						observer.loaded(open, transcript);
+					});
+					this.update({
+						transcript,
+						loadingTranscript: false,
+						error: void 0
+					});
+				} catch (error) {
+					this.update({
+						loadingTranscript: false,
+						error: describe(error),
+						errorConflict: false
+					});
+				}
+			}
+			/**
+			* Fetch the page of the open Session that sits before the one held.
+			*
+			* A transcript arrives as its newest page, so the older end is one request
+			* away rather than part of every switch. The page is placed before what is
+			* held, never merged into it: the two ranges are adjacent by construction, and
+			* the held page already carries everything above them.
+			* @returns nothing; the store is the result.
+			*/
+			/**
+			* Page this console all the way back to the start of the Session's log.
+			*
+			* The footer counts what this console holds, and the machine's own page counts the
+			* whole log — so the only way the two can agree without the machine sending its own
+			* totals is for the console to *hold* the whole log. Paging does that: every page it
+			* fetches stays in its transcript even after the server's mirror trims its window.
+			* @returns when the log's start is reached, or when a page was already in flight.
+			*/
+			async loadAllOlder() {
+				for (let page = 0; page < 500; page += 1) {
+					for (let wait = 0; wait < 200 && this.store.getSnapshot().loadingOlder; wait += 1) await new Promise((resolve) => {
+						setTimeout(resolve, 50);
+					});
+					const transcript = this.store.getSnapshot().transcript;
+					if (transcript === void 0 || !transcript.hasMore) return;
+					await this.loadOlder();
+					await new Promise((resolve) => {
+						setTimeout(resolve, 350);
+					});
+				}
+			}
+			async loadOlder() {
+				const snapshot = this.store.getSnapshot();
+				const open = snapshot.open;
+				const transcript = snapshot.transcript;
+				if (open === void 0 || transcript === void 0) return;
+				if (!transcript.hasMore || snapshot.loadingOlder) return;
+				const first = transcript.events[0]?.seq;
+				if (first === void 0) return;
+				this.update({ loadingOlder: true });
+				for (let attempt = 0; attempt < OLDER_ATTEMPTS; attempt += 1) {
+					const current = this.store.getSnapshot();
+					if (current.open?.sessionId !== open.sessionId) return;
+					const held = current.transcript;
+					if (held === void 0) return;
+					let older;
+					try {
+						({transcript: older} = await getJson(`${ROUTE_PREFIX}/transcript?machine=${encodeURIComponent(open.machineName)}&session=${encodeURIComponent(open.sessionId)}&limit=${String(Math.max(1, held.events.length))}&before=${String(first)}`));
+					} catch (error) {
+						this.update({
+							loadingOlder: false,
+							error: describe(error),
+							errorConflict: false
+						});
+						return;
+					}
+					if (older.events.length > 0) {
+						this.update({
+							transcript: {
+								...held,
+								events: mergeEvents(held.events, older.events),
+								hasMore: older.hasMore
+							},
+							loadingOlder: false
+						});
+						this.notify((observer) => {
+							observer.older(open, older);
+						});
+						return;
+					}
+					const moved = current.transcript?.events[0]?.seq;
+					if (moved !== void 0 && moved < first) {
+						this.update({ loadingOlder: false });
+						return;
+					}
+					if (!older.hasMore) {
+						this.update({
+							transcript: {
+								...held,
+								hasMore: false
+							},
+							loadingOlder: false
+						});
+						return;
+					}
+					await new Promise((resolve) => {
+						setTimeout(resolve, OLDER_WAIT_MS);
+					});
+				}
+				this.update({ loadingOlder: false });
+			}
+			/**
+			* Send one takeover prompt to the machine that owns the open Session.
+			* @param text - the prompt text.
+			* @returns true when the server accepted and forwarded it.
+			*/
+			async sendPrompt(text) {
+				const open = this.store.getSnapshot().open;
+				if (open === void 0) return false;
+				try {
+					const result = await postJson(`${ROUTE_PREFIX}/command`, {
+						machineName: open.machineName,
+						sessionId: open.sessionId,
+						text
+					});
+					const known = this.earlyCommands.get(result.commandId);
+					this.earlyCommands.delete(result.commandId);
+					this.update({
+						error: void 0,
+						delivery: known ?? {
+							commandId: result.commandId,
+							state: "queued",
+							expiresAt: Date.now() + 12e4
+						}
+					});
+					return true;
+				} catch (error) {
+					this.update({
+						error: describe(error),
+						errorConflict: false
+					});
+					return false;
+				}
+			}
+			/**
+			* Answer one question this console was offered.
+			*
+			* The answer goes to the machine that asked rather than being applied here: it
+			* is a claim on a decision, and the machine is the only side that can say
+			* whether the question was still open when it arrived. So the ordinary refusal
+			* — a 409 carrying "already answered on the machine that asked it" — is shown on
+			* the card, because the honest story is a race that was lost and not a failure
+			* to retry.
+			* @param machineName - the machine that asked.
+			* @param questionId - the question being answered.
+			* @param answers - the choices, one per question the batch asked.
+			* @returns true when the machine's server accepted the answer for delivery.
+			*/
+			async answerQuestion(machineName, questionId, answers) {
+				this.setAnswer(questionId, { sent: true });
+				try {
+					if ((await postJson(`/dsh-session-sync/answer`, {
+						machineName,
+						questionId,
+						answers
+					})).ok !== true) throw new Error("the server did not accept the answer");
+					return true;
+				} catch (error) {
+					this.setAnswer(questionId, { error: describe(error) });
+					return false;
+				}
+			}
+			/** Record one question's answer progress without disturbing the others. */
+			setAnswer(questionId, state) {
+				this.update({ answers: {
+					...this.store.getSnapshot().answers,
+					[questionId]: state
+				} });
+			}
+			/**
+			* Send the console's decision on one relayed approval.
+			*
+			* The ordinary failure is a race already lost — the machine's own human decided —
+			* and the server answers 409 with that sentence. It is *not* an error to retry:
+			* it is the race's honest result, and the approval is gone either way, so the card
+			* is the only place that can say so.
+			* @param machineName - the machine that is blocked.
+			* @param approvalId - the approval being decided.
+			* @param decision - allow once, or reject.
+			* @returns true when the machine's server accepted the decision for delivery.
+			*/
+			async decideApproval(machineName, approvalId, decision) {
+				this.setDecision(approvalId, { sent: true });
+				try {
+					if ((await postJson(`/dsh-session-sync/approval`, {
+						machineName,
+						approvalId,
+						decision
+					})).ok !== true) throw new Error("the server did not accept the decision");
+					return true;
+				} catch (error) {
+					this.setDecision(approvalId, { error: describe(error) });
+					return false;
+				}
+			}
+			/** Record one approval's decision progress without disturbing the others. */
+			setDecision(approvalId, state) {
+				this.update({ decisions: {
+					...this.store.getSnapshot().decisions,
+					[approvalId]: state
+				} });
+			}
+			openStream() {
+				if (typeof EventSource === "undefined") return;
+				const source = new EventSource(`${ROUTE_PREFIX}/events`);
+				source.onopen = () => {
+					const first = !this.sawOpen;
+					this.sawOpen = true;
+					const snapshot = this.store.getSnapshot();
+					const reset = !first && this.sawMachines && snapshot.state.machines.length === 0;
+					this.update({
+						stream: "open",
+						...reset ? { mirrorResets: snapshot.mirrorResets + 1 } : {}
+					});
+					if (!first) this.refresh();
+				};
+				source.onerror = () => {
+					this.update({ stream: "connecting" });
+				};
+				source.onmessage = (event) => {
+					let frame;
+					try {
+						frame = JSON.parse(event.data);
+					} catch {
+						return;
+					}
+					this.consume(frame);
+				};
+				this.source = source;
+			}
+			consume(frame) {
+				if (frame.type === "state") {
+					const previous = this.store.getSnapshot().state;
+					const complete = isCompleteState(frame.state);
+					const state = complete ? frame.state : {
+						...previous,
+						machines: Array.isArray(frame.state.machines) ? frame.state.machines : previous.machines
+					};
+					this.update({
+						state,
+						ready: true,
+						...complete ? { questions: frame.state.questions ?? [] } : {},
+						...complete ? { approvals: frame.state.approvals ?? [] } : {}
+					});
+					if (previous.published !== state.published) this.refreshSessions();
+					return;
+				}
+				if (frame.type === "events") {
+					const snapshot = this.store.getSnapshot();
+					const open = snapshot.open;
+					if (open === void 0) return;
+					if (open.machineName !== frame.machineName || open.sessionId !== frame.sessionId) return;
+					const transcript = snapshot.transcript;
+					if (transcript === void 0) return;
+					this.notify((observer) => {
+						observer.appended(open, frame);
+					});
+					this.update({
+						transcript: {
+							...transcript,
+							events: mergeEvents(transcript.events, frame.events)
+						},
+						...frame.events.some(isSettlement) ? { live: noLive() } : {}
+					});
+					return;
+				}
+				if (frame.type === "stream") {
+					const snapshot = this.store.getSnapshot();
+					const open = snapshot.open;
+					if (open === void 0) return;
+					if (open.machineName !== frame.machineName || open.sessionId !== frame.sessionId) return;
+					const live = snapshot.live;
+					if (frame.turn < live.turn || frame.turn === live.turn && frame.step < live.step) return;
+					const advanced = frame.turn > live.turn || frame.turn === live.turn && frame.step > live.step;
+					const base = advanced ? {
+						...noLive(),
+						turn: frame.turn,
+						step: frame.step
+					} : live;
+					const shown = frame.kind === "reasoning" ? base.reasoning : base.text;
+					if (!advanced && frame.text !== "" && frame.text.length < shown.length && shown.startsWith(frame.text)) return;
+					this.notify((observer) => {
+						observer.streamed(open, frame);
+					});
+					this.update({ live: frame.kind === "reasoning" ? {
+						...base,
+						reasoning: frame.text
+					} : {
+						...base,
+						text: frame.text
+					} });
+					return;
+				}
+				if (frame.type === "question") {
+					const snapshot = this.store.getSnapshot();
+					const view = frame.question;
+					if (view.closed === void 0) {
+						this.update({ questions: upsertQuestion(snapshot.questions, view) });
+						return;
+					}
+					this.update({
+						questions: snapshot.questions.filter((question) => question.questionId !== view.questionId),
+						answers: withoutKey(snapshot.answers, view.questionId)
+					});
+					return;
+				}
+				if (frame.type === "approval") {
+					const snapshot = this.store.getSnapshot();
+					const view = frame.approval;
+					if (view.closed === void 0) {
+						this.update({ approvals: upsertApproval(snapshot.approvals, view) });
+						return;
+					}
+					this.update({
+						approvals: snapshot.approvals.filter((approval) => approval.approvalId !== view.approvalId),
+						decisions: withoutKey(snapshot.decisions, view.approvalId)
+					});
+					return;
+				}
+				if (frame.type === "command") {
+					const delivery = {
+						commandId: frame.command.commandId,
+						state: frame.command.state,
+						expiresAt: frame.command.expiresAt,
+						...frame.command.error === void 0 ? {} : { error: frame.command.error }
+					};
+					const current = this.store.getSnapshot().delivery;
+					if (current !== void 0 && current.commandId === frame.command.commandId) {
+						this.update({ delivery });
+						return;
+					}
+					this.earlyCommands.delete(frame.command.commandId);
+					this.earlyCommands.set(frame.command.commandId, delivery);
+					while (this.earlyCommands.size > EARLY_COMMAND_LIMIT) {
+						const oldest = this.earlyCommands.keys().next();
+						if (oldest.done === true) break;
+						this.earlyCommands.delete(oldest.value);
+					}
+					return;
+				}
+				this.update({
+					error: frame.message,
+					errorConflict: false
+				});
+			}
+			/**
+			* Publish one patch, remembering that this page once held machines.
+			*
+			* That memory is what makes an empty mirror a reset rather than a fleet that
+			* never connected: the empty window itself is only a couple of seconds wide,
+			* so the notice has to be raised by the reconnect rather than by what the
+			* next read happens to find.
+			*/
+			update(patch) {
+				const next = {
+					...this.store.getSnapshot(),
+					...patch
+				};
+				if (next.state.machines.length > 0) this.sawMachines = true;
+				this.store.set(next);
+				this.notifyRunning();
+			}
+			/**
+			* Tell the observer something, and never let it take the transport with it.
+			*
+			* Mirroring into the shipped renderer is an enhancement: a consumer that
+			* cannot be fed is detached (leaving the console on its own pane) and its
+			* failure is reported where every other failure is, rather than thrown into
+			* the action that happened to be running.
+			*/
+			notify(deliver) {
+				const observer = this.observer;
+				if (observer === void 0) return;
+				try {
+					deliver(observer);
+				} catch (error) {
+					this.observer = void 0;
+					this.update({
+						error: describe(error),
+						errorConflict: false
+					});
+				}
+			}
+			/**
+			* Report the open Session's running flag when the mirror moves it.
+			*
+			* The flag is a mirror reading rather than an event, so it has no frame of
+			* its own: every snapshot write funnels through here and the reading is
+			* compared against the last one reported.
+			*/
+			notifyRunning() {
+				if (this.observer === void 0) return;
+				const snapshot = this.store.getSnapshot();
+				const open = snapshot.open;
+				if (open === void 0) {
+					this.reportedRunning = void 0;
+					return;
+				}
+				const running = snapshot.state.machines.find((machine) => machine.machineName === open.machineName)?.sessions.find((candidate) => candidate.sessionId === open.sessionId)?.running ?? snapshot.transcript?.running ?? false;
+				if (running === this.reportedRunning) return;
+				this.reportedRunning = running;
+				this.notify((observer) => {
+					observer.running(open, running);
+				});
+			}
+		};
+		/**
+		* One refused Host response, with the Host's own classification of it.
+		*
+		* `conflict` is the settings-revision conflict the Host already re-read and retried:
+		* the only refusal here that reloading the page recovers, and therefore the only one
+		* the page may tell the reader to reload for. Every other refusal — a field the form
+		* sent that the schema will not take, a settings row that is gone, a service that
+		* went away — is a fact about the request itself, and a page reload changes nothing
+		* about it.
+		*/
+		var HostFailure = class extends Error {
+			conflict;
+			/**
+			* @param message - the Host's own sentence, shown to the reader verbatim.
+			* @param conflict - whether the Host classified the refusal as a conflict.
+			*/
+			constructor(message, conflict) {
+				super(message);
+				this.conflict = conflict;
+				this.name = "HostFailure";
+			}
+		};
+		/** Read one JSON response, turning a non-2xx into a thrown error carrying the server's reason. */
+		async function getJson(path) {
+			return await decode(await fetch(path, { cache: "no-store" }));
+		}
+		/** Post one JSON body and read the JSON response. */
+		async function postJson(path, body) {
+			return await decode(await fetch(path, {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify(body)
+			}));
+		}
+		/** Decode a response, preferring the server's own failure reason. */
+		async function decode(response) {
+			const text = await response.text();
+			if (!response.ok) {
+				let reason = `HTTP ${String(response.status)}`;
+				let conflict = false;
+				try {
+					const parsed = JSON.parse(text);
+					if (typeof parsed.reason === "string") reason = parsed.reason;
+					else if (typeof parsed.error === "string") reason = parsed.error;
+					conflict = parsed.conflict === true;
+				} catch {}
+				throw new HostFailure(reason, conflict);
+			}
+			return JSON.parse(text);
+		}
+		/** Human-readable one-line failure text. */
+		function describe(error) {
+			return error instanceof Error ? error.message : String(error);
+		}
+		/**
+		* Merge durable events into the open window, in sequence order.
+		*
+		* The same stream carries two arrivals: a live frame, which belongs at the end,
+		* and a page the mirror fetched from behind its window, which belongs in front.
+		* The sequence is the only thing that says which, and membership is what keeps a
+		* replay from doubling a row.
+		* @param held - the events already in the window.
+		* @param incoming - the events just received.
+		* @returns the merged window, in sequence order.
+		*/
+		function mergeEvents(held, incoming) {
+			if (incoming.length === 0) return [...held];
+			const seen = new Set(held.map((event) => event.seq));
+			const fresh = incoming.filter((event) => !seen.has(event.seq));
+			if (fresh.length === 0) return [...held];
+			const last = held[held.length - 1]?.seq;
+			if (last !== void 0 && fresh.every((event) => event.seq > last)) return [...held, ...fresh];
+			return [...held, ...fresh].sort((left, right) => left.seq - right.seq);
+		}
+		/**
+		* Put one question into the open set, in the order the asks arrived.
+		*
+		* A question already held is replaced rather than duplicated: the server may
+		* re-state an open one (a reconnect replays state), and two cards for one
+		* decision is exactly the confusion this feature exists to avoid.
+		* @param held - the questions already on screen.
+		* @param view - the question that just arrived.
+		* @returns the new set, oldest ask first.
+		*/
+		function upsertQuestion(held, view) {
+			return [...held.filter((question) => question.questionId !== view.questionId), view].sort((left, right) => left.openedAt - right.openedAt);
+		}
+		/**
+		* Put one approval into the open set, in the order the offers arrived.
+		*
+		* The same rule as a question's: one card per approval, replaced rather than
+		* duplicated, because two cards for one permission is the confusion this feature
+		* exists to avoid — and here a reader cannot tell which of the two is live.
+		* @param held - the approvals already on screen.
+		* @param view - the approval that just arrived.
+		* @returns the new set, oldest offer first.
+		*/
+		function upsertApproval(held, view) {
+			return [...held.filter((approval) => approval.approvalId !== view.approvalId), view].sort((left, right) => left.openedAt - right.openedAt);
+		}
+		/**
+		* One record's entries except a named key.
+		* @param record - the record to copy.
+		* @param key - the key to drop.
+		* @returns a copy without that key.
+		*/
+		function withoutKey(record, key) {
+			const next = {};
+			for (const [name, value] of Object.entries(record)) if (name !== key) next[name] = value;
+			return next;
+		}
+		/**
+		* Whether a state frame carries the whole view rather than just a mirror slice.
+		* @param state - the frame's state payload.
+		* @returns true when every field the surfaces render is present.
+		*/
+		function isCompleteState(state) {
+			return (state.role === "server" || state.role === "client") && Array.isArray(state.machines) && typeof state.machineName === "string" && typeof state.published === "number";
+		}
+		//#endregion
+		//#region src/client/envelope-placement.ts
+		/**
+		* Decide where one envelope belongs.
+		* @param seq - the envelope's sequence.
+		* @param newestHeld - highest sequence the drawn window holds, or undefined when it holds none.
+		* @param fed - sequences the drawn window has already taken.
+		* @returns the placement; `newer` is the only one the caller may append.
+		*/
+		function envelopePlacement(seq, newestHeld, fed) {
+			if (fed.has(seq)) return "drop";
+			if (newestHeld === void 0) return "newer";
+			return seq > newestHeld ? "newer" : "history";
+		}
+		/**
+		* The higher of two optional sequences, treating "no mark yet" as the other one.
+		*
+		* `Math.max(undefined, seq)` is `NaN`, and every comparison against NaN is false —
+		* so a caller that starts with no mark and reaches for `Math.max` files every live
+		* event as history and the pane silently stops appending. One line, two failure
+		* modes, and no type error to warn you: spelled out, and tested.
+		* @param current - the mark so far, or undefined when nothing has been marked.
+		* @param seq - the sequence to fold in.
+		* @returns the higher of the two, or `seq` when there is no mark yet.
+		*/
+		function highestOf(current, seq) {
+			return current === void 0 || seq > current ? seq : current;
+		}
+		//#endregion
+		//#region src/client/live-text.ts
+		/**
+		* The chunk one live delta becomes, in the vocabulary the shipped renderer reads.
+		*
+		* This is the shape the shipped client itself puts in an `assistant/live-chunk`
+		* event: `api/session-controller/src/client/sessions/assistant-stream.ts` wraps the
+		* stream's own `chunk` unchanged, and the live stream's chunks are the singular
+		* `-delta` forms from `llm`'s `StreamChunk`.
+		* @param kind - which of the step's two texts this delta continues.
+		* @param delta - the text to append.
+		* @returns the chunk to put in the live-chunk event.
+		*/
+		function liveChunkOf(kind, delta) {
+			return {
+				type: kind === "reasoning" ? "reasoning-delta" : "text-delta",
+				index: 0,
+				text: delta
+			};
+		}
+		/** The accumulator one mirrored Session keeps for its live text. */
+		var LiveText = class {
+			shown = /* @__PURE__ */ new Map();
+			/**
+			* Take one frame's whole text so far and return the part that is new.
+			* @param attemptId - the attempt the text belongs to.
+			* @param kind - which of the step's two texts it is.
+			* @param text - the whole text so far, as the relay form carries it.
+			* @returns the delta to append, and whether this kind restarted.
+			*/
+			take(attemptId, kind, text) {
+				const key = `${attemptId}\u0000${kind}`;
+				const shown = this.shown.get(key) ?? "";
+				const restarted = !text.startsWith(shown);
+				this.shown.set(key, text);
+				return {
+					delta: text.slice(restarted ? 0 : shown.length),
+					restarted
+				};
+			}
+			/**
+			* Forget every kind of one attempt, because it is no longer live.
+			* @param attemptId - the attempt that settled.
+			*/
+			forget(attemptId) {
+				const prefix = `${attemptId}\u0000`;
+				for (const key of [...this.shown.keys()]) if (key.startsWith(prefix)) this.shown.delete(key);
+			}
+			/** Forget everything, because the whole window was replaced. */
+			clear() {
+				this.shown.clear();
+			}
+		};
+		//#endregion
+		//#region src/client/official-views.ts
+		/**
+		* Which shipped conversation page the console can ask for.
+		*
+		* The shipped shell draws one `conversation.view` entry per tab, chosen from the
+		* owner prop the pane hands down (`ui-conversation`'s `DefaultConversationViews`:
+		* `const viewId = view ?? active?.id`, then
+		* `renderSlot('conversation.view', …, { only: viewId })`). `conversation.session`
+		* belongs to the shipped content Factory, so the local Factory position this
+		* plugin supplies is the only place the choice can come from — which is exactly
+		* how the pane already pinned the chat page.
+		*
+		* The two ids are named here, once, because both the request and the fallback
+		* decision key off them. The *existence* question is asked of the registry rather
+		* than assumed: `conversation.view` is a list slot, so a build whose `ui-trajectory`
+		* is absent — or disabled — simply has no such entry, and `entries()` answers an
+		* undeclared key with an empty list on purpose, so a renderer may probe ahead of
+		* plugin load order.
+		*/
+		/** The `conversation.view` entry id of the shipped chat page. */
+		const CHAT_VIEW = "chat";
+		/** The `conversation.view` entry id of the shipped trajectory page. */
+		const TRAJECTORY_VIEW = "trajectory";
+		/**
+		* Whether one registry listing carries an entry with this id.
+		*
+		* Total by construction: an entry without options, or without an id, is simply not
+		* the one being looked for — the question is "may the console hand this page to the
+		* shipped view", and every answer other than a found id is no.
+		* @param entries - one `slots.entries(key)` listing.
+		* @param id - the entry id to look for.
+		* @returns true when the shipped view for that page is registered here.
+		*/
+		function hasViewEntry(entries, id) {
+			return entries.some((entry) => entry.options?.id === id);
+		}
+		//#endregion
+		//#region src/client/routing.ts
+		/**
+		* The browser half's one decision, in a module with no imports.
+		*
+		* A test here cannot import `SyncPanel.tsx` (it needs `react` and the shipped UI
+		* packages, neither of which resolves from this package), so the part that
+		* decides *whether a build can draw a foreign Session at all* is named and kept
+		* dependency-free. That puts it under `node --test` on both sides of the build,
+		* and it leaves the renderer with nothing but rendering to get wrong.
+		*/
+		/**
+		* Whether a client Sessions service offers the seam the console draws through.
+		*
+		* Both halves are required and neither is enough. `retainAgentScope` is what
+		* makes a Session the Host has never heard of renderable at all; `binding` is
+		* where the window comes from, and a build that retained without one would draw
+		* an empty pane — so a service with only the first is read as "no route", which
+		* keeps the console's own conversation in charge.
+		* @param service - whatever `ctx.get('sessions')` answered, of any shape.
+		* @returns whether the scope route is available.
+		*/
+		function scopeCapable(service) {
+			if (typeof service !== "object" || service === null) return false;
+			const candidate = service;
+			return typeof candidate.retainAgentScope === "function" && typeof candidate.binding === "function";
+		}
+		//#endregion
+		//#region src/client/official-session.tsx
+		/**
+		* The plugin's mirror, projected onto the shipped DSH conversation renderer.
+		*
+		* The console hand-draws a remote Session's conversation because a browser
+		* plugin cannot import another plugin's components. A build that offers
+		* `ctx.sessions.retainAgentScope` removes that limit: the plugin retains the
+		* remote Session under a synthetic local identity, drives the window that
+		* retention hands it with the mirror's own envelopes, and lets the shipped
+		* `conversation.content` factory draw it — so the pane is the product's real
+		* conversation rather than a copy of it.
+		*
+		* Everything in this module is feature-detected and structurally typed. That
+		* seam is not in every build this plugin has to keep working on, so nothing here
+		* may assume it exists: {@link OfficialSessions.supported} is false without it,
+		* and the console then keeps its own pane untouched.
+		*/
+		/**
+		* The child slot the console's `main` entry declares for the shipped
+		* Conversation.
+		*
+		* A non-root child is what hands the panel its `SessionProvider` and
+		* `renderSlot` seats, and `session` is the scope the shipped content needs: the
+		* occurrence is bound to the retained Session the panel holds. This is the
+		* shape ui-subagent's `SidebarChatTab` uses for its own embedded chat.
+		*/
+		const OFFICIAL_SLOT = "session-sync.conversation";
+		/**
+		* Synthetic local identity of one retained remote Session.
+		*
+		* Local identities are minted as `session-<uuid>`; this prefix cannot come out
+		* of that generator, so a retained Session can never collide with a local one —
+		* the one rule the retention seam states about the id it is given.
+		* @param open - the remote Session's own address.
+		* @returns the stable synthetic id.
+		*/
+		function officialSessionId(open) {
+			return `dsh-session-sync:${open.machineName}/${open.sessionId}`;
+		}
+		/**
+		* One live attempt's identity, from the plugin's own live key.
+		*
+		* The transport already keys a live row by turn and step, and both a live frame
+		* and the settlement that ends it carry that pair — so the same attempt id is
+		* derived on both sides with no hidden state to keep in step.
+		* @param turn - the turn the step belongs to.
+		* @param step - the step within the turn.
+		* @returns the attempt id.
+		*/
+		function attemptKey(turn, step) {
+			return `${String(turn)}:${String(step)}`;
+		}
+		/**
+		* The turn|step a settlement event closes, when it names one.
+		* @param event - one durable envelope.
+		* @returns the attempt id, or undefined for an envelope without coordinates.
+		*/
+		function settlementAttemptId(event) {
+			const data = asRecord(event.data);
+			const turn = data?.["turn"];
+			const step = data?.["step"];
+			return typeof turn === "number" && typeof step === "number" ? attemptKey(turn, step) : void 0;
+		}
+		/** The adapter key of one remote Session: machine and id, in one string. */
+		function remoteKey(machineName, sessionId) {
+			return `${machineName}\u0000${sessionId}`;
+		}
+		/**
+		* Envelope types that exist only to point a Host-computed panel at its data.
+		*
+		* `workspace/changes` carries a turn number and nothing else; the files and
+		* totals beside it are served by whichever Host owns the Session, which for a
+		* mirrored one is a Host that has never heard of it. Official seats react to the
+		* announcement and ask for a summary that cannot arrive — one failed request per
+		* announcement, and a card left marked unavailable — so the announcement is
+		* dropped from the window this console feeds. Nothing visible is lost: the card
+		* it drives could never render, while the tool rows that actually changed the
+		* files are ordinary events and stay.
+		*/
+		const PANEL_ONLY_TYPES = /* @__PURE__ */ new Set(["workspace/changes"]);
+		/** Whether one envelope feeds a Host-computed panel and nothing else. */
+		function isPanelOnly(event) {
+			return PANEL_ONLY_TYPES.has(event.type);
+		}
+		/** Narrow one unknown value to a plain record. */
+		function asRecord(value) {
+			if (typeof value !== "object" || value === null || Array.isArray(value)) return void 0;
+			return value;
+		}
+		/**
+		* The projection sink one Session face carries, when it carries a usable one.
+		*
+		* Checked rather than assumed: `projections` is read off another plugin's Session
+		* object, so a build that renamed it, or that hands out a face with only the read
+		* half, has to end as "no sink here" — the shipped footer then shows the fold over
+		* the window, exactly as it does on a Session whose Host unit is not mounted.
+		* @param session - the Session face of a retained binding, when there is one.
+		* @returns the sink, or undefined when this face cannot take a value.
+		*/
+		function projectionsSink(session) {
+			const candidate = session?.projections;
+			return candidate !== void 0 && typeof candidate.apply === "function" ? candidate : void 0;
+		}
+		/**
+		* One retained remote Session, and the frames fed into it.
+		*
+		* One instance per opened remote Session. Every method is safe to call after
+		* {@link OfficialMirror.release}: a Session switch and the panel closing can
+		* both ask for the end, and a frame that was in flight may still arrive.
+		*/
+		var OfficialMirror = class {
+			/** The reference the shipped pane binds this Session with. */
+			reference;
+			/** The window this console drives directly, which is where the events go. */
+			source;
+			/** The Session face, when the binding exposes one that reports running. */
+			face;
+			/**
+			* The Session's projection store, when this build hands one out.
+			*
+			* Where the console's footer numbers go so that the *shipped* statistics row and
+			* context meter can render them: those components read the store, and a retained
+			* Session has no Host behind it to fill it.
+			*/
+			projections;
+			/** The live attempt whose text is on screen, by the plugin's turn|step key. */
+			liveAttempt;
+			/**
+			* Whole text already shown, per attempt **and per kind**.
+			*
+			* One entry per attempt was wrong, and the symptom was subtle enough to be
+			* reported as "the thinking only appears once it has finished": a step streams its
+			* reasoning and *then* its answer through the same attempt id, so the first answer
+			* delta is never an extension of the reasoning text — which took the restart path
+			* in {@link OfficialSession.feedLive}, and the restart path retires the attempt's
+			* transient rows. The thinking a reader was watching was therefore torn down at the
+			* exact moment the answer began, leaving only the durable reasoning block that
+			* arrives with the settlement. Nothing about an answer means the reasoning before
+			* it stopped being live, so the two accumulate apart.
+			*/
+			liveText = new LiveText();
+			/** Dense transient position, so a live row sorts above the durable window. */
+			transient = 0;
+			/** Highest durable sequence seen, the base of a transient row's position. */
+			lastSeq = -1;
+			/**
+			* Sequences the drawn window already carries.
+			*
+			* An older page reaches the mirror twice — once as the page this console read,
+			* once as ordinary frames when the origin replays it — and the second arrival
+			* must not be appended on top of the first. The shipped conversation's
+			* assembler requires each node's matches in sequence order, so a redelivered
+			* event, like an older one, would break the pane rather than merely duplicate.
+			*/
+			fed = /* @__PURE__ */ new Set();
+			/**
+			* The highest sequence this mirror has handed the shipped assembler.
+			*
+			* Not the same as the window's newest entry: the window is a view, and a page
+			* this console prepends can move its oldest end down while the assembler has
+			* already taken matches from further up. Monotonicity has to be measured
+			* against what the assembler saw, or the window's own shape lies about it.
+			*/
+			highestFed;
+			released = false;
+			/**
+			* Take one remote Session up through the route this build offers.
+			* @param service - the client Sessions service.
+			* @param open - the remote Session's own address.
+			*/
+			constructor(service, open) {
+				const sessionId = officialSessionId(open);
+				this.reference = service.retainAgentScope(sessionId);
+				this.reference.ready?.catch(() => {});
+				const binding = service.binding(sessionId);
+				this.source = binding?.eventSource;
+				this.face = binding?.session;
+				this.projections = projectionsSink(binding?.session);
+			}
+			/**
+			* Land one finished projection value on the Session's store.
+			*
+			* Safety is in the ordering and the gate, not in the store: a released mirror
+			* writes nothing, and a build whose face carries no sink writes nothing. An
+			* `undefined` value is a real write — it is how a reading the log no longer
+			* states is taken down rather than left on screen.
+			* @param key - the projection key.
+			* @param value - the whole value.
+			* @param seq - the watermark, already above everything published before.
+			*/
+			applyProjection(key, value, seq) {
+				if (this.released) return;
+				this.projections?.apply(key, value, seq);
+			}
+			/**
+			* Replace the whole mirrored window, which is what opening a Session does.
+			* @param transcript - the opening window, in log order.
+			*/
+			replace(transcript) {
+				if (this.released) return;
+				this.liveAttempt = void 0;
+				this.liveText.clear();
+				const events = transcript.events.filter((event) => !isPanelOnly(event));
+				this.fed = new Set(events.map((event) => event.seq));
+				this.highestFed = events.reduce((highest, event) => highest === void 0 || event.seq > highest ? event.seq : highest, void 0);
+				this.transient = 0;
+				this.lastSeq = -1;
+				for (const event of transcript.events) this.observe(event.seq);
+				this.source?.replace(events.map(entryOf), false);
+				this.face?.handleRunning?.(transcript.running);
+			}
+			/**
+			* Feed one `events` frame's durable envelopes, in order.
+			*
+			* A settlement goes through `settle` rather than `append`: it is the durable
+			* end of a live attempt, and the plugin's own rule — a settlement clears the
+			* step's streaming text — is exactly that act.
+			*
+			* Two of these envelopes are not news, and neither may be appended:
+			*
+			* - one the window already carries, because an older page reaches this console
+			*   both as the page it read and as the origin's ordinary replay frames;
+			* - one below the window, which is that replay: it is history, and the shipped
+			*   conversation's assembler requires each node's matches in sequence order, so
+			*   appending it breaks the pane instead of merely duplicating a row. The test
+			*   for this is "not newer than everything the window holds" rather than "below
+			*   its first sequence", because a page this console prepended moves that first
+			*   sequence down and the replay then sits *inside* the range.
+			*
+			* @param events - the frame's envelopes.
+			*/
+			appendEvents(events) {
+				if (this.released) return;
+				const history = [];
+				for (const event of events) {
+					if (isPanelOnly(event)) {
+						this.observe(event.seq);
+						continue;
+					}
+					if (this.fed.has(event.seq)) continue;
+					if (envelopePlacement(event.seq, this.highestFed, this.fed) === "history") {
+						history.push(event);
+						continue;
+					}
+					if (isSettlement(event)) {
+						this.settle(event);
+						continue;
+					}
+					this.fed.add(event.seq);
+					this.highestFed = highestOf(this.highestFed, event.seq);
+					this.observe(event.seq);
+					this.source?.append(entryOf(event));
+				}
+				if (history.length > 0) this.prependOlder({
+					events: history,
+					hasMore: true
+				});
+			}
+			/**
+			* The sequence range the window this console drives covers.
+			* @returns the range, or undefined while no window is drawn.
+			*/
+			windowRange() {
+				const entries = this.source?.getSnapshot().entries;
+				if (entries === void 0 || entries.length === 0) return void 0;
+				const first = entries[0]?.event.seq;
+				const last = entries[entries.length - 1]?.event.seq;
+				if (first === void 0 || last === void 0) return void 0;
+				return {
+					first,
+					last
+				};
+			}
+			/**
+			* Put one older page below the window.
+			*
+			* This is the only way the older end is reachable in the shipped pane: the
+			* shipped control asks the Host, which has never heard of this Session, so the
+			* window it is given never claims more (`hasMore` stays false) and the console
+			* pages through its own channel instead. What arrives goes *before* the window
+			* rather than replacing it, so the reader keeps their place.
+			* @param page - the older page, whose events sit below everything held.
+			*/
+			prependOlder(page) {
+				if (this.released) return;
+				const entries = this.source?.getSnapshot().entries ?? [];
+				const held = /* @__PURE__ */ new Set();
+				for (const entry of entries) held.add(entry.event.seq);
+				const events = page.events.filter((event) => !held.has(event.seq) && !isPanelOnly(event) && !this.fed.has(event.seq));
+				if (events.length === 0) return;
+				for (const event of events) {
+					this.fed.add(event.seq);
+					this.observe(event.seq);
+				}
+				this.source?.prepend(events.map(entryOf), page.hasMore);
+			}
+			/**
+			* Feed one live delta frame: the whole step text so far, replaced as it grows.
+			* @param frame - the accepted frame, already ordered by the transport.
+			*/
+			stream(frame) {
+				if (this.released) return;
+				const attemptId = attemptKey(frame.turn, frame.step);
+				if (frame.text === "") {
+					if (this.liveAttempt !== attemptId) return;
+					this.closeLive({ attemptId });
+					return;
+				}
+				this.liveAttempt = attemptId;
+				this.feedLive(attemptId, frame);
+			}
+			/**
+			* Report the origin's running flag, which the mirror tracks apart from events.
+			* @param running - whether the origin reports a turn in flight.
+			*/
+			setRunning(running) {
+				if (this.released) return;
+				this.face?.handleRunning?.(running);
+			}
+			/**
+			* Release the Session and its reference.
+			*
+			* Idempotent, and total: a Session switch and the panel closing can both ask,
+			* and the live attempt is abandoned first so the renderer is not left holding
+			* text for an attempt that will never settle.
+			*/
+			release() {
+				if (this.released) return;
+				this.released = true;
+				const live = this.liveAttempt;
+				this.liveAttempt = void 0;
+				this.liveText.clear();
+				if (live !== void 0) try {
+					this.closeLive({ attemptId: live });
+				} catch {}
+				try {
+					this.reference.release();
+				} catch {}
+			}
+			/**
+			* Append the delta between what is shown and what the origin just sent.
+			*
+			* The wire form of live Assistant text is a dense run of chunks, and the
+			* relay carries the whole text so far instead — so the delta is computed here,
+			* and a text that is not an extension of the last one restarts **that kind**
+			* rather than inventing a chunk the fold would rebaseline on.
+			*
+			* The accumulator is per kind ({@link OfficialSession.liveText} explains why): a
+			* step's reasoning and its answer are two separate streams through one attempt id,
+			* so an answer that begins after a reasoning run is not a restart at all — and
+			* treating it as one is what used to retire the thinking row mid-stream.
+			*/
+			feedLive(attemptId, frame) {
+				const step = this.liveText.take(attemptId, frame.kind, frame.text);
+				if (step.restarted) this.closeLive({ attemptId });
+				const delta = step.delta;
+				if (delta === "") return;
+				const time = Date.now();
+				this.transient += 1;
+				this.source?.append({
+					type: "transient",
+					event: {
+						type: "assistant/live-chunk",
+						seq: this.lastSeq + 1 - 1 / (this.transient + 1),
+						time,
+						data: {
+							attemptId,
+							turn: frame.turn,
+							step: frame.step,
+							chunk: liveChunkOf(frame.kind, delta)
+						}
+					}
+				});
+			}
+			/** Close one live attempt with its durable settlement, or with nothing. */
+			closeLive(o) {
+				this.liveText.forget(o.attemptId);
+				if (o.event === void 0) this.source?.settleAssistant(o.attemptId);
+				else {
+					this.observe(o.event.seq);
+					this.source?.settleAssistant(o.attemptId, entryOf(o.event));
+				}
+				if (this.liveAttempt === o.attemptId) this.liveAttempt = void 0;
+			}
+			/** Settle the attempt one durable event ends. */
+			settle(event) {
+				const attemptId = settlementAttemptId(event) ?? this.liveAttempt ?? `settled:${String(event.seq)}`;
+				this.closeLive({
+					attemptId,
+					event
+				});
+			}
+			observe(seq) {
+				if (seq > this.lastSeq) this.lastSeq = seq;
+			}
+		};
+		/** Wrap one wire envelope as the entry an event window carries. */
+		function entryOf(event) {
+			return {
+				type: "event",
+				event
+			};
+		}
+		/**
+		* The bridge between the console's transport and the shipped renderer.
+		*
+		* It implements the transport observer: the console tells it what the mirror
+		* reported, and it keeps one retained Session for whichever remote Session is
+		* open. The panel binds `referenceFor(...)` around the shipped content, which is
+		* how the pane's Session identity reaches the renderer.
+		*/
+		var OfficialSessions = class {
+			ctx;
+			composerBlockReason;
+			current;
+			/** The running flag already reported, so a poll does not restate it. */
+			lastRunning;
+			/** The Session whose composer this console blocked, if it blocked one. */
+			blockedComposer;
+			/**
+			* The last watermark this bridge published a projection value at.
+			*
+			* One counter for the whole bridge rather than one per mirror, and monotonic for
+			* the plugin's lifetime: a Session's projection store outlives the mirror that
+			* was retained for it, so a counter that restarted would have its first
+			* publication of a re-opened Session refused as stale — and the footer would keep
+			* the previous reading while looking perfectly healthy.
+			*/
+			projectionSeq = 0;
+			/**
+			* @param ctx - the client context, read for the Sessions service and the
+			*   composer-block registry.
+			* @param composerBlockReason - the localized reason shown in a blocked
+			*   composer; read at the moment of blocking so it follows the locale.
+			*/
+			constructor(ctx, composerBlockReason) {
+				this.ctx = ctx;
+				this.composerBlockReason = composerBlockReason;
+			}
+			/** Whether this build can render a Session through the shipped conversation. */
+			get supported() {
+				return this.routeOf() !== void 0;
+			}
+			/** The route this build offers, for the panel to name. */
+			get route() {
+				return this.routeOf();
+			}
+			/** The sequence range the shipped window covers, for the panel to name. */
+			windowRange() {
+				return this.current?.mirror.windowRange();
+			}
+			/**
+			* Whether the console must draw the composer itself.
+			*
+			* The scope route drives the window directly, so the shipped composer would
+			* carry its prompt to a Host that has never heard of this Session.
+			*/
+			get composerOwned() {
+				return this.routeOf() !== void 0;
+			}
+			/**
+			* The reference to bind for one remote Session, for the panel's render.
+			* @param machineName - owning machine.
+			* @param sessionId - the remote Session's own id.
+			* @returns the retained reference while exactly that Session is drawn.
+			*/
+			referenceFor(machineName, sessionId) {
+				const current = this.current;
+				if (current === void 0) return void 0;
+				return current.key === remoteKey(machineName, sessionId) ? current.mirror.reference : void 0;
+			}
+			/**
+			* Whether the retained Session is one identity.
+			* @param sessionId - the identity an occurrence was mounted for.
+			* @returns true while the mirror holds exactly that Session.
+			*/
+			owns(sessionId) {
+				return this.current?.id === sessionId;
+			}
+			/**
+			* Publish the footer's numbers on the retained Session's projection store.
+			* @param values - whole projection values by key.
+			* @param floor - the sequence the publication is consistent with.
+			*/
+			publishFooter(values, floor) {
+				const mirror = this.current?.mirror;
+				if (mirror === void 0) return;
+				for (const [key, value] of Object.entries(values)) {
+					this.projectionSeq = nextWatermark(this.projectionSeq, floor);
+					mirror.applyProjection(key, value, this.projectionSeq);
+				}
+			}
+			/**
+			* The panel opened a Session: take it up, replacing whatever was before.
+			* @param open - the remote Session.
+			*/
+			opened(open) {
+				const service = this.service();
+				const route = this.routeOf();
+				if (service === void 0 || route === void 0) return;
+				const key = remoteKey(open.machineName, open.sessionId);
+				if (this.current?.key === key) return;
+				this.release();
+				const id = officialSessionId(open);
+				this.blockComposer(id);
+				this.current = {
+					key,
+					id,
+					mirror: new OfficialMirror(service, open)
+				};
+			}
+			/**
+			* The opening window arrived.
+			* @param open - the remote Session it belongs to.
+			* @param transcript - the window.
+			*/
+			loaded(open, transcript) {
+				if (this.matches(open)) this.current?.mirror.replace(transcript);
+			}
+			/**
+			* The panel paged up: one older page arrived for the open Session.
+			* @param open - the remote Session it belongs to.
+			* @param page - the page.
+			*/
+			older(open, page) {
+				if (this.matches(open)) this.current?.mirror.prependOlder(page);
+			}
+			/**
+			* One `events` frame arrived.
+			* @param open - the remote Session it belongs to.
+			* @param frame - the frame.
+			*/
+			appended(open, frame) {
+				if (this.matches(open)) this.current?.mirror.appendEvents(frame.events);
+			}
+			/**
+			* One accepted live delta frame arrived.
+			* @param open - the remote Session it belongs to.
+			* @param frame - the frame.
+			*/
+			streamed(open, frame) {
+				if (this.matches(open)) this.current?.mirror.stream(frame);
+			}
+			/**
+			* The mirror moved the open Session's running flag.
+			* @param open - the remote Session it belongs to.
+			* @param running - the new reading.
+			*/
+			running(open, running) {
+				if (!this.matches(open)) return;
+				if (running === this.lastRunning) return;
+				this.lastRunning = running;
+				this.current?.mirror.setRunning(running);
+			}
+			/** Release the Session the console was drawing, if any. Idempotent. */
+			release() {
+				const current = this.current;
+				this.current = void 0;
+				this.lastRunning = void 0;
+				current?.mirror.release();
+				if (current !== void 0) this.unblockComposer(current.id);
+			}
+			/** Block one Session's shipped composer, remembering which one. */
+			blockComposer(id) {
+				this.unblockComposer(this.blockedComposer);
+				const blocks = this.composerBlocks();
+				if (blocks === void 0) return;
+				try {
+					blocks.set(id, { reason: this.composerBlockReason() });
+					this.blockedComposer = id;
+				} catch {}
+			}
+			/** Clear one Session's block, when this console raised it. */
+			unblockComposer(id) {
+				if (id === void 0) return;
+				if (this.blockedComposer === id) this.blockedComposer = void 0;
+				const blocks = this.composerBlocks();
+				if (blocks === void 0) return;
+				try {
+					blocks.set(id, void 0);
+				} catch {}
+			}
+			/**
+			* The composer-block registry, feature-detected on the client context.
+			*
+			* `ctx.conversation.blocks` is the shipped plugin-facing registry for making
+			* one Session's composer inert. It is raised here so the shipped composer
+			* carries the console's own reason while the pane is held — but it is only an
+			* affordance, and another plugin that publishes its own state for the same
+			* Session can clear it, so the pane hides the shipped composer outright on
+			* this route rather than trusting this write to survive.
+			*/
+			composerBlocks() {
+				const conversation = this.ctx.get?.("conversation");
+				if (typeof conversation !== "object" || conversation === null) return void 0;
+				const blocks = conversation.blocks;
+				if (typeof blocks !== "object" || blocks === null) return void 0;
+				const candidate = blocks;
+				return typeof candidate.set === "function" ? candidate : void 0;
+			}
+			/**
+			* The route this build offers.
+			*
+			* One route is all a released DSH has, and {@link service} has already checked
+			* both of its halves, so this is a naming step rather than a search.
+			* @returns the route, or undefined when the build offers none.
+			*/
+			routeOf() {
+				return this.service() === void 0 ? void 0 : "scope";
+			}
+			/**
+			* The Sessions service, feature-detected on the client context.
+			*
+			* `sessions` is deliberately absent from this plugin's `inject` list: the
+			* console has to load on builds that predate the retention seam, and a
+			* required service the half cannot use would stop the whole half from
+			* applying. The lookup is lazy because the service may be registered after
+			* this plugin applies, and cheap because it runs once per panel render.
+			*/
+			service() {
+				const service = this.ctx.get?.("sessions");
+				return scopeCapable(service) ? service : void 0;
+			}
+			/** Whether the Session being drawn is the one a frame names. */
+			matches(open) {
+				return this.current?.key === remoteKey(open.machineName, open.sessionId);
+			}
+		};
+		/**
+		* Which shipped conversation page the pane below is asked to draw.
+		*
+		* The choice travels by context rather than by props because the two ends live in
+		* different trees: the console's tab is panel state, while the place the request
+		* has to be made — a local Factory position — is rendered by the occurrence the
+		* panel dispatches. The panel wraps that dispatch in this provider; a pane that
+		* was never asked for anything keeps the chat page, which is what every other
+		* caller of the shipped content wants.
+		*/
+		const OfficialViewContext = react.createContext(CHAT_VIEW);
+		/**
+		* The shipped Conversation's View, requested at this occurrence.
+		*
+		* The Factory's own default local Component renders `conversation.session` with no
+		* View request, which resolves to whichever tab the shell has selected; asking for
+		* one explicitly is what keeps a Session whose roster would open elsewhere on the
+		* page the console is actually showing — the sidebar chat pins `chat` for the same
+		* reason, and this pane asks for the console's tab (`chat`, or the shipped
+		* trajectory page, where that page is registered at all).
+		*/
+		function RequestedView(props) {
+			const view = react.useContext(OfficialViewContext);
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(react_jsx_runtime.Fragment, { children: props.renderSlot("conversation.session", { view }) });
+		}
+		/**
+		* The shipped Conversation content, drawn for the console's open Session.
+		*
+		* `embedded` is the variant the sidebar chat uses for a Session that sits
+		* beside the shell's own; the console's pane is exactly that. The phase is
+		* `active`: what the mirror holds is a conversation, while the hero belongs to
+		* a local new Session, which a remote one never is.
+		*
+		* The content shell is drawn whole, composer included, even though that
+		* composer is then hidden: rendering `conversation.session` directly was tried
+		* and draws an empty pane, because the shell is what supplies the context that
+		* View is written against. So this pane hides the furniture instead of omitting
+		* it, and accepts that a session-scoped integration behind it may still start a
+		* Host read that cannot succeed (see the README's limitations) — the shipped
+		* trajectory page's own "load earlier" is one of those, which is why the console
+		* keeps its own paging control above the pane.
+		* @param props - the renderer's Factory dispatcher.
+		* @returns the shipped content occurrence.
+		*/
+		function OfficialConversation({ renderFactorySlot }) {
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(react_jsx_runtime.Fragment, { children: renderFactorySlot("conversation.content", {
+				variant: "embedded",
+				phase: "active",
+				hero: false
+			}, { slots: { views: RequestedView } }) });
 		}
 		//#endregion
 		//#region \0dsh-css:C:\Users\14339\Desktop\git\dsh-session-sync\src\client\accessibility.module.css.mjs
@@ -7879,6 +7416,478 @@ window.__ModuleLoader__.load({
 			if (unit === "days") return `${String(n)} ${t("timeDays")}`;
 			if (unit === "months") return `${String(n)} ${t("timeMonths")}`;
 			return `${String(n)} ${t("timeYears")}`;
+		}
+		//#endregion
+		//#region src/client/ConfigSection.tsx
+		/**
+		* The Session sync configuration, as the Plugins page renders it.
+		*
+		* Registered into `plugins.detail.section`, which renders under the content of
+		* every detail page — so the entry is handed the open page's subject and this
+		* component is only reached for this plugin's own pages (the guard lives in the
+		* registration, `ownsSubject` in `config-entry.ts`).
+		*
+		* The form keeps talking to this plugin's own `/config` route rather than a Host
+		* `form`: the form's second half is a per-Session publish list, which is a patch
+		* the Host's field-by-field `mutate` cannot express, and the route is the same
+		* channel `/state` already arrives on.
+		*
+		* Edits are staged and written on save. Each write is a durable document
+		* mutation on the Host, and the switch list is long enough that committing per
+		* keystroke would turn one intention into a dozen writes.
+		*/
+		/** Seed the draft from the served configuration. */
+		function draftOf(config) {
+			return {
+				machineName: config.machineName,
+				serverUrl: config.serverUrl,
+				isServer: config.isServer,
+				password: config.password,
+				listenHost: config.listenHost,
+				listenPort: String(config.listenPort)
+			};
+		}
+		/**
+		* Render the Session sync configuration.
+		* @param props - copy, the snapshot hook, and the write actions.
+		* @returns the form.
+		*/
+		function ConfigSection(props) {
+			const state = props.useSync((snapshot) => snapshot);
+			const { t } = props;
+			const [draft, setDraft] = react.useState(() => draftOf(state.config));
+			const [dirty, setDirty] = react.useState(false);
+			const [status, setStatus] = react.useState("idle");
+			const seeded = react.useRef(state.config);
+			const dirtyRef = react.useRef(false);
+			dirtyRef.current = dirty;
+			react.useEffect(() => {
+				if (seeded.current === state.config) return;
+				seeded.current = state.config;
+				if (dirtyRef.current) return;
+				setDraft(draftOf(state.config));
+			}, [state.config]);
+			const edit = (patch) => {
+				setDraft((current) => ({
+					...current,
+					...patch
+				}));
+				setDirty(true);
+				setStatus("idle");
+			};
+			const discard = () => {
+				setDraft(draftOf(state.config));
+				setDirty(false);
+				setStatus("idle");
+			};
+			const save = () => {
+				setStatus("saving");
+				props.configure({
+					machineName: draft.machineName,
+					serverUrl: draft.serverUrl,
+					isServer: draft.isServer,
+					password: draft.password,
+					listenHost: draft.listenHost,
+					listenPort: Number.parseInt(draft.listenPort, 10)
+				}).then((accepted) => {
+					setStatus(accepted ? "saved" : "failed");
+					if (accepted) setDirty(false);
+				});
+			};
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("section", {
+				className: sync_module_css_default.section,
+				"aria-label": t("sectionTitle"),
+				children: [
+					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+						className: sync_module_css_default.lede,
+						children: t("sectionDescription")
+					}),
+					/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+						className: sync_module_css_default.group,
+						children: [
+							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("h3", {
+								className: sync_module_css_default.groupTitle,
+								children: t("machineGroup")
+							}),
+							/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+								className: sync_module_css_default.card,
+								children: [
+									/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("label", {
+										className: sync_module_css_default.field,
+										children: [
+											/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+												className: sync_module_css_default.label,
+												children: t("machineName")
+											}),
+											/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Input, {
+												value: draft.machineName,
+												onChange: (event) => {
+													edit({ machineName: event.target.value });
+												}
+											}),
+											/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+												className: sync_module_css_default.hint,
+												children: t("machineNameHint")
+											})
+										]
+									}),
+									/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("label", {
+										className: sync_module_css_default.field,
+										children: [
+											/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+												className: sync_module_css_default.label,
+												children: t("serverUrl")
+											}),
+											/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Input, {
+												value: draft.serverUrl,
+												placeholder: "192.168.1.10:8791",
+												disabled: draft.isServer,
+												onChange: (event) => {
+													edit({ serverUrl: event.target.value });
+												}
+											}),
+											/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+												className: sync_module_css_default.hint,
+												children: t("serverUrlHint")
+											})
+										]
+									}),
+									/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+										className: sync_module_css_default.fieldRow,
+										children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
+											className: sync_module_css_default.fieldText,
+											children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+												className: sync_module_css_default.label,
+												children: t("isServer")
+											}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+												className: sync_module_css_default.hint,
+												children: t("isServerHint")
+											})]
+										}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Switch, {
+											checked: draft.isServer,
+											label: t("isServer"),
+											onChange: (next) => {
+												edit({ isServer: next });
+											}
+										})]
+									}),
+									/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("label", {
+										className: sync_module_css_default.field,
+										children: [
+											/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+												className: sync_module_css_default.label,
+												children: t("password")
+											}),
+											/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Input, {
+												type: "password",
+												autoComplete: "off",
+												value: draft.password,
+												onChange: (event) => {
+													edit({ password: event.target.value });
+												}
+											}),
+											/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+												className: sync_module_css_default.hint,
+												children: t("passwordHint")
+											})
+										]
+									}),
+									/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+										className: sync_module_css_default.pair,
+										children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("label", {
+											className: sync_module_css_default.field,
+											children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+												className: sync_module_css_default.label,
+												children: t("listenHost")
+											}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Input, {
+												value: draft.listenHost,
+												disabled: !draft.isServer,
+												onChange: (event) => {
+													edit({ listenHost: event.target.value });
+												}
+											})]
+										}), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("label", {
+											className: sync_module_css_default.field,
+											children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+												className: sync_module_css_default.label,
+												children: t("listenPort")
+											}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Input, {
+												inputMode: "numeric",
+												value: draft.listenPort,
+												disabled: !draft.isServer,
+												onChange: (event) => {
+													edit({ listenPort: event.target.value });
+												}
+											})]
+										})]
+									})
+								]
+							}),
+							/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+								className: sync_module_css_default.actions,
+								children: [
+									/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
+										variant: "primary",
+										size: "sm",
+										disabled: !dirty || status === "saving",
+										onClick: save,
+										children: t("save")
+									}),
+									/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
+										variant: "ghost",
+										size: "sm",
+										disabled: !dirty,
+										onClick: discard,
+										children: t("discard")
+									}),
+									status === "saved" && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+										className: sync_module_css_default.saved,
+										children: t("saved")
+									}),
+									status === "failed" && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
+										className: sync_module_css_default.failed,
+										children: [t("saveFailed"), state.error === void 0 ? "" : ` · ${state.error}`]
+									}),
+									status === "failed" && state.errorConflict === true && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+										className: sync_module_css_default.failed,
+										children: t("saveConflictHint")
+									}),
+									dirty && status === "idle" && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+										className: sync_module_css_default.dirty,
+										children: t("unsaved")
+									})
+								]
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, react_jsx_runtime.jsx)(StatusBlock, {
+						t,
+						state
+					}),
+					/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+						className: sync_module_css_default.group,
+						children: [
+							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("h3", {
+								className: sync_module_css_default.groupTitle,
+								children: t("sessions")
+							}),
+							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+								className: sync_module_css_default.hint,
+								children: t("sessionsHint")
+							}),
+							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+								className: sync_module_css_default.hint,
+								children: t("sessionApprovalsHint")
+							}),
+							/* @__PURE__ */ (0, react_jsx_runtime.jsx)(SessionList, {
+								t,
+								ready: state.ready,
+								sessions: state.sessions,
+								setSessionSync: props.setSessionSync,
+								setSessionApprovals: props.setSessionApprovals
+							})
+						]
+					})
+				]
+			});
+		}
+		/** The role, listener, and link facts, gathered in one place. */
+		function StatusBlock({ t, state }) {
+			const { role, listening, linked, machines, published } = state.state;
+			const connected = role === "server" ? listening ? t("statusListening") : t("statusNotListening") : state.config.serverUrl.trim() === "" ? t("statusNotConfigured") : linked ? t("statusLinked") : t("statusUnlinked");
+			const healthy = role === "server" ? listening : linked;
+			const detail = state.state.listenError ?? state.state.linkError;
+			const own = state.state.pluginVersion;
+			const peers = machines.map((machine) => ({
+				name: machine.machineName,
+				version: machine.pluginVersion
+			})).filter((peer) => peer.version !== void 0);
+			const skewed = peers.filter((peer) => peer.version !== own);
+			const total = (pick) => machines.reduce((sum, machine) => sum + machine.sessions.reduce((inner, session) => inner + pick(session), 0), 0);
+			const holes = total((session) => session.holes ?? 0);
+			const behind = total((session) => session.behind ?? 0);
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+				className: sync_module_css_default.group,
+				children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("h3", {
+					className: sync_module_css_default.groupTitle,
+					children: t("statusTitle")
+				}), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+					className: sync_module_css_default.card,
+					children: [
+						/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+							className: sync_module_css_default.status,
+							children: [
+								/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
+									className: sync_module_css_default.statusItem,
+									children: [
+										/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.StateDot, { state: healthy ? "done" : "idle" }),
+										t("statusTitle"),
+										/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+											className: healthy ? sync_module_css_default.statusGood : sync_module_css_default.statusBad,
+											children: connected
+										})
+									]
+								}),
+								/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+									className: sync_module_css_default.statusItem,
+									children: role === "server" ? t("roleServer") : t("roleClient")
+								}),
+								/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
+									className: sync_module_css_default.statusItem,
+									children: [t("publishedCount"), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+										className: sync_module_css_default.statusValue,
+										children: String(published)
+									})]
+								}),
+								role === "server" && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
+									className: sync_module_css_default.statusItem,
+									children: [t("machineSessions"), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+										className: sync_module_css_default.statusValue,
+										children: String(machines.length)
+									})]
+								}),
+								role === "server" && holes > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
+									className: sync_module_css_default.statusItem,
+									title: t("mirrorGapsHint"),
+									children: [t("mirrorGaps"), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+										className: sync_module_css_default.statusBad,
+										children: String(holes)
+									})]
+								}),
+								role === "server" && behind > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
+									className: sync_module_css_default.statusItem,
+									title: t("sessionBehindHint"),
+									children: [t("mirrorBehind"), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+										className: sync_module_css_default.statusValue,
+										children: String(behind)
+									})]
+								}),
+								/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
+									className: sync_module_css_default.statusItem,
+									title: t("pluginVersionHint"),
+									children: [
+										t("pluginVersion"),
+										/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+											className: skewed.length === 0 ? sync_module_css_default.statusValue : sync_module_css_default.statusBad,
+											children: own
+										}),
+										peers.length > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
+											className: skewed.length === 0 ? sync_module_css_default.statusValue : sync_module_css_default.statusBad,
+											children: [" · ", peers.map((peer) => `${peer.name} ${peer.version}`).join(", ")]
+										})
+									]
+								}),
+								skewed.length > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+									className: sync_module_css_default.statusItem,
+									children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+										className: sync_module_css_default.statusBad,
+										children: t("pluginVersionSkew")
+									})
+								})
+							]
+						}),
+						detail !== void 0 && detail !== "" && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+							className: sync_module_css_default.failed,
+							children: detail
+						}),
+						state.error !== void 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+							className: sync_module_css_default.failed,
+							children: state.error
+						})
+					]
+				})]
+			});
+		}
+		/**
+		* The per-Session publish switches, and — where a Session is published — the
+		* separate approval switch.
+		*
+		* The second switch is drawn only for a published Session, and that is a statement
+		* rather than a layout choice: an approval card resolves what is being allowed from
+		* the mirrored conversation, so opening a Session to remote approvals without
+		* publishing it would offer a reader a permission over something they cannot see.
+		* The engine refuses that combination, and the page does not pretend otherwise.
+		*/
+		function SessionList({ t, ready, sessions, setSessionSync, setSessionApprovals }) {
+			const [openKeys, setOpenKeys] = react.useState({});
+			if (!ready) return /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+				className: sync_module_css_default.empty,
+				children: t("sessionsLoading")
+			});
+			if (sessions.length === 0) return /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+				className: sync_module_css_default.empty,
+				children: t("sessionsEmpty")
+			});
+			const groups = sessionGroupsOf(sessions);
+			const toggle = (key) => {
+				setOpenKeys((previous) => ({
+					...previous,
+					[key]: previous[key] !== true
+				}));
+			};
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+				className: sync_module_css_default.sessionList,
+				children: groups.map((group) => {
+					const key = group.cwd ?? "";
+					const open = openKeys[key] === true;
+					return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react.Fragment, { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(TreeRow, {
+						level: 0,
+						icon: "project",
+						open,
+						label: group.cwd ?? t("sessionsNoWorkspace"),
+						trailing: String(group.sessions.length),
+						rowKey: key,
+						onToggleKey: toggle
+					}), open && group.sessions.map((session) => /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+						className: `${sync_module_css_default.treeSession} ${sync_module_css_default.settingsSession}`,
+						children: [
+							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+								className: sync_module_css_default.treeSlot,
+								children: session.running && /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.StateDot, { state: "ongoing" })
+							}),
+							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+								className: sync_module_css_default.rowTitle,
+								title: session.title,
+								children: session.title
+							}),
+							/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
+								className: sync_module_css_default.settingsControls,
+								children: [session.synced && /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Switch, {
+									checked: session.approved,
+									label: `${t("sessionApprovalsLabel")}: ${session.title}`,
+									onChange: (next) => {
+										setSessionApprovals(session.sessionId, next);
+									}
+								}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Switch, {
+									checked: session.synced,
+									label: `${t("sessionSyncLabel")}: ${session.title}`,
+									onChange: (next) => {
+										setSessionSync(session.sessionId, next);
+									}
+								})]
+							})
+						]
+					}, session.sessionId))] }, key);
+				})
+			});
+		}
+		//#endregion
+		//#region src/client/PanelIcon.tsx
+		/**
+		* The icon the sidebar renders for this plugin's global panel row.
+		*
+		* The row is the entry that survives the collapsed rail, where the browsing
+		* region's section renders nothing at all, so it exists as its own component
+		* rather than as an inline JSX expression: the registration lives in `index.ts`,
+		* which is a `.ts` module.
+		*/
+		/**
+		* Render the panel row's glyph.
+		* @param props - the requested icon size.
+		* @returns the icon; selection is the row's own styling, not the glyph's.
+		*/
+		function PanelIcon(props) {
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconGlobeOutlineRegular, { size: props.size });
 		}
 		//#endregion
 		//#region src/client/locales.ts

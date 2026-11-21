@@ -2199,3 +2199,17 @@
     transition: none;
   }
 }
+
+/* A Session row inside the settings list: the console's own 32px session row,
+   pushed in under the workspace row it belongs to. */
+.settingsSession {
+  padding-left: 24px;
+}
+
+.settingsControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  padding-right: 8px;
+}

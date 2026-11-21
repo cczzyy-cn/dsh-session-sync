@@ -21,6 +21,7 @@ import type { ConfigPatch, LocalSessionRow, SyncConfig } from '../shared/protoco
 import type { SyncClientSnapshot } from './api.ts'
 import type { SessionSyncKey, SessionSyncTranslate } from './locales.ts'
 import { sessionGroupsOf } from './session-groups.ts'
+import { TreeRow } from './SyncPanel.tsx'
 import css from './sync.module.css'
 
 /** Props the renderer binds for this entry. */
@@ -350,46 +351,62 @@ function SessionList({ t, ready, sessions, setSessionSync, setSessionApprovals }
   setSessionSync: (sessionId: string, synced: boolean) => Promise<boolean>
   setSessionApprovals: (sessionId: string, approved: boolean) => Promise<boolean>
 }): React.ReactElement {
+  // Collapsed by default: a machine with several projects should open on the list
+  // of projects, not on every Session it has ever run. The set of what the reader
+  // opened is per render of this page, the same way the console's own tree holds
+  // its expansion in memory.
+  const [openKeys, setOpenKeys] = React.useState<Record<string, boolean>>({})
   if (!ready) return <span className={css.empty}>{t('sessionsLoading')}</span>
   if (sessions.length === 0) return <span className={css.empty}>{t('sessionsEmpty')}</span>
   const groups = sessionGroupsOf(sessions)
+  const toggle = (key: string): void => {
+    setOpenKeys(previous => ({ ...previous, [key]: previous[key] !== true }))
+  }
   return (
     <div className={css.sessionList}>
-      {groups.map(group => (
-        <div key={group.cwd ?? ''} className={css.sessionGroup}>
-          <div className={css.sessionGroupHead}>
-            <span className={css.sessionGroupPath} title={group.cwd ?? ''}>
-              {group.cwd ?? t('sessionsNoWorkspace')}
-            </span>
-            <span className={css.sessionGroupCount}>{group.sessions.length}</span>
-          </div>
-          {group.sessions.map(session => (
-            <div key={session.sessionId} className={css.sessionRow}>
-              <span className={css.sessionText}>
-                <span className={css.sessionTitle}>{session.title}</span>
-                {session.running && (
-                  <span className={css.sessionMeta}>
-                    <StateDot state="ongoing" />
-                    <span>{t('sessionRunning')}</span>
-                  </span>
-                )}
-              </span>
-              {session.synced && (
-                <Switch
-                  checked={session.approved}
-                  label={`${t('sessionApprovalsLabel')}: ${session.title}`}
-                  onChange={(next) => { void setSessionApprovals(session.sessionId, next) }}
-                />
-              )}
-              <Switch
-                checked={session.synced}
-                label={`${t('sessionSyncLabel')}: ${session.title}`}
-                onChange={(next) => { void setSessionSync(session.sessionId, next) }}
-              />
-            </div>
-          ))}
-        </div>
-      ))}
+      {groups.map(group => {
+        const key = group.cwd ?? ''
+        const open = openKeys[key] === true
+        return (
+          <React.Fragment key={key}>
+            {/* The workspace row is the console's own tree row: same 34px height,
+                same folder glyph that becomes a chevron, same trailing count —
+                the settings list is a list of Sessions, so it should read like the
+                one the product already draws. */}
+            <TreeRow
+              level={0}
+              icon="project"
+              open={open}
+              label={group.cwd ?? t('sessionsNoWorkspace')}
+              trailing={String(group.sessions.length)}
+              rowKey={key}
+              onToggleKey={toggle}
+            />
+            {open && group.sessions.map(session => (
+              <div key={session.sessionId} className={`${css.treeSession} ${css.settingsSession}`}>
+                <span className={css.treeSlot}>
+                  {session.running && <StateDot state="ongoing" />}
+                </span>
+                <span className={css.rowTitle} title={session.title}>{session.title}</span>
+                <span className={css.settingsControls}>
+                  {session.synced && (
+                    <Switch
+                      checked={session.approved}
+                      label={`${t('sessionApprovalsLabel')}: ${session.title}`}
+                      onChange={(next) => { void setSessionApprovals(session.sessionId, next) }}
+                    />
+                  )}
+                  <Switch
+                    checked={session.synced}
+                    label={`${t('sessionSyncLabel')}: ${session.title}`}
+                    onChange={(next) => { void setSessionSync(session.sessionId, next) }}
+                  />
+                </span>
+              </div>
+            ))}
+          </React.Fragment>
+        )
+      })}
     </div>
   )
 }

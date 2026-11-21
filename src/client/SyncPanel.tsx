@@ -546,7 +546,7 @@ export function SyncPanel(props: SyncPanelProps): React.ReactElement {
  * browser gives it. Both still swap to the expand arrow on hover, because that
  * arrow is the only affordance saying the row folds.
  */
-const TreeRow = React.memo(function TreeRow(props: {
+export const TreeRow = React.memo(function TreeRow(props: {
   level: 0 | 1
   icon: 'machine' | 'project'
   open: boolean
