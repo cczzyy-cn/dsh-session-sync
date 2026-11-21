@@ -363,7 +363,7 @@ function SessionList({ t, ready, sessions, setSessionSync, setSessionApprovals }
     setOpenKeys(previous => ({ ...previous, [key]: previous[key] !== true }))
   }
   return (
-    <div className={css.sessionList}>
+    <div className={`${css.sessionList} ${css.settingsTree}`}>
       {groups.map(group => {
         const key = group.cwd ?? ''
         const open = openKeys[key] === true

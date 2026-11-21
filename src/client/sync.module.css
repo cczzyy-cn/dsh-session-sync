@@ -2220,3 +2220,13 @@
   margin-left: auto;
   padding-right: 12px;
 }
+/* Inside the settings list a row is a place to read a switch, not a browsing row:
+   hovering must not swap the folder for a chevron. The console's tree keeps that
+   swap — this override is scoped to the settings list only. */
+.settingsTree .treeRow:hover .treeFolder {
+  display: inline-flex;
+}
+
+.settingsTree .treeRow:hover .treeChevron {
+  display: none;
+}
