@@ -2245,3 +2245,17 @@
 .settingsTree .settingsSession:hover {
   background: transparent;
 }
+/* Vertical rhythm that does not depend on whether a directory is open: every row
+   is 34px (the Session rows used to be 32px, so an expanded block sat tighter than
+   the rows above it), and each directory starts 6px below the previous block. */
+.settingsTree .settingsSession {
+  height: 34px;
+}
+
+.settingsTree .treeRow {
+  margin-top: 6px;
+}
+
+.settingsTree .treeRow:first-child {
+  margin-top: 0;
+}
