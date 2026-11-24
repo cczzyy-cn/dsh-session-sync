@@ -7,6 +7,8 @@
  * a boundary. It reads the leaf scalars it needs and builds one of these.
  */
 
+import type { LiveStreamPayload } from './live-stream.ts'
+
 /** The transport path prefix every browser-facing route lives under. */
 export const ROUTE_PREFIX = '/dsh-session-sync'
 
@@ -403,6 +405,21 @@ export interface SyncState {
     opened: boolean
     pending: number
     events: number
+    /**
+     * The official Assistant attempt this follow is relaying, when one is open.
+     *
+     * Diagnostic only — the console renders from live frames. It answers the one
+     * question a stalled live row raises: whether the origin has an attempt at
+     * all, how far it has relayed, and whether it dropped one (and why).
+     */
+    live?: {
+      attemptId: string
+      turn: number
+      step: number
+      nextIndex: number
+      pending: number
+      broken?: string
+    }
     /** Why the follow's last attempt ended, when it ended without an abort. */
     ended?: string
   }[]
@@ -848,6 +865,11 @@ export interface CommandStatus {
  * The whole text so far rather than an increment: a lost frame then self-heals
  * on the next one, and the reader never sees a gap. The durable events remain
  * the source of truth -- the completed message replaces this.
+ *
+ * Kept for one reason only: a server upgraded ahead of its origins still has to
+ * understand the payload an older build posts. The current relay is
+ * {@link LiveStreamPayload}; the server folds this shape into the same official
+ * chunks so both generations reach the browser as one vocabulary.
  */
 export interface StreamDeltaPayload {
   sessionId: string
@@ -1026,8 +1048,14 @@ export type SyncStreamFrame =
   | { type: 'question'; question: RelayedQuestionView }
   /** One relayed approval opened, updated, or closed on the server this console reads. */
   | { type: 'approval'; approval: RelayedApprovalView }
-  /** Transient streaming text for the open Session; never mirrored. */
-  | { type: 'stream'; machineName: string; sessionId: string; turn: number; step: number; kind: 'reasoning' | 'text'; text: string }
+  /**
+   * One official Assistant-stream event for the open Session; never mirrored.
+   *
+   * The payload is the same start/chunk/end vocabulary `follow` yields, plus the
+   * baseline a late reader gets. The console folds it for its own live row and the
+   * shipped-renderer pane feeds the raw chunks to DSH's assembler.
+   */
+  | { type: 'stream'; machineName: string; sessionId: string; live: LiveStreamPayload }
   | { type: 'error'; message: string }
 
 /** Build the config a fresh install starts from. */

@@ -1558,11 +1558,49 @@
    column, and composer, so the seat only has to hand it the pane's whole
    height — the same seat an embedded chat gets in the right sidebar. */
 .officialPane {
+  position: relative;
   display: flex;
   flex-direction: column;
   flex: 1;
   min-height: 0;
   overflow: hidden;
+}
+
+/* The console's own to-bottom control for the shipped scroller.
+   The shipped one belongs to a scroll policy that only arms when the Session's
+   open state is `open`; a mirror-fed Session opens against a Host that has never
+   heard of it, so that policy stays inert and its control never appears. This is
+   the same size, look and place, driven by the console's own follow intent. */
+.paneToBottom {
+  position: absolute;
+  right: 24px;
+  bottom: 16px;
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  --dsw-elevation-stroke-color: var(--dsw-alias-border-l3);
+  border-radius: 100px;
+  corner-shape: round;
+  color: var(--dsw-alias-label-primary);
+  background: var(--dsw-alias-button-floating-fill);
+  box-shadow: var(--dsw-elevation-panel);
+  cursor: pointer;
+}
+
+.paneToBottom:hover {
+  background: var(--dsw-alias-button-floating-hover);
+}
+
+/* One control for one scroller: the shipped slot is hidden because the console's
+   replaces it. If a future build renames the class the rule stops matching, which
+   fails safe — the shipped control comes back rather than something else hiding. */
+.officialPane [class*='toBottomSlot'] {
+  display: none;
 }
 
 .officialPane > * {
@@ -1688,6 +1726,62 @@
   color: var(--dsw-alias-label-primary);
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+/* A Tool call the model is still streaming. The transcript has no card for it
+   yet — its arguments are not valid JSON until the block ends — so this states
+   the Tool's name and the first argument it has been given. Same row rhythm as
+   the shipped process rows: one line, code face for the names. */
+.liveTool {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  color: var(--dsw-alias-label-secondary);
+  font: var(--dsw-font-xxs-12);
+}
+
+.liveToolDot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--dsw-alias-state-business-primary);
+  animation: liveToolPulse 1.2s ease-in-out infinite;
+}
+
+.liveToolName {
+  flex: none;
+  color: var(--dsw-alias-label-primary);
+  font-family: var(--ds-font-family-code);
+  font-size: 12px;
+}
+
+.liveToolArgs {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--ds-font-family-code);
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+@keyframes liveToolPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .liveToolDot {
+    animation: none;
+  }
 }
 
 /* Assistant turn: folded thinking (when any) above the markdown answer. The

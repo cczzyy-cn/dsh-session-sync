@@ -635,6 +635,39 @@ function Conversation(props: {
   /** Whether the reader is at the floor of the transcript. */
   const [atBottom, setAtBottom] = React.useState(true)
   /**
+   * The same fact as a ref, for the size observer.
+   *
+   * A `ResizeObserver` callback closes over the state it was created with, so a
+   * follow decision read from state goes stale the moment the reader scrolls —
+   * and a stale `true` is what keeps a growing transcript out of view while the
+   * "to bottom" control stays hidden. The ref is the live answer.
+   */
+  const atBottomRef = React.useRef(true)
+  /**
+   * Whether the shipped pane's own scroller is at its floor.
+   *
+   * The shipped conversation arms its scroll policy only when its Session open
+   * state is `open`. A mirror-fed Session is opened against a Host that has never
+   * heard of it, so that read fails and the policy never arms: the pane renders,
+   * but nothing follows the tail and its own to-bottom control never appears.
+   * The console therefore owns follow intent for the shipped scroller too.
+   */
+  const [paneAtBottom, setPaneAtBottom] = React.useState(true)
+  /** Live copy of {@link paneAtBottom} for the size observer. */
+  const paneAtBottomRef = React.useRef(true)
+  /** The Session/view already placed at the shipped pane's floor. */
+  const paneSettledFor = React.useRef('')
+  /**
+   * Whether a Session switch is still placing the shipped pane at its floor.
+   *
+   * The pane mounts before its window arrives, so the first size observation sees
+   * a scrollport at the top and would record that as reader intent — cancelling
+   * the very follow the switch asked for. While this is set, "not at the floor"
+   * is layout in progress, not a reader who scrolled up; it clears once the
+   * content has actually landed at the floor.
+   */
+  const paneSettling = React.useRef(false)
+  /**
    * Whether the shipped pane's own scroller is at *its* top.
    *
    * The console's "older" row marks the top of a transcript page, and on the
@@ -656,11 +689,52 @@ function Conversation(props: {
    * the browser paints.
    */
   const paneMetrics = React.useRef<PagingMetrics>({ first: undefined, top: 0, height: 0 })
+  // The shipped conversation, when this DSH build can retain the open Session,
+  // the mirror has something to replace it with, and the renderer gave this
+  // panel the seats the child slot's declaration earns it. The reference must
+  // exist before the pane renders: the SessionProvider binds it, and an absent
+  // one would inherit whatever local Session the shell has selected.
+  const shipped = props.official.supported
+    && props.renderSlot !== undefined
+    && props.SessionProvider !== undefined
+    && state.transcript !== undefined
+    ? props.official.referenceFor(props.machineName, session.sessionId)
+    : undefined
+  /**
+   * The shipped conversation page the console asks for, or undefined when the
+   * shipped content cannot draw the page the console's tab is on.
+   *
+   * Both tabs are shipped pages where the build has them — `chat`, and the
+   * trajectory ledger `ui-trajectory` registers — and the pane requests one by id.
+   * The fallbacks are the two cases the console has to keep drawing itself: a build
+   * with no retention seam (no shipped content at all), and the trajectory tab on a
+   * build whose `conversation.view` has no trajectory entry. Asking is what makes
+   * the console's ledger stay the fallback rather than the default.
+   */
+  const shippedView = shipped === undefined
+    ? undefined
+    : tab === 'chat' || props.hasTrajectoryView()
+      ? tab
+      : undefined
   const scrollToBottom = React.useCallback((smooth = true): void => {
     const el = body.current
     if (el === null) return
     if (smooth && typeof el.scrollTo === 'function') el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
     else el.scrollTop = el.scrollHeight
+    atBottomRef.current = true
+    setAtBottom(true)
+  }, [])
+  /** Land the shipped pane's scroller at its floor, the way its own control would. */
+  const scrollPaneToBottom = React.useCallback((smooth = true): void => {
+    const scroller = paneScroller.current
+    if (scroller === null) return
+    paneAtBottomRef.current = true
+    setPaneAtBottom(true)
+    if (smooth && typeof scroller.scrollTo === 'function') {
+      scroller.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' })
+    } else {
+      scroller.scrollTop = scroller.scrollHeight
+    }
   }, [])
   // A reader who scrolled up owns the viewport until they come back down; while
   // they are at the floor the mirrored tail keeps following, which is what a live
@@ -669,12 +743,14 @@ function Conversation(props: {
     const el = body.current
     if (el === null) return
     const onScroll = (): void => {
-      setAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight <= FOLLOW_THRESHOLD)
+      const bottom = el.scrollHeight - el.scrollTop - el.clientHeight <= FOLLOW_THRESHOLD
+      atBottomRef.current = bottom
+      setAtBottom(bottom)
     }
     onScroll()
     el.addEventListener('scroll', onScroll, { passive: true })
     return () => { el.removeEventListener('scroll', onScroll) }
-  }, [tab, state.open?.sessionId])
+  }, [tab, state.open?.sessionId, shippedView !== undefined])
   // Growth is what the tail has to follow, and it arrives without a row count
   // change: the live row's text grows, markdown reflows, a disclosure opens. The
   // shipped ChatView watches the column for exactly this reason, and writes only
@@ -682,10 +758,10 @@ function Conversation(props: {
   React.useEffect(() => {
     const node = column.current
     if (node === null || typeof ResizeObserver === 'undefined') return
-    const observer = new ResizeObserver(() => { if (atBottom) scrollToBottom(false) })
+    const observer = new ResizeObserver(() => { if (atBottomRef.current) scrollToBottom(false) })
     observer.observe(node)
     return () => { observer.disconnect() }
-  }, [atBottom, scrollToBottom, tab, state.open?.sessionId])
+  }, [scrollToBottom, tab, state.open?.sessionId, shippedView !== undefined])
   // Where the shipped pane's scroller is, tracked on the wrapper rather than on
   // its own handlers in the capture phase: a scroll event does not bubble, but it
   // does descend, so one listener here hears every scrollable inside the pane
@@ -695,42 +771,139 @@ function Conversation(props: {
   React.useEffect(() => {
     const host = pane.current
     if (host === null) return
-    const scroller = findScroller(host)
-    paneScroller.current = scroller
-    if (scroller !== null) setAtPaneTop(scroller.scrollTop <= FOLLOW_THRESHOLD)
+    const measureBottom = (el: HTMLElement): void => {
+      if (paneSettling.current) {
+        // A switch is still placing this pane: the top is where the window is
+        // being installed, not where the reader put it.
+        paneAtBottomRef.current = true
+        setPaneAtBottom(true)
+        return
+      }
+      const bottom = el.scrollHeight - el.scrollTop - el.clientHeight <= FOLLOW_THRESHOLD
+      paneAtBottomRef.current = bottom
+      setPaneAtBottom(bottom)
+    }
+    const bind = (): HTMLElement | null => {
+      const scroller = findScroller(host)
+      paneScroller.current = scroller
+      if (scroller !== null) {
+        setAtPaneTop(scroller.scrollTop <= FOLLOW_THRESHOLD)
+        measureBottom(scroller)
+      }
+      return scroller
+    }
+    let scroller = bind()
     // The pane's own content may not be laid out at the first commit, in which
     // case its scroller still looks like one whose content fits. One frame later
     // it is the real thing — and because the shipped conversation opens at its
     // newest message, learning that is the difference between a boundary row and
     // a permanent banner.
     const frame = typeof requestAnimationFrame === 'function'
-      ? requestAnimationFrame(() => {
-        const settled = findScroller(host)
-        paneScroller.current = settled
-        if (settled !== null) setAtPaneTop(settled.scrollTop <= FOLLOW_THRESHOLD)
-      })
+      ? requestAnimationFrame(() => { scroller = bind() })
       : undefined
     const onScroll = (event: Event): void => {
       const target = event.target
       if (!(target instanceof HTMLElement)) return
       if (target.scrollHeight <= target.clientHeight) return
       setAtPaneTop(target.scrollTop <= FOLLOW_THRESHOLD)
+      if (target === paneScroller.current) measureBottom(target)
     }
     host.addEventListener('scroll', onScroll, { capture: true, passive: true })
+    // The shipped scroll policy only arms when its Session open state is `open`.
+    // A mirror-fed Session opens against a Host that has never heard of it, so
+    // that state is `error` and the policy stays inert: the pane renders, but
+    // nothing follows the tail and its own to-bottom control never appears. The
+    // console therefore follows the shipped scroller itself, watching the chat
+    // root — whose height is the content — and only while the reader is pinned.
+    let observed: HTMLElement | null = null
+    const follow = (): void => {
+      const current = paneScroller.current
+      if (current === null) return
+      // A switch is placing the pane, not a reader position: keep following until
+      // the window has actually landed at the floor.
+      if (paneSettling.current) paneAtBottomRef.current = true
+      if (!paneAtBottomRef.current) return
+      current.scrollTop = current.scrollHeight
+      if (paneSettling.current
+        && current.scrollHeight - current.clientHeight - current.scrollTop <= FOLLOW_THRESHOLD) {
+        paneSettling.current = false
+      }
+    }
+    const resize = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(follow)
+    const observeContent = (): void => {
+      const root = host.querySelector<HTMLElement>('[data-chat-following-tail]')
+      if (root === observed) return
+      if (observed !== null) resize?.unobserve(observed)
+      observed = root
+      if (root !== null) resize?.observe(root)
+    }
+    observeContent()
+    if (scroller !== null) resize?.observe(scroller)
+    // A switched Session replaces the chat root, and the first window is installed
+    // after the pane mounts: the root can be absent at both bind and the frame
+    // below. Structure changes are what reveal it, so the observer is re-aimed
+    // there rather than only at fixed moments.
+    const mutations = typeof MutationObserver === 'undefined' ? undefined : new MutationObserver(() => {
+      const root = host.querySelector<HTMLElement>('[data-chat-following-tail]')
+      if (root !== observed) {
+        if (observed !== null) resize?.unobserve(observed)
+        observed = root
+        if (root !== null) resize?.observe(root)
+      }
+      // The shipped shell can mount after both the effect and its frame, which is
+      // where the scroller becomes reachable; without this the pane is never bound
+      // and no follow can happen at all.
+      if (paneScroller.current === null || !host.contains(paneScroller.current)) {
+        scroller = bind()
+        if (scroller !== null) resize?.observe(scroller)
+      }
+      follow()
+    })
+    mutations?.observe(host, { childList: true, subtree: true })
+    // The chat root is rendered a frame after the pane, and replaced when the view
+    // switches, so it is re-found once rather than only at the first commit.
+    const settle = typeof requestAnimationFrame === 'function'
+      ? requestAnimationFrame(() => {
+        scroller = bind()
+        observeContent()
+        if (scroller !== null) resize?.observe(scroller)
+        follow()
+      })
+      : undefined
     return () => {
       if (frame !== undefined) cancelAnimationFrame(frame)
+      if (settle !== undefined) cancelAnimationFrame(settle)
       host.removeEventListener('scroll', onScroll, { capture: true })
+      mutations?.disconnect()
+      resize?.disconnect()
     }
     // `state.transcript` rather than the rendered pane: this effect is declared
     // before the pane's own reference resolves, and the transcript is what its
     // existence depends on. A null ref simply means there is no pane to watch.
-  }, [tab, state.open?.sessionId, state.transcript !== undefined])
+  }, [tab, state.open?.sessionId, state.transcript !== undefined, shippedView !== undefined])
   // Opening a Session is a fresh read: it starts at the floor whatever the reader
-  // was doing in the previous one.
+  // was doing in the previous one — on either pane.
   React.useEffect(() => {
+    atBottomRef.current = true
     setAtBottom(true)
     scrollToBottom(false)
-  }, [state.open?.sessionId, scrollToBottom])
+    const key = `${state.open?.machineName ?? ''}|${state.open?.sessionId ?? ''}|${tab}|${state.transcript === undefined ? 'loading' : 'loaded'}`
+    if (paneSettledFor.current === key) return
+    paneSettledFor.current = key
+    paneSettling.current = true
+    paneAtBottomRef.current = true
+    setPaneAtBottom(true)
+    // The shipped pane installs its window after this commit, and its scroller is
+    // found before that; the floor is written on the next two frames so the write
+    // lands after the content the reader will keep.
+    const frames: number[] = []
+    if (typeof requestAnimationFrame === 'function') {
+      frames.push(requestAnimationFrame(() => {
+        frames.push(requestAnimationFrame(() => { scrollPaneToBottom(false) }))
+      }))
+    }
+    return () => { for (const handle of frames) cancelAnimationFrame(handle) }
+  }, [state.open?.machineName, state.open?.sessionId, state.transcript !== undefined, tab, scrollToBottom, scrollPaneToBottom])
   const rows = React.useMemo(
     () => toRows(state.transcript?.events ?? []),
     [state.transcript],
@@ -783,33 +956,6 @@ function Conversation(props: {
   )
 
   const delivery = state.delivery
-  // The shipped conversation, when this DSH build can retain the open Session,
-  // the mirror has something to replace it with, and the renderer gave this
-  // panel the seats the child slot's declaration earns it. The reference must
-  // exist before the pane renders: the SessionProvider binds it, and an absent
-  // one would inherit whatever local Session the shell has selected.
-  const shipped = props.official.supported
-    && props.renderSlot !== undefined
-    && props.SessionProvider !== undefined
-    && state.transcript !== undefined
-    ? props.official.referenceFor(props.machineName, session.sessionId)
-    : undefined
-  /**
-   * The shipped conversation page the console asks for, or undefined when the
-   * shipped content cannot draw the page the console's tab is on.
-   *
-   * Both tabs are shipped pages where the build has them — `chat`, and the
-   * trajectory ledger `ui-trajectory` registers — and the pane requests one by id.
-   * The fallbacks are the two cases the console has to keep drawing itself: a build
-   * with no retention seam (no shipped content at all), and the trajectory tab on a
-   * build whose `conversation.view` has no trajectory entry. Asking is what makes
-   * the console's ledger stay the fallback rather than the default.
-   */
-  const shippedView = shipped === undefined
-    ? undefined
-    : tab === 'chat' || props.hasTrajectoryView()
-      ? tab
-      : undefined
   /**
    * Whether the shipped pane is drawing this Session's footer right now.
    *
@@ -1042,6 +1188,19 @@ function Conversation(props: {
                 {props.renderSlot(OFFICIAL_SLOT, {})}
               </OfficialViewContext.Provider>
             </props.SessionProvider>
+            {/* The shipped control is part of a scroll policy that never arms for
+                a mirror-fed Session (see the pane effect). This is the same
+                control, owned by the console, for the same scroller. */}
+            {!paneAtBottom && (
+              <button
+                type="button"
+                className={css.paneToBottom}
+                aria-label={t('chatToBottom')}
+                onClick={() => { scrollPaneToBottom() }}
+              >
+                <IconChevronDownOutlineRegular />
+              </button>
+            )}
           </div>
         </>
       )}
@@ -1080,13 +1239,16 @@ function Conversation(props: {
                       : rows.map(row => (
                         <TranscriptLine key={row.key} t={t} row={row} labels={labels} latestTurn={latestTurn} />
                       ))}
-                {/* Streaming text arrives between durable settlements: reasoning
-                    first, then the answer, each replacing itself as it grows. The
-                    settlement that ends the step retires both. */}
-                {(state.live.reasoning !== '' || state.live.text !== '') && (
+                {/* Live content arrives between durable settlements, in the order
+                    the model authored it: reasoning, prose, and the Tool calls it
+                    is running. The settlement that ends the step retires them. */}
+                {state.live.blocks.length > 0 && (
                   <div className={css.assistantRow}>
-                    {state.live.reasoning !== '' && <ReasoningRow t={t} reasoning={state.live.reasoning} streaming />}
-                    {state.live.text !== '' && <MarkdownText text={state.live.text} labels={labels} />}
+                    {state.live.blocks.map(block => block.kind === 'reasoning'
+                      ? <ReasoningRow key={`reasoning-${String(block.index)}`} t={t} reasoning={block.text} streaming />
+                      : block.kind === 'text'
+                        ? <MarkdownText key={`text-${String(block.index)}`} text={block.text} labels={labels} />
+                        : <LiveToolRow key={`tool-${String(block.index)}`} name={block.name} arguments={block.arguments} />)}
                   </div>
                 )}
               </div>
@@ -1553,6 +1715,53 @@ function RetryLine({ t, row }: {
 /** Whole seconds left before a scheduled attempt runs, never below one. */
 function countdownSeconds(deadline: number): number {
   return Math.max(1, Math.ceil((deadline - Date.now()) / 1_000))
+}
+
+/**
+ * One Tool call the model is still streaming.
+ *
+ * The official stream carries the call before its card can exist: the arguments
+ * are a raw JSON fragment, so there is nothing to hand the transcript's Tool row
+ * yet. This states the one thing that is known — which Tool is running, and the
+ * first value it has been given — rather than leaving the reader with a spinner
+ * and no name.
+ */
+function LiveToolRow({ name, arguments: args }: { name: string; arguments: string }): React.ReactElement {
+  const gist = toolArgumentGist(args)
+  return (
+    <div className={css.liveTool} data-state="running">
+      <span className={css.liveToolDot} aria-hidden />
+      <span className={css.liveToolName}>{name === '' ? '…' : name}</span>
+      {gist !== '' && <span className={css.liveToolArgs}>{gist}</span>}
+    </div>
+  )
+}
+
+/**
+ * The first human-readable value of a Tool call's arguments so far.
+ *
+ * The fragment is not valid JSON until the block ends, so a parse is attempted
+ * and the raw text is the fallback: either way the reader sees the argument the
+ * call is being built around, not an object dump.
+ * @param args - raw JSON text streamed so far.
+ * @returns one short line, empty when there is nothing yet.
+ */
+function toolArgumentGist(args: string): string {
+  const trimmed = args.trim()
+  if (trimmed === '') return ''
+  let candidate = trimmed
+  try {
+    const parsed = JSON.parse(trimmed) as unknown
+    if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+      const first = Object.values(parsed as Record<string, unknown>)
+        .find(value => typeof value === 'string' && value.trim() !== '')
+      if (typeof first === 'string') candidate = first
+    }
+  } catch {
+    // Still streaming: the raw fragment is the honest answer.
+  }
+  const oneLine = candidate.replace(/\s+/g, ' ').trim()
+  return oneLine.length > 96 ? `${oneLine.slice(0, 96)}…` : oneLine
 }
 
 /**

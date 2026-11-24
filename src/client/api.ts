@@ -25,6 +25,11 @@ import {
   type SyncState,
   type SyncStreamFrame,
 } from '../shared/protocol.ts'
+import {
+  LiveAttemptFold,
+  type LiveAttemptView,
+  type LiveStreamPayload,
+} from '../shared/live-stream.ts'
 
 /** How often the local Session list is re-read while the panel is mounted. */
 const SESSION_POLL_MS = 15_000
@@ -117,11 +122,14 @@ export interface SyncClientSnapshot {
    */
   mirrorResets: number
   /**
-   * Streaming text for the open Session's current step, replaced by the durable
-   * settlement. `turn` and `step` say which step it belongs to, so a frame that
-   * arrives late cannot overwrite a newer one.
+   * The live Assistant attempt for the open Session, folded from the official
+   * chunk stream and replaced by the durable settlement.
+   *
+   * `blocks` is the authored order — reasoning, answer and Tool calls as the model
+   * emitted them — and is what the console draws. `turn` and `step` say which step
+   * the row belongs to, so a frame that arrives late cannot overwrite a newer one.
    */
-  live: { reasoning: string; text: string; turn: number; step: number }
+  live: LiveAttemptView
   /**
    * Questions this server is offering to this console, oldest ask first.
    *
@@ -194,11 +202,12 @@ const NO_STEP = -1
 /**
  * The empty live row.
  *
- * A blank row rather than `undefined`: the panel asks whether either text is
- * non-empty, and a step's first frame is what fills one.
+ * A complete view rather than `undefined`: the panel asks whether there is
+ * anything to draw, and a step's first chunk is what fills one. The identity is
+ * empty so no real attempt can be mistaken for it.
  */
-function noLive(): SyncClientSnapshot['live'] {
-  return { reasoning: '', text: '', turn: NO_STEP, step: NO_STEP }
+function noLive(): LiveAttemptView {
+  return { attemptId: '', turn: NO_STEP, step: NO_STEP, blocks: [], reasoning: '', text: '', tools: [] }
 }
 
 /**
@@ -218,8 +227,8 @@ export function isSettlement(event: MirrorEvent): boolean {
 /** One `events` frame: durable envelopes appended to one published Session. */
 export type SyncEventsFrame = Extract<SyncStreamFrame, { type: 'events' }>
 
-/** One `stream` frame: the whole text so far for one live step. */
-export type SyncLiveDelta = Extract<SyncStreamFrame, { type: 'stream' }>
+/** One `stream` frame: an official Assistant-stream event for the open Session. */
+export type SyncLiveFrame = Extract<SyncStreamFrame, { type: 'stream' }>
 
 /**
  * One consumer told what the mirror reported as it arrives.
@@ -246,8 +255,8 @@ export interface SyncTransportObserver {
   older(open: OpenSession, page: MirrorTranscript): void
   /** One `events` frame's durable envelopes, in order. */
   appended(open: OpenSession, frame: SyncEventsFrame): void
-  /** One accepted live delta frame. */
-  streamed(open: OpenSession, frame: SyncLiveDelta): void
+  /** One accepted live frame. */
+  streamed(open: OpenSession, frame: SyncLiveFrame): void
   /** The mirror moved the open Session's running flag. */
   running(open: OpenSession, running: boolean): void
 }
@@ -273,6 +282,15 @@ export class SyncClient {
   private observer: SyncTransportObserver | undefined
   /** The running flag already reported to that consumer. */
   private reportedRunning: boolean | undefined
+  /**
+   * The open Session's live attempt, folded locally.
+   *
+   * Held beside the snapshot because it is the only thing a chunk batch can be
+   * applied to: the snapshot is a value, and a dense run needs the cursor and the
+   * blocks from the previous frame. Replaced by a `start` or `baseline`, dropped
+   * by a `clear` and by opening another Session.
+   */
+  private liveFold: LiveAttemptFold | undefined
 
   constructor() {
     this.store = createSnapshotStore<SyncClientSnapshot>({
@@ -455,6 +473,7 @@ export class SyncClient {
     // a reference that has already been released.
     this.reportedRunning = undefined
     this.notify(observer => { observer.opened(open) })
+    this.liveFold = undefined
     this.update({
       open,
       transcript: undefined,
@@ -468,11 +487,14 @@ export class SyncClient {
       delivery: undefined,
     })
     try {
-      const { transcript } = await getJson<{ transcript: MirrorTranscript }>(
+      const { transcript, live } = await getJson<{ transcript: MirrorTranscript; live?: LiveStreamPayload }>(
         `${ROUTE_PREFIX}/transcript?machine=${encodeURIComponent(machineName)}&session=${encodeURIComponent(sessionId)}`,
       )
       this.notify(observer => { observer.loaded(open, transcript) })
       this.update({ transcript, loadingTranscript: false, error: undefined })
+      // After the window, never before: the baseline is drawn on top of the
+      // replace, and a reader opening a running Session sees the step it is in.
+      if (live !== undefined) this.consume({ type: 'stream', machineName, sessionId, live })
     } catch (error: unknown) {
       this.update({ loadingTranscript: false, error: describe(error), errorConflict: false })
     }
@@ -728,6 +750,63 @@ export class SyncClient {
     this.source = source
   }
 
+  /**
+   * Apply one live event to the open Session's attempt.
+   *
+   * The fold is official: a `start` replaces the attempt, a `baseline` seeds it
+   * mid-run, a chunk batch is dense, and a gap drops the row rather than drawing a
+   * hole. `end`/`clear` close it. A frame for an attempt this browser never saw is
+   * ignored — a `chunks` batch that outran its `start` cannot be folded.
+   * @param live - one live event from the browser stream.
+   * @returns the view to publish, or undefined when the event changes nothing.
+   */
+  private foldLive(live: LiveStreamPayload): LiveAttemptView | undefined {
+    switch (live.type) {
+      case 'baseline': {
+        const fold = new LiveAttemptFold({ attemptId: live.attemptId, turn: live.turn, step: live.step })
+        fold.seed(live)
+        this.liveFold = fold
+        return fold.view()
+      }
+      case 'start': {
+        // A retried step re-opens the same turn and step; announcing it starts the
+        // row over, exactly as the shipped renderer would.
+        this.liveFold = new LiveAttemptFold({ attemptId: live.attemptId, turn: live.turn, step: live.step })
+        return this.liveFold.view()
+      }
+      case 'chunks': {
+        const fold = this.liveFold
+        if (fold === undefined || fold.attemptId !== live.attemptId) return undefined
+        for (const frame of live.chunks) {
+          if (fold.apply(frame)) continue
+          // A dense run with a hole cannot be repaired here; the next `start`
+          // (or the opening baseline) is what a reader will see next.
+          this.liveFold = undefined
+          return noLive()
+        }
+        return fold.view()
+      }
+      case 'end': {
+        if (this.liveFold?.attemptId !== live.attemptId) return undefined
+        if (live.outcome === 'abandoned') {
+          this.liveFold = undefined
+          return noLive()
+        }
+        // A committed attempt is replaced by its own durable settlement, which is
+        // the next thing the mirror sends; its live row stays until then.
+        return this.liveFold.view()
+      }
+      case 'clear': {
+        const fold = this.liveFold
+        if (fold === undefined) return undefined
+        if (live.turn !== fold.turn || live.step !== fold.step) return undefined
+        if (live.attemptId !== undefined && live.attemptId !== '' && live.attemptId !== fold.attemptId) return undefined
+        this.liveFold = undefined
+        return noLive()
+      }
+    }
+  }
+
   private consume(frame: SyncStreamFrame): void {
     if (frame.type === 'state') {
       const previous = this.store.getSnapshot().state
@@ -770,10 +849,12 @@ export class SyncClient {
       // to reach the shipped renderer as the close of a live attempt, which the
       // merged event list alone no longer says.
       this.notify(observer => { observer.appended(open, frame) })
+      const settled = frame.events.some(isSettlement)
+      if (settled) this.liveFold = undefined
       this.update({
         transcript: { ...transcript, events: mergeEvents(transcript.events, frame.events) },
         // A durable settlement ends the streaming step it belongs to.
-        ...(frame.events.some(isSettlement) ? { live: noLive() } : {}),
+        ...(settled ? { live: noLive() } : {}),
       })
       return
     }
@@ -782,24 +863,14 @@ export class SyncClient {
       const open = snapshot.open
       if (open === undefined) return
       if (open.machineName !== frame.machineName || open.sessionId !== frame.sessionId) return
-      const live = snapshot.live
-      // Frames for an older step must not overwrite a newer one: every delta is
-      // its own post, so two steps' frames can arrive out of order.
-      if (frame.turn < live.turn || (frame.turn === live.turn && frame.step < live.step)) return
-      // A step's text is replaced, not appended: the origin sends the whole text
-      // so far, so a lost frame heals on the next one. A step that moved on
-      // starts both texts over, because its reasoning is a new one.
-      const advanced = frame.turn > live.turn || (frame.turn === live.turn && frame.step > live.step)
-      const base = advanced ? { ...noLive(), turn: frame.turn, step: frame.step } : live
-      // Within one step the text only grows, so a frame whose text is a strict
-      // prefix of what is already shown is an older snapshot that arrived late:
-      // every update is its own post, and the network does not order two posts
-      // that were issued together. An empty text is exempt -- that is how an
-      // abandoned attempt is dropped, and it is the only frame that may regress.
-      const shown = frame.kind === 'reasoning' ? base.reasoning : base.text
-      if (!advanced && frame.text !== '' && frame.text.length < shown.length && shown.startsWith(frame.text)) return
+      // An older Host posts the whole-text shape; this client was built for the
+      // official chunk stream. Ignoring it is the honest degradation: no live row
+      // rather than a crash on a frame it cannot read.
+      if ((frame as { live?: unknown }).live === undefined) return
+      const live = this.foldLive(frame.live)
+      if (live === undefined) return
       this.notify(observer => { observer.streamed(open, frame) })
-      this.update({ live: frame.kind === 'reasoning' ? { ...base, reasoning: frame.text } : { ...base, text: frame.text } })
+      this.update({ live })
       return
     }
     if (frame.type === 'question') {

@@ -215,7 +215,12 @@ async function dispatch(
       sendJson(response, 404, { error: 'no such mirrored Session' })
       return
     }
-    sendJson(response, 200, { transcript })
+    // The window is the durable mirror; an attempt in flight is not in it. It
+    // travels with the same read so the pane can start mid-step instead of
+    // waiting for the next chunk — and after the window, so the baseline lands
+    // on top of the replace rather than being wiped by it.
+    const live = service.live(machineName, sessionId)
+    sendJson(response, 200, { transcript, ...(live === undefined ? {} : { live }) })
     return
   }
 

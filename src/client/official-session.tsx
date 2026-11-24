@@ -16,16 +16,16 @@
  */
 import * as React from 'react'
 import type { MirrorEvent, MirrorTranscript } from '../shared/protocol.ts'
+import type { LiveChunkFrame } from '../shared/live-stream.ts'
 import {
   isSettlement,
   type OpenSession,
   type SyncEventsFrame,
-  type SyncLiveDelta,
+  type SyncLiveFrame,
   type SyncTransportObserver,
 } from './api.ts'
 import { envelopePlacement, highestOf } from './envelope-placement.ts'
 import { nextWatermark } from './footer-projections.ts'
-import { LiveText, liveChunkOf } from './live-text.ts'
 import { CHAT_VIEW } from './official-views.ts'
 import { scopeCapable } from './routing.ts'
 
@@ -260,32 +260,6 @@ export interface OfficialBridgeFace {
   publishFooter(values: Readonly<Record<string, unknown>>, floor: number): void
 }
 
-/**
- * One live attempt's identity, from the plugin's own live key.
- *
- * The transport already keys a live row by turn and step, and both a live frame
- * and the settlement that ends it carry that pair — so the same attempt id is
- * derived on both sides with no hidden state to keep in step.
- * @param turn - the turn the step belongs to.
- * @param step - the step within the turn.
- * @returns the attempt id.
- */
-function attemptKey(turn: number, step: number): string {
-  return `${String(turn)}:${String(step)}`
-}
-
-/**
- * The turn|step a settlement event closes, when it names one.
- * @param event - one durable envelope.
- * @returns the attempt id, or undefined for an envelope without coordinates.
- */
-function settlementAttemptId(event: MirrorEvent): string | undefined {
-  const data = asRecord(event.data)
-  const turn = data?.['turn']
-  const step = data?.['step']
-  return typeof turn === 'number' && typeof step === 'number' ? attemptKey(turn, step) : undefined
-}
-
 /** The adapter key of one remote Session: machine and id, in one string. */
 function remoteKey(machineName: string, sessionId: string): string {
   return `${machineName}\u0000${sessionId}`
@@ -355,24 +329,15 @@ export class OfficialMirror {
    * Session has no Host behind it to fill it.
    */
   private readonly projections: ProjectionsSinkLike | undefined
-  /** The live attempt whose text is on screen, by the plugin's turn|step key. */
+  /** The live attempt whose chunks are on screen, by the official attempt id. */
   private liveAttempt: string | undefined
-  /**
-   * Whole text already shown, per attempt **and per kind**.
-   *
-   * One entry per attempt was wrong, and the symptom was subtle enough to be
-   * reported as "the thinking only appears once it has finished": a step streams its
-   * reasoning and *then* its answer through the same attempt id, so the first answer
-   * delta is never an extension of the reasoning text — which took the restart path
-   * in {@link OfficialSession.feedLive}, and the restart path retires the attempt's
-   * transient rows. The thinking a reader was watching was therefore torn down at the
-   * exact moment the answer began, leaving only the durable reasoning block that
-   * arrives with the settlement. Nothing about an answer means the reasoning before
-   * it stopped being live, so the two accumulate apart.
-   */
-  private readonly liveText = new LiveText()
+  /** The live attempt's turn and step, which its chunks do not repeat. */
+  private liveTurn = -1
+  private liveStep = -1
   /** Dense transient position, so a live row sorts above the durable window. */
   private transient = 0
+  /** Refused feeds so far, counted so a repeated refusal is logged once. */
+  private feedFailures = 0
   /** Highest durable sequence seen, the base of a transient row's position. */
   private lastSeq = -1
   /**
@@ -439,7 +404,6 @@ export class OfficialMirror {
   replace(transcript: MirrorTranscript): void {
     if (this.released) return
     this.liveAttempt = undefined
-    this.liveText.clear()
     // Announcements are dropped from the window but still counted: the newest
     // sequence is what a live row's position is measured against.
     const events = transcript.events.filter(event => !isPanelOnly(event))
@@ -455,7 +419,7 @@ export class OfficialMirror {
     this.transient = 0
     this.lastSeq = -1
     for (const event of transcript.events) this.observe(event.seq)
-    this.source?.replace(events.map(entryOf), false)
+    this.feedSafely(() => this.source?.replace(events.map(entryOf), false), 'window')
     this.face?.handleRunning?.(transcript.running)
   }
 
@@ -519,7 +483,7 @@ export class OfficialMirror {
       // live events would all be filed as history and the pane would stop appending.
       this.highestFed = highestOf(this.highestFed, event.seq)
       this.observe(event.seq)
-      this.source?.append(entryOf(event))
+      this.feedSafely(() => this.source?.append(entryOf(event)), 'event')
     }
     // One batch per frame, in the order the frame carried it: a later frame
     // belongs to a page further down, and prepending it puts it before this one.
@@ -573,28 +537,89 @@ export class OfficialMirror {
     // `hasMore` is the page's own claim about what lies below it. The console's
     // control reads the client store for that, not this flag, so claiming more
     // only keeps the shipped pane's (hidden) control from claiming the end.
-    this.source?.prepend(events.map(entryOf), page.hasMore)
+    this.feedSafely(() => this.source?.prepend(events.map(entryOf), page.hasMore), 'older page')
   }
 
   /**
-   * Feed one live delta frame: the whole step text so far, replaced as it grows.
+   * Run one feed and survive the shipped assembler's refusal.
+   *
+   * The assembler throws when a Match arrives out of the order it expects — a
+   * retried step's start after that step's updates, a tail window that begins
+   * inside a step — and that throw is not local: it fails the session-controller's
+   * whole event-feed subscriber, so the pane stops updating until it is reopened.
+   * A refused entry is a rendering gap; a dead feed is the whole pane. The entry
+   * is therefore dropped and counted rather than allowed to take the feed down.
+   * @param action - the source call to run.
+   * @param what - what is being fed, for the one-time warning.
+   */
+  private feedSafely(action: () => void, what: string): void {
+    try {
+      action()
+    } catch (error) {
+      this.feedFailures += 1
+      if (this.feedFailures <= 3) {
+        console.warn(
+          `dsh-session-sync: dropped one ${what} the shipped conversation assembler refused: ${String(error)}`,
+        )
+      }
+    }
+  }
+
+  /**
+   * Feed one live event to the shipped renderer.
+   *
+   * The chunks are the official vocabulary — the same values `follow` hands the
+   * Web client — so they are appended verbatim rather than translated. A
+   * `baseline` re-states an attempt this pane did not see begin, a `start`
+   * replaces whatever row was there, an `end` of an abandoned attempt retires it,
+   * and a committed one waits for its durable settlement (which is the next thing
+   * the mirror sends).
    * @param frame - the accepted frame, already ordered by the transport.
    */
-  stream(frame: SyncLiveDelta): void {
+  stream(frame: SyncLiveFrame): void {
     if (this.released) return
-    const attemptId = attemptKey(frame.turn, frame.step)
-    // An empty text is how the origin drops an abandoned attempt — the one
-    // frame the plugin's own live row allows to regress. There is nothing to
-    // show, so the attempt is abandoned rather than streamed as blank.
-    if (frame.text === '') {
-      if (this.liveAttempt !== attemptId) return
-      this.closeLive({ attemptId })
-      return
+    // Older Hosts post the whole-text shape; this pane folds the official chunk
+    // stream. An unreadable frame leaves the row as it was rather than crashing
+    // the shipped renderer.
+    if ((frame as { live?: unknown }).live === undefined) return
+    const live = frame.live
+    switch (live.type) {
+      case 'baseline': {
+        // A re-statement replaces the row, even for the same attempt: this pane
+        // may already be drawing chunks that the baseline also carries, and the
+        // shipped assembler would append the repeat instead of replacing it.
+        if (this.liveAttempt !== undefined) this.closeLive({ attemptId: this.liveAttempt })
+        this.liveAttempt = live.attemptId
+        this.liveTurn = live.turn
+        this.liveStep = live.step
+        for (const chunk of live.chunks) this.feedChunk(live.attemptId, chunk)
+        return
+      }
+      case 'start': {
+        if (this.liveAttempt !== undefined) this.closeLive({ attemptId: this.liveAttempt })
+        this.liveAttempt = live.attemptId
+        this.liveTurn = live.turn
+        this.liveStep = live.step
+        return
+      }
+      case 'chunks': {
+        if (this.liveAttempt !== live.attemptId) return
+        for (const chunk of live.chunks) this.feedChunk(live.attemptId, chunk)
+        return
+      }
+      case 'end': {
+        if (this.liveAttempt !== live.attemptId) return
+        if (live.outcome === 'abandoned') this.closeLive({ attemptId: live.attemptId })
+        return
+      }
+      case 'clear': {
+        if (this.liveAttempt === undefined) return
+        if (live.attemptId !== undefined && live.attemptId !== '' && live.attemptId !== this.liveAttempt) return
+        if (live.turn !== this.liveTurn || live.step !== this.liveStep) return
+        this.closeLive({ attemptId: this.liveAttempt })
+        return
+      }
     }
-    this.liveAttempt = attemptId
-    // No `time`: the origin wrote the durable events, and a browser clock only
-    // misplaces the live row against them.
-    this.feedLive(attemptId, frame)
   }
 
   /**
@@ -618,7 +643,6 @@ export class OfficialMirror {
     this.released = true
     const live = this.liveAttempt
     this.liveAttempt = undefined
-    this.liveText.clear()
     if (live !== undefined) {
       try {
         this.closeLive({ attemptId: live })
@@ -637,70 +661,63 @@ export class OfficialMirror {
   }
 
   /**
-   * Append the delta between what is shown and what the origin just sent.
+   * Append one official chunk as the transient row the shipped pane folds.
    *
-   * The wire form of live Assistant text is a dense run of chunks, and the
-   * relay carries the whole text so far instead — so the delta is computed here,
-   * and a text that is not an extension of the last one restarts **that kind**
-   * rather than inventing a chunk the fold would rebaseline on.
-   *
-   * The accumulator is per kind ({@link OfficialSession.liveText} explains why): a
-   * step's reasoning and its answer are two separate streams through one attempt id,
-   * so an answer that begins after a reasoning run is not a restart at all — and
-   * treating it as one is what used to retire the thinking row mid-stream.
+   * The chunk is passed through untouched: the pane's chat assembler is the same
+   * one DSH's own Web client runs, so it already knows how to fold a text delta, a
+   * Tool-call fragment, a block boundary, usage, or a finish. Re-encoding it here
+   * was the old relay's job and its bug — the synthesized chunk vocabulary was not
+   * one the renderer read.
+   * @param attemptId - the attempt the chunk belongs to.
+   * @param frame - the dense chunk frame.
    */
-  private feedLive(attemptId: string, frame: SyncLiveDelta): void {
-    const step = this.liveText.take(attemptId, frame.kind, frame.text)
-    if (step.restarted) this.closeLive({ attemptId })
-    const delta = step.delta
-    if (delta === '') return
-    const time = Date.now()
+  private feedChunk(attemptId: string, frame: LiveChunkFrame): void {
     this.transient += 1
-    this.source?.append({
+    this.feedSafely(() => this.source?.append({
       type: 'transient',
       event: {
         type: 'assistant/live-chunk',
         // A position above the durable window, dense within its own run: the
         // same shape the client's own fold gives a transient row.
         seq: this.lastSeq + 1 - 1 / (this.transient + 1),
-        time,
+        time: frame.time > 0 ? frame.time : Date.now(),
         data: {
           attemptId,
-          turn: frame.turn,
-          step: frame.step,
-          // The live vocabulary, not the durable one: see `liveChunkOf`. The durable
-          // run shape (`text-chunks`/`reasoning-chunks`) is consumed by no shipped
-          // renderer, so sending it made every synthesized live row invisible — which
-          // is why thinking only ever arrived with its settlement.
-          chunk: liveChunkOf(frame.kind, delta),
+          turn: this.liveTurn,
+          step: this.liveStep,
+          chunk: frame.chunk as never,
         },
       },
-    })
+    }), 'live chunk')
   }
 
   /** Close one live attempt with its durable settlement, or with nothing. */
   private closeLive(o: { attemptId: string; event?: MirrorEvent }): void {
-    // Every kind of this attempt: settling it means neither its reasoning nor its
-    // answer is live any more.
-    this.liveText.forget(o.attemptId)
     if (o.event === undefined) {
-      this.source?.settleAssistant(o.attemptId)
+      this.feedSafely(() => this.source?.settleAssistant(o.attemptId), 'live attempt')
     } else {
       // `settleAssistant` retires the attempt's transient rows and inserts the
       // durable settlement in one publication, so the entry is not appended too.
       this.observe(o.event.seq)
-      this.source?.settleAssistant(o.attemptId, entryOf(o.event))
+      this.feedSafely(() => this.source?.settleAssistant(o.attemptId, entryOf(o.event)), 'settlement')
     }
     if (this.liveAttempt === o.attemptId) this.liveAttempt = undefined
   }
 
   /** Settle the attempt one durable event ends. */
   private settle(event: MirrorEvent): void {
-    // The event's own coordinates are authoritative — a step may settle with no
-    // relayed frame at all — and the live attempt is the fallback for an
-    // envelope that names no step.
-    const attemptId = settlementAttemptId(event) ?? this.liveAttempt ?? `settled:${String(event.seq)}`
-    this.closeLive({ attemptId, event })
+    // The settlement names a step, not the attempt id the live chunks carry; the
+    // live attempt is closed when its own turn and step are the ones settling.
+    const data = asRecord(event.data)
+    const turn = data?.['turn']
+    const step = data?.['step']
+    const live = this.liveAttempt
+    const matches = live !== undefined
+      && (typeof turn !== 'number' || turn === this.liveTurn)
+      && (typeof step !== 'number' || step === this.liveStep)
+    // With no live row, a synthetic id still inserts the settlement: that is the
+    // ordinary "a step settled while this pane was closed" path.
+    this.closeLive({ attemptId: matches ? live : live ?? `settled:${String(event.seq)}`, event })
   }
 
   private observe(seq: number): void {
@@ -869,7 +886,7 @@ export class OfficialSessions implements OfficialBridgeFace, SyncTransportObserv
    * @param open - the remote Session it belongs to.
    * @param frame - the frame.
    */
-  streamed(open: OpenSession, frame: SyncLiveDelta): void {
+  streamed(open: OpenSession, frame: SyncLiveFrame): void {
     if (this.matches(open)) this.current?.mirror.stream(frame)
   }
 

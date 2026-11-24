@@ -89,14 +89,6 @@ window.__ModuleLoader__.load({
 		};
 		//#endregion
 		//#region src/shared/protocol.ts
-		/**
-		* Wire and persisted shapes shared by the Host half, the sync server, and the
-		* browser half.
-		*
-		* Every shape here is plain JSON. The one rule that shapes this file: the Host
-		* half never hands a live DSH object (a Session, an Agent, a projection) across
-		* a boundary. It reads the leaf scalars it needs and builds one of these.
-		*/
 		/** The transport path prefix every browser-facing route lives under. */
 		const ROUTE_PREFIX = "/dsh-session-sync";
 		/** Default listen port of the sync server. */
@@ -961,7 +953,7 @@ window.__ModuleLoader__.load({
 		}
 		//#endregion
 		//#region \0dsh-css:C:\Users\14339\Desktop\git\dsh-session-sync\src\client\sync.module.css.mjs
-		const css$6 = ".Emn1LG_section{flex-direction:column;gap:14px;padding:4px 0 8px;display:flex}.Emn1LG_lede{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xs-13);margin:0}.Emn1LG_group{flex-direction:column;gap:10px;display:flex}.Emn1LG_groupTitle{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-strong-13);margin:0}.Emn1LG_card{border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);border-radius:10px;flex-direction:column;gap:10px;padding:12px 14px;display:flex}.Emn1LG_field{flex-direction:column;gap:4px;display:flex}.Emn1LG_fieldRow{justify-content:space-between;align-items:center;gap:12px;display:flex}.Emn1LG_fieldText{flex-direction:column;gap:2px;min-width:0;display:flex}.Emn1LG_label{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13)}.Emn1LG_hint{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12)}.Emn1LG_pair{grid-template-columns:minmax(0,1fr) 120px;gap:10px;display:grid}.Emn1LG_actions{align-items:center;gap:8px;display:flex}.Emn1LG_saved{color:var(--dsw-alias-state-success-primary);font:var(--dsw-font-xxs-12)}.Emn1LG_dirty{color:var(--dsw-alias-state-warn-primary);font:var(--dsw-font-xxs-12)}.Emn1LG_failed{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12)}.Emn1LG_sessionList{flex-direction:column;max-height:280px;display:flex;overflow-y:auto}.Emn1LG_sessionRow{justify-content:space-between;align-items:center;gap:12px;min-height:40px;padding:5px 2px;display:flex}.Emn1LG_sessionRow+.Emn1LG_sessionRow{border-top:.5px solid var(--dsw-alias-border-l1)}.Emn1LG_sessionGroup{flex-direction:column;display:flex}.Emn1LG_sessionGroup+.Emn1LG_sessionGroup{border-top:.5px solid var(--dsw-alias-border-l1);margin-top:6px;padding-top:6px}.Emn1LG_sessionGroupHead{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);align-items:center;gap:8px;padding:4px 2px 2px;display:flex}.Emn1LG_sessionGroupPath{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.Emn1LG_sessionGroupCount{font-variant-numeric:tabular-nums;margin-left:auto}.Emn1LG_sessionText{flex-direction:column;gap:2px;min-width:0;display:flex}.Emn1LG_sessionTitle{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.Emn1LG_sessionMeta{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);align-items:center;gap:6px;display:flex}.Emn1LG_empty{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);padding:12px 2px}.Emn1LG_status{flex-wrap:wrap;gap:6px 18px;display:flex}.Emn1LG_statusItem{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12);align-items:center;gap:6px;display:flex}.Emn1LG_statusValue{color:var(--dsw-alias-label-primary)}.Emn1LG_statusBad{color:var(--dsw-alias-state-error-primary)}.Emn1LG_statusGood{color:var(--dsw-alias-state-success-primary)}.Emn1LG_panel{height:100%;min-height:0;color:var(--dsw-alias-label-primary);display:flex;position:relative}.Emn1LG_listPane{background:var(--dsw-specific-sidebar-fill);border-right:.5px solid var(--dsw-alias-border-l3);flex-direction:column;flex:none;width:280px;min-height:0;display:flex}.Emn1LG_listHead{flex-direction:column;flex:none;gap:6px;padding:10px 10px 8px;display:flex}.Emn1LG_listHeadRow{align-items:center;gap:6px;min-width:0;display:flex}.Emn1LG_listHeadRow>:first-child{flex:1;min-width:0}.Emn1LG_listCollapse,.Emn1LG_listExpand{flex:none;width:28px;padding:0}.Emn1LG_panel ::placeholder,.Emn1LG_panel input::placeholder,.Emn1LG_panel textarea::placeholder{color:var(--dsw-alias-label-caption);opacity:1}.Emn1LG_listExpand{color:var(--dsw-alias-button-info-fill)}.Emn1LG_panel[data-list=hidden] .Emn1LG_listPane{display:none}.Emn1LG_listStatus{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.Emn1LG_list{flex-direction:column;flex:1;gap:3px;min-height:0;margin-right:2px;padding:0 6px 8px;display:flex;overflow-y:auto}.Emn1LG_notice{background:var(--dsw-alias-state-warn-tertiary);color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);border-radius:8px;align-items:flex-start;gap:6px;margin:2px 2px 6px;padding:6px 8px;display:flex}.Emn1LG_noticeText{flex:1;min-width:0}.Emn1LG_noticeClose{width:14px;height:14px;color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:0;border-radius:4px;flex:none;justify-content:center;align-items:center;padding:0;font-size:13px;line-height:13px;display:inline-flex}.Emn1LG_noticeClose:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_treeRow,.Emn1LG_treeSession{box-sizing:border-box;width:100%;color:var(--dsw-alias-label-primary);text-align:left;cursor:pointer;user-select:none;transition:background var(--ds-transition-duration-fast) var(--ds-ease-in-out);background:0 0;border:0;border-radius:8px;align-items:center;gap:6px;padding:0 8px;display:flex}.Emn1LG_treeRow{height:34px}.Emn1LG_treeSession{gap:0;height:32px}.Emn1LG_treeRow:hover,.Emn1LG_treeSession:hover,.Emn1LG_treeSessionSelected{background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_treeRow:focus-visible,.Emn1LG_treeSession:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.Emn1LG_panel [data-level=\"1\"]{padding-left:24px}.Emn1LG_panel [data-level=\"2\"]{padding-left:40px}.Emn1LG_treeSlot{width:16px;height:20px;color:var(--dsw-alias-label-tertiary);flex:none;justify-content:center;align-items:center;display:inline-flex}.Emn1LG_treeChevron{color:var(--dsw-alias-label-caption);display:none}.Emn1LG_treeRow:hover .Emn1LG_treeFolder{display:none}.Emn1LG_treeRow:hover .Emn1LG_treeChevron{display:inline-flex}.Emn1LG_arrowOpen{transform:rotate(90deg)}.Emn1LG_treeChevron svg{transition:transform .15s var(--ds-ease-in-out)}.Emn1LG_rowTitle{min-width:0;font:var(--dsw-font-s-14);text-overflow:ellipsis;white-space:nowrap;flex:1;overflow:hidden}.Emn1LG_treeSession .Emn1LG_rowTitle{margin:0 6px 0 4px}.Emn1LG_rowTime{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);flex:none}.Emn1LG_gapBadge{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12);white-space:nowrap;flex:none;margin-right:6px}.Emn1LG_realBadge,.Emn1LG_routeBadge{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-text-secondary);font:var(--dsw-font-xxs-12);white-space:nowrap;border-radius:4px;flex:none;margin-right:6px;padding:0 6px}.Emn1LG_scopeBadge{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-text-secondary);font:var(--dsw-font-xxs-12);white-space:nowrap;cursor:default;border:0;border-radius:4px;flex:none;margin-right:6px;padding:0 6px}.Emn1LG_scopeBadgeAction{cursor:pointer}.Emn1LG_scopeBadgeAction:hover{background:var(--dsw-alias-interactive-bg-active);color:var(--dsw-alias-label-primary)}.Emn1LG_olderRow{justify-content:center;padding:2px 0 12px;display:flex}.Emn1LG_olderButton{border:.5px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12);cursor:pointer;background:0 0;border-radius:999px;padding:4px 12px}.Emn1LG_olderButton:hover:not(:disabled){border-color:var(--dsw-alias-border-l4);color:var(--dsw-alias-label-primary)}.Emn1LG_olderButton:disabled{cursor:default;opacity:.6}.Emn1LG_treeRowDim .Emn1LG_rowTitle,.Emn1LG_treeRowDim .Emn1LG_rowTime{color:var(--dsw-alias-label-secondary)}.Emn1LG_heroRoot{justify-content:center;align-items:center;min-width:0;height:100%;padding:0 24px;display:flex}.Emn1LG_heroStack{flex-direction:column;align-items:center;gap:12px;width:100%;max-width:calc(min(920px,100%) + 32px);display:flex}.Emn1LG_heroHeadline{color:var(--dsw-alias-label-primary);flex-wrap:wrap;justify-content:center;align-items:center;gap:12px 10px;font-size:26px;font-weight:500;line-height:32px;display:flex}.Emn1LG_heroFish{color:var(--dsw-alias-label-primary);flex:none;justify-content:center;align-items:center;display:inline-flex}.Emn1LG_heroTitleGroup{flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 7px;min-width:0;display:flex}.Emn1LG_heroBadge{border:.5px solid var(--dsw-alias-interactive-bg-hover);background:var(--dsw-alias-state-business-tertiary);color:var(--dsw-alias-label-primary-bluish);font-family:var(--ds-font-family-code);white-space:nowrap;border-radius:24px;align-self:flex-start;margin-top:2px;padding:1px 7px 0;font-size:12px;font-weight:500;line-height:18px}.Emn1LG_heroHint{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);text-align:center;margin:0}.Emn1LG_tjRoot{width:100%;min-height:0;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-1);flex-direction:column;flex:1;display:flex;overflow:hidden}.Emn1LG_tjToolbar{z-index:4;box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);flex:none;align-items:center;gap:2px;height:32px;padding:0 6px;display:flex;position:sticky;top:0}.Emn1LG_tjToggle{height:20px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);cursor:pointer;background:0 0;border:0;border-radius:3px;flex:none;align-items:center;gap:4px;padding:0 7px;display:inline-flex}.Emn1LG_tjToggleIcon{stroke:currentColor;stroke-width:1.25px;stroke-linecap:round;stroke-linejoin:round;flex:none;width:12px;height:12px}.Emn1LG_tjToggle:hover,.Emn1LG_tjToggle[aria-pressed=true],.Emn1LG_tjAction:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_tjToggle:focus-visible,.Emn1LG_tjAction:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary);outline-offset:1px}.Emn1LG_tjAction{height:20px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);cursor:pointer;background:0 0;border:0;border-radius:3px;flex:none;align-items:center;gap:4px;padding:0 5px;display:inline-flex}.Emn1LG_tjActionIcon{color:var(--dsw-alias-label-tertiary);font:14px/14px var(--ds-font-family-code)}.Emn1LG_tjSearch{border:.5px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-bg-layer-2);min-width:84px;height:22px;color:var(--dsw-alias-label-caption);border-radius:4px;flex:0 164px;align-items:center;gap:4px;margin-left:auto;padding:0 6px;display:flex}.Emn1LG_tjSearch:focus-within{border-color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-bg-layer-1)}.Emn1LG_tjSearchIcon{flex:none}.Emn1LG_tjSearchInput{width:100%;min-width:0;color:var(--dsw-alias-label-primary);font:var(--dsw-font-xxs-12);background:0 0;border:0;outline:0;padding:0}.Emn1LG_tjSearchInput::placeholder{color:var(--dsw-alias-label-caption)}.Emn1LG_tjStrip{border-bottom:.5px solid var(--dsw-alias-border-l2);flex:none}.Emn1LG_tjPlot{background:var(--dsw-alias-bg-layer-2);grid-template-columns:44px minmax(0,1fr);height:50px;display:grid;overflow:hidden}.Emn1LG_tjLaneLabels{border-right:.5px solid var(--dsw-alias-border-l1);color:var(--dsw-alias-label-caption);font-size:10px;line-height:1;position:relative}.Emn1LG_tjLaneLabels span{justify-content:flex-end;align-items:center;height:8px;display:flex;position:absolute;right:3px}.Emn1LG_tjLaneLabels span:first-child{top:7px}.Emn1LG_tjLaneLabels span:nth-child(2){top:21px}.Emn1LG_tjLaneLabels span:nth-child(3){top:35px}.Emn1LG_tjTrack{position:relative;overflow:hidden}.Emn1LG_tjLanes,.Emn1LG_tjTurnBoundaries{position:absolute;inset:7px 0}.Emn1LG_tjSpan{top:calc(var(--tj-span-lane) * 14px);left:var(--tj-span-left);width:max(2px, var(--tj-span-width));background:var(--dsw-alias-label-secondary);opacity:.78;cursor:pointer;border:0;border-radius:1px;min-width:2px;height:8px;padding:0;position:absolute}.Emn1LG_tjSpan[data-kind=user]{background:var(--dsw-alias-state-business-primary)}.Emn1LG_tjSpan[data-kind=assistant],.Emn1LG_tjSpan[data-kind=think]{background:var(--dsw-alias-label-primary);opacity:1}.Emn1LG_tjSpan[data-kind=tool]{background:var(--dsw-alias-state-warn-label);opacity:1}.Emn1LG_tjSpan[data-kind=context]{background:var(--dsw-alias-state-success-primary)}.Emn1LG_tjSpan[data-error=true]{background:var(--dsw-alias-state-error-primary)}.Emn1LG_tjSpan[data-selected=false]{opacity:.14}.Emn1LG_tjSpan[data-current=true]{z-index:1;box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary)}.Emn1LG_tjTurnBoundary{background:var(--dsw-alias-border-l2);width:.5px;position:absolute;top:0;bottom:0}.Emn1LG_tjSplit{background:var(--dsw-alias-bg-layer-1);flex:1;min-width:0;min-height:0;display:flex;overflow:hidden}.Emn1LG_tjTablePane{flex:1;min-width:0;overflow:hidden auto}.Emn1LG_ledgerTable tbody tr[data-selected=true]{background:var(--dsw-alias-interactive-bg-active)}.Emn1LG_ledgerTable tbody tr[data-dimmed=true]{opacity:.3}.Emn1LG_ledgerTable tbody tr[data-folded=true]{cursor:pointer}.Emn1LG_ledgerTable tbody tr[data-folded=true] td{height:20px}.Emn1LG_tjFolded{min-width:0;color:var(--dsw-alias-label-secondary);align-items:center;gap:6px;font-size:12px;line-height:16px;display:flex}.Emn1LG_tjFoldedEllipsis{color:var(--dsw-alias-label-tertiary);flex:none;font-weight:600}.Emn1LG_tjFoldedText{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.Emn1LG_tjDetails{border-left:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);flex-direction:column;flex:none;width:clamp(320px,38%,440px);min-width:0;min-height:0;display:flex}.Emn1LG_tjDetailsHeader{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);flex:none;justify-content:space-between;align-items:center;height:42px;padding:0 8px 0 12px;display:flex}.Emn1LG_tjDetailsTitle{align-items:center;gap:8px;min-width:0;display:flex}.Emn1LG_tjDetailsDot{corner-shape:round;background:var(--dsw-alias-label-secondary);border-radius:50%;flex:none;width:5px;height:5px}.Emn1LG_tjDetailsName{font:500 12px/16px var(--ds-font-family-code);flex:none}.Emn1LG_tjDetailsLocation{min-width:0;color:var(--dsw-alias-label-tertiary);font:11px/16px var(--ds-font-family-code);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.Emn1LG_tjClose{width:28px;height:28px;color:var(--dsw-alias-label-secondary);cursor:pointer;background:0 0;border:0;border-radius:6px;flex:none;justify-content:center;align-items:center;padding:0;font-size:18px;line-height:18px;display:inline-flex}.Emn1LG_tjClose:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_tjDetailTabs{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);white-space:nowrap;flex:none;gap:1px;width:100%;height:34px;padding:0 8px;display:flex;overflow-x:auto}.Emn1LG_tjDetailTab{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);cursor:pointer;background:0 0;border:0;flex:none;padding:0 9px;position:relative}.Emn1LG_tjDetailTab:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_tjDetailTabActive{color:var(--dsw-alias-state-business-primary)}.Emn1LG_tjDetailTabActive:after{background:var(--dsw-alias-state-business-primary);content:\"\";border-radius:1px 1px 0 0;height:2px;position:absolute;bottom:0;left:9px;right:9px}.Emn1LG_tjDetailBody{flex:1;min-height:0;overflow:hidden auto}.Emn1LG_tjOverview{font:var(--dsw-font-xs-13);margin:0;padding:8px 0}.Emn1LG_tjOverview>div{grid-template-columns:94px minmax(0,1fr);align-items:center;min-height:22px;padding:0 14px;display:grid}.Emn1LG_tjOverview dt{color:var(--dsw-alias-label-tertiary)}.Emn1LG_tjOverview dd{min-width:0;color:var(--dsw-alias-label-primary);text-overflow:ellipsis;white-space:nowrap;margin:0;overflow:hidden}.Emn1LG_tjPayload{box-sizing:border-box;overflow-wrap:anywhere;background:var(--dsw-alias-markdown-code-block);min-height:100%;color:var(--dsw-alias-label-primary);font:12px/19px var(--ds-font-family-code);tab-size:2;white-space:pre-wrap;margin:0;padding:14px}.Emn1LG_tjMarkdown{padding:6px 14px 8px}.Emn1LG_viewPane{background:var(--dsw-alias-bg-base);flex-direction:column;flex:1;min-width:0;min-height:0;display:flex}.Emn1LG_viewHeader{border-bottom:.5px solid var(--dsw-alias-border-l3);flex-direction:column;flex:none;padding:10px 20px 0;display:flex}.Emn1LG_viewTitleRow{align-items:center;gap:8px;min-width:0;min-height:30px;display:flex}.Emn1LG_viewSpacer{flex:1}.Emn1LG_viewTabs{z-index:1;gap:36px;margin-top:10px;padding-left:8px;display:flex;position:relative}.Emn1LG_viewTab{color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:0;padding:0 0 9px;font-size:13px;font-weight:500;line-height:16px;position:relative}.Emn1LG_viewTab:after{content:\"\";background:0 0;border-radius:2px;height:2px;position:absolute;bottom:-1px;left:0;right:0}.Emn1LG_viewTabActive{color:var(--dsw-alias-state-business-primary)}.Emn1LG_viewTabActive:after{background:var(--dsw-alias-state-business-primary)}.Emn1LG_viewTab:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.Emn1LG_chromeCluster{flex:none;align-items:center;gap:8px;min-width:0;display:flex}.Emn1LG_chromeChip{border:.5px solid var(--dsw-alias-border-l2);corner-shape:round;max-width:200px;min-height:24px;color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);text-overflow:ellipsis;white-space:nowrap;border-radius:999px;align-items:center;gap:4px;padding:0 8px;display:inline-flex;overflow:hidden}.Emn1LG_statusRow{width:100%;max-width:calc(min(920px,100%) + 32px);color:var(--dsw-alias-label-caption);font:var(--dsw-font-xxxs-11);font-variant-numeric:tabular-nums;flex-wrap:wrap;justify-content:center;gap:12px;padding:6px 0 0;display:flex}.Emn1LG_ledger{background:var(--dsw-alias-bg-layer-1);flex:1;min-height:0;margin-right:2px;overflow-y:auto}.Emn1LG_ledgerTable{border-spacing:0;table-layout:fixed;width:100%;color:var(--dsw-alias-label-primary);font:var(--dsw-font-xxs-12)}.Emn1LG_ledgerTable th{z-index:3;box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-specific-sidebar-fill);height:30px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);text-align:left;text-overflow:ellipsis;white-space:nowrap;padding:0 8px;font-weight:500;position:sticky;top:0;overflow:hidden}.Emn1LG_ledgerEventHead{text-align:right;width:122px;padding-right:4px}.Emn1LG_ledgerTable td{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l1);text-overflow:ellipsis;white-space:nowrap;height:30px;padding:0 8px;overflow:hidden}.Emn1LG_ledgerTable tbody tr:hover{background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_ledgerEventCell{text-align:right;padding-left:36px;padding-right:4px;position:relative;overflow:visible}.Emn1LG_ledgerRail{z-index:4;background:var(--dsw-alias-border-l3);pointer-events:none;width:2px;position:absolute;top:-1px;bottom:-1px;left:0}.Emn1LG_ledgerTable tbody tr[data-error=true] .Emn1LG_ledgerRail{background:var(--dsw-alias-state-error-primary)}.Emn1LG_ledgerTable tbody tr[data-turn-start=true] td:before{z-index:1;background:var(--dsw-alias-border-l1);content:\"\";pointer-events:none;height:2px;position:absolute;top:0;left:0;right:0;transform:translateY(-50%)}.Emn1LG_ledgerTable tbody tr[data-turn-start=true]:first-child td:before{content:none}.Emn1LG_ledgerTurnLabel{z-index:3;box-sizing:border-box;background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-tertiary);font:8px/10px var(--ds-font-family-code);font-variant-numeric:tabular-nums;white-space:nowrap;border-radius:0 0 2px;align-items:center;padding:1px 5px;display:inline-grid;position:absolute;top:0;left:0}.Emn1LG_ledgerKindSlot{justify-content:flex-end;align-items:center;width:76px;display:inline-flex}.Emn1LG_ledgerKind{box-sizing:border-box;letter-spacing:.035em;user-select:none;border:1px solid #0000;border-radius:4px;align-items:center;height:19px;padding:0 5px;font-size:10px;font-weight:650;line-height:16px;display:inline-flex}.Emn1LG_kind_user{color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-state-business-tertiary)}.Emn1LG_kind_assistant,.Emn1LG_kind_think{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-2)}.Emn1LG_kind_tool{color:var(--dsw-alias-state-warn-label);background:var(--dsw-alias-state-warn-tertiary)}.Emn1LG_kind_error{color:var(--dsw-alias-state-error-primary);background:var(--dsw-alias-bg-layer-2)}.Emn1LG_kind_system,.Emn1LG_kind_policy,.Emn1LG_kind_title,.Emn1LG_kind_other,.Emn1LG_kind_compaction{color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-bg-module-platform)}.Emn1LG_kind_turn,.Emn1LG_kind_step,.Emn1LG_kind_context{color:var(--dsw-alias-label-tertiary);background:var(--dsw-alias-bg-layer-2)}.Emn1LG_ledgerContentCell{padding-left:4px}.Emn1LG_ledgerText{color:var(--dsw-alias-label-primary)}.Emn1LG_ledgerMono{color:var(--dsw-alias-label-secondary);font-family:var(--ds-font-family-code);font-size:12px}.Emn1LG_ledgerResult{grid-template-columns:clamp(180px,36cqw,480px) minmax(0,1fr);align-items:center;gap:8px;min-width:0;display:grid}.Emn1LG_ledgerResult>*{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.Emn1LG_ledgerErrorText{color:var(--dsw-alias-state-error-primary)}.Emn1LG_ledgerDuration{color:var(--dsw-alias-label-caption);font:var(--dsw-font-xxxs-11);font-variant-numeric:tabular-nums;margin-left:8px}.Emn1LG_viewTitle{min-width:0;font:var(--dsw-font-s-strong-14);text-overflow:ellipsis;white-space:nowrap;flex:0 auto;margin:0;overflow:hidden}.Emn1LG_viewMachine{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);white-space:nowrap;flex:none}.Emn1LG_viewScroll{flex:1;min-height:0;margin-right:2px;padding:16px 32px;overflow-y:auto}.Emn1LG_officialPane{flex-direction:column;flex:1;min-height:0;display:flex;overflow:hidden}.Emn1LG_officialPane>*{flex:1;min-height:0}.Emn1LG_officialPane [aria-label=好的回答],.Emn1LG_officialPane [aria-label=取消标记],.Emn1LG_officialPane [aria-label=有问题的回答],.Emn1LG_officialPane [aria-label=Good\\ response],.Emn1LG_officialPane [aria-label=Remove\\ rating],.Emn1LG_officialPane [aria-label=Bad\\ response],.Emn1LG_officialPane [aria-label=在新对话中分支],.Emn1LG_officialPane [aria-label=\"Branch into a new conversation\"]{display:none}.Emn1LG_officialPane [data-slot=conversation\\.view]{--dsh-composer-side-clearance:0px}.Emn1LG_officialPane [data-conversation-content]{--dsh-chat-content-width:min(952px, 100%)}.Emn1LG_drivesWindow [data-composer-card],.Emn1LG_drivesWindow [class*=openError]{display:none}.Emn1LG_viewColumn{flex-direction:column;width:100%;max-width:min(920px,100%);margin:0 auto;display:flex}.Emn1LG_viewColumn>*+*{margin-top:16px}.Emn1LG_userRow{flex-direction:column;align-items:flex-end;gap:6px;display:flex}.Emn1LG_bubble{max-width:min(calc(var(--dsh-chat-content-width,748px) * .702), 82%);background:var(--dsw-specific-bubble);font-size:var(--dsh-content-font-size,14px);line-height:calc(22px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-primary);white-space:pre-wrap;word-break:break-word;border-radius:22px;padding:10px 16px}.Emn1LG_assistantRow{flex-direction:column;gap:16px;min-width:0;display:flex}.Emn1LG_messageActions{margin-top:4px;margin-left:-6px}.Emn1LG_stopped,.Emn1LG_mediaChip{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-tertiary);border-radius:6px;align-self:flex-start;padding:0 6px;font-size:11px;line-height:18px}.Emn1LG_action{width:calc(28px + var(--dsh-content-font-delta,0px));height:calc(28px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;border-radius:28px;justify-content:center;align-items:center;padding:6px;display:inline-flex}.Emn1LG_action svg{width:calc(15px + var(--dsh-content-font-delta,0px));height:calc(15px + var(--dsh-content-font-delta,0px))}.Emn1LG_action:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary)}.Emn1LG_timeStart{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);white-space:nowrap;padding-right:12px}.Emn1LG_timeEnd{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);white-space:nowrap}.Emn1LG_noticeRow{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px));grid-template-columns:10px minmax(0,1fr) auto;align-items:start;gap:8px;padding:2px 0;display:grid}.Emn1LG_noticeDot{margin-top:5px}.Emn1LG_noticeCopy{overflow-wrap:anywhere;min-width:0}.Emn1LG_noticeTitleError{color:var(--dsw-alias-state-error-primary);margin-right:6px;font-weight:600}.Emn1LG_noticeTitleWarn{color:var(--dsw-alias-state-warn-primary);margin-right:6px;font-weight:600}.Emn1LG_noticeMessage{color:var(--dsw-alias-label-secondary)}.Emn1LG_noticeCode{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-markdown-code-block-small)}.Emn1LG_retryRow{color:var(--dsw-alias-label-tertiary);font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px))}.Emn1LG_retrySummary{width:fit-content;color:inherit;cursor:pointer;user-select:none;border-radius:3px;align-items:center;gap:7px;padding:2px 0;list-style:none;display:inline-flex}.Emn1LG_retrySummary::-webkit-details-marker{display:none}.Emn1LG_retrySummary:after{content:\"\";opacity:.8;border-bottom:1.5px solid;border-right:1.5px solid;width:6px;height:6px;transition:transform .12s;transform:rotate(-45deg)}.Emn1LG_retrySummary:hover{color:var(--dsw-alias-label-secondary)}.Emn1LG_retrySummary:focus-visible{outline:1.5px solid var(--dsw-alias-button-info-fill);outline-offset:2px}.Emn1LG_retryText{color:inherit}.Emn1LG_retryRow[data-active] .Emn1LG_retryText{background:linear-gradient(90deg, var(--dsw-alias-label-tertiary) 0%, var(--dsw-alias-label-tertiary) 40%, var(--dsw-alias-label-secondary) 50%, var(--dsw-alias-label-tertiary) 60%, var(--dsw-alias-label-tertiary) 100%);color:#0000;background-position:100%;background-size:200% 100%;background-clip:text;animation:1.6s ease-in-out infinite Emn1LG_dsh-sync-retry-shimmer}@keyframes Emn1LG_dsh-sync-retry-shimmer{0%{background-position:100%}to{background-position:0%}}@media (prefers-reduced-motion:reduce){.Emn1LG_retryRow[data-active] .Emn1LG_retryText{color:inherit;background:0 0;animation:none}}.Emn1LG_retryRow[open] .Emn1LG_retrySummary:after{transform:rotate(45deg)}.Emn1LG_retryDetails{overflow-wrap:anywhere;font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(18px + var(--dsh-content-font-delta-secondary,0px));gap:2px;margin-top:3px;padding-left:14px;display:grid}.Emn1LG_retryDetailLabel{color:var(--dsw-alias-label-secondary)}.Emn1LG_toBottomSlot{z-index:2;pointer-events:none;justify-content:flex-end;height:0;padding-right:8px;display:flex;position:sticky;bottom:16px}.Emn1LG_toBottom{--dsw-elevation-stroke-color:var(--dsw-alias-border-l3);corner-shape:round;width:34px;height:34px;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-button-floating-fill);box-shadow:var(--dsw-elevation-panel);cursor:pointer;pointer-events:auto;border:0;border-radius:100px;justify-content:center;align-items:center;margin-top:-34px;padding:0;display:flex}.Emn1LG_toBottom:hover{background:var(--dsw-alias-button-floating-hover)}.Emn1LG_composerRoot{flex-direction:column;flex:none;align-items:center;padding:0 16px 8px;display:flex}.Emn1LG_composerRootInner{box-sizing:border-box;justify-content:center;width:100%;padding:0 16px;display:flex}.Emn1LG_dockComposer{box-sizing:border-box;width:100%;margin-bottom:calc(-1 * var(--dsh-composer-stack-gap,6px));justify-content:center;padding:0 16px;display:flex}.Emn1LG_officialPane:has([data-sync-composer])~.Emn1LG_composerRoot{display:none}.Emn1LG_composerCard{box-sizing:border-box;--dsw-elevation-stroke-color:var(--dsw-alias-border-l2);background:var(--dsw-specific-input-major);width:100%;max-width:calc(min(920px,100%) + 32px);box-shadow:var(--dsw-elevation-soft);font:var(--dsw-font-s-14);border:0;border-radius:22px;flex-direction:column;gap:12px;padding-top:8px;display:flex}.Emn1LG_composerText{box-sizing:border-box;width:100%;min-height:44px;max-height:200px;color:var(--dsw-alias-label-primary);font:inherit;resize:none;background:0 0;border:0;margin:0;padding:8px 16px 0}.Emn1LG_composerText::placeholder{color:var(--dsw-alias-placeholder)}.Emn1LG_composerText:focus-visible{outline:none}.Emn1LG_composerBar{align-items:center;gap:8px;padding:0 10px 10px 16px;display:flex}.Emn1LG_composerTarget{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);flex:none}.Emn1LG_composerDelivery{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11)}.Emn1LG_composerOffline{color:var(--dsw-alias-state-warn-label);font:var(--dsw-font-xxxs-11)}.Emn1LG_composerSpacer{flex:1}.Emn1LG_sendButton{corner-shape:round;background:var(--dsw-alias-button-info-fill);color:#fff;cursor:pointer;width:34px;height:34px;transition:background-color var(--ds-transition-duration-fast) var(--ds-ease-in-out);border:0;border-radius:999px;flex:none;place-items:center;display:grid}.Emn1LG_sendButton:hover:not(:disabled){background:var(--dsw-alias-button-info-hover)}.Emn1LG_sendButton:disabled{opacity:.4;cursor:default}.Emn1LG_sendButton:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.Emn1LG_error{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12);margin-bottom:10px}.Emn1LG_panel[data-narrow=true] .Emn1LG_listPane{border-right:0;width:100%}.Emn1LG_panel[data-narrow=true] .Emn1LG_viewMachineName,.Emn1LG_panel[data-narrow=true] .Emn1LG_chromeCluster{display:none}.Emn1LG_panel[data-narrow=true] .Emn1LG_viewPane{z-index:0;position:relative}.Emn1LG_panel[data-narrow=true][data-list=shown] .Emn1LG_listPane{z-index:1;position:absolute;inset:0}.Emn1LG_panel[data-narrow=true][data-list=hidden] .Emn1LG_listPane{display:none}@media (prefers-reduced-motion:reduce){.Emn1LG_treeRow,.Emn1LG_treeSession,.Emn1LG_treeChevron svg,.Emn1LG_sendButton{transition:none}}.Emn1LG_settingsTree .Emn1LG_treeRow{padding-left:24px}.Emn1LG_settingsSession{padding-left:40px}.Emn1LG_sessionList{scrollbar-gutter:stable}.Emn1LG_settingsControls{align-items:center;gap:8px;margin-left:auto;padding-right:12px;display:flex}.Emn1LG_settingsTree .Emn1LG_treeRow:hover .Emn1LG_treeFolder{display:inline-flex}.Emn1LG_settingsTree .Emn1LG_treeRow:hover .Emn1LG_treeChevron{display:none}.Emn1LG_settingsTree .Emn1LG_settingsSession{height:34px}.Emn1LG_settingsTree .Emn1LG_treeRow{margin-top:6px}.Emn1LG_settingsTree .Emn1LG_treeRow:first-child{margin-top:0}.Emn1LG_settingsTree .Emn1LG_treeRow,.Emn1LG_settingsTree .Emn1LG_settingsSession{height:34px;min-height:34px;max-height:34px}.Emn1LG_settingsTree .Emn1LG_treeRow .Emn1LG_rowTitle,.Emn1LG_settingsTree .Emn1LG_settingsSession .Emn1LG_rowTitle{line-height:20px}";
+		const css$6 = ".Emn1LG_section{flex-direction:column;gap:14px;padding:4px 0 8px;display:flex}.Emn1LG_lede{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xs-13);margin:0}.Emn1LG_group{flex-direction:column;gap:10px;display:flex}.Emn1LG_groupTitle{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-strong-13);margin:0}.Emn1LG_card{border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);border-radius:10px;flex-direction:column;gap:10px;padding:12px 14px;display:flex}.Emn1LG_field{flex-direction:column;gap:4px;display:flex}.Emn1LG_fieldRow{justify-content:space-between;align-items:center;gap:12px;display:flex}.Emn1LG_fieldText{flex-direction:column;gap:2px;min-width:0;display:flex}.Emn1LG_label{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13)}.Emn1LG_hint{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12)}.Emn1LG_pair{grid-template-columns:minmax(0,1fr) 120px;gap:10px;display:grid}.Emn1LG_actions{align-items:center;gap:8px;display:flex}.Emn1LG_saved{color:var(--dsw-alias-state-success-primary);font:var(--dsw-font-xxs-12)}.Emn1LG_dirty{color:var(--dsw-alias-state-warn-primary);font:var(--dsw-font-xxs-12)}.Emn1LG_failed{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12)}.Emn1LG_sessionList{flex-direction:column;max-height:280px;display:flex;overflow-y:auto}.Emn1LG_sessionRow{justify-content:space-between;align-items:center;gap:12px;min-height:40px;padding:5px 2px;display:flex}.Emn1LG_sessionRow+.Emn1LG_sessionRow{border-top:.5px solid var(--dsw-alias-border-l1)}.Emn1LG_sessionGroup{flex-direction:column;display:flex}.Emn1LG_sessionGroup+.Emn1LG_sessionGroup{border-top:.5px solid var(--dsw-alias-border-l1);margin-top:6px;padding-top:6px}.Emn1LG_sessionGroupHead{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);align-items:center;gap:8px;padding:4px 2px 2px;display:flex}.Emn1LG_sessionGroupPath{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.Emn1LG_sessionGroupCount{font-variant-numeric:tabular-nums;margin-left:auto}.Emn1LG_sessionText{flex-direction:column;gap:2px;min-width:0;display:flex}.Emn1LG_sessionTitle{color:var(--dsw-alias-label-primary);font:var(--dsw-font-xs-13);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.Emn1LG_sessionMeta{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);align-items:center;gap:6px;display:flex}.Emn1LG_empty{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);padding:12px 2px}.Emn1LG_status{flex-wrap:wrap;gap:6px 18px;display:flex}.Emn1LG_statusItem{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12);align-items:center;gap:6px;display:flex}.Emn1LG_statusValue{color:var(--dsw-alias-label-primary)}.Emn1LG_statusBad{color:var(--dsw-alias-state-error-primary)}.Emn1LG_statusGood{color:var(--dsw-alias-state-success-primary)}.Emn1LG_panel{height:100%;min-height:0;color:var(--dsw-alias-label-primary);display:flex;position:relative}.Emn1LG_listPane{background:var(--dsw-specific-sidebar-fill);border-right:.5px solid var(--dsw-alias-border-l3);flex-direction:column;flex:none;width:280px;min-height:0;display:flex}.Emn1LG_listHead{flex-direction:column;flex:none;gap:6px;padding:10px 10px 8px;display:flex}.Emn1LG_listHeadRow{align-items:center;gap:6px;min-width:0;display:flex}.Emn1LG_listHeadRow>:first-child{flex:1;min-width:0}.Emn1LG_listCollapse,.Emn1LG_listExpand{flex:none;width:28px;padding:0}.Emn1LG_panel ::placeholder,.Emn1LG_panel input::placeholder,.Emn1LG_panel textarea::placeholder{color:var(--dsw-alias-label-caption);opacity:1}.Emn1LG_listExpand{color:var(--dsw-alias-button-info-fill)}.Emn1LG_panel[data-list=hidden] .Emn1LG_listPane{display:none}.Emn1LG_listStatus{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.Emn1LG_list{flex-direction:column;flex:1;gap:3px;min-height:0;margin-right:2px;padding:0 6px 8px;display:flex;overflow-y:auto}.Emn1LG_notice{background:var(--dsw-alias-state-warn-tertiary);color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);border-radius:8px;align-items:flex-start;gap:6px;margin:2px 2px 6px;padding:6px 8px;display:flex}.Emn1LG_noticeText{flex:1;min-width:0}.Emn1LG_noticeClose{width:14px;height:14px;color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:0;border-radius:4px;flex:none;justify-content:center;align-items:center;padding:0;font-size:13px;line-height:13px;display:inline-flex}.Emn1LG_noticeClose:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_treeRow,.Emn1LG_treeSession{box-sizing:border-box;width:100%;color:var(--dsw-alias-label-primary);text-align:left;cursor:pointer;user-select:none;transition:background var(--ds-transition-duration-fast) var(--ds-ease-in-out);background:0 0;border:0;border-radius:8px;align-items:center;gap:6px;padding:0 8px;display:flex}.Emn1LG_treeRow{height:34px}.Emn1LG_treeSession{gap:0;height:32px}.Emn1LG_treeRow:hover,.Emn1LG_treeSession:hover,.Emn1LG_treeSessionSelected{background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_treeRow:focus-visible,.Emn1LG_treeSession:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.Emn1LG_panel [data-level=\"1\"]{padding-left:24px}.Emn1LG_panel [data-level=\"2\"]{padding-left:40px}.Emn1LG_treeSlot{width:16px;height:20px;color:var(--dsw-alias-label-tertiary);flex:none;justify-content:center;align-items:center;display:inline-flex}.Emn1LG_treeChevron{color:var(--dsw-alias-label-caption);display:none}.Emn1LG_treeRow:hover .Emn1LG_treeFolder{display:none}.Emn1LG_treeRow:hover .Emn1LG_treeChevron{display:inline-flex}.Emn1LG_arrowOpen{transform:rotate(90deg)}.Emn1LG_treeChevron svg{transition:transform .15s var(--ds-ease-in-out)}.Emn1LG_rowTitle{min-width:0;font:var(--dsw-font-s-14);text-overflow:ellipsis;white-space:nowrap;flex:1;overflow:hidden}.Emn1LG_treeSession .Emn1LG_rowTitle{margin:0 6px 0 4px}.Emn1LG_rowTime{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);flex:none}.Emn1LG_gapBadge{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12);white-space:nowrap;flex:none;margin-right:6px}.Emn1LG_realBadge,.Emn1LG_routeBadge{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-text-secondary);font:var(--dsw-font-xxs-12);white-space:nowrap;border-radius:4px;flex:none;margin-right:6px;padding:0 6px}.Emn1LG_scopeBadge{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-text-secondary);font:var(--dsw-font-xxs-12);white-space:nowrap;cursor:default;border:0;border-radius:4px;flex:none;margin-right:6px;padding:0 6px}.Emn1LG_scopeBadgeAction{cursor:pointer}.Emn1LG_scopeBadgeAction:hover{background:var(--dsw-alias-interactive-bg-active);color:var(--dsw-alias-label-primary)}.Emn1LG_olderRow{justify-content:center;padding:2px 0 12px;display:flex}.Emn1LG_olderButton{border:.5px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12);cursor:pointer;background:0 0;border-radius:999px;padding:4px 12px}.Emn1LG_olderButton:hover:not(:disabled){border-color:var(--dsw-alias-border-l4);color:var(--dsw-alias-label-primary)}.Emn1LG_olderButton:disabled{cursor:default;opacity:.6}.Emn1LG_treeRowDim .Emn1LG_rowTitle,.Emn1LG_treeRowDim .Emn1LG_rowTime{color:var(--dsw-alias-label-secondary)}.Emn1LG_heroRoot{justify-content:center;align-items:center;min-width:0;height:100%;padding:0 24px;display:flex}.Emn1LG_heroStack{flex-direction:column;align-items:center;gap:12px;width:100%;max-width:calc(min(920px,100%) + 32px);display:flex}.Emn1LG_heroHeadline{color:var(--dsw-alias-label-primary);flex-wrap:wrap;justify-content:center;align-items:center;gap:12px 10px;font-size:26px;font-weight:500;line-height:32px;display:flex}.Emn1LG_heroFish{color:var(--dsw-alias-label-primary);flex:none;justify-content:center;align-items:center;display:inline-flex}.Emn1LG_heroTitleGroup{flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 7px;min-width:0;display:flex}.Emn1LG_heroBadge{border:.5px solid var(--dsw-alias-interactive-bg-hover);background:var(--dsw-alias-state-business-tertiary);color:var(--dsw-alias-label-primary-bluish);font-family:var(--ds-font-family-code);white-space:nowrap;border-radius:24px;align-self:flex-start;margin-top:2px;padding:1px 7px 0;font-size:12px;font-weight:500;line-height:18px}.Emn1LG_heroHint{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);text-align:center;margin:0}.Emn1LG_tjRoot{width:100%;min-height:0;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-1);flex-direction:column;flex:1;display:flex;overflow:hidden}.Emn1LG_tjToolbar{z-index:4;box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);flex:none;align-items:center;gap:2px;height:32px;padding:0 6px;display:flex;position:sticky;top:0}.Emn1LG_tjToggle{height:20px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);cursor:pointer;background:0 0;border:0;border-radius:3px;flex:none;align-items:center;gap:4px;padding:0 7px;display:inline-flex}.Emn1LG_tjToggleIcon{stroke:currentColor;stroke-width:1.25px;stroke-linecap:round;stroke-linejoin:round;flex:none;width:12px;height:12px}.Emn1LG_tjToggle:hover,.Emn1LG_tjToggle[aria-pressed=true],.Emn1LG_tjAction:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_tjToggle:focus-visible,.Emn1LG_tjAction:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary);outline-offset:1px}.Emn1LG_tjAction{height:20px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);cursor:pointer;background:0 0;border:0;border-radius:3px;flex:none;align-items:center;gap:4px;padding:0 5px;display:inline-flex}.Emn1LG_tjActionIcon{color:var(--dsw-alias-label-tertiary);font:14px/14px var(--ds-font-family-code)}.Emn1LG_tjSearch{border:.5px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-bg-layer-2);min-width:84px;height:22px;color:var(--dsw-alias-label-caption);border-radius:4px;flex:0 164px;align-items:center;gap:4px;margin-left:auto;padding:0 6px;display:flex}.Emn1LG_tjSearch:focus-within{border-color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-bg-layer-1)}.Emn1LG_tjSearchIcon{flex:none}.Emn1LG_tjSearchInput{width:100%;min-width:0;color:var(--dsw-alias-label-primary);font:var(--dsw-font-xxs-12);background:0 0;border:0;outline:0;padding:0}.Emn1LG_tjSearchInput::placeholder{color:var(--dsw-alias-label-caption)}.Emn1LG_tjStrip{border-bottom:.5px solid var(--dsw-alias-border-l2);flex:none}.Emn1LG_tjPlot{background:var(--dsw-alias-bg-layer-2);grid-template-columns:44px minmax(0,1fr);height:50px;display:grid;overflow:hidden}.Emn1LG_tjLaneLabels{border-right:.5px solid var(--dsw-alias-border-l1);color:var(--dsw-alias-label-caption);font-size:10px;line-height:1;position:relative}.Emn1LG_tjLaneLabels span{justify-content:flex-end;align-items:center;height:8px;display:flex;position:absolute;right:3px}.Emn1LG_tjLaneLabels span:first-child{top:7px}.Emn1LG_tjLaneLabels span:nth-child(2){top:21px}.Emn1LG_tjLaneLabels span:nth-child(3){top:35px}.Emn1LG_tjTrack{position:relative;overflow:hidden}.Emn1LG_tjLanes,.Emn1LG_tjTurnBoundaries{position:absolute;inset:7px 0}.Emn1LG_tjSpan{top:calc(var(--tj-span-lane) * 14px);left:var(--tj-span-left);width:max(2px, var(--tj-span-width));background:var(--dsw-alias-label-secondary);opacity:.78;cursor:pointer;border:0;border-radius:1px;min-width:2px;height:8px;padding:0;position:absolute}.Emn1LG_tjSpan[data-kind=user]{background:var(--dsw-alias-state-business-primary)}.Emn1LG_tjSpan[data-kind=assistant],.Emn1LG_tjSpan[data-kind=think]{background:var(--dsw-alias-label-primary);opacity:1}.Emn1LG_tjSpan[data-kind=tool]{background:var(--dsw-alias-state-warn-label);opacity:1}.Emn1LG_tjSpan[data-kind=context]{background:var(--dsw-alias-state-success-primary)}.Emn1LG_tjSpan[data-error=true]{background:var(--dsw-alias-state-error-primary)}.Emn1LG_tjSpan[data-selected=false]{opacity:.14}.Emn1LG_tjSpan[data-current=true]{z-index:1;box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary)}.Emn1LG_tjTurnBoundary{background:var(--dsw-alias-border-l2);width:.5px;position:absolute;top:0;bottom:0}.Emn1LG_tjSplit{background:var(--dsw-alias-bg-layer-1);flex:1;min-width:0;min-height:0;display:flex;overflow:hidden}.Emn1LG_tjTablePane{flex:1;min-width:0;overflow:hidden auto}.Emn1LG_ledgerTable tbody tr[data-selected=true]{background:var(--dsw-alias-interactive-bg-active)}.Emn1LG_ledgerTable tbody tr[data-dimmed=true]{opacity:.3}.Emn1LG_ledgerTable tbody tr[data-folded=true]{cursor:pointer}.Emn1LG_ledgerTable tbody tr[data-folded=true] td{height:20px}.Emn1LG_tjFolded{min-width:0;color:var(--dsw-alias-label-secondary);align-items:center;gap:6px;font-size:12px;line-height:16px;display:flex}.Emn1LG_tjFoldedEllipsis{color:var(--dsw-alias-label-tertiary);flex:none;font-weight:600}.Emn1LG_tjFoldedText{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.Emn1LG_tjDetails{border-left:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);flex-direction:column;flex:none;width:clamp(320px,38%,440px);min-width:0;min-height:0;display:flex}.Emn1LG_tjDetailsHeader{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);flex:none;justify-content:space-between;align-items:center;height:42px;padding:0 8px 0 12px;display:flex}.Emn1LG_tjDetailsTitle{align-items:center;gap:8px;min-width:0;display:flex}.Emn1LG_tjDetailsDot{corner-shape:round;background:var(--dsw-alias-label-secondary);border-radius:50%;flex:none;width:5px;height:5px}.Emn1LG_tjDetailsName{font:500 12px/16px var(--ds-font-family-code);flex:none}.Emn1LG_tjDetailsLocation{min-width:0;color:var(--dsw-alias-label-tertiary);font:11px/16px var(--ds-font-family-code);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.Emn1LG_tjClose{width:28px;height:28px;color:var(--dsw-alias-label-secondary);cursor:pointer;background:0 0;border:0;border-radius:6px;flex:none;justify-content:center;align-items:center;padding:0;font-size:18px;line-height:18px;display:inline-flex}.Emn1LG_tjClose:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_tjDetailTabs{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);white-space:nowrap;flex:none;gap:1px;width:100%;height:34px;padding:0 8px;display:flex;overflow-x:auto}.Emn1LG_tjDetailTab{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);cursor:pointer;background:0 0;border:0;flex:none;padding:0 9px;position:relative}.Emn1LG_tjDetailTab:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_tjDetailTabActive{color:var(--dsw-alias-state-business-primary)}.Emn1LG_tjDetailTabActive:after{background:var(--dsw-alias-state-business-primary);content:\"\";border-radius:1px 1px 0 0;height:2px;position:absolute;bottom:0;left:9px;right:9px}.Emn1LG_tjDetailBody{flex:1;min-height:0;overflow:hidden auto}.Emn1LG_tjOverview{font:var(--dsw-font-xs-13);margin:0;padding:8px 0}.Emn1LG_tjOverview>div{grid-template-columns:94px minmax(0,1fr);align-items:center;min-height:22px;padding:0 14px;display:grid}.Emn1LG_tjOverview dt{color:var(--dsw-alias-label-tertiary)}.Emn1LG_tjOverview dd{min-width:0;color:var(--dsw-alias-label-primary);text-overflow:ellipsis;white-space:nowrap;margin:0;overflow:hidden}.Emn1LG_tjPayload{box-sizing:border-box;overflow-wrap:anywhere;background:var(--dsw-alias-markdown-code-block);min-height:100%;color:var(--dsw-alias-label-primary);font:12px/19px var(--ds-font-family-code);tab-size:2;white-space:pre-wrap;margin:0;padding:14px}.Emn1LG_tjMarkdown{padding:6px 14px 8px}.Emn1LG_viewPane{background:var(--dsw-alias-bg-base);flex-direction:column;flex:1;min-width:0;min-height:0;display:flex}.Emn1LG_viewHeader{border-bottom:.5px solid var(--dsw-alias-border-l3);flex-direction:column;flex:none;padding:10px 20px 0;display:flex}.Emn1LG_viewTitleRow{align-items:center;gap:8px;min-width:0;min-height:30px;display:flex}.Emn1LG_viewSpacer{flex:1}.Emn1LG_viewTabs{z-index:1;gap:36px;margin-top:10px;padding-left:8px;display:flex;position:relative}.Emn1LG_viewTab{color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:0;padding:0 0 9px;font-size:13px;font-weight:500;line-height:16px;position:relative}.Emn1LG_viewTab:after{content:\"\";background:0 0;border-radius:2px;height:2px;position:absolute;bottom:-1px;left:0;right:0}.Emn1LG_viewTabActive{color:var(--dsw-alias-state-business-primary)}.Emn1LG_viewTabActive:after{background:var(--dsw-alias-state-business-primary)}.Emn1LG_viewTab:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.Emn1LG_chromeCluster{flex:none;align-items:center;gap:8px;min-width:0;display:flex}.Emn1LG_chromeChip{border:.5px solid var(--dsw-alias-border-l2);corner-shape:round;max-width:200px;min-height:24px;color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11);text-overflow:ellipsis;white-space:nowrap;border-radius:999px;align-items:center;gap:4px;padding:0 8px;display:inline-flex;overflow:hidden}.Emn1LG_statusRow{width:100%;max-width:calc(min(920px,100%) + 32px);color:var(--dsw-alias-label-caption);font:var(--dsw-font-xxxs-11);font-variant-numeric:tabular-nums;flex-wrap:wrap;justify-content:center;gap:12px;padding:6px 0 0;display:flex}.Emn1LG_ledger{background:var(--dsw-alias-bg-layer-1);flex:1;min-height:0;margin-right:2px;overflow-y:auto}.Emn1LG_ledgerTable{border-spacing:0;table-layout:fixed;width:100%;color:var(--dsw-alias-label-primary);font:var(--dsw-font-xxs-12)}.Emn1LG_ledgerTable th{z-index:3;box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-specific-sidebar-fill);height:30px;color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);text-align:left;text-overflow:ellipsis;white-space:nowrap;padding:0 8px;font-weight:500;position:sticky;top:0;overflow:hidden}.Emn1LG_ledgerEventHead{text-align:right;width:122px;padding-right:4px}.Emn1LG_ledgerTable td{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l1);text-overflow:ellipsis;white-space:nowrap;height:30px;padding:0 8px;overflow:hidden}.Emn1LG_ledgerTable tbody tr:hover{background:var(--dsw-alias-interactive-bg-hover)}.Emn1LG_ledgerEventCell{text-align:right;padding-left:36px;padding-right:4px;position:relative;overflow:visible}.Emn1LG_ledgerRail{z-index:4;background:var(--dsw-alias-border-l3);pointer-events:none;width:2px;position:absolute;top:-1px;bottom:-1px;left:0}.Emn1LG_ledgerTable tbody tr[data-error=true] .Emn1LG_ledgerRail{background:var(--dsw-alias-state-error-primary)}.Emn1LG_ledgerTable tbody tr[data-turn-start=true] td:before{z-index:1;background:var(--dsw-alias-border-l1);content:\"\";pointer-events:none;height:2px;position:absolute;top:0;left:0;right:0;transform:translateY(-50%)}.Emn1LG_ledgerTable tbody tr[data-turn-start=true]:first-child td:before{content:none}.Emn1LG_ledgerTurnLabel{z-index:3;box-sizing:border-box;background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-tertiary);font:8px/10px var(--ds-font-family-code);font-variant-numeric:tabular-nums;white-space:nowrap;border-radius:0 0 2px;align-items:center;padding:1px 5px;display:inline-grid;position:absolute;top:0;left:0}.Emn1LG_ledgerKindSlot{justify-content:flex-end;align-items:center;width:76px;display:inline-flex}.Emn1LG_ledgerKind{box-sizing:border-box;letter-spacing:.035em;user-select:none;border:1px solid #0000;border-radius:4px;align-items:center;height:19px;padding:0 5px;font-size:10px;font-weight:650;line-height:16px;display:inline-flex}.Emn1LG_kind_user{color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-state-business-tertiary)}.Emn1LG_kind_assistant,.Emn1LG_kind_think{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-2)}.Emn1LG_kind_tool{color:var(--dsw-alias-state-warn-label);background:var(--dsw-alias-state-warn-tertiary)}.Emn1LG_kind_error{color:var(--dsw-alias-state-error-primary);background:var(--dsw-alias-bg-layer-2)}.Emn1LG_kind_system,.Emn1LG_kind_policy,.Emn1LG_kind_title,.Emn1LG_kind_other,.Emn1LG_kind_compaction{color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-bg-module-platform)}.Emn1LG_kind_turn,.Emn1LG_kind_step,.Emn1LG_kind_context{color:var(--dsw-alias-label-tertiary);background:var(--dsw-alias-bg-layer-2)}.Emn1LG_ledgerContentCell{padding-left:4px}.Emn1LG_ledgerText{color:var(--dsw-alias-label-primary)}.Emn1LG_ledgerMono{color:var(--dsw-alias-label-secondary);font-family:var(--ds-font-family-code);font-size:12px}.Emn1LG_ledgerResult{grid-template-columns:clamp(180px,36cqw,480px) minmax(0,1fr);align-items:center;gap:8px;min-width:0;display:grid}.Emn1LG_ledgerResult>*{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.Emn1LG_ledgerErrorText{color:var(--dsw-alias-state-error-primary)}.Emn1LG_ledgerDuration{color:var(--dsw-alias-label-caption);font:var(--dsw-font-xxxs-11);font-variant-numeric:tabular-nums;margin-left:8px}.Emn1LG_viewTitle{min-width:0;font:var(--dsw-font-s-strong-14);text-overflow:ellipsis;white-space:nowrap;flex:0 auto;margin:0;overflow:hidden}.Emn1LG_viewMachine{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxs-12);white-space:nowrap;flex:none}.Emn1LG_viewScroll{flex:1;min-height:0;margin-right:2px;padding:16px 32px;overflow-y:auto}.Emn1LG_officialPane{flex-direction:column;flex:1;min-height:0;display:flex;position:relative;overflow:hidden}.Emn1LG_paneToBottom{z-index:9;--dsw-elevation-stroke-color:var(--dsw-alias-border-l3);corner-shape:round;width:34px;height:34px;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-button-floating-fill);box-shadow:var(--dsw-elevation-panel);cursor:pointer;border:0;border-radius:100px;justify-content:center;align-items:center;padding:0;display:flex;position:absolute;bottom:16px;right:24px}.Emn1LG_paneToBottom:hover{background:var(--dsw-alias-button-floating-hover)}.Emn1LG_officialPane [class*=toBottomSlot]{display:none}.Emn1LG_officialPane>*{flex:1;min-height:0}.Emn1LG_officialPane [aria-label=好的回答],.Emn1LG_officialPane [aria-label=取消标记],.Emn1LG_officialPane [aria-label=有问题的回答],.Emn1LG_officialPane [aria-label=Good\\ response],.Emn1LG_officialPane [aria-label=Remove\\ rating],.Emn1LG_officialPane [aria-label=Bad\\ response],.Emn1LG_officialPane [aria-label=在新对话中分支],.Emn1LG_officialPane [aria-label=\"Branch into a new conversation\"]{display:none}.Emn1LG_officialPane [data-slot=conversation\\.view]{--dsh-composer-side-clearance:0px}.Emn1LG_officialPane [data-conversation-content]{--dsh-chat-content-width:min(952px, 100%)}.Emn1LG_drivesWindow [data-composer-card],.Emn1LG_drivesWindow [class*=openError]{display:none}.Emn1LG_viewColumn{flex-direction:column;width:100%;max-width:min(920px,100%);margin:0 auto;display:flex}.Emn1LG_viewColumn>*+*{margin-top:16px}.Emn1LG_userRow{flex-direction:column;align-items:flex-end;gap:6px;display:flex}.Emn1LG_bubble{max-width:min(calc(var(--dsh-chat-content-width,748px) * .702), 82%);background:var(--dsw-specific-bubble);font-size:var(--dsh-content-font-size,14px);line-height:calc(22px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-primary);white-space:pre-wrap;word-break:break-word;border-radius:22px;padding:10px 16px}.Emn1LG_liveTool{min-width:0;color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12);align-items:baseline;gap:8px;display:flex}.Emn1LG_liveToolDot{background:var(--dsw-alias-state-business-primary);border-radius:50%;flex:none;width:6px;height:6px;animation:1.2s ease-in-out infinite Emn1LG_liveToolPulse}.Emn1LG_liveToolName{color:var(--dsw-alias-label-primary);font-family:var(--ds-font-family-code);flex:none;font-size:12px}.Emn1LG_liveToolArgs{white-space:nowrap;text-overflow:ellipsis;min-width:0;font-family:var(--ds-font-family-code);opacity:.75;font-size:12px;overflow:hidden}@keyframes Emn1LG_liveToolPulse{0%,to{opacity:1}50%{opacity:.35}}@media (prefers-reduced-motion:reduce){.Emn1LG_liveToolDot{animation:none}}.Emn1LG_assistantRow{flex-direction:column;gap:16px;min-width:0;display:flex}.Emn1LG_messageActions{margin-top:4px;margin-left:-6px}.Emn1LG_stopped,.Emn1LG_mediaChip{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-tertiary);border-radius:6px;align-self:flex-start;padding:0 6px;font-size:11px;line-height:18px}.Emn1LG_action{width:calc(28px + var(--dsh-content-font-delta,0px));height:calc(28px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;border-radius:28px;justify-content:center;align-items:center;padding:6px;display:inline-flex}.Emn1LG_action svg{width:calc(15px + var(--dsh-content-font-delta,0px));height:calc(15px + var(--dsh-content-font-delta,0px))}.Emn1LG_action:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary)}.Emn1LG_timeStart{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);white-space:nowrap;padding-right:12px}.Emn1LG_timeEnd{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);white-space:nowrap}.Emn1LG_noticeRow{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px));grid-template-columns:10px minmax(0,1fr) auto;align-items:start;gap:8px;padding:2px 0;display:grid}.Emn1LG_noticeDot{margin-top:5px}.Emn1LG_noticeCopy{overflow-wrap:anywhere;min-width:0}.Emn1LG_noticeTitleError{color:var(--dsw-alias-state-error-primary);margin-right:6px;font-weight:600}.Emn1LG_noticeTitleWarn{color:var(--dsw-alias-state-warn-primary);margin-right:6px;font-weight:600}.Emn1LG_noticeMessage{color:var(--dsw-alias-label-secondary)}.Emn1LG_noticeCode{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-markdown-code-block-small)}.Emn1LG_retryRow{color:var(--dsw-alias-label-tertiary);font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px))}.Emn1LG_retrySummary{width:fit-content;color:inherit;cursor:pointer;user-select:none;border-radius:3px;align-items:center;gap:7px;padding:2px 0;list-style:none;display:inline-flex}.Emn1LG_retrySummary::-webkit-details-marker{display:none}.Emn1LG_retrySummary:after{content:\"\";opacity:.8;border-bottom:1.5px solid;border-right:1.5px solid;width:6px;height:6px;transition:transform .12s;transform:rotate(-45deg)}.Emn1LG_retrySummary:hover{color:var(--dsw-alias-label-secondary)}.Emn1LG_retrySummary:focus-visible{outline:1.5px solid var(--dsw-alias-button-info-fill);outline-offset:2px}.Emn1LG_retryText{color:inherit}.Emn1LG_retryRow[data-active] .Emn1LG_retryText{background:linear-gradient(90deg, var(--dsw-alias-label-tertiary) 0%, var(--dsw-alias-label-tertiary) 40%, var(--dsw-alias-label-secondary) 50%, var(--dsw-alias-label-tertiary) 60%, var(--dsw-alias-label-tertiary) 100%);color:#0000;background-position:100%;background-size:200% 100%;background-clip:text;animation:1.6s ease-in-out infinite Emn1LG_dsh-sync-retry-shimmer}@keyframes Emn1LG_dsh-sync-retry-shimmer{0%{background-position:100%}to{background-position:0%}}@media (prefers-reduced-motion:reduce){.Emn1LG_retryRow[data-active] .Emn1LG_retryText{color:inherit;background:0 0;animation:none}}.Emn1LG_retryRow[open] .Emn1LG_retrySummary:after{transform:rotate(45deg)}.Emn1LG_retryDetails{overflow-wrap:anywhere;font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(18px + var(--dsh-content-font-delta-secondary,0px));gap:2px;margin-top:3px;padding-left:14px;display:grid}.Emn1LG_retryDetailLabel{color:var(--dsw-alias-label-secondary)}.Emn1LG_toBottomSlot{z-index:2;pointer-events:none;justify-content:flex-end;height:0;padding-right:8px;display:flex;position:sticky;bottom:16px}.Emn1LG_toBottom{--dsw-elevation-stroke-color:var(--dsw-alias-border-l3);corner-shape:round;width:34px;height:34px;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-button-floating-fill);box-shadow:var(--dsw-elevation-panel);cursor:pointer;pointer-events:auto;border:0;border-radius:100px;justify-content:center;align-items:center;margin-top:-34px;padding:0;display:flex}.Emn1LG_toBottom:hover{background:var(--dsw-alias-button-floating-hover)}.Emn1LG_composerRoot{flex-direction:column;flex:none;align-items:center;padding:0 16px 8px;display:flex}.Emn1LG_composerRootInner{box-sizing:border-box;justify-content:center;width:100%;padding:0 16px;display:flex}.Emn1LG_dockComposer{box-sizing:border-box;width:100%;margin-bottom:calc(-1 * var(--dsh-composer-stack-gap,6px));justify-content:center;padding:0 16px;display:flex}.Emn1LG_officialPane:has([data-sync-composer])~.Emn1LG_composerRoot{display:none}.Emn1LG_composerCard{box-sizing:border-box;--dsw-elevation-stroke-color:var(--dsw-alias-border-l2);background:var(--dsw-specific-input-major);width:100%;max-width:calc(min(920px,100%) + 32px);box-shadow:var(--dsw-elevation-soft);font:var(--dsw-font-s-14);border:0;border-radius:22px;flex-direction:column;gap:12px;padding-top:8px;display:flex}.Emn1LG_composerText{box-sizing:border-box;width:100%;min-height:44px;max-height:200px;color:var(--dsw-alias-label-primary);font:inherit;resize:none;background:0 0;border:0;margin:0;padding:8px 16px 0}.Emn1LG_composerText::placeholder{color:var(--dsw-alias-placeholder)}.Emn1LG_composerText:focus-visible{outline:none}.Emn1LG_composerBar{align-items:center;gap:8px;padding:0 10px 10px 16px;display:flex}.Emn1LG_composerTarget{color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xxxs-11);flex:none}.Emn1LG_composerDelivery{color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxxs-11)}.Emn1LG_composerOffline{color:var(--dsw-alias-state-warn-label);font:var(--dsw-font-xxxs-11)}.Emn1LG_composerSpacer{flex:1}.Emn1LG_sendButton{corner-shape:round;background:var(--dsw-alias-button-info-fill);color:#fff;cursor:pointer;width:34px;height:34px;transition:background-color var(--ds-transition-duration-fast) var(--ds-ease-in-out);border:0;border-radius:999px;flex:none;place-items:center;display:grid}.Emn1LG_sendButton:hover:not(:disabled){background:var(--dsw-alias-button-info-hover)}.Emn1LG_sendButton:disabled{opacity:.4;cursor:default}.Emn1LG_sendButton:focus-visible{box-shadow:0 0 0 2px var(--dsw-alias-state-business-primary);outline:none}.Emn1LG_error{color:var(--dsw-alias-state-error-primary);font:var(--dsw-font-xxs-12);margin-bottom:10px}.Emn1LG_panel[data-narrow=true] .Emn1LG_listPane{border-right:0;width:100%}.Emn1LG_panel[data-narrow=true] .Emn1LG_viewMachineName,.Emn1LG_panel[data-narrow=true] .Emn1LG_chromeCluster{display:none}.Emn1LG_panel[data-narrow=true] .Emn1LG_viewPane{z-index:0;position:relative}.Emn1LG_panel[data-narrow=true][data-list=shown] .Emn1LG_listPane{z-index:1;position:absolute;inset:0}.Emn1LG_panel[data-narrow=true][data-list=hidden] .Emn1LG_listPane{display:none}@media (prefers-reduced-motion:reduce){.Emn1LG_treeRow,.Emn1LG_treeSession,.Emn1LG_treeChevron svg,.Emn1LG_sendButton{transition:none}}.Emn1LG_settingsTree .Emn1LG_treeRow{padding-left:24px}.Emn1LG_settingsSession{padding-left:40px}.Emn1LG_sessionList{scrollbar-gutter:stable}.Emn1LG_settingsControls{align-items:center;gap:8px;margin-left:auto;padding-right:12px;display:flex}.Emn1LG_settingsTree .Emn1LG_treeRow:hover .Emn1LG_treeFolder{display:inline-flex}.Emn1LG_settingsTree .Emn1LG_treeRow:hover .Emn1LG_treeChevron{display:none}.Emn1LG_settingsTree .Emn1LG_settingsSession{height:34px}.Emn1LG_settingsTree .Emn1LG_treeRow{margin-top:6px}.Emn1LG_settingsTree .Emn1LG_treeRow:first-child{margin-top:0}.Emn1LG_settingsTree .Emn1LG_treeRow,.Emn1LG_settingsTree .Emn1LG_settingsSession{height:34px;min-height:34px;max-height:34px}.Emn1LG_settingsTree .Emn1LG_treeRow .Emn1LG_rowTitle,.Emn1LG_settingsTree .Emn1LG_settingsSession .Emn1LG_rowTitle{line-height:20px}";
 		const tagId$6 = "dsh-session-sync/sync.module.css";
 		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagId$6) + "]") === null) {
 			const tag = document.createElement("style");
@@ -1045,6 +1037,11 @@ window.__ModuleLoader__.load({
 			"listHeadRow": "Emn1LG_listHeadRow",
 			"listPane": "Emn1LG_listPane",
 			"listStatus": "Emn1LG_listStatus",
+			"liveTool": "Emn1LG_liveTool",
+			"liveToolArgs": "Emn1LG_liveToolArgs",
+			"liveToolDot": "Emn1LG_liveToolDot",
+			"liveToolName": "Emn1LG_liveToolName",
+			"liveToolPulse": "Emn1LG_liveToolPulse",
 			"mediaChip": "Emn1LG_mediaChip",
 			"messageActions": "Emn1LG_messageActions",
 			"notice": "Emn1LG_notice",
@@ -1061,6 +1058,7 @@ window.__ModuleLoader__.load({
 			"olderButton": "Emn1LG_olderButton",
 			"olderRow": "Emn1LG_olderRow",
 			"pair": "Emn1LG_pair",
+			"paneToBottom": "Emn1LG_paneToBottom",
 			"panel": "Emn1LG_panel",
 			"realBadge": "Emn1LG_realBadge",
 			"retryDetailLabel": "Emn1LG_retryDetailLabel",
@@ -4030,6 +4028,231 @@ window.__ModuleLoader__.load({
 			};
 		}
 		//#endregion
+		//#region src/shared/live-stream.ts
+		/** One writable block, created on first sight of its index. */
+		function blank(kind) {
+			return {
+				kind,
+				text: "",
+				id: "",
+				name: "",
+				arguments: ""
+			};
+		}
+		/** Read one non-negative safe integer, or undefined. */
+		function indexOf(value) {
+			return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : void 0;
+		}
+		/**
+		* What one live attempt's chunks fold to.
+		*
+		* Official semantics are followed exactly where they matter: frames are dense and
+		* a gap is a rebaseline, a delta at a block index whose kind changed starts that
+		* block over, and a `block-end` replaces the streamed content with the assembled
+		* block. Usage and finish carry no reader-visible content and are ignored here;
+		* they still travel to the shipped renderer, which folds them itself.
+		*/
+		var LiveAttemptFold = class {
+			attemptId;
+			turn;
+			step;
+			next;
+			blocks = /* @__PURE__ */ new Map();
+			/**
+			* @param identity - the attempt these chunks belong to.
+			* @param nextIndex - dense position of the first frame; 0 for a fresh attempt.
+			*/
+			constructor(identity, nextIndex = 0) {
+				this.attemptId = identity.attemptId;
+				this.turn = identity.turn;
+				this.step = identity.step;
+				this.next = nextIndex;
+			}
+			/** The dense position the next frame must carry. */
+			get nextIndex() {
+				return this.next;
+			}
+			/**
+			* Take content from a baseline without enforcing its synthetic frame indexes.
+			*
+			* A baseline carries only the visible view, so its frame positions and the
+			* attempt's real cursor are different numbers; `nextIndex` is the cursor.
+			* @param baseline - one re-statement of an attempt in flight.
+			*/
+			seed(baseline) {
+				this.blocks.clear();
+				for (const frame of baseline.chunks) this.take(frame.chunk);
+				this.next = baseline.nextIndex;
+			}
+			/**
+			* Fold one dense frame.
+			* @param frame - the next frame of this attempt.
+			* @returns false when the frame is not the dense next one.
+			*/
+			apply(frame) {
+				if (frame.index !== this.next) return false;
+				this.next += 1;
+				this.take(frame.chunk);
+				return true;
+			}
+			/** What a reader would draw right now. */
+			view() {
+				const blocks = [];
+				for (const index of [...this.blocks.keys()].sort((a, b) => a - b)) {
+					const block = this.blocks.get(index);
+					if (block === void 0) continue;
+					if (block.kind === "text" && block.text !== "") blocks.push({
+						kind: "text",
+						index,
+						text: block.text
+					});
+					else if (block.kind === "reasoning" && block.text !== "") blocks.push({
+						kind: "reasoning",
+						index,
+						text: block.text
+					});
+					else if (block.kind === "tool" && (block.name !== "" || block.arguments !== "")) blocks.push({
+						kind: "tool",
+						index,
+						id: block.id,
+						name: block.name,
+						arguments: block.arguments
+					});
+				}
+				return {
+					attemptId: this.attemptId,
+					turn: this.turn,
+					step: this.step,
+					blocks,
+					reasoning: blocks.filter((block) => block.kind === "reasoning").map((block) => block.text).join(""),
+					text: blocks.filter((block) => block.kind === "text").map((block) => block.text).join(""),
+					tools: blocks.filter((block) => block.kind === "tool").map((block) => ({
+						index: block.index,
+						id: block.id,
+						name: block.name,
+						arguments: block.arguments
+					}))
+				};
+			}
+			/**
+			* Re-state this attempt as a baseline for a reader that arrived late.
+			*
+			* One frame per visible block, with the outer positions renumbered densely; the
+			* cursor stays the attempt's real one so frames after the baseline still land.
+			*/
+			baseline() {
+				const now = Date.now();
+				const chunks = [];
+				for (const block of this.view().blocks) {
+					const chunk = block.kind === "text" ? {
+						type: "text-delta",
+						index: block.index,
+						text: block.text
+					} : block.kind === "reasoning" ? {
+						type: "reasoning-delta",
+						index: block.index,
+						text: block.text
+					} : {
+						type: "tool-call-delta",
+						index: block.index,
+						id: block.id,
+						...block.name === "" ? {} : { name: block.name },
+						argumentsDelta: block.arguments
+					};
+					chunks.push({
+						index: chunks.length,
+						time: now,
+						chunk
+					});
+				}
+				return {
+					attemptId: this.attemptId,
+					turn: this.turn,
+					step: this.step,
+					nextIndex: this.next,
+					chunks
+				};
+			}
+			/** Apply one chunk's content, ignoring its outer position. */
+			take(value) {
+				const type = value["type"];
+				const index = indexOf(value["index"]);
+				if (typeof type !== "string" || index === void 0) return;
+				switch (type) {
+					case "block-start": {
+						const blockType = value["blockType"];
+						this.blocks.set(index, blank(blockType === "text" ? "text" : blockType === "reasoning" ? "reasoning" : blockType === "tool-call" ? "tool" : "other"));
+						return;
+					}
+					case "text-delta": {
+						const text = value["text"];
+						if (typeof text !== "string" || text === "") return;
+						let state = this.blocks.get(index);
+						if (state === void 0 || state.kind !== "text") {
+							state = blank("text");
+							this.blocks.set(index, state);
+						}
+						state.text += text;
+						return;
+					}
+					case "reasoning-delta": {
+						const text = value["text"];
+						if (typeof text !== "string" || text === "") return;
+						let state = this.blocks.get(index);
+						if (state === void 0 || state.kind !== "reasoning") {
+							state = blank("reasoning");
+							this.blocks.set(index, state);
+						}
+						state.text += text;
+						return;
+					}
+					case "tool-call-delta": {
+						let state = this.blocks.get(index);
+						if (state === void 0 || state.kind !== "tool") {
+							state = blank("tool");
+							this.blocks.set(index, state);
+						}
+						if (typeof value["id"] === "string") state.id = value["id"];
+						if (typeof value["name"] === "string") state.name = value["name"];
+						if (typeof value["argumentsDelta"] === "string") state.arguments += value["argumentsDelta"];
+						return;
+					}
+					case "block-end": {
+						const block = value["block"];
+						if (typeof block !== "object" || block === null || Array.isArray(block)) return;
+						const finished = block;
+						if (finished["type"] === "text" && typeof finished["text"] === "string") {
+							this.blocks.set(index, {
+								...blank("text"),
+								text: finished["text"]
+							});
+							return;
+						}
+						if (finished["type"] === "reasoning" && typeof finished["text"] === "string") {
+							this.blocks.set(index, {
+								...blank("reasoning"),
+								text: finished["text"]
+							});
+							return;
+						}
+						if (finished["type"] === "tool-call") {
+							this.blocks.set(index, {
+								kind: "tool",
+								text: "",
+								id: typeof finished["id"] === "string" ? finished["id"] : "",
+								name: typeof finished["name"] === "string" ? finished["name"] : "",
+								arguments: typeof finished["arguments"] === "string" ? finished["arguments"] : ""
+							});
+							return;
+						}
+						this.blocks.set(index, blank("other"));
+						return;
+					}
+					default: return;
+				}
+			}
+		};
+		//#endregion
 		//#region src/client/api.ts
 		/**
 		* Browser-side transport and view state for the sync plugin.
@@ -4090,15 +4313,19 @@ window.__ModuleLoader__.load({
 		/**
 		* The empty live row.
 		*
-		* A blank row rather than `undefined`: the panel asks whether either text is
-		* non-empty, and a step's first frame is what fills one.
+		* A complete view rather than `undefined`: the panel asks whether there is
+		* anything to draw, and a step's first chunk is what fills one. The identity is
+		* empty so no real attempt can be mistaken for it.
 		*/
 		function noLive() {
 			return {
+				attemptId: "",
+				turn: NO_STEP,
+				step: NO_STEP,
+				blocks: [],
 				reasoning: "",
 				text: "",
-				turn: NO_STEP,
-				step: NO_STEP
+				tools: []
 			};
 		}
 		/**
@@ -4135,6 +4362,15 @@ window.__ModuleLoader__.load({
 			observer;
 			/** The running flag already reported to that consumer. */
 			reportedRunning;
+			/**
+			* The open Session's live attempt, folded locally.
+			*
+			* Held beside the snapshot because it is the only thing a chunk batch can be
+			* applied to: the snapshot is a value, and a dense run needs the cursor and the
+			* blocks from the previous frame. Replaced by a `start` or `baseline`, dropped
+			* by a `clear` and by opening another Session.
+			*/
+			liveFold;
 			constructor() {
 				this.store = (0, _deepseek_ai_dsh_client_store.createSnapshotStore)({
 					ready: false,
@@ -4295,6 +4531,7 @@ window.__ModuleLoader__.load({
 				this.notify((observer) => {
 					observer.opened(open);
 				});
+				this.liveFold = void 0;
 				this.update({
 					open,
 					transcript: void 0,
@@ -4304,7 +4541,7 @@ window.__ModuleLoader__.load({
 					delivery: void 0
 				});
 				try {
-					const { transcript } = await getJson(`${ROUTE_PREFIX}/transcript?machine=${encodeURIComponent(machineName)}&session=${encodeURIComponent(sessionId)}`);
+					const { transcript, live } = await getJson(`${ROUTE_PREFIX}/transcript?machine=${encodeURIComponent(machineName)}&session=${encodeURIComponent(sessionId)}`);
 					this.notify((observer) => {
 						observer.loaded(open, transcript);
 					});
@@ -4312,6 +4549,12 @@ window.__ModuleLoader__.load({
 						transcript,
 						loadingTranscript: false,
 						error: void 0
+					});
+					if (live !== void 0) this.consume({
+						type: "stream",
+						machineName,
+						sessionId,
+						live
 					});
 				} catch (error) {
 					this.update({
@@ -4541,6 +4784,62 @@ window.__ModuleLoader__.load({
 				};
 				this.source = source;
 			}
+			/**
+			* Apply one live event to the open Session's attempt.
+			*
+			* The fold is official: a `start` replaces the attempt, a `baseline` seeds it
+			* mid-run, a chunk batch is dense, and a gap drops the row rather than drawing a
+			* hole. `end`/`clear` close it. A frame for an attempt this browser never saw is
+			* ignored — a `chunks` batch that outran its `start` cannot be folded.
+			* @param live - one live event from the browser stream.
+			* @returns the view to publish, or undefined when the event changes nothing.
+			*/
+			foldLive(live) {
+				switch (live.type) {
+					case "baseline": {
+						const fold = new LiveAttemptFold({
+							attemptId: live.attemptId,
+							turn: live.turn,
+							step: live.step
+						});
+						fold.seed(live);
+						this.liveFold = fold;
+						return fold.view();
+					}
+					case "start":
+						this.liveFold = new LiveAttemptFold({
+							attemptId: live.attemptId,
+							turn: live.turn,
+							step: live.step
+						});
+						return this.liveFold.view();
+					case "chunks": {
+						const fold = this.liveFold;
+						if (fold === void 0 || fold.attemptId !== live.attemptId) return void 0;
+						for (const frame of live.chunks) {
+							if (fold.apply(frame)) continue;
+							this.liveFold = void 0;
+							return noLive();
+						}
+						return fold.view();
+					}
+					case "end":
+						if (this.liveFold?.attemptId !== live.attemptId) return void 0;
+						if (live.outcome === "abandoned") {
+							this.liveFold = void 0;
+							return noLive();
+						}
+						return this.liveFold.view();
+					case "clear": {
+						const fold = this.liveFold;
+						if (fold === void 0) return void 0;
+						if (live.turn !== fold.turn || live.step !== fold.step) return void 0;
+						if (live.attemptId !== void 0 && live.attemptId !== "" && live.attemptId !== fold.attemptId) return void 0;
+						this.liveFold = void 0;
+						return noLive();
+					}
+				}
+			}
 			consume(frame) {
 				if (frame.type === "state") {
 					const previous = this.store.getSnapshot().state;
@@ -4568,40 +4867,28 @@ window.__ModuleLoader__.load({
 					this.notify((observer) => {
 						observer.appended(open, frame);
 					});
+					const settled = frame.events.some(isSettlement);
+					if (settled) this.liveFold = void 0;
 					this.update({
 						transcript: {
 							...transcript,
 							events: mergeEvents(transcript.events, frame.events)
 						},
-						...frame.events.some(isSettlement) ? { live: noLive() } : {}
+						...settled ? { live: noLive() } : {}
 					});
 					return;
 				}
 				if (frame.type === "stream") {
-					const snapshot = this.store.getSnapshot();
-					const open = snapshot.open;
+					const open = this.store.getSnapshot().open;
 					if (open === void 0) return;
 					if (open.machineName !== frame.machineName || open.sessionId !== frame.sessionId) return;
-					const live = snapshot.live;
-					if (frame.turn < live.turn || frame.turn === live.turn && frame.step < live.step) return;
-					const advanced = frame.turn > live.turn || frame.turn === live.turn && frame.step > live.step;
-					const base = advanced ? {
-						...noLive(),
-						turn: frame.turn,
-						step: frame.step
-					} : live;
-					const shown = frame.kind === "reasoning" ? base.reasoning : base.text;
-					if (!advanced && frame.text !== "" && frame.text.length < shown.length && shown.startsWith(frame.text)) return;
+					if (frame.live === void 0) return;
+					const live = this.foldLive(frame.live);
+					if (live === void 0) return;
 					this.notify((observer) => {
 						observer.streamed(open, frame);
 					});
-					this.update({ live: frame.kind === "reasoning" ? {
-						...base,
-						reasoning: frame.text
-					} : {
-						...base,
-						text: frame.text
-					} });
+					this.update({ live });
 					return;
 				}
 				if (frame.type === "question") {
@@ -4865,59 +5152,6 @@ window.__ModuleLoader__.load({
 			return current === void 0 || seq > current ? seq : current;
 		}
 		//#endregion
-		//#region src/client/live-text.ts
-		/**
-		* The chunk one live delta becomes, in the vocabulary the shipped renderer reads.
-		*
-		* This is the shape the shipped client itself puts in an `assistant/live-chunk`
-		* event: `api/session-controller/src/client/sessions/assistant-stream.ts` wraps the
-		* stream's own `chunk` unchanged, and the live stream's chunks are the singular
-		* `-delta` forms from `llm`'s `StreamChunk`.
-		* @param kind - which of the step's two texts this delta continues.
-		* @param delta - the text to append.
-		* @returns the chunk to put in the live-chunk event.
-		*/
-		function liveChunkOf(kind, delta) {
-			return {
-				type: kind === "reasoning" ? "reasoning-delta" : "text-delta",
-				index: 0,
-				text: delta
-			};
-		}
-		/** The accumulator one mirrored Session keeps for its live text. */
-		var LiveText = class {
-			shown = /* @__PURE__ */ new Map();
-			/**
-			* Take one frame's whole text so far and return the part that is new.
-			* @param attemptId - the attempt the text belongs to.
-			* @param kind - which of the step's two texts it is.
-			* @param text - the whole text so far, as the relay form carries it.
-			* @returns the delta to append, and whether this kind restarted.
-			*/
-			take(attemptId, kind, text) {
-				const key = `${attemptId}\u0000${kind}`;
-				const shown = this.shown.get(key) ?? "";
-				const restarted = !text.startsWith(shown);
-				this.shown.set(key, text);
-				return {
-					delta: text.slice(restarted ? 0 : shown.length),
-					restarted
-				};
-			}
-			/**
-			* Forget every kind of one attempt, because it is no longer live.
-			* @param attemptId - the attempt that settled.
-			*/
-			forget(attemptId) {
-				const prefix = `${attemptId}\u0000`;
-				for (const key of [...this.shown.keys()]) if (key.startsWith(prefix)) this.shown.delete(key);
-			}
-			/** Forget everything, because the whole window was replaced. */
-			clear() {
-				this.shown.clear();
-			}
-		};
-		//#endregion
 		//#region src/client/official-views.ts
 		/**
 		* Which shipped conversation page the console can ask for.
@@ -5021,30 +5255,6 @@ window.__ModuleLoader__.load({
 		function officialSessionId(open) {
 			return `dsh-session-sync:${open.machineName}/${open.sessionId}`;
 		}
-		/**
-		* One live attempt's identity, from the plugin's own live key.
-		*
-		* The transport already keys a live row by turn and step, and both a live frame
-		* and the settlement that ends it carry that pair — so the same attempt id is
-		* derived on both sides with no hidden state to keep in step.
-		* @param turn - the turn the step belongs to.
-		* @param step - the step within the turn.
-		* @returns the attempt id.
-		*/
-		function attemptKey(turn, step) {
-			return `${String(turn)}:${String(step)}`;
-		}
-		/**
-		* The turn|step a settlement event closes, when it names one.
-		* @param event - one durable envelope.
-		* @returns the attempt id, or undefined for an envelope without coordinates.
-		*/
-		function settlementAttemptId(event) {
-			const data = asRecord(event.data);
-			const turn = data?.["turn"];
-			const step = data?.["step"];
-			return typeof turn === "number" && typeof step === "number" ? attemptKey(turn, step) : void 0;
-		}
 		/** The adapter key of one remote Session: machine and id, in one string. */
 		function remoteKey(machineName, sessionId) {
 			return `${machineName}\u0000${sessionId}`;
@@ -5107,24 +5317,15 @@ window.__ModuleLoader__.load({
 			* Session has no Host behind it to fill it.
 			*/
 			projections;
-			/** The live attempt whose text is on screen, by the plugin's turn|step key. */
+			/** The live attempt whose chunks are on screen, by the official attempt id. */
 			liveAttempt;
-			/**
-			* Whole text already shown, per attempt **and per kind**.
-			*
-			* One entry per attempt was wrong, and the symptom was subtle enough to be
-			* reported as "the thinking only appears once it has finished": a step streams its
-			* reasoning and *then* its answer through the same attempt id, so the first answer
-			* delta is never an extension of the reasoning text — which took the restart path
-			* in {@link OfficialSession.feedLive}, and the restart path retires the attempt's
-			* transient rows. The thinking a reader was watching was therefore torn down at the
-			* exact moment the answer began, leaving only the durable reasoning block that
-			* arrives with the settlement. Nothing about an answer means the reasoning before
-			* it stopped being live, so the two accumulate apart.
-			*/
-			liveText = new LiveText();
+			/** The live attempt's turn and step, which its chunks do not repeat. */
+			liveTurn = -1;
+			liveStep = -1;
 			/** Dense transient position, so a live row sorts above the durable window. */
 			transient = 0;
+			/** Refused feeds so far, counted so a repeated refusal is logged once. */
+			feedFailures = 0;
 			/** Highest durable sequence seen, the base of a transient row's position. */
 			lastSeq = -1;
 			/**
@@ -5183,14 +5384,13 @@ window.__ModuleLoader__.load({
 			replace(transcript) {
 				if (this.released) return;
 				this.liveAttempt = void 0;
-				this.liveText.clear();
 				const events = transcript.events.filter((event) => !isPanelOnly(event));
 				this.fed = new Set(events.map((event) => event.seq));
 				this.highestFed = events.reduce((highest, event) => highest === void 0 || event.seq > highest ? event.seq : highest, void 0);
 				this.transient = 0;
 				this.lastSeq = -1;
 				for (const event of transcript.events) this.observe(event.seq);
-				this.source?.replace(events.map(entryOf), false);
+				this.feedSafely(() => this.source?.replace(events.map(entryOf), false), "window");
 				this.face?.handleRunning?.(transcript.running);
 			}
 			/**
@@ -5233,7 +5433,7 @@ window.__ModuleLoader__.load({
 					this.fed.add(event.seq);
 					this.highestFed = highestOf(this.highestFed, event.seq);
 					this.observe(event.seq);
-					this.source?.append(entryOf(event));
+					this.feedSafely(() => this.source?.append(entryOf(event)), "event");
 				}
 				if (history.length > 0) this.prependOlder({
 					events: history,
@@ -5276,22 +5476,72 @@ window.__ModuleLoader__.load({
 					this.fed.add(event.seq);
 					this.observe(event.seq);
 				}
-				this.source?.prepend(events.map(entryOf), page.hasMore);
+				this.feedSafely(() => this.source?.prepend(events.map(entryOf), page.hasMore), "older page");
 			}
 			/**
-			* Feed one live delta frame: the whole step text so far, replaced as it grows.
+			* Run one feed and survive the shipped assembler's refusal.
+			*
+			* The assembler throws when a Match arrives out of the order it expects — a
+			* retried step's start after that step's updates, a tail window that begins
+			* inside a step — and that throw is not local: it fails the session-controller's
+			* whole event-feed subscriber, so the pane stops updating until it is reopened.
+			* A refused entry is a rendering gap; a dead feed is the whole pane. The entry
+			* is therefore dropped and counted rather than allowed to take the feed down.
+			* @param action - the source call to run.
+			* @param what - what is being fed, for the one-time warning.
+			*/
+			feedSafely(action, what) {
+				try {
+					action();
+				} catch (error) {
+					this.feedFailures += 1;
+					if (this.feedFailures <= 3) console.warn(`dsh-session-sync: dropped one ${what} the shipped conversation assembler refused: ${String(error)}`);
+				}
+			}
+			/**
+			* Feed one live event to the shipped renderer.
+			*
+			* The chunks are the official vocabulary — the same values `follow` hands the
+			* Web client — so they are appended verbatim rather than translated. A
+			* `baseline` re-states an attempt this pane did not see begin, a `start`
+			* replaces whatever row was there, an `end` of an abandoned attempt retires it,
+			* and a committed one waits for its durable settlement (which is the next thing
+			* the mirror sends).
 			* @param frame - the accepted frame, already ordered by the transport.
 			*/
 			stream(frame) {
 				if (this.released) return;
-				const attemptId = attemptKey(frame.turn, frame.step);
-				if (frame.text === "") {
-					if (this.liveAttempt !== attemptId) return;
-					this.closeLive({ attemptId });
-					return;
+				if (frame.live === void 0) return;
+				const live = frame.live;
+				switch (live.type) {
+					case "baseline":
+						if (this.liveAttempt !== void 0) this.closeLive({ attemptId: this.liveAttempt });
+						this.liveAttempt = live.attemptId;
+						this.liveTurn = live.turn;
+						this.liveStep = live.step;
+						for (const chunk of live.chunks) this.feedChunk(live.attemptId, chunk);
+						return;
+					case "start":
+						if (this.liveAttempt !== void 0) this.closeLive({ attemptId: this.liveAttempt });
+						this.liveAttempt = live.attemptId;
+						this.liveTurn = live.turn;
+						this.liveStep = live.step;
+						return;
+					case "chunks":
+						if (this.liveAttempt !== live.attemptId) return;
+						for (const chunk of live.chunks) this.feedChunk(live.attemptId, chunk);
+						return;
+					case "end":
+						if (this.liveAttempt !== live.attemptId) return;
+						if (live.outcome === "abandoned") this.closeLive({ attemptId: live.attemptId });
+						return;
+					case "clear":
+						if (this.liveAttempt === void 0) return;
+						if (live.attemptId !== void 0 && live.attemptId !== "" && live.attemptId !== this.liveAttempt) return;
+						if (live.turn !== this.liveTurn || live.step !== this.liveStep) return;
+						this.closeLive({ attemptId: this.liveAttempt });
+						return;
 				}
-				this.liveAttempt = attemptId;
-				this.feedLive(attemptId, frame);
 			}
 			/**
 			* Report the origin's running flag, which the mirror tracks apart from events.
@@ -5313,7 +5563,6 @@ window.__ModuleLoader__.load({
 				this.released = true;
 				const live = this.liveAttempt;
 				this.liveAttempt = void 0;
-				this.liveText.clear();
 				if (live !== void 0) try {
 					this.closeLive({ attemptId: live });
 				} catch {}
@@ -5322,55 +5571,51 @@ window.__ModuleLoader__.load({
 				} catch {}
 			}
 			/**
-			* Append the delta between what is shown and what the origin just sent.
+			* Append one official chunk as the transient row the shipped pane folds.
 			*
-			* The wire form of live Assistant text is a dense run of chunks, and the
-			* relay carries the whole text so far instead — so the delta is computed here,
-			* and a text that is not an extension of the last one restarts **that kind**
-			* rather than inventing a chunk the fold would rebaseline on.
-			*
-			* The accumulator is per kind ({@link OfficialSession.liveText} explains why): a
-			* step's reasoning and its answer are two separate streams through one attempt id,
-			* so an answer that begins after a reasoning run is not a restart at all — and
-			* treating it as one is what used to retire the thinking row mid-stream.
+			* The chunk is passed through untouched: the pane's chat assembler is the same
+			* one DSH's own Web client runs, so it already knows how to fold a text delta, a
+			* Tool-call fragment, a block boundary, usage, or a finish. Re-encoding it here
+			* was the old relay's job and its bug — the synthesized chunk vocabulary was not
+			* one the renderer read.
+			* @param attemptId - the attempt the chunk belongs to.
+			* @param frame - the dense chunk frame.
 			*/
-			feedLive(attemptId, frame) {
-				const step = this.liveText.take(attemptId, frame.kind, frame.text);
-				if (step.restarted) this.closeLive({ attemptId });
-				const delta = step.delta;
-				if (delta === "") return;
-				const time = Date.now();
+			feedChunk(attemptId, frame) {
 				this.transient += 1;
-				this.source?.append({
+				this.feedSafely(() => this.source?.append({
 					type: "transient",
 					event: {
 						type: "assistant/live-chunk",
 						seq: this.lastSeq + 1 - 1 / (this.transient + 1),
-						time,
+						time: frame.time > 0 ? frame.time : Date.now(),
 						data: {
 							attemptId,
-							turn: frame.turn,
-							step: frame.step,
-							chunk: liveChunkOf(frame.kind, delta)
+							turn: this.liveTurn,
+							step: this.liveStep,
+							chunk: frame.chunk
 						}
 					}
-				});
+				}), "live chunk");
 			}
 			/** Close one live attempt with its durable settlement, or with nothing. */
 			closeLive(o) {
-				this.liveText.forget(o.attemptId);
-				if (o.event === void 0) this.source?.settleAssistant(o.attemptId);
+				if (o.event === void 0) this.feedSafely(() => this.source?.settleAssistant(o.attemptId), "live attempt");
 				else {
 					this.observe(o.event.seq);
-					this.source?.settleAssistant(o.attemptId, entryOf(o.event));
+					this.feedSafely(() => this.source?.settleAssistant(o.attemptId, entryOf(o.event)), "settlement");
 				}
 				if (this.liveAttempt === o.attemptId) this.liveAttempt = void 0;
 			}
 			/** Settle the attempt one durable event ends. */
 			settle(event) {
-				const attemptId = settlementAttemptId(event) ?? this.liveAttempt ?? `settled:${String(event.seq)}`;
+				const data = asRecord(event.data);
+				const turn = data?.["turn"];
+				const step = data?.["step"];
+				const live = this.liveAttempt;
+				const matches = live !== void 0 && (typeof turn !== "number" || turn === this.liveTurn) && (typeof step !== "number" || step === this.liveStep);
 				this.closeLive({
-					attemptId,
+					attemptId: matches ? live : live ?? `settled:${String(event.seq)}`,
 					event
 				});
 			}
@@ -6407,6 +6652,39 @@ window.__ModuleLoader__.load({
 			/** Whether the reader is at the floor of the transcript. */
 			const [atBottom, setAtBottom] = react.useState(true);
 			/**
+			* The same fact as a ref, for the size observer.
+			*
+			* A `ResizeObserver` callback closes over the state it was created with, so a
+			* follow decision read from state goes stale the moment the reader scrolls —
+			* and a stale `true` is what keeps a growing transcript out of view while the
+			* "to bottom" control stays hidden. The ref is the live answer.
+			*/
+			const atBottomRef = react.useRef(true);
+			/**
+			* Whether the shipped pane's own scroller is at its floor.
+			*
+			* The shipped conversation arms its scroll policy only when its Session open
+			* state is `open`. A mirror-fed Session is opened against a Host that has never
+			* heard of it, so that read fails and the policy never arms: the pane renders,
+			* but nothing follows the tail and its own to-bottom control never appears.
+			* The console therefore owns follow intent for the shipped scroller too.
+			*/
+			const [paneAtBottom, setPaneAtBottom] = react.useState(true);
+			/** Live copy of {@link paneAtBottom} for the size observer. */
+			const paneAtBottomRef = react.useRef(true);
+			/** The Session/view already placed at the shipped pane's floor. */
+			const paneSettledFor = react.useRef("");
+			/**
+			* Whether a Session switch is still placing the shipped pane at its floor.
+			*
+			* The pane mounts before its window arrives, so the first size observation sees
+			* a scrollport at the top and would record that as reader intent — cancelling
+			* the very follow the switch asked for. While this is set, "not at the floor"
+			* is layout in progress, not a reader who scrolled up; it clears once the
+			* content has actually landed at the floor.
+			*/
+			const paneSettling = react.useRef(false);
+			/**
 			* Whether the shipped pane's own scroller is at *its* top.
 			*
 			* The console's "older" row marks the top of a transcript page, and on the
@@ -6432,6 +6710,19 @@ window.__ModuleLoader__.load({
 				top: 0,
 				height: 0
 			});
+			const shipped = props.official.supported && props.renderSlot !== void 0 && props.SessionProvider !== void 0 && state.transcript !== void 0 ? props.official.referenceFor(props.machineName, session.sessionId) : void 0;
+			/**
+			* The shipped conversation page the console asks for, or undefined when the
+			* shipped content cannot draw the page the console's tab is on.
+			*
+			* Both tabs are shipped pages where the build has them — `chat`, and the
+			* trajectory ledger `ui-trajectory` registers — and the pane requests one by id.
+			* The fallbacks are the two cases the console has to keep drawing itself: a build
+			* with no retention seam (no shipped content at all), and the trajectory tab on a
+			* build whose `conversation.view` has no trajectory entry. Asking is what makes
+			* the console's ledger stay the fallback rather than the default.
+			*/
+			const shippedView = shipped === void 0 ? void 0 : tab === "chat" || props.hasTrajectoryView() ? tab : void 0;
 			const scrollToBottom = react.useCallback((smooth = true) => {
 				const el = body.current;
 				if (el === null) return;
@@ -6440,69 +6731,174 @@ window.__ModuleLoader__.load({
 					behavior: "smooth"
 				});
 				else el.scrollTop = el.scrollHeight;
+				atBottomRef.current = true;
+				setAtBottom(true);
+			}, []);
+			/** Land the shipped pane's scroller at its floor, the way its own control would. */
+			const scrollPaneToBottom = react.useCallback((smooth = true) => {
+				const scroller = paneScroller.current;
+				if (scroller === null) return;
+				paneAtBottomRef.current = true;
+				setPaneAtBottom(true);
+				if (smooth && typeof scroller.scrollTo === "function") scroller.scrollTo({
+					top: scroller.scrollHeight,
+					behavior: "smooth"
+				});
+				else scroller.scrollTop = scroller.scrollHeight;
 			}, []);
 			react.useEffect(() => {
 				const el = body.current;
 				if (el === null) return;
 				const onScroll = () => {
-					setAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight <= FOLLOW_THRESHOLD);
+					const bottom = el.scrollHeight - el.scrollTop - el.clientHeight <= FOLLOW_THRESHOLD;
+					atBottomRef.current = bottom;
+					setAtBottom(bottom);
 				};
 				onScroll();
 				el.addEventListener("scroll", onScroll, { passive: true });
 				return () => {
 					el.removeEventListener("scroll", onScroll);
 				};
-			}, [tab, state.open?.sessionId]);
+			}, [
+				tab,
+				state.open?.sessionId,
+				shippedView !== void 0
+			]);
 			react.useEffect(() => {
 				const node = column.current;
 				if (node === null || typeof ResizeObserver === "undefined") return;
 				const observer = new ResizeObserver(() => {
-					if (atBottom) scrollToBottom(false);
+					if (atBottomRef.current) scrollToBottom(false);
 				});
 				observer.observe(node);
 				return () => {
 					observer.disconnect();
 				};
 			}, [
-				atBottom,
 				scrollToBottom,
 				tab,
-				state.open?.sessionId
+				state.open?.sessionId,
+				shippedView !== void 0
 			]);
 			react.useEffect(() => {
 				const host = pane.current;
 				if (host === null) return;
-				const scroller = findScroller(host);
-				paneScroller.current = scroller;
-				if (scroller !== null) setAtPaneTop(scroller.scrollTop <= FOLLOW_THRESHOLD);
+				const measureBottom = (el) => {
+					if (paneSettling.current) {
+						paneAtBottomRef.current = true;
+						setPaneAtBottom(true);
+						return;
+					}
+					const bottom = el.scrollHeight - el.scrollTop - el.clientHeight <= FOLLOW_THRESHOLD;
+					paneAtBottomRef.current = bottom;
+					setPaneAtBottom(bottom);
+				};
+				const bind = () => {
+					const scroller = findScroller(host);
+					paneScroller.current = scroller;
+					if (scroller !== null) {
+						setAtPaneTop(scroller.scrollTop <= FOLLOW_THRESHOLD);
+						measureBottom(scroller);
+					}
+					return scroller;
+				};
+				let scroller = bind();
 				const frame = typeof requestAnimationFrame === "function" ? requestAnimationFrame(() => {
-					const settled = findScroller(host);
-					paneScroller.current = settled;
-					if (settled !== null) setAtPaneTop(settled.scrollTop <= FOLLOW_THRESHOLD);
+					scroller = bind();
 				}) : void 0;
 				const onScroll = (event) => {
 					const target = event.target;
 					if (!(target instanceof HTMLElement)) return;
 					if (target.scrollHeight <= target.clientHeight) return;
 					setAtPaneTop(target.scrollTop <= FOLLOW_THRESHOLD);
+					if (target === paneScroller.current) measureBottom(target);
 				};
 				host.addEventListener("scroll", onScroll, {
 					capture: true,
 					passive: true
 				});
+				let observed = null;
+				const follow = () => {
+					const current = paneScroller.current;
+					if (current === null) return;
+					if (paneSettling.current) paneAtBottomRef.current = true;
+					if (!paneAtBottomRef.current) return;
+					current.scrollTop = current.scrollHeight;
+					if (paneSettling.current && current.scrollHeight - current.clientHeight - current.scrollTop <= FOLLOW_THRESHOLD) paneSettling.current = false;
+				};
+				const resize = typeof ResizeObserver === "undefined" ? void 0 : new ResizeObserver(follow);
+				const observeContent = () => {
+					const root = host.querySelector("[data-chat-following-tail]");
+					if (root === observed) return;
+					if (observed !== null) resize?.unobserve(observed);
+					observed = root;
+					if (root !== null) resize?.observe(root);
+				};
+				observeContent();
+				if (scroller !== null) resize?.observe(scroller);
+				const mutations = typeof MutationObserver === "undefined" ? void 0 : new MutationObserver(() => {
+					const root = host.querySelector("[data-chat-following-tail]");
+					if (root !== observed) {
+						if (observed !== null) resize?.unobserve(observed);
+						observed = root;
+						if (root !== null) resize?.observe(root);
+					}
+					if (paneScroller.current === null || !host.contains(paneScroller.current)) {
+						scroller = bind();
+						if (scroller !== null) resize?.observe(scroller);
+					}
+					follow();
+				});
+				mutations?.observe(host, {
+					childList: true,
+					subtree: true
+				});
+				const settle = typeof requestAnimationFrame === "function" ? requestAnimationFrame(() => {
+					scroller = bind();
+					observeContent();
+					if (scroller !== null) resize?.observe(scroller);
+					follow();
+				}) : void 0;
 				return () => {
 					if (frame !== void 0) cancelAnimationFrame(frame);
+					if (settle !== void 0) cancelAnimationFrame(settle);
 					host.removeEventListener("scroll", onScroll, { capture: true });
+					mutations?.disconnect();
+					resize?.disconnect();
 				};
 			}, [
 				tab,
 				state.open?.sessionId,
-				state.transcript !== void 0
+				state.transcript !== void 0,
+				shippedView !== void 0
 			]);
 			react.useEffect(() => {
+				atBottomRef.current = true;
 				setAtBottom(true);
 				scrollToBottom(false);
-			}, [state.open?.sessionId, scrollToBottom]);
+				const key = `${state.open?.machineName ?? ""}|${state.open?.sessionId ?? ""}|${tab}|${state.transcript === void 0 ? "loading" : "loaded"}`;
+				if (paneSettledFor.current === key) return;
+				paneSettledFor.current = key;
+				paneSettling.current = true;
+				paneAtBottomRef.current = true;
+				setPaneAtBottom(true);
+				const frames = [];
+				if (typeof requestAnimationFrame === "function") frames.push(requestAnimationFrame(() => {
+					frames.push(requestAnimationFrame(() => {
+						scrollPaneToBottom(false);
+					}));
+				}));
+				return () => {
+					for (const handle of frames) cancelAnimationFrame(handle);
+				};
+			}, [
+				state.open?.machineName,
+				state.open?.sessionId,
+				state.transcript !== void 0,
+				tab,
+				scrollToBottom,
+				scrollPaneToBottom
+			]);
 			const rows = react.useMemo(() => toRows(state.transcript?.events ?? []), [state.transcript]);
 			const chrome = react.useMemo(() => sessionChrome(state.transcript?.events ?? []), [state.transcript]);
 			const reportedStats = props.session.stats;
@@ -6518,19 +6914,6 @@ window.__ModuleLoader__.load({
 				footnotes: t("footnotes")
 			}), [t]);
 			const delivery = state.delivery;
-			const shipped = props.official.supported && props.renderSlot !== void 0 && props.SessionProvider !== void 0 && state.transcript !== void 0 ? props.official.referenceFor(props.machineName, session.sessionId) : void 0;
-			/**
-			* The shipped conversation page the console asks for, or undefined when the
-			* shipped content cannot draw the page the console's tab is on.
-			*
-			* Both tabs are shipped pages where the build has them — `chat`, and the
-			* trajectory ledger `ui-trajectory` registers — and the pane requests one by id.
-			* The fallbacks are the two cases the console has to keep drawing itself: a build
-			* with no retention seam (no shipped content at all), and the trajectory tab on a
-			* build whose `conversation.view` has no trajectory entry. Asking is what makes
-			* the console's ledger stay the fallback rather than the default.
-			*/
-			const shippedView = shipped === void 0 ? void 0 : tab === "chat" || props.hasTrajectoryView() ? tab : void 0;
 			/**
 			* Whether the shipped pane is drawing this Session's footer right now.
 			*
@@ -6696,16 +7079,24 @@ window.__ModuleLoader__.load({
 						},
 						children: state.loadingOlder ? t("loadingOlder") : t("loadOlder")
 					})
-				}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+				}), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 					ref: pane,
 					className: props.official.composerOwned ? `${sync_module_css_default.officialPane} ${sync_module_css_default.drivesWindow}` : sync_module_css_default.officialPane,
-					children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(props.SessionProvider, {
+					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(props.SessionProvider, {
 						session: shipped,
 						children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(OfficialViewContext.Provider, {
 							value: shippedView,
 							children: props.renderSlot("session-sync.conversation", {})
 						})
-					})
+					}), !paneAtBottom && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
+						type: "button",
+						className: sync_module_css_default.paneToBottom,
+						"aria-label": t("chatToBottom"),
+						onClick: () => {
+							scrollPaneToBottom();
+						},
+						children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconChevronDownOutlineRegular, {})
+					})]
 				})] }),
 				shippedView === void 0 && tab === "trajectory" && /* @__PURE__ */ (0, react_jsx_runtime.jsx)(TrajectoryView, {
 					t,
@@ -6751,16 +7142,19 @@ window.__ModuleLoader__.load({
 								labels,
 								latestTurn
 							}, row.key)),
-							(state.live.reasoning !== "" || state.live.text !== "") && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+							state.live.blocks.length > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
 								className: sync_module_css_default.assistantRow,
-								children: [state.live.reasoning !== "" && /* @__PURE__ */ (0, react_jsx_runtime.jsx)(ReasoningRow, {
+								children: state.live.blocks.map((block) => block.kind === "reasoning" ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)(ReasoningRow, {
 									t,
-									reasoning: state.live.reasoning,
+									reasoning: block.text,
 									streaming: true
-								}), state.live.text !== "" && /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.MarkdownText, {
-									text: state.live.text,
+								}, `reasoning-${String(block.index)}`) : block.kind === "text" ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.MarkdownText, {
+									text: block.text,
 									labels
-								})]
+								}, `text-${String(block.index)}`) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)(LiveToolRow, {
+									name: block.name,
+									arguments: block.arguments
+								}, `tool-${String(block.index)}`))
 							})
 						]
 					}), !atBottom && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
@@ -7149,6 +7543,59 @@ window.__ModuleLoader__.load({
 		/** Whole seconds left before a scheduled attempt runs, never below one. */
 		function countdownSeconds(deadline) {
 			return Math.max(1, Math.ceil((deadline - Date.now()) / 1e3));
+		}
+		/**
+		* One Tool call the model is still streaming.
+		*
+		* The official stream carries the call before its card can exist: the arguments
+		* are a raw JSON fragment, so there is nothing to hand the transcript's Tool row
+		* yet. This states the one thing that is known — which Tool is running, and the
+		* first value it has been given — rather than leaving the reader with a spinner
+		* and no name.
+		*/
+		function LiveToolRow({ name, arguments: args }) {
+			const gist = toolArgumentGist(args);
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+				className: sync_module_css_default.liveTool,
+				"data-state": "running",
+				children: [
+					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+						className: sync_module_css_default.liveToolDot,
+						"aria-hidden": true
+					}),
+					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+						className: sync_module_css_default.liveToolName,
+						children: name === "" ? "…" : name
+					}),
+					gist !== "" && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+						className: sync_module_css_default.liveToolArgs,
+						children: gist
+					})
+				]
+			});
+		}
+		/**
+		* The first human-readable value of a Tool call's arguments so far.
+		*
+		* The fragment is not valid JSON until the block ends, so a parse is attempted
+		* and the raw text is the fallback: either way the reader sees the argument the
+		* call is being built around, not an object dump.
+		* @param args - raw JSON text streamed so far.
+		* @returns one short line, empty when there is nothing yet.
+		*/
+		function toolArgumentGist(args) {
+			const trimmed = args.trim();
+			if (trimmed === "") return "";
+			let candidate = trimmed;
+			try {
+				const parsed = JSON.parse(trimmed);
+				if (typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)) {
+					const first = Object.values(parsed).find((value) => typeof value === "string" && value.trim() !== "");
+					if (typeof first === "string") candidate = first;
+				}
+			} catch {}
+			const oneLine = candidate.replace(/\s+/g, " ").trim();
+			return oneLine.length > 96 ? `${oneLine.slice(0, 96)}…` : oneLine;
 		}
 		/**
 		* One assistant reasoning block, folded away by default.

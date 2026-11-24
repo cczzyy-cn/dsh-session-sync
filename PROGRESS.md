@@ -1,23 +1,23 @@
 # dsh-session-sync 推进记录
 
 > 只写被证据支撑的事实：跑过的命令、测到的数字、看到的现象。每条结论都要能指出它是怎么被验证的。
-> 本文件不参与构建。最近更新：2026-11-19（服务器 DSH 升级到 `0.2.2-rc.5`，控制台在真浏览器里复验通过）
+> 本文件不参与构建。最近更新：2026-11-25（实时输出改走官方 assistant 流：`start`/`chunk`/`end` 全量转达 + baseline）
 
 ## 0. 现状一眼看
 
 | 项 | 值 |
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
-| 版本 | **`0.10.45`**（控制台头部瘦身：删返回箭头与子代理计数，窄屏让标题拿到整行；tag `v0.10.45` = `feeae1c`） |
+| 版本 | **`0.10.55`**（实时输出改走官方 assistant 流：`start`/`chunk`/`end` 全量转达 + baseline；工作树，未打 tag、未部署） |
 | 部署面 | **2026-09-30 晚**：服务器与本机两个 profile（`web` / `desktop`）都曾钉到 `#v0.10.32`，两端产物 sha256 逐字节相同；服务器 unit 已重启 ⇒ 跑 0.10.32。**0.10.33/0.10.34 的落地读数见 §2 那两节**。实时读数用 `scripts/deploy-status.ps1` 取，不要看这一行 |
 | 服务器（远端） | **已上线 `0.10.45`**（依赖 `#v0.10.45`）· DSH **`0.2.2-rc.5`**（2026-11-19 升级，unit 备份 `.bak-20261119-141436`）· unit `dsh-web.service` active · 3080（绑 `127.0.0.1`）与 8791 都在听 |
 | 本机宿主 | **这个 GUI 跑的是打包版** `DeepSeek Harness.exe`（`resources\app.asar\dsh`，DSH 0.2.0-rc.1），**不是源码 checkout**；它加载的 profile 是 `~/.dsh/profiles/desktop`。`profiles/web` 与 `profiles/desktop` 两个 profile 里都装着本插件 |
 | 本机 DSH checkout | **此刻不存在**：`C:\Users\14339\Desktop\git\deepseek-harness` 已不在盘上（2026-11-19 实测 `Test-Path` = False），`node_modules` 也不在 ⇒ 构建、`typecheck`、`release.ps1`、`deploy-status -VerifyBuild` 都会拒绝；只有编码门禁与纯 node 测试能跑。要改产物得先把 checkout 与依赖装回来 |
 | 设置层真源 | **profile 的 `cordis.patch.yml`**（不是 `~/.dsh/settings.yaml`）。实测：迁移成功，`~/.dsh/dsh-session-sync.json` 已归档为 `dsh-session-sync.json.imported-2026-09-30T12-45-17-595Z.json`，值出现在 `profiles/desktop/cordis.patch.yml` 的 `session-sync` 行里 |
-| 测试 | **204 例：200 通过 / 0 失败 / 4 跳过**（49 suites，约 13 秒，`node --test --experimental-transform-types --test-concurrency=1 "tests/*.spec.ts"`，2026-11-19 实跑） |
+| 测试 | **215 例：215 通过 / 0 失败**（54 suites，约 11 秒，`node --test --experimental-transform-types --test-concurrency=1 "tests/*.spec.ts"`，2026-11-25 实跑） |
 | 真机验证 | 仍停在 0.10.5 那批：提问竞速（0.10.4）、控制台**放行**与**拒绝**审批（0.10.5）见 §2。**0.10.29–0.10.31 无真机验证** |
-| 产物 | `lib/index.js` **253,788 B**（sha256 `56f82889…`）· `client/client.js` **400,250 B**（sha256 `1f2d6407…`）；两个产物均已含设置层标记（`settings.describe`、`expectedRevision` 命中） |
-| 编码门禁 | `node scripts/check-encoding.mjs` **clean（69 文件）**（2026-11-19 实跑）；0.10.29 之前它在空转（只扫 3 个文件却报 clean），见 §2 |
+| 产物 | `lib/index.js` **284,025 B**（sha256 `9fa750d630ca…`）· `client/client.js` **421,123 B**（sha256 `3215d65e60ac…`）；2026-11-26 实跑 `npm run build` |
+| 编码门禁 | `node scripts/check-encoding.mjs` **clean（70 文件）**（2026-11-25 实跑） |
 | 类型 | `npm run typecheck` = 67 文件 / 752 诊断 / **undeclared 0 · relative imports 全解析 · 类型不匹配 0**（752 全是无 bundler 解析时的 JSX/上游项） |
 | 控制台路线 | **`scope`**：服务器上 `dsh-api-session-controller/lib/client.js` 命中 `retainAgentScope` ⇒ 特性探测确定走它；`adopt` 在任何已发布构建里都不存在（该路线已从代码删除） |
 | 服务器镜像 | 按需重建：源站 reconcile + follow 快照；此刻本机发布列表为空（`syncSessions: {}`），所以镜像里没有会话 |
@@ -95,6 +95,98 @@
 
 > 2026-09-25 及以前的推进日志（从"② 的答案"一路到 0.3.x）已归档到 `docs/history-2026-09.md`。
 > 这一段只留本版（0.8.x/0.9.x/0.10.x）的改动与验证；历史文件是当时的推理记录，不要照它实现。
+
+### v0.10.55：实时输出改走官方 assistant 流（2026-11-25）
+
+**为什么改**：旧转达只认 `reasoning-delta` / `text-delta`，把一步的流压成两段"到目前为止的
+整文本"；工具调用参数、`block-start`/`block-end`、`usage`、`finish` 在源站就被丢掉，控制台
+与自带对话页都看不到运行中的工具行。而自带的 `feedLive` 还得把整文本差分成它自己合成的
+chunk——0.10.9 之前"实时思考看不见"的根因正是这种合成形状没有渲染器认。
+
+**改法**：
+- **源站**（`src/host/service.ts`）：`start` / 密集 `chunk` / `end` 全量转达（`wireChunk` 只
+  剥掉 `finish.replayState`）；150 ms 的 flush 把同一个块里相邻的 delta 先合并，再按自己的
+  密集 index 发出。opening 的 compact run 由 `expandLiveBaseline` 展开成同样的帧（含
+  `tool-call-chunks` 与 raw `chunk`）。源站 index 与发送 index 分开记；跳帧或超大 chunk
+  会丢弃该 attempt 并只发一次 `clear`，不再"假装完整"。
+- **服务器**（`src/host/hub.ts`）：按会话保留 fold（可见文本，不是帧列表）——新浏览器与
+  「在步骤中途打开会话」都先拿到 baseline；durable settlement 兜底清掉 live 行。旧源站的
+  整文本 `/stream-delta` 在服务器差分成同样的文本 delta（`legacy:<turn>:<step>` 作 attempt
+  id），两端可分开升级。
+- **浏览器**（`src/client/api.ts`）：同一个 fold 产出 `live.blocks`（推理 / 正文 / 工具行）；
+  `official-session.tsx` 把原始 chunk 直接交给自带组装器，删掉 `live-text.ts` 与其 7 例测试，
+  换成 `tests/live-stream.spec.ts` 11 例。
+- **传输**（`src/host/transport.ts`）：live 帧单独一条 FIFO 队列——并发 `fetch` 不保证顺序，
+  而乱序就是密集 index 的洞；断链时清空队列，等重连的 follow baseline。
+
+**同一版的滚动修复（2026-11-26）**：用户报「自动滚动会话页有问题、下滑到最新按钮不见了」。
+用一个无头 Chrome（临时 profile，CDP）打开**线上服务器控制台**（0.10.54）复现并定位：
+
+| 观测 | 值 |
+| --- | --- |
+| 路线 | `原件 · scope` |
+| 自带 `[data-chat-following-tail]` | **存在**（即 `followingTail = true`） |
+| 自带滚动体 `[data-conversation-scroll]` | `scrollTop = 0`、`scrollHeight = 15435`、`clientHeight = 319` |
+| 面板里隐藏的 `openError` | **存在**：`历史加载失败：session "dsh-session-sync:…"`（`display:none`） |
+| 手动滚上去 3000px 后 | `followingTail` 仍为 true，按钮仍不存在 |
+
+根因：镜像会话的 open 状态是 `error`（那次必然失败的 Host 历史读），而自带 `ui-chat` 的
+`useChatScroll` 只在 `isOpen` 时初始化阅读策略（`content.current.opened` 因而从不置位），
+所以自带跟随与置底按钮永远不工作；`followingTail` 从 scroll store 的初值（`true`）开始，
+再没有任何采样把它改掉。修法在 `SyncPanel.tsx`：控制台自己观察自带聊天根的高度、只在
+读者贴底时写 `scrollTop`，读者离开底部时渲染同形的 `.paneToBottom` 按钮，并隐藏自带那枚；
+手绘路线同时把 `atBottom` 换成 ref（旧的 `ResizeObserver` 闭包里的 state 会把"跟随"卡在
+true）。打开会话时两次 rAF 后落到自带滚动体底部。
+
+**验证（2026-11-26，线上页面 + 注入工作树客户端产物）**：`npm test` 215 通过 / 0 失败；
+`npm run build` 成功；`check-encoding` clean。CDP `Fetch` 把工作树构建的 `client/client.js`
+注入线上控制台后，打开同一会话：
+
+| 判据 | 实测 |
+| --- | --- |
+| 打开即贴底 | `scrollTop = floor = 10880` |
+| 贴底时增长（向聊天根追加 400px 模拟流式输出） | 自动跟到 `11280` |
+| 上滚 2500px | 出现控制台置底按钮（`.paneToBottom`，34×34，`display:flex`） |
+| 点击置底按钮 | 回到 `floor = 11280`，按钮消失 |
+| **切换会话**（Git 拉取 → 分析项目并给出建议） | B 的标题出现，`scrollTop = floor = 2588`，无按钮 |
+| 控制台 error | 无 |
+
+这一步抓到三个真实缺陷，都不是测试/构建能发现的：
+
+1. `shippedView` 被写进 effects 的依赖数组，但它的 `const` 声明在 effects 之后，运行期是 TDZ
+   `ReferenceError`——错误边界会把整个面板换成工作区。已把 `shipped` / `shippedView` 的声明
+   移到 effects 之前。
+2. **切换会话时自带 shell 其实晚于 effect 挂载**：绑定那一刻既找不到滚动体、也找不到聊天根，
+   下一帧再找一次仍然可能落空。现在用 `MutationObserver` 在结构变化时重新绑定滚动体与聊天根，
+   这是"切换会话后停在顶部"的直接修法。
+3. **切换的第一次尺寸观测会把"顶部"记成读者意图**，把刚设的跟随取消。新增 `paneSettling`
+   标记：切换落底之前，"不在底部"一律当作布局尚未完成，直到内容真的落到 `floor` 才允许它
+   变成"读者上滚"。
+
+另外给新客户端加了旧 Host 的降级：旧版 `/stream-delta` 的整文本帧现在被忽略（不再把
+`frame.live` 当必填而崩掉），混合升级期间最多丢实时行，不会打掉面板。
+
+**同一轮的第四个修复：assembler 拒绝一条 Match 时不再拖死整条 feed（2026-11-26）**。
+用户贴出 `[session-controller] event feed subscriber failed: … received an update before its
+start Match`，栈停在 `OfficialMirror.appendEvents`。这是自带 assembler 的规则（它的
+`acceptMatch` 在 `starting && context.matches.length > 0` 时抛），窗口起点、重试的 step start、
+durable 与 live 两条队列都可能让它看到反序。该异常不是局部的：它会让 session-controller 的
+整条 event feed subscriber 失效，面板直到重开都不再更新。修法：所有向自带 source 的投递
+（`replace` / `append` / `prepend` / `settleAssistant`）都经过 [feedSafely](src/client/official-session.tsx:555)，
+被拒绝的那一条丢弃、只记一次 warning；**一行缺口好过整块面板停摆**。这条是防御性修复：
+线上开同一会话 15 秒没有复现出该异常，所以没有"修复前失败 → 修复后通过"的对照。
+**本版未部署**，真机复验要等安装重启。
+
+**验证**：`npm test` = **215 通过 / 0 失败**（54 suites，10.8 s，2026-11-25）；其中“real link”
+一例起真监听者 + 真 `OriginLink`，断言 `start → chunks → baseline` 与 settlement 清行。
+`npm run build` 成功：`lib/index.js` 284,025 B、`client/client.js` 421,123 B；
+`check-encoding` clean（70 文件）。**流契约对照**：下载并解包
+`@deepseek-ai/dsh-api-session-controller@0.2.3-alpha.1`，其 `src/types.ts` 的
+`SessionFollowFrame` / `SessionAssistantStreamFrame` 与当前安装的 `0.2.2-rc.5` 相同
+（两版 diff 只把 `SessionListMetadata` 移走），`src/assistant-stream.ts` 也确认 baseline
+的 `nextIndex` 就是 chunk 帧数、`stream` 是 compact run；实现按这份契约写。
+**未验证**（需真机/另一台源站）：两端旧新混跑的 legacy 路径只在 hub 单元里测过，
+没有在真实旧源站上跑过。
 
 ### v0.10.46：转方案 C —— 会话页维持官方正文，外壳继续用官方原语（2026-11-19）
 

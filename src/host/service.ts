@@ -21,11 +21,16 @@ import {
   type PublishIndexPayload,
   type RelayedAnswerItem,
   type RelayedApprovalDecision,
-  type StreamDeltaPayload,
   type SyncConfig,
   type SyncState,
   type SyncStreamFrame,
 } from '../shared/protocol.ts'
+import {
+  expandLiveBaseline,
+  wireChunk,
+  LiveBatch,
+  type LiveStreamPayload,
+} from '../shared/live-stream.ts'
 import type {
   ApprovalNext,
   ApprovalOutcomeLike,
@@ -52,22 +57,37 @@ import { pluginVersion } from './version.ts'
 const RECONCILE_MS = 10_000
 
 /**
- * How often buffered events, and the streaming text, are handed to the link.
+ * How often buffered events, and the official live stream, are handed to the link.
  *
- * Measured on this deployment: the model's deltas arrive at roughly 200 a
- * second, so a whole thinking block is on the wire in under three seconds. At
- * the previous 400 ms that was three to six visible updates for an entire
- * block, which reads as one shot however it is rendered; 150 ms keeps the relay
- * ahead of the burst. Each update carries the step's whole text, so the cost of
- * the finer tick is bounded by the text, not by the number of deltas.
+ * Deltas arrive at roughly 200 a second, so a step's whole thinking block is on
+ * the wire in under three seconds. At the previous 400 ms that was three to six
+ * visible updates for an entire block, which reads as one shot however it is
+ * rendered; 150 ms keeps the relay ahead of the burst. What each tick carries is
+ * now a batch of the model's own chunks rather than the step's whole text, so the
+ * cost of the finer tick is bounded by the tokens produced, not by the text so
+ * far — the frame after this one is the same size whether the answer is one line
+ * or fifty.
  */
 const FLUSH_MS = 150
 
 /** Bound on events buffered per Session while the link is down. */
 const BUFFER_LIMIT = 4_000
 
-/** Bound on steps whose streamed text is still tracked, per kind. */
+/** Bound on settlement marks kept per service. */
 const LIVE_LIMIT = 64
+
+/**
+ * Bound on live chunks buffered between two flushes.
+ *
+ * A tick covers 150 ms of a stream that emits a few hundred deltas a second, so
+ * this is an order of magnitude above a normal batch. Overflow means the loop or
+ * the link is stalled, and the honest answer is to drop the attempt rather than
+ * grow an unbounded queue: the durable message still arrives.
+ */
+const LIVE_BATCH_LIMIT = 2_048
+
+/** Largest single chunk relayed, in serialized bytes. */
+const LIVE_CHUNK_BYTES = 64 * 1024
 
 /**
  * Shortest gap between two replays of the same Session.
@@ -86,12 +106,6 @@ const RESYNC_FLOOR_MS = 5_000
  * this keeps a burst of clicks from becoming a burst of disk reads.
  */
 const PAGE_FLOOR_MS = 1_000
-
-/** The two kinds of text one step streams. */
-const STREAM_KINDS = ['reasoning', 'text'] as const
-
-/** One kind of streamed text. */
-type StreamKind = typeof STREAM_KINDS[number]
 
 /** One tracked `follow` stream. */
 interface FollowHandle {
@@ -112,6 +126,27 @@ interface FollowHandle {
   /** The open attempt's turn and step, which its `chunk` frames do not repeat. */
   turn: number
   step: number
+  /**
+   * Dense position expected for the next frame of the open attempt.
+   *
+   * Kept apart from the send cursor because this half renumbers what it sends:
+   * DSH's own index starts where the opening baseline stopped, while the relay's
+   * first batch is dense from zero. A source frame out of order means a chunk was
+   * lost, and an attempt with a hole is dropped rather than shown with a gap.
+   */
+  sourceIndex: number
+  /** Whether this attempt's `start` event has been posted. */
+  liveStarted: boolean
+  /** Chunks buffered for the next flush, merged and numbered by the batch. */
+  liveBatch: LiveBatch
+  /**
+   * Why this attempt is no longer representable, when it is not.
+   *
+   * Set by a source gap or an oversized chunk. The attempt is dropped and no
+   * further frame is relayed until the next `start`, because a live row that is
+   * silently missing a chunk is worse than one that is honestly absent.
+   */
+  liveBroken?: string
   /**
    * Highest durable sequence this follow has delivered, or -1 before any.
    *
@@ -167,19 +202,9 @@ interface FollowHandle {
   ended?: string
 }
 
-/** The accumulator key of one step's text. */
-function sessionLiveKey(sessionId: string, turn: number, step: number, kind: StreamKind): string {
-  return `${sessionId}|${String(turn)}|${String(step)}|${kind}`
-}
-
 /** The settlement key of one step: what says that step is over. */
 function sessionStepKey(sessionId: string, turn: number, step: number): string {
   return `${sessionId}|${String(turn)}|${String(step)}`
-}
-
-/** The accumulator key of the step one follow has open. */
-function liveKey(handle: FollowHandle, kind: StreamKind): string {
-  return sessionLiveKey(handle.sessionId, handle.turn, handle.step, kind)
 }
 
 /** The settlement key of the step one follow has open. */
@@ -223,9 +248,6 @@ export class SessionSyncService {
   private followError: string | undefined
   private followErrorSession: string | undefined
 
-  /** Streaming text per step, keyed session|turn|step|kind; relayed, never mirrored. */
-  private readonly liveText = new Map<string, StreamDeltaPayload>()
-  private readonly liveDirty = new Set<string>()
   /** Steps whose settlement already arrived, so a late delta cannot revive them. */
   private readonly settled = new Set<string>()
   /** When each Session was last replayed at the server's request. */
@@ -502,6 +524,16 @@ export class SessionSyncService {
           opened: handle.opened,
           pending: handle.pending.length,
           events: handle.seen,
+          ...(handle.liveStarted ? {
+            live: {
+              attemptId: handle.attemptId,
+              turn: handle.turn,
+              step: handle.step,
+              nextIndex: handle.liveBatch.nextIndex,
+              pending: handle.liveBatch.size,
+              ...(handle.liveBroken === undefined ? {} : { broken: handle.liveBroken }),
+            },
+          } : {}),
           ...(handle.ended === undefined ? {} : { ended: handle.ended }),
         })),
         ...(this.lastPageRead === undefined ? {} : { page: this.lastPageRead }),
@@ -587,6 +619,20 @@ export class SessionSyncService {
     page?: { limit: number; before?: number },
   ): MirrorTranscript | undefined {
     return this.hub.transcript(machineName, sessionId, page)
+  }
+
+  /**
+   * The live attempt one mirrored Session is showing right now.
+   *
+   * Read when a reader opens the Session, so the step already in flight appears
+   * with the window rather than at its next chunk. Transient like every live
+   * frame: absent means no attempt is open.
+   * @param machineName - owning machine.
+   * @param sessionId - published Session.
+   * @returns the baseline, or undefined when nothing is live.
+   */
+  live(machineName: string, sessionId: string): LiveStreamPayload | undefined {
+    return this.hub.liveOf(machineName, sessionId)
   }
 
   /**
@@ -737,6 +783,11 @@ export class SessionSyncService {
   attachBrowser(sink: BrowserSink): () => void {
     this.browsers.add(sink)
     sink.send({ type: 'state', state: this.view() })
+    // The state is the durable mirror; a step that has not settled is not in it,
+    // so every attempt in flight is re-stated as a baseline for this reader. The
+    // hub keeps the folded view, which is what makes a late connection start
+    // mid-answer instead of at the next frame.
+    for (const frame of this.hub.liveFrames()) sink.send(frame)
     return () => { this.browsers.delete(sink) }
   }
 
@@ -1172,6 +1223,9 @@ export class SessionSyncService {
       attemptId: '',
       turn: 0,
       step: 0,
+      sourceIndex: 0,
+      liveStarted: false,
+      liveBatch: new LiveBatch(),
       lastSeq: -1,
       firstSeq: -1,
       sentFirstSeq: -1,
@@ -1207,18 +1261,19 @@ export class SessionSyncService {
   }
 
   /**
-   * Take the streaming text out of one follow frame.
+   * Take the official Assistant-stream frame out of one follow frame.
    *
    * With `assistantStream: true` a follow yields
    * `{ type: 'assistant-stream', frame }`, where the frame is a `start` (the
-   * attempt's identity, turn, and step), a dense `chunk` carrying one
-   * `text-delta` or `reasoning-delta`, or an `end` whose outcome says whether
-   * the attempt was committed or abandoned.
+   * attempt's identity, turn, and step), a dense `chunk` carrying one raw
+   * `StreamChunk`, or an `end` whose outcome says whether the attempt was
+   * committed or abandoned.
    *
-   * The wire sends deltas; everything this plugin relays is the whole text so
-   * far, so they are accumulated here per Session, step, and kind, and a lost
-   * frame heals on the next one. The durable path is not touched: a chunk this
-   * reader does not recognise is simply ignored.
+   * Every chunk kind is relayed, not only the two text deltas: the shipped
+   * renderer folds live Tool calls, block boundaries, usage and the attempt's
+   * finish from the same vocabulary, and the console's own live row reads that
+   * vocabulary too. The durable path is not touched — a chunk this half does not
+   * recognise is ignored here and still arrives as part of its settlement.
    * @param handle - the follow the frame arrived on, which owns the identity
    *   every field below is keyed by: several follows are open at once, and a
    *   service-wide "current Session" attributed one Session's stream to another.
@@ -1238,109 +1293,176 @@ export class SessionSyncService {
       this.takeChunk(handle, record)
       return
     }
-    if (type === 'end') {
-      const outcome = record['outcome'] as Record<string, unknown> | undefined
-      // An abandoned attempt has no durable settlement to replace its row, so
-      // the reader is told the text is gone. A committed one is replaced by its
-      // own `assistant/message`, which is the durable path's business.
-      if (outcome !== undefined && outcome['kind'] === 'abandoned') this.dropStep(handle)
-    }
+    if (type === 'end') this.endAttempt(handle, record)
   }
 
   /**
-   * Adopt one attempt's identity and forget whatever step it replaces.
+   * Adopt one attempt's identity and announce it.
    *
-   * A retried step re-opens the same turn and step, so without this the second
-   * attempt's deltas would be appended to the first attempt's text.
+   * A retried step re-opens the same turn and step. The `start` event is what
+   * tells a reader that, so the attempt is announced rather than merged into
+   * whatever was there before.
    * @param handle - the follow the start frame arrived on.
    * @param record - one `start` frame.
    */
   private openAttempt(handle: FollowHandle, record: Record<string, unknown>): void {
-    const previousTurn = handle.turn
-    const previousStep = handle.step
-    if (typeof record['attemptId'] === 'string') handle.attemptId = record['attemptId']
-    if (typeof record['turn'] === 'number') handle.turn = record['turn']
-    if (typeof record['step'] === 'number') handle.step = record['step']
-    this.forgetStep(handle.sessionId, previousTurn, previousStep)
+    const attemptId = typeof record['attemptId'] === 'string' ? record['attemptId'] : ''
+    if (attemptId === '') return
+    const turn = typeof record['turn'] === 'number' ? record['turn'] : handle.turn
+    const step = typeof record['step'] === 'number' ? record['step'] : handle.step
+    this.adoptAttempt(handle, attemptId, turn, step, 0)
+    this.link?.publishLive({
+      type: 'start',
+      sessionId: handle.sessionId,
+      attemptId,
+      turn,
+      step,
+      startedAfterSeq: typeof record['startedAfterSeq'] === 'number' ? record['startedAfterSeq'] : -1,
+    })
   }
 
   /**
-   * Accumulate one streamed chunk of the open attempt.
+   * Relay one dense chunk of the open attempt.
+   *
+   * The source index is checked before the chunk is kept: a stream that skipped a
+   * frame cannot be folded faithfully, so the attempt is dropped instead of shown
+   * with a hole. An oversized chunk takes the same path — the live row is
+   * presentation, and the durable message still carries the content.
    * @param handle - the follow the chunk arrived on.
    * @param record - one `chunk` frame.
    */
   private takeChunk(handle: FollowHandle, record: Record<string, unknown>): void {
+    const attemptId = typeof record['attemptId'] === 'string' ? record['attemptId'] : ''
     // A controller mounted after this attempt started has no `start` frame to
-    // reset on; the first chunk of another attempt is that reset.
-    if (typeof record['attemptId'] === 'string' && record['attemptId'] !== handle.attemptId) {
-      handle.attemptId = record['attemptId']
-      this.forgetStep(handle.sessionId, handle.turn, handle.step)
+    // adopt: the first chunk of another attempt is that reset.
+    if (attemptId !== '' && attemptId !== handle.attemptId) {
+      this.adoptAttempt(handle, attemptId, handle.turn, handle.step, 0)
+      this.link?.publishLive({
+        type: 'start',
+        sessionId: handle.sessionId,
+        attemptId,
+        turn: handle.turn,
+        step: handle.step,
+        startedAfterSeq: -1,
+      })
     }
-    const chunk = jsonObject(record['chunk'])
+    if (handle.liveBroken !== undefined) return
+    if (this.settled.has(stepKey(handle))) return
+    const index = typeof record['index'] === 'number' ? record['index'] : -1
+    if (index !== handle.sourceIndex) {
+      this.breakLive(handle, `the source stream skipped frame ${String(index)}`)
+      return
+    }
+    handle.sourceIndex += 1
+    const raw = jsonObject(record['chunk'])
+    if (raw === undefined) return
+    const chunk = wireChunk(raw)
     if (chunk === undefined) return
-    const kind = chunk['type'] === 'reasoning-delta' ? 'reasoning' : chunk['type'] === 'text-delta' ? 'text' : undefined
-    if (kind === undefined) return
-    this.appendStream(handle, kind, typeof chunk['text'] === 'string' ? chunk['text'] : '')
+    if (JSON.stringify(chunk).length > LIVE_CHUNK_BYTES) {
+      this.breakLive(handle, 'one chunk exceeded the relay limit')
+      return
+    }
+    handle.liveBatch.push(
+      typeof record['time'] === 'number' ? record['time'] : Date.now(),
+      chunk,
+    )
+    if (handle.liveBatch.size > LIVE_BATCH_LIMIT) this.breakLive(handle, 'the live batch overflowed')
   }
 
   /**
-   * Append one delta to its step's text and mark that step for relay.
-   * @param handle - the follow the delta belongs to.
-   * @param kind - which of the step's two texts it is.
-   * @param text - the delta itself.
+   * Close one attempt: publish whatever is still buffered, then the end marker.
+   * @param handle - the follow the end frame arrived on.
+   * @param record - one `end` frame.
    */
-  private appendStream(handle: FollowHandle, kind: StreamKind, text: string): void {
-    if (text === '' || this.settled.has(stepKey(handle))) return
-    const key = liveKey(handle, kind)
-    const base = this.liveText.get(key)?.text ?? ''
-    this.liveText.set(key, {
-      sessionId: handle.sessionId,
-      turn: handle.turn,
-      step: handle.step,
-      kind,
-      text: base + text,
-    })
-    this.liveDirty.add(key)
-    while (this.liveText.size > LIVE_LIMIT) {
-      const oldest = this.liveText.keys().next()
-      if (oldest.done === true || oldest.value === key) break
-      this.liveText.delete(oldest.value)
-      this.liveDirty.delete(oldest.value)
+  private endAttempt(handle: FollowHandle, record: Record<string, unknown>): void {
+    const attemptId = typeof record['attemptId'] === 'string' ? record['attemptId'] : handle.attemptId
+    if (attemptId === '' || attemptId !== handle.attemptId) return
+    const outcome = jsonObject(record['outcome'])
+    const kind = outcome?.['kind'] === 'abandoned' ? 'abandoned' : 'committed'
+    if (handle.liveBroken === undefined) {
+      this.flushLive(handle)
+      this.link?.publishLive({
+        type: 'end',
+        sessionId: handle.sessionId,
+        attemptId,
+        index: handle.liveBatch.nextIndex,
+        outcome: kind,
+      })
+    }
+    // An abandoned attempt has no durable settlement to replace its row, so the
+    // reader is told the text is gone. A committed one is replaced by its own
+    // `assistant/message`, which is the durable path's business.
+    if (kind === 'abandoned') {
+      this.publishClear(handle, handle.turn, handle.step, attemptId)
+      this.settled.add(stepKey(handle))
+      this.pruneSettled()
+      this.adoptAttempt(handle, '', handle.turn, handle.step, 0)
     }
   }
 
   /**
-   * Forget one step entirely: its text, its pending relay, and any settlement
-   * mark it carried.
+   * Make one attempt the one this follow relays, dropping whatever preceded it.
+   * @param handle - the follow whose attempt is being adopted.
+   * @param attemptId - the new attempt, or empty when the attempt is over.
+   * @param turn - its turn.
+   * @param step - its step.
+   * @param sendIndex - the dense position its first relayed frame carries.
+   */
+  private adoptAttempt(handle: FollowHandle, attemptId: string, turn: number, step: number, sendIndex: number): void {
+    handle.attemptId = attemptId
+    handle.turn = turn
+    handle.step = step
+    handle.sourceIndex = 0
+    handle.liveBatch = new LiveBatch(sendIndex)
+    handle.liveStarted = attemptId !== ''
+    handle.liveBroken = undefined
+    if (attemptId !== '') this.settled.delete(sessionStepKey(handle.sessionId, turn, step))
+  }
+
+  /**
+   * Drop one unrepresentable attempt and tell the reader it is gone.
+   *
+   * Only the first reason is named; the frames keep arriving until the next
+   * `start`, and each one would otherwise log the same sentence again.
+   * @param handle - the follow whose attempt is being dropped.
+   * @param reason - why it can no longer be relayed.
+   */
+  private breakLive(handle: FollowHandle, reason: string): void {
+    if (handle.liveBroken === undefined) {
+      handle.liveBroken = reason
+      this.ctx.logger.info(`dsh-session-sync: live relay for "${handle.sessionId}" abandoned: ${reason}`)
+    }
+    handle.liveBatch.clear()
+    this.publishClear(handle, handle.turn, handle.step, handle.attemptId)
+    this.settled.add(stepKey(handle))
+    this.pruneSettled()
+  }
+
+  /**
+   * Tell the reader one attempt's live row is gone.
+   * @param handle - the follow that owned it.
+   * @param turn - the attempt's turn.
+   * @param step - the attempt's step.
+   * @param attemptId - the attempt, when the settlement names it.
+   */
+  private publishClear(handle: FollowHandle, turn: number, step: number, attemptId?: string): void {
+    this.link?.publishLive({
+      type: 'clear',
+      sessionId: handle.sessionId,
+      ...(attemptId === undefined || attemptId === '' ? {} : { attemptId }),
+      turn,
+      step,
+    })
+  }
+
+  /**
+   * Forget one step's settlement mark.
    * @param sessionId - the Session that owns the step.
    * @param turn - the step's turn.
    * @param step - the step number.
    */
   private forgetStep(sessionId: string, turn: number, step: number): void {
-    for (const kind of STREAM_KINDS) {
-      const key = sessionLiveKey(sessionId, turn, step, kind)
-      this.liveText.delete(key)
-      this.liveDirty.delete(key)
-    }
     this.settled.delete(sessionStepKey(sessionId, turn, step))
-  }
-
-  /**
-   * Tell the reader the open step's text is gone, and refuse any late delta for
-   * it. Only an abandoned attempt needs the frame: nothing follows it, so
-   * nothing else would replace the row.
-   * @param handle - the follow whose attempt was abandoned.
-   */
-  private dropStep(handle: FollowHandle): void {
-    for (const kind of STREAM_KINDS) {
-      const key = liveKey(handle, kind)
-      const previous = this.liveText.get(key)
-      if (previous === undefined) continue
-      this.liveText.set(key, { ...previous, text: '' })
-      this.liveDirty.add(key)
-    }
-    this.settled.add(stepKey(handle))
-    this.pruneSettled()
   }
 
   /**
@@ -1357,9 +1479,21 @@ export class SessionSyncService {
     const data = event.data as Record<string, unknown> | undefined
     const turn = typeof data?.['turn'] === 'number' ? data['turn'] : handle.turn
     const step = typeof data?.['step'] === 'number' ? data['step'] : handle.step
+    // Only the attempt that owns this step may be named: a settlement for a step
+    // that is already behind the live one must not clear the newer row. And only
+    // a live attempt is worth a frame at all — the opening window replays the
+    // whole conversation, so every historical message would otherwise post a
+    // clear for a row nobody is drawing.
+    const mine = handle.liveStarted && handle.turn === turn && handle.step === step
+    if (mine) this.publishClear(handle, turn, step, handle.attemptId)
     this.forgetStep(handle.sessionId, turn, step)
     this.settled.add(sessionStepKey(handle.sessionId, turn, step))
     this.pruneSettled()
+    if (mine) {
+      handle.liveBatch.clear()
+      handle.attemptId = ''
+      handle.liveStarted = false
+    }
   }
 
   /** Bound the settlement marks, newest kept. */
@@ -1373,35 +1507,33 @@ export class SessionSyncService {
 
   /**
    * Adopt the opening frame's live attempt, so a follow that opens in the
-   * middle of a step still shows the text that was streamed before it.
+   * middle of a step still shows what was streamed before it.
    *
-   * The baseline nests its compact runs under `activeAttempt`, and `nextIndex`
-   * says how many deltas they represent: DSH's own Web client expands them and
-   * stops there, and so does this.
+   * The opening carries the attempt's compact runs and `nextIndex`, the number of
+   * dense frames they stand for. Expanding it here — with Tool-call runs and raw
+   * chunks included — is what makes the baseline the same vocabulary as the
+   * frames that follow, so a reader can fold both without a second code path.
    * @param handle - the follow that just opened.
    * @param frame - its opening frame.
    */
   private seedStream(handle: FollowHandle, frame: Record<string, unknown>): void {
-    const baseline = frame['assistantStream'] as Record<string, unknown> | undefined
-    const attempt = baseline?.['activeAttempt'] as Record<string, unknown> | undefined
-    if (attempt === undefined) return
-    if (typeof attempt['attemptId'] === 'string') handle.attemptId = attempt['attemptId']
-    if (typeof attempt['turn'] === 'number') handle.turn = attempt['turn']
-    if (typeof attempt['step'] === 'number') handle.step = attempt['step']
-    const runs = Array.isArray(attempt['stream']) ? attempt['stream'] as readonly Record<string, unknown>[] : []
-    const limit = typeof attempt['nextIndex'] === 'number' ? attempt['nextIndex'] : Number.MAX_SAFE_INTEGER
-    let members = 0
-    for (const run of runs) {
-      const kind = run['type'] === 'reasoning-chunks' ? 'reasoning' : run['type'] === 'text-chunks' ? 'text' : undefined
-      if (kind === undefined) continue
-      const texts = Array.isArray(run['texts']) ? run['texts'] : []
-      for (const part of texts) {
-        if (typeof part !== 'string' || part === '') continue
-        if (members >= limit) return
-        members += 1
-        this.appendStream(handle, kind, part)
-      }
-    }
+    const baseline = jsonObject(frame['assistantStream'])
+    if (baseline === undefined) return
+    const expanded = expandLiveBaseline(baseline['activeAttempt'])
+    if (expanded === undefined) return
+    this.adoptAttempt(handle, expanded.attemptId, expanded.turn, expanded.step, expanded.chunks.length)
+    // The source cursor is where DSH's own index stopped, not where this relay's
+    // synthetic frames end: the next follow frame carries `nextIndex`.
+    handle.sourceIndex = expanded.nextIndex
+    this.link?.publishLive({
+      type: 'baseline',
+      sessionId: handle.sessionId,
+      attemptId: expanded.attemptId,
+      turn: expanded.turn,
+      step: expanded.step,
+      nextIndex: expanded.nextIndex,
+      chunks: expanded.chunks,
+    })
   }
 
   private absorb(handle: FollowHandle, frame: FollowFrame): void {
@@ -1486,15 +1618,42 @@ export class SessionSyncService {
     }
   }
 
-  /** Relay the streaming text accumulated since the last tick. */
+  /** Relay the live chunks accumulated since the last tick. */
   private flushStream(): void {
-    if (this.liveDirty.size === 0) return
-    for (const key of this.liveDirty) {
-      const payload = this.liveText.get(key)
-      if (payload === undefined) continue
-      this.link?.publishStream(payload)
+    const link = this.link
+    if (link === undefined || !link.linked) {
+      // Live rows are presentation, not work: a link that is down costs the
+      // reader the current step's live view, and the follow restart on the next
+      // link-up re-seeds it from a fresh opening baseline.
+      for (const handle of this.follows.values()) handle.liveBatch.clear()
+      return
     }
-    this.liveDirty.clear()
+    for (const handle of this.follows.values()) {
+      if (handle.liveBatch.size === 0) continue
+      this.flushLive(handle)
+    }
+  }
+
+  /**
+   * Hand one attempt's buffered chunks to the link as one dense batch.
+   *
+   * The batch owns the merging and the numbering — see {@link LiveBatch} — so
+   * this only decides whether the link may take it at all.
+   * @param handle - the follow whose buffered frames are sent.
+   */
+  private flushLive(handle: FollowHandle): void {
+    if (handle.liveBroken !== undefined || !handle.liveStarted) {
+      handle.liveBatch.clear()
+      return
+    }
+    const chunks = handle.liveBatch.drain()
+    if (chunks.length === 0) return
+    this.link?.publishLive({
+      type: 'chunks',
+      sessionId: handle.sessionId,
+      attemptId: handle.attemptId,
+      chunks,
+    })
   }
 
   private flush(): void {

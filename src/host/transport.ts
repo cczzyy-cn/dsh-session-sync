@@ -35,8 +35,8 @@ import {
   type RelayedApproval,
   type RelayedQuestion,
   type RelayedQuestionOption,
-  type StreamDeltaPayload,
 } from '../shared/protocol.ts'
+import type { LiveStreamPayload } from '../shared/live-stream.ts'
 import type { SyncHub } from './hub.ts'
 import type { HostLogger } from './dsh.ts'
 
@@ -60,6 +60,15 @@ const FRAME_OUTBOX_LIMIT = 8_000
 
 /** Outbox depth at which a lagging link says so, once per episode. */
 const FRAME_OUTBOX_WARN = 2_000
+
+/**
+ * Live events the ordered queue may hold before the oldest are dropped.
+ *
+ * A tick posts one batch per active Session, so even a handful of running
+ * Sessions stay far below this. Reaching it means the link is stalled; the live
+ * row is the thing to lose, and it is lost honestly — its next `start` replaces it.
+ */
+const LIVE_OUTBOX_LIMIT = 128
 
 /**
  * Every kind the downstream stream may carry *as a command*, and nothing else.
@@ -232,16 +241,36 @@ export async function startSyncServer(options: SyncServerOptions): Promise<SyncS
     if (request.method === 'POST' && url.pathname === '/stream-delta') {
       const body = await readJson(request)
       const sessionId = typeof body?.['sessionId'] === 'string' ? body['sessionId'] : ''
-      const kind = body?.['kind'] === 'reasoning' ? 'reasoning' : body?.['kind'] === 'text' ? 'text' : ''
-      const text = typeof body?.['text'] === 'string' ? body['text'] : ''
-      const turn = typeof body?.['turn'] === 'number' ? body['turn'] : 0
-      const step = typeof body?.['step'] === 'number' ? body['step'] : 0
-      if (sessionId === '' || kind === '') {
-        sendJson(response, 400, { error: 'sessionId and kind are required' })
+      if (sessionId === '') {
+        sendJson(response, 400, { error: 'sessionId is required' })
         return
       }
-      options.hub.publishStream(machineName, { sessionId, turn, step, kind, text })
-      sendJson(response, 200, { ok: true })
+      // Two generations meet at this route: an older origin posts the step's whole
+      // text per kind, and a current one posts the official stream. The legacy
+      // shape is translated here so the browser sees one vocabulary regardless of
+      // which machine is publishing.
+      const kind = body?.['kind']
+      if (kind === 'reasoning' || kind === 'text') {
+        const text = typeof body?.['text'] === 'string' ? body['text'] : ''
+        const turn = typeof body?.['turn'] === 'number' ? body['turn'] : 0
+        const step = typeof body?.['step'] === 'number' ? body['step'] : 0
+        options.hub.publishLegacyStream(machineName, { sessionId, kind, text, turn, step })
+        sendJson(response, 200, { ok: true })
+        return
+      }
+      const type = body?.['type']
+      if (type === 'baseline' || type === 'start' || type === 'chunks' || type === 'end' || type === 'clear') {
+        // The fold walks `chunks`; a payload without the array would throw
+        // inside the mirror rather than answer 400 here.
+        if ((type === 'baseline' || type === 'chunks') && !Array.isArray(body?.['chunks'])) {
+          sendJson(response, 400, { error: 'chunks must be an array' })
+          return
+        }
+        options.hub.publishStream(machineName, body as unknown as LiveStreamPayload)
+        sendJson(response, 200, { ok: true })
+        return
+      }
+      sendJson(response, 400, { error: 'a live event type or a legacy kind is required' })
       return
     }
 
@@ -673,6 +702,18 @@ export class OriginLink {
   private pumping = false
   /** Whether the depth has been reported for the current episode. */
   private outboxWarned = false
+  /**
+   * Live events waiting to be posted, in order.
+   *
+   * Unordered posts cannot carry a dense chunk run: a batch that overtakes its
+   * predecessor is a gap, and a gap is a dropped attempt. So these are posted one
+   * at a time, oldest first. They are still transient — a refused post is dropped
+   * rather than retried, because the frame after it is newer and the attempt's
+   * next `start` is what a reader will see either way.
+   */
+  private readonly liveOutbox: LiveStreamPayload[] = []
+  /** Whether the live drain loop is running, so only one posts at a time. */
+  private livePumping = false
   /** What the last published batch looked like, as the wire will see it. */
   private lastBatch: OriginBatchReport | undefined
   /**
@@ -726,6 +767,9 @@ export class OriginLink {
     // post history the Session may no longer even publish.
     this.outbox.length = 0
     this.outboxEvents = 0
+    // Live frames belong to attempts this link was watching; a re-follow opens a
+    // new one from its own baseline, so nothing here outlives the link either.
+    this.liveOutbox.length = 0
     this.setLinked(false)
   }
 
@@ -847,11 +891,37 @@ export class OriginLink {
   }
 
   /**
-   * Publish one step's streaming text.
-   * @param payload - the step, the kind, and the whole text so far.
+   * Publish one official Assistant-stream event.
+   *
+   * Queued rather than posted immediately: `start` before `chunks` before `end`
+   * is the one ordering the receiver's fold depends on, and two concurrent
+   * `fetch` calls do not promise it. A frame dropped by a refused post is not
+   * retried — live rows are presentation, and the next attempt starts a new run.
+   * @param payload - the event and the Session it belongs to.
    */
-  publishStream(payload: StreamDeltaPayload): void {
-    void this.post('/stream-delta', { ...payload, machineName: this.options.machineName() })
+  publishLive(payload: LiveStreamPayload): void {
+    if (!this.isLinked) return
+    this.liveOutbox.push(payload)
+    if (this.liveOutbox.length > LIVE_OUTBOX_LIMIT) this.liveOutbox.splice(0, this.liveOutbox.length - LIVE_OUTBOX_LIMIT)
+    this.pumpLive()
+  }
+
+  /** Send queued live events, oldest first, until the queue is empty. */
+  private pumpLive(): void {
+    if (this.livePumping) return
+    this.livePumping = true
+    void (async () => {
+      try {
+        for (;;) {
+          const payload = this.liveOutbox[0]
+          if (payload === undefined) break
+          await this.post('/stream-delta', payload)
+          this.liveOutbox.shift()
+        }
+      } finally {
+        this.livePumping = false
+      }
+    })()
   }
 
   /**
@@ -1108,6 +1178,10 @@ export class OriginLink {
     if (this.isLinked === linked && error === undefined) return
     const wasLinked = this.isLinked
     this.isLinked = linked
+    // A re-follow re-seeds every live attempt from a fresh opening baseline, so
+    // queued frames from before the drop are not just stale: applied after that
+    // baseline they would be an index gap, and the receiver would drop the row.
+    if (!linked) this.liveOutbox.length = 0
     this.options.onStatus(error === undefined ? { linked } : { linked, error })
     // A fresh token is what a refused batch needed, so the queue is retried the
     // moment the link is back rather than at the next flush.

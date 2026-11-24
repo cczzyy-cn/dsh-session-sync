@@ -35,6 +35,11 @@ import {
   type SyncState,
   type SyncStreamFrame,
 } from '../shared/protocol.ts'
+import {
+  LiveAttemptFold,
+  type LiveChunkFrame,
+  type LiveStreamPayload,
+} from '../shared/live-stream.ts'
 
 /** Upper bound on the events retained per mirrored Session. */
 const EVENT_LIMIT = 4_000
@@ -301,6 +306,40 @@ interface MachineRecord {
   readonly approvals: Map<string, RelayedApprovalView>
 }
 
+/** One live Assistant attempt the mirror holds for readers that arrive late. */
+interface LiveEntry {
+  readonly machineName: string
+  readonly sessionId: string
+  readonly fold: LiveAttemptFold
+  /**
+   * When this attempt was last touched, so an origin that died mid-step does not
+   * leave a live row in memory forever.
+   */
+  touchedAt: number
+  /**
+   * Whole text already relayed per kind, present only for a legacy origin.
+   *
+   * The legacy payload states the whole text so far instead of a delta, so the
+   * server is the one that computes the difference — and that difference becomes
+   * the same official chunk a current origin would have sent.
+   */
+  legacy?: { reasoning: string; text: string }
+}
+
+/**
+ * How long an attempt may go without a frame before it is dropped.
+ *
+ * A live attempt emits chunks continuously; minutes of silence mean the origin
+ * is gone (or the Session was replaced), and the durable settlement that would
+ * normally clear it is never coming.
+ */
+const LIVE_STALE_MS = 5 * 60_000
+
+/** The map key of one mirrored Session's live attempt. */
+function liveKeyOf(machineName: string, sessionId: string): string {
+  return `${machineName}|${sessionId}`
+}
+
 /** The server-role mirror and its subscribers. */
 export class SyncHub {
   private readonly records = new Map<string, MachineRecord>()
@@ -308,6 +347,15 @@ export class SyncHub {
   private readonly gapAsked = new Map<string, number>()
   /** Sessions whose history was last asked for, and when. */
   private readonly olderAsked = new Map<string, number>()
+  /**
+   * The official Assistant attempt each mirrored Session is showing.
+   *
+   * Kept so a browser that opens the console in the middle of a step gets a
+   * baseline instead of a dense-index gap, and so a legacy whole-text origin can
+   * be folded into the same vocabulary. Bounded by the number of Sessions that
+   * are running *right now*, which is what makes an unbounded map acceptable.
+   */
+  private readonly lives = new Map<string, LiveEntry>()
 
   /**
    * @param notify - receives every frame the mirror produces. The owner decides
@@ -410,6 +458,9 @@ export class SyncHub {
       // The Session is gone, so its episode is over: a later publish of the same
       // id starts one from scratch rather than inheriting a spent retry window.
       this.gapAsked.delete(`${record.machineName}|${sessionId}`)
+      // And a live row for a Session that is no longer published is nothing a
+      // reader could open again: the next publish starts its own attempt.
+      this.lives.delete(liveKeyOf(record.machineName, sessionId))
     }
     // The index is where an origin states its extent, so it can be the only
     // thing that reveals an empty mirror. Detect here, and let the periodic
@@ -419,24 +470,239 @@ export class SyncHub {
   }
 
   /**
-   * Relay one streaming update. Nothing is stored: streaming is presentation,
-   * and the durable events that follow are what the mirror keeps.
+   * Relay one official Assistant-stream event, keeping the attempt for late readers.
+   *
+   * The fold is the server's only copy of the live view, and it exists for two
+   * jobs the origin cannot do: re-state an attempt in flight for a browser that
+   * connects now, and notice a hole in what arrived. It holds the visible text,
+   * not the frame list, so its size follows the answer rather than the delta rate.
    * @param machineName - the publishing machine.
-   * @param payload - the step's whole text so far for one kind.
+   * @param payload - one baseline, start, chunk batch, end, or clear.
    */
-  publishStream(machineName: string, payload: StreamDeltaPayload): void {
+  publishStream(machineName: string, payload: LiveStreamPayload): void {
     const record = this.records.get(machineName)
     if (record === undefined) return
     record.lastSeen = Date.now()
+    const key = liveKeyOf(machineName, payload.sessionId)
+    switch (payload.type) {
+      case 'baseline': {
+        const fold = new LiveAttemptFold({
+          attemptId: payload.attemptId,
+          turn: payload.turn,
+          step: payload.step,
+        })
+        fold.seed(payload)
+        this.lives.set(key, { machineName, sessionId: payload.sessionId, fold, touchedAt: Date.now() })
+        break
+      }
+      case 'start': {
+        this.lives.set(key, {
+          machineName,
+          sessionId: payload.sessionId,
+          fold: new LiveAttemptFold({
+            attemptId: payload.attemptId,
+            turn: payload.turn,
+            step: payload.step,
+          }),
+          touchedAt: Date.now(),
+        })
+        break
+      }
+      case 'chunks': {
+        const entry = this.lives.get(key)
+        // A batch whose attempt the mirror never saw a start for is not a chunk
+        // sequence it can fold; dropping it is the same rule the browser applies.
+        if (entry === undefined || entry.fold.attemptId !== payload.attemptId) return
+        entry.touchedAt = Date.now()
+        for (const frame of payload.chunks) {
+          if (entry.fold.apply(frame)) continue
+          // A hole in what arrived cannot be repaired here: the origin is the
+          // only holder of the missing frame. The row goes, and the next `start`
+          // is what a reader sees next.
+          this.lives.delete(key)
+          this.broadcast({
+            type: 'stream',
+            machineName,
+            sessionId: payload.sessionId,
+            live: {
+              type: 'clear',
+              sessionId: payload.sessionId,
+              attemptId: payload.attemptId,
+              turn: entry.fold.turn,
+              step: entry.fold.step,
+            },
+          })
+          return
+        }
+        break
+      }
+      case 'end': {
+        const entry = this.lives.get(key)
+        if (entry !== undefined && entry.fold.attemptId === payload.attemptId && payload.outcome === 'abandoned') {
+          this.lives.delete(key)
+        }
+        break
+      }
+      case 'clear': {
+        const entry = this.lives.get(key)
+        if (entry === undefined) break
+        if (payload.turn !== entry.fold.turn || payload.step !== entry.fold.step) break
+        if (payload.attemptId !== undefined && payload.attemptId !== ''
+          && payload.attemptId !== entry.fold.attemptId) break
+        this.lives.delete(key)
+        break
+      }
+    }
+    this.broadcast({ type: 'stream', machineName, sessionId: payload.sessionId, live: payload })
+  }
+
+  /**
+   * Relay a whole-text update from an older origin in the same vocabulary.
+   *
+   * The server, not the browser, is where this translation belongs: it is the
+   * one side that can keep the text it has already shown, so the difference it
+   * computes is exactly the delta a current origin would have sent. A text that
+   * is not an extension of what was shown restarts the block — the same rule the
+   * official fold applies to a type change — and a blank text drops the attempt.
+   * @param machineName - the publishing machine.
+   * @param payload - the step, the kind, and the whole text so far.
+   */
+  publishLegacyStream(machineName: string, payload: StreamDeltaPayload): void {
+    const record = this.records.get(machineName)
+    if (record === undefined) return
+    record.lastSeen = Date.now()
+    const key = liveKeyOf(machineName, payload.sessionId)
+    const attemptId = `legacy:${String(payload.turn)}:${String(payload.step)}`
+    const sessionId = payload.sessionId
+    let entry = this.lives.get(key)
+    if (entry !== undefined && entry.fold.attemptId !== attemptId) {
+      this.lives.delete(key)
+      this.broadcast({
+        type: 'stream',
+        machineName,
+        sessionId,
+        live: { type: 'clear', sessionId, attemptId: entry.fold.attemptId, turn: entry.fold.turn, step: entry.fold.step },
+      })
+      entry = undefined
+    }
+    if (payload.text === '') {
+      if (entry !== undefined) {
+        this.lives.delete(key)
+        this.broadcast({
+          type: 'stream',
+          machineName,
+          sessionId,
+          live: { type: 'clear', sessionId, attemptId, turn: payload.turn, step: payload.step },
+        })
+      }
+      return
+    }
+    if (entry === undefined) {
+      entry = {
+        machineName,
+        sessionId,
+        fold: new LiveAttemptFold({ attemptId, turn: payload.turn, step: payload.step }),
+        touchedAt: Date.now(),
+        legacy: { reasoning: '', text: '' },
+      }
+      this.lives.set(key, entry)
+      this.broadcast({
+        type: 'stream',
+        machineName,
+        sessionId,
+        live: { type: 'start', sessionId, attemptId, turn: payload.turn, step: payload.step, startedAfterSeq: -1 },
+      })
+    }
+    const legacy = entry.legacy ?? { reasoning: '', text: '' }
+    const shown = payload.kind === 'reasoning' ? legacy.reasoning : legacy.text
+    let delta = payload.text
+    let base = legacy
+    if (!payload.text.startsWith(shown)) {
+      // The text was replaced rather than extended: the row this attempt had is
+      // no longer what the origin means, so it is dropped and re-stated from the
+      // new text instead of being appended to.
+      this.lives.delete(key)
+      this.broadcast({
+        type: 'stream',
+        machineName,
+        sessionId,
+        live: { type: 'clear', sessionId, attemptId, turn: payload.turn, step: payload.step },
+      })
+      const restarted: LiveEntry = {
+        machineName,
+        sessionId,
+        fold: new LiveAttemptFold({ attemptId, turn: payload.turn, step: payload.step }),
+        touchedAt: Date.now(),
+        legacy: { reasoning: '', text: '' },
+      }
+      this.lives.set(key, restarted)
+      this.broadcast({
+        type: 'stream',
+        machineName,
+        sessionId,
+        live: { type: 'start', sessionId, attemptId, turn: payload.turn, step: payload.step, startedAfterSeq: -1 },
+      })
+      entry = restarted
+      delta = payload.text
+      // Nothing the old row accumulated describes this new text.
+      base = { reasoning: '', text: '' }
+    } else {
+      delta = payload.text.slice(shown.length)
+    }
+    entry.touchedAt = Date.now()
+    entry.legacy = { ...base, [payload.kind]: payload.text }
+    if (delta === '') return
+    const frame: LiveChunkFrame = {
+      index: entry.fold.nextIndex,
+      time: Date.now(),
+      // One block per kind: the official stream gives reasoning and answer
+      // separate block indexes, so both stay on screen while the answer starts.
+      chunk: {
+        type: payload.kind === 'reasoning' ? 'reasoning-delta' : 'text-delta',
+        index: payload.kind === 'reasoning' ? 0 : 1,
+        text: delta,
+      },
+    }
+    entry.fold.apply(frame)
     this.broadcast({
       type: 'stream',
       machineName,
-      sessionId: payload.sessionId,
-      turn: payload.turn,
-      step: payload.step,
-      kind: payload.kind,
-      text: payload.text,
+      sessionId,
+      live: { type: 'chunks', sessionId, attemptId, chunks: [frame] },
     })
+  }
+
+  /**
+   * The live attempt one Session is showing, as a baseline for a reader opening it.
+   *
+   * Opening a Session is not a browser attach: the page has been listening all
+   * along, so nothing else would hand it the attempt already in flight. This is
+   * what the transcript read carries back with the window.
+   * @param machineName - the publishing machine.
+   * @param sessionId - the Session being opened.
+   * @returns the baseline, or undefined when no attempt is live.
+   */
+  liveOf(machineName: string, sessionId: string): LiveStreamPayload | undefined {
+    const entry = this.lives.get(liveKeyOf(machineName, sessionId))
+    if (entry === undefined) return undefined
+    return { type: 'baseline', sessionId, ...entry.fold.baseline() }
+  }
+
+  /**
+   * The live attempts in flight, as baselines for a browser that just attached.
+   *
+   * Sent right after the complete state, which is the other half of "what a page
+   * that just loaded should see": state carries the durable mirror, this carries
+   * the step that has not settled yet.
+   */
+  liveFrames(): SyncStreamFrame[] {
+    const frames: SyncStreamFrame[] = []
+    for (const entry of this.lives.values()) {
+      const live = this.liveOf(entry.machineName, entry.sessionId)
+      if (live === undefined) continue
+      frames.push({ type: 'stream', machineName: entry.machineName, sessionId: entry.sessionId, live })
+    }
+    return frames
   }
 
   /**
@@ -503,7 +769,46 @@ export class SyncHub {
       sessionId: payload.sessionId,
       events: fresh,
     })
+    this.retireLive(record, payload.sessionId, fresh)
     this.reportGap(record, session)
+  }
+
+  /**
+   * Drop a live attempt that its own durable settlement has just replaced.
+   *
+   * The origin also posts a `clear`; this is the repair for when that frame and
+   * the settlement lose their race, and it is what a browser that connected
+   * between them would otherwise keep drawing.
+   * @param record - the machine that published the settlement.
+   * @param sessionId - the Session it belongs to.
+   * @param events - the fresh durable events just accepted.
+   */
+  private retireLive(record: MachineRecord, sessionId: string, events: readonly MirrorEvent[]): void {
+    const key = liveKeyOf(record.machineName, sessionId)
+    const entry = this.lives.get(key)
+    if (entry === undefined) return
+    const settled = events.some(event => {
+      if (event.type !== 'assistant/message' && event.type !== 'assistant/attempt') return false
+      const data = event.data as Record<string, unknown> | undefined
+      const turn = data?.['turn']
+      const step = data?.['step']
+      return (typeof turn !== 'number' || turn === entry.fold.turn)
+        && (typeof step !== 'number' || step === entry.fold.step)
+    })
+    if (!settled) return
+    this.lives.delete(key)
+    this.broadcast({
+      type: 'stream',
+      machineName: record.machineName,
+      sessionId,
+      live: {
+        type: 'clear',
+        sessionId,
+        attemptId: entry.fold.attemptId,
+        turn: entry.fold.turn,
+        step: entry.fold.step,
+      },
+    })
   }
 
   /**
@@ -517,6 +822,25 @@ export class SyncHub {
    * and nothing at all while the mirror is whole.
    */
   sweepGaps(): void {
+    // A live row whose origin died mid-step has no settlement coming, so it is
+    // aged out here rather than held for the life of the process.
+    const now = Date.now()
+    for (const [key, entry] of this.lives) {
+      if (now - entry.touchedAt < LIVE_STALE_MS) continue
+      this.lives.delete(key)
+      this.broadcast({
+        type: 'stream',
+        machineName: entry.machineName,
+        sessionId: entry.sessionId,
+        live: {
+          type: 'clear',
+          sessionId: entry.sessionId,
+          attemptId: entry.fold.attemptId,
+          turn: entry.fold.turn,
+          step: entry.fold.step,
+        },
+      })
+    }
     for (const record of this.records.values()) {
       for (const session of record.sessions.values()) {
         this.reportGap(record, session)
