@@ -8,9 +8,9 @@
 | 项 | 值 |
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
-| 版本 | **`0.10.55`**（实时输出改走官方 assistant 流：`start`/`chunk`/`end` 全量转达 + baseline；工作树，未打 tag、未部署） |
-| 部署面 | **2026-09-30 晚**：服务器与本机两个 profile（`web` / `desktop`）都曾钉到 `#v0.10.32`，两端产物 sha256 逐字节相同；服务器 unit 已重启 ⇒ 跑 0.10.32。**0.10.33/0.10.34 的落地读数见 §2 那两节**。实时读数用 `scripts/deploy-status.ps1` 取，不要看这一行 |
-| 服务器（远端） | **已上线 `0.10.45`**（依赖 `#v0.10.45`）· DSH **`0.2.2-rc.5`**（2026-11-19 升级，unit 备份 `.bak-20261119-141436`）· unit `dsh-web.service` active · 3080（绑 `127.0.0.1`）与 8791 都在听 |
+| 版本 | **`0.10.55`**（实时输出改走官方 assistant 流；控制台接管镜像页贴底/切换；assembler 拒绝防护）· tag `v0.10.55` = `f0a6567`，已推 origin |
+| 部署面 | **2026-11-26 15:46 UTC**：服务器已上 0.10.55（重启 `dsh-web.service`，3080 与 8792 在听，客户端 sha256 `3215d65e…`）；本机 `desktop` profile 仍钉 `#v0.10.54`，**要重启 App 才会加载 0.10.55**。实时读数用 `scripts/deploy-status.ps1` |
+| 服务器（远端） | **已上线 `0.10.55`**（依赖 `#v0.10.55`）· DSH **`0.2.2-rc.5`**（2026-11-19 升级，unit 备份 `.bak-20261119-141436`）· unit `dsh-web.service` active · 3080（绑 `127.0.0.1`）与 8791（nginx→8792）都在听 |
 | 本机宿主 | **这个 GUI 跑的是打包版** `DeepSeek Harness.exe`（`resources\app.asar\dsh`，DSH 0.2.0-rc.1），**不是源码 checkout**；它加载的 profile 是 `~/.dsh/profiles/desktop`。`profiles/web` 与 `profiles/desktop` 两个 profile 里都装着本插件 |
 | 本机 DSH checkout | **此刻不存在**：`C:\Users\14339\Desktop\git\deepseek-harness` 已不在盘上（2026-11-19 实测 `Test-Path` = False），`node_modules` 也不在 ⇒ 构建、`typecheck`、`release.ps1`、`deploy-status -VerifyBuild` 都会拒绝；只有编码门禁与纯 node 测试能跑。要改产物得先把 checkout 与依赖装回来 |
 | 设置层真源 | **profile 的 `cordis.patch.yml`**（不是 `~/.dsh/settings.yaml`）。实测：迁移成功，`~/.dsh/dsh-session-sync.json` 已归档为 `dsh-session-sync.json.imported-2026-09-30T12-45-17-595Z.json`，值出现在 `profiles/desktop/cordis.patch.yml` 的 `session-sync` 行里 |
@@ -175,7 +175,15 @@ durable 与 live 两条队列都可能让它看到反序。该异常不是局部
 （`replace` / `append` / `prepend` / `settleAssistant`）都经过 [feedSafely](src/client/official-session.tsx:555)，
 被拒绝的那一条丢弃、只记一次 warning；**一行缺口好过整块面板停摆**。这条是防御性修复：
 线上开同一会话 15 秒没有复现出该异常，所以没有"修复前失败 → 修复后通过"的对照。
-**本版未部署**，真机复验要等安装重启。
+**部署与线上复验（2026-11-26 15:46 UTC）**：`main` 与 tag `v0.10.55` 已推
+origin；服务器 profile 的依赖改为 `#v0.10.55`（`pnpm add`，package.json / pnpm-lock
+备份 `.bak-20261126-154534`），`systemctl restart dsh-web.service` 后 active，3080 与
+8792 在听，安装产物 `client.js` sha256 `3215d65e…` 与工作树一致。无头 Chrome 打开线上
+控制台复验：客户端已含 `paneToBottom`；打开会话 `top = floor = 10898`；上滚出现按钮、
+点击回底；切换会话 `top = floor = 2588`；打开**运行中**会话（服务器 0.10.55 + 桌面源站
+0.10.54）`top = floor = 1992`，无 console error——旧源站的整文本流由服务器的 legacy 差分成
+官方帧，混合升级工作。重启后镜像显示 `缺 2258 条`，是源站重连后只补了 tail 窗口，hub 的
+回填在继续。本机 `desktop` profile 仍是 0.10.54，需重启 App 才加载本版。
 
 **验证**：`npm test` = **215 通过 / 0 失败**（54 suites，10.8 s，2026-11-25）；其中“real link”
 一例起真监听者 + 真 `OriginLink`，断言 `start → chunks → baseline` 与 settlement 清行。
