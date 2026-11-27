@@ -224,6 +224,16 @@ async function dispatch(
     return
   }
 
+  if (method === 'GET' && route === '/live') {
+    // The transient attempt alone, for a reader whose window came from the
+    // console's own cache: the window is current, but the live row is not in it.
+    const machineName = url.searchParams.get('machine') ?? ''
+    const sessionId = url.searchParams.get('session') ?? ''
+    const live = service.live(machineName, sessionId)
+    sendJson(response, 200, live === undefined ? {} : { live })
+    return
+  }
+
   if (method === 'POST' && route === '/command') {
     const body = await readJsonBody(request)
     if (body === undefined) {

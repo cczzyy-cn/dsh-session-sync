@@ -66,10 +66,37 @@ const OLDER_WAIT_MS = 3_000
  */
 const EARLY_COMMAND_LIMIT = 16
 
+/**
+ * How many Session windows this page keeps for instant switching.
+ *
+ * A window is a few hundred events; the list is what a reader cycles through, so
+ * a handful of entries is enough to make back-and-forth switching free. The cap
+ * keeps a long browsing session from pinning every window's event objects.
+ */
+const TRANSCRIPT_CACHE_LIMIT = 8
+
 /** One remote Session the user has open. */
 export interface OpenSession {
   machineName: string
   sessionId: string
+}
+
+/** One Session window kept for a switch back. */
+interface CachedTranscript {
+  transcript: MirrorTranscript
+  /**
+   * Whether the page's event stream has been connected continuously since this
+   * window was taken. A reconnect can miss events, so a stale window is fetched
+   * again instead of being shown as current.
+   */
+  fresh: boolean
+  /** Last open time, so the cap evicts the least recently used window. */
+  usedAt: number
+}
+
+/** The cache key of one Session window. */
+function transcriptKeyOf(open: OpenSession): string {
+  return `${open.machineName}\u0000${open.sessionId}`
 }
 
 /**
@@ -291,6 +318,8 @@ export class SyncClient {
    * by a `clear` and by opening another Session.
    */
   private liveFold: LiveAttemptFold | undefined
+  /** Session windows kept for a switch back, evicted least-recently-used. */
+  private readonly cachedTranscripts = new Map<string, CachedTranscript>()
 
   constructor() {
     this.store = createSnapshotStore<SyncClientSnapshot>({
@@ -462,12 +491,79 @@ export class SyncClient {
   }
 
   /**
+   * Keep one Session's window for a switch back, evicting the least recently used.
+   * @param key - the Session's cache key.
+   * @param transcript - its window as just read.
+   */
+  private rememberTranscript(key: string, transcript: MirrorTranscript): void {
+    this.cachedTranscripts.delete(key)
+    this.cachedTranscripts.set(key, { transcript, fresh: true, usedAt: Date.now() })
+    while (this.cachedTranscripts.size > TRANSCRIPT_CACHE_LIMIT) {
+      let oldestKey: string | undefined
+      let oldest = Number.POSITIVE_INFINITY
+      for (const [candidate, entry] of this.cachedTranscripts) {
+        if (entry.usedAt < oldest) {
+          oldest = entry.usedAt
+          oldestKey = candidate
+        }
+      }
+      if (oldestKey === undefined || oldestKey === key) break
+      this.cachedTranscripts.delete(oldestKey)
+    }
+  }
+
+  /**
+   * Whether the machine currently reports this Session mid-turn.
+   * @param open - the Session being opened.
+   * @returns true when a live attempt may exist.
+   */
+  private runningOf(open: OpenSession): boolean {
+    const machine = this.store.getSnapshot().state.machines
+      .find(candidate => candidate.machineName === open.machineName)
+    return machine?.sessions.find(session => session.sessionId === open.sessionId)?.running ?? false
+  }
+
+  /**
+   * Fetch just the transient live attempt for a Session whose window came from cache.
+   *
+   * The window is a few hundred events; the live row is not in it. This keeps a
+   * switch back to a running Session from losing the current step without
+   * re-reading the window. Best effort: a failure leaves no live row, which is
+   * the same state as a step that has not started.
+   * @param open - the Session whose live attempt is wanted.
+   */
+  private async refreshLive(open: OpenSession): Promise<void> {
+    try {
+      const { live } = await getJson<{ live?: LiveStreamPayload }>(
+        `${ROUTE_PREFIX}/live?machine=${encodeURIComponent(open.machineName)}`
+        + `&session=${encodeURIComponent(open.sessionId)}`,
+      )
+      const current = this.store.getSnapshot().open
+      if (current?.machineName !== open.machineName || current.sessionId !== open.sessionId) return
+      if (live !== undefined) {
+        this.consume({ type: 'stream', machineName: open.machineName, sessionId: open.sessionId, live })
+      }
+    } catch {
+      // The durable window is already on screen; a missing live row is the
+      // ordinary state of a Session between steps.
+    }
+  }
+
+  /** Mark every kept window stale, because the event stream may have missed frames. */
+  private markTranscriptsStale(): void {
+    for (const entry of this.cachedTranscripts.values()) entry.fresh = false
+  }
+
+  /**
    * Open one mirrored Session in the centre panel.
    * @param machineName - owning machine.
    * @param sessionId - published Session.
    */
   async openSession(machineName: string, sessionId: string): Promise<void> {
     const open: OpenSession = { machineName, sessionId }
+    const key = transcriptKeyOf(open)
+    const cached = this.cachedTranscripts.get(key)
+    const hit = cached !== undefined && cached.fresh ? cached : undefined
     // Told before the store publishes the opening, for the reason `observe`
     // gives: a Session switch releases the old retention, and no render may see
     // a reference that has already been released.
@@ -476,8 +572,10 @@ export class SyncClient {
     this.liveFold = undefined
     this.update({
       open,
-      transcript: undefined,
-      loadingTranscript: true,
+      // A window this page has already read is shown at once; the event stream
+      // has kept it current, so switching back is not a new read.
+      transcript: hit?.transcript,
+      loadingTranscript: hit === undefined,
       loadingOlder: false,
       // Live text belongs to the Session that streamed it. Whatever the last
       // one left behind must not read as the new one's current step.
@@ -486,10 +584,19 @@ export class SyncClient {
       // Session's composer must not inherit the previous one's outcome.
       delivery: undefined,
     })
+    if (hit !== undefined) {
+      hit.usedAt = Date.now()
+      this.notify(observer => { observer.loaded(open, hit.transcript) })
+      // The window is current; only the transient live row needs a fresh
+      // baseline, and only while the Session is actually mid-turn.
+      if (this.runningOf(open)) void this.refreshLive(open)
+      return
+    }
     try {
       const { transcript, live } = await getJson<{ transcript: MirrorTranscript; live?: LiveStreamPayload }>(
         `${ROUTE_PREFIX}/transcript?machine=${encodeURIComponent(machineName)}&session=${encodeURIComponent(sessionId)}`,
       )
+      this.rememberTranscript(key, transcript)
       this.notify(observer => { observer.loaded(open, transcript) })
       this.update({ transcript, loadingTranscript: false, error: undefined })
       // After the window, never before: the baseline is drawn on top of the
@@ -577,14 +684,14 @@ export class SyncClient {
         return
       }
       if (older.events.length > 0) {
-        this.update({
-          transcript: {
-            ...held,
-            events: mergeEvents(held.events, older.events),
-            hasMore: older.hasMore,
-          },
-          loadingOlder: false,
-        })
+        const merged = {
+          ...held,
+          events: mergeEvents(held.events, older.events),
+          hasMore: older.hasMore,
+        }
+        this.update({ transcript: merged, loadingOlder: false })
+        const cached = this.cachedTranscripts.get(transcriptKeyOf(open))
+        if (cached !== undefined) cached.transcript = merged
         // The consumer is told the page itself, not the merged list: it holds its
         // own window, and a page is the part of it that goes before.
         this.notify(observer => { observer.older(open, older) })
@@ -600,7 +707,10 @@ export class SyncClient {
         return
       }
       if (!older.hasMore) {
-        this.update({ transcript: { ...held, hasMore: false }, loadingOlder: false })
+        const merged = { ...held, hasMore: false }
+        this.update({ transcript: merged, loadingOlder: false })
+        const cached = this.cachedTranscripts.get(transcriptKeyOf(open))
+        if (cached !== undefined) cached.transcript = merged
         return
       }
       await new Promise(resolve => { setTimeout(resolve, OLDER_WAIT_MS) })
@@ -733,10 +843,14 @@ export class SyncClient {
         stream: 'open',
         ...(reset ? { mirrorResets: snapshot.mirrorResets + 1 } : {}),
       })
+      // A reconnect may have missed event frames; every kept window must be
+      // re-read rather than presented as current.
+      if (!first) this.markTranscriptsStale()
       if (!first) void this.refresh()
     }
     source.onerror = () => {
       this.update({ stream: 'connecting' })
+      this.markTranscriptsStale()
     }
     source.onmessage = (event: MessageEvent<string>) => {
       let frame: SyncStreamFrame
@@ -836,13 +950,39 @@ export class SyncClient {
       // A machine or Session appearing or disappearing invalidates the current
       // local list too: the rows carry switch state that may have moved.
       if (previous.published !== state.published) void this.refreshSessions()
+      // A kept window for a Session that is no longer published cannot be opened
+      // again, so it is not worth its memory.
+      const published = new Set<string>()
+      for (const machine of state.machines) {
+        for (const session of machine.sessions) {
+          published.add(transcriptKeyOf({ machineName: machine.machineName, sessionId: session.sessionId }))
+        }
+      }
+      for (const key of [...this.cachedTranscripts.keys()]) {
+        if (!published.has(key)) this.cachedTranscripts.delete(key)
+      }
       return
     }
     if (frame.type === 'events') {
       const snapshot = this.store.getSnapshot()
       const open = snapshot.open
-      if (open === undefined) return
-      if (open.machineName !== frame.machineName || open.sessionId !== frame.sessionId) return
+      const key = transcriptKeyOf({ machineName: frame.machineName, sessionId: frame.sessionId })
+      const cached = this.cachedTranscripts.get(key)
+      const isOpen = open !== undefined
+        && open.machineName === frame.machineName
+        && open.sessionId === frame.sessionId
+      if (!isOpen) {
+        // Keep a window this page has already read current while the reader is
+        // looking at another Session. That is what makes switching back a read
+        // of memory instead of a new request.
+        if (cached !== undefined) {
+          cached.transcript = {
+            ...cached.transcript,
+            events: mergeEvents(cached.transcript.events, frame.events),
+          }
+        }
+        return
+      }
       const transcript = snapshot.transcript
       if (transcript === undefined) return
       // The observer is told the frame as well as the store: a settlement has
@@ -851,11 +991,13 @@ export class SyncClient {
       this.notify(observer => { observer.appended(open, frame) })
       const settled = frame.events.some(isSettlement)
       if (settled) this.liveFold = undefined
+      const merged = { ...transcript, events: mergeEvents(transcript.events, frame.events) }
       this.update({
-        transcript: { ...transcript, events: mergeEvents(transcript.events, frame.events) },
+        transcript: merged,
         // A durable settlement ends the streaming step it belongs to.
         ...(settled ? { live: noLive() } : {}),
       })
+      if (cached !== undefined) cached.transcript = merged
       return
     }
     if (frame.type === 'stream') {

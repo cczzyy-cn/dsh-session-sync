@@ -8,7 +8,7 @@
 | 项 | 值 |
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
-| 版本 | **`0.10.57`**（重复 `step/start` 投递前过滤；含 0.10.55 的实时流/贴底/切换/feed 防护）· tag `v0.10.57` = `21e7b59`，已推 origin |
+| 版本 | **`0.10.58`**（切换会话复用已读窗口，不再重拉 transcript；含 0.10.55-0.10.57 的实时流/贴底/切换/feed 防护） |
 | 部署面 | **2026-11-27 12:42 UTC**：服务器已上 0.10.57（重启 `dsh-web.service`，3080 与 8792 在听，客户端 sha256 `8b634068…`）；本机 `desktop` profile 仍钉 `#v0.10.54`，**要重启 App 才会加载新版**。实时读数用 `scripts/deploy-status.ps1` |
 | 服务器（远端） | **已上线 `0.10.57`**（依赖 `#v0.10.57`）· DSH **`0.2.2-rc.5`**（2026-11-19 升级，unit 备份 `.bak-20261119-141436`）· unit `dsh-web.service` active · 3080（绑 `127.0.0.1`）与 8791（nginx→8792）都在听 |
 | 本机宿主 | **这个 GUI 跑的是打包版** `DeepSeek Harness.exe`（`resources\app.asar\dsh`，DSH 0.2.0-rc.1），**不是源码 checkout**；它加载的 profile 是 `~/.dsh/profiles/desktop`。`profiles/web` 与 `profiles/desktop` 两个 profile 里都装着本插件 |
@@ -16,7 +16,7 @@
 | 设置层真源 | **profile 的 `cordis.patch.yml`**（不是 `~/.dsh/settings.yaml`）。实测：迁移成功，`~/.dsh/dsh-session-sync.json` 已归档为 `dsh-session-sync.json.imported-2026-09-30T12-45-17-595Z.json`，值出现在 `profiles/desktop/cordis.patch.yml` 的 `session-sync` 行里 |
 | 测试 | **222 例：222 通过 / 0 失败**（55 suites，约 11 秒，`node --test --experimental-transform-types --test-concurrency=1 "tests/*.spec.ts"`，2026-11-25 实跑） |
 | 真机验证 | 仍停在 0.10.5 那批：提问竞速（0.10.4）、控制台**放行**与**拒绝**审批（0.10.5）见 §2。**0.10.29–0.10.31 无真机验证** |
-| 产物 | `lib/index.js` **284,025 B**（sha256 `9fa750d630ca…`）· `client/client.js` **425,650 B**（sha256 `8b6340683e13…`）；2026-11-26 实跑 `npm run build` |
+| 产物 | `lib/index.js` **284,317 B**（sha256 `1d8dbaa4f2ef…`）· `client/client.js` **430,244 B**（sha256 `16006bdbaefd…`）；2026-11-26 实跑 `npm run build` |
 | 编码门禁 | `node scripts/check-encoding.mjs` **clean（70 文件）**（2026-11-25 实跑） |
 | 类型 | `npm run typecheck` = 67 文件 / 752 诊断 / **undeclared 0 · relative imports 全解析 · 类型不匹配 0**（752 全是无 bundler 解析时的 JSX/上游项） |
 | 控制台路线 | **`scope`**：服务器上 `dsh-api-session-controller/lib/client.js` 命中 `retainAgentScope` ⇒ 特性探测确定走它；`adopt` 在任何已发布构建里都不存在（该路线已从代码删除） |
@@ -95,6 +95,28 @@
 
 > 2026-09-25 及以前的推进日志（从"② 的答案"一路到 0.3.x）已归档到 `docs/history-2026-09.md`。
 > 这一段只留本版（0.8.x/0.9.x/0.10.x）的改动与验证；历史文件是当时的推理记录，不要照它实现。
+
+### v0.10.58：来回切换会话不再重拉已读窗口（2026-11-27）
+
+用户报「来回切换会话会重新拉取已有会话数据」。原因很直接：`openSession` 每次都先
+`transcript: undefined` 再 GET `/transcript`，于是切回一个刚看过的会话也要等一次窗口
+读取、看一次 loading。
+
+修法（`src/client/api.ts`）：
+
+- **保留最近 8 个已读窗口**（LRU）。缓存命中时立即把窗口交给 store 与自带面板，不再
+  发 `/transcript`。
+- **事件流在后台保持缓存更新**：`events` 帧现在对所有**已缓存**的会话合并，不再只处理
+  当前打开的那个；切回时看到的是这期间长出来的事件。
+- **新鲜度**：SSE `onerror` 或重连后所有缓存标记 stale，下一次打开重新拉取——断流期间
+  可能漏帧，不能把旧窗口当最新的展示。
+- **实时行**：窗口来自缓存时，若会话正在运行，只 GET 新的 `/live`（一个 attempt 的
+  baseline，几 KB），不重读窗口；非运行会话连这个都不发。
+- 会话从机器列表消失时删掉它的缓存；超过 8 个按最久未用淘汰。
+
+**判据**：`npm test` 222 通过 / 0 失败；`npm run build` 成功。**浏览器判据待部署后跑**：
+切换 A→B→A 时 `/transcript` 请求数应停在 2，第三次不再出现；running 会话切回时应只有
+一条 `/live`；SSE 断开重连后切回必须重新拉取。
 
 ### v0.10.56：重复的 step start 不再进入自带 feed（2026-11-27）
 

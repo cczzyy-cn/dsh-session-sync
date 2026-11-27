@@ -4295,6 +4295,18 @@ window.__ModuleLoader__.load({
 		* command the machine had already accepted.
 		*/
 		const EARLY_COMMAND_LIMIT = 16;
+		/**
+		* How many Session windows this page keeps for instant switching.
+		*
+		* A window is a few hundred events; the list is what a reader cycles through, so
+		* a handful of entries is enough to make back-and-forth switching free. The cap
+		* keeps a long browsing session from pinning every window's event objects.
+		*/
+		const TRANSCRIPT_CACHE_LIMIT = 8;
+		/** The cache key of one Session window. */
+		function transcriptKeyOf(open) {
+			return `${open.machineName}\u0000${open.sessionId}`;
+		}
 		/** The neutral state rendered before the Host has answered. */
 		function idleState() {
 			return {
@@ -4371,6 +4383,8 @@ window.__ModuleLoader__.load({
 			* by a `clear` and by opening another Session.
 			*/
 			liveFold;
+			/** Session windows kept for a switch back, evicted least-recently-used. */
+			cachedTranscripts = /* @__PURE__ */ new Map();
 			constructor() {
 				this.store = (0, _deepseek_ai_dsh_client_store.createSnapshotStore)({
 					ready: false,
@@ -4518,6 +4532,63 @@ window.__ModuleLoader__.load({
 				} });
 			}
 			/**
+			* Keep one Session's window for a switch back, evicting the least recently used.
+			* @param key - the Session's cache key.
+			* @param transcript - its window as just read.
+			*/
+			rememberTranscript(key, transcript) {
+				this.cachedTranscripts.delete(key);
+				this.cachedTranscripts.set(key, {
+					transcript,
+					fresh: true,
+					usedAt: Date.now()
+				});
+				while (this.cachedTranscripts.size > TRANSCRIPT_CACHE_LIMIT) {
+					let oldestKey;
+					let oldest = Number.POSITIVE_INFINITY;
+					for (const [candidate, entry] of this.cachedTranscripts) if (entry.usedAt < oldest) {
+						oldest = entry.usedAt;
+						oldestKey = candidate;
+					}
+					if (oldestKey === void 0 || oldestKey === key) break;
+					this.cachedTranscripts.delete(oldestKey);
+				}
+			}
+			/**
+			* Whether the machine currently reports this Session mid-turn.
+			* @param open - the Session being opened.
+			* @returns true when a live attempt may exist.
+			*/
+			runningOf(open) {
+				return this.store.getSnapshot().state.machines.find((candidate) => candidate.machineName === open.machineName)?.sessions.find((session) => session.sessionId === open.sessionId)?.running ?? false;
+			}
+			/**
+			* Fetch just the transient live attempt for a Session whose window came from cache.
+			*
+			* The window is a few hundred events; the live row is not in it. This keeps a
+			* switch back to a running Session from losing the current step without
+			* re-reading the window. Best effort: a failure leaves no live row, which is
+			* the same state as a step that has not started.
+			* @param open - the Session whose live attempt is wanted.
+			*/
+			async refreshLive(open) {
+				try {
+					const { live } = await getJson(`${ROUTE_PREFIX}/live?machine=${encodeURIComponent(open.machineName)}&session=${encodeURIComponent(open.sessionId)}`);
+					const current = this.store.getSnapshot().open;
+					if (current?.machineName !== open.machineName || current.sessionId !== open.sessionId) return;
+					if (live !== void 0) this.consume({
+						type: "stream",
+						machineName: open.machineName,
+						sessionId: open.sessionId,
+						live
+					});
+				} catch {}
+			}
+			/** Mark every kept window stale, because the event stream may have missed frames. */
+			markTranscriptsStale() {
+				for (const entry of this.cachedTranscripts.values()) entry.fresh = false;
+			}
+			/**
 			* Open one mirrored Session in the centre panel.
 			* @param machineName - owning machine.
 			* @param sessionId - published Session.
@@ -4527,6 +4598,9 @@ window.__ModuleLoader__.load({
 					machineName,
 					sessionId
 				};
+				const key = transcriptKeyOf(open);
+				const cached = this.cachedTranscripts.get(key);
+				const hit = cached !== void 0 && cached.fresh ? cached : void 0;
 				this.reportedRunning = void 0;
 				this.notify((observer) => {
 					observer.opened(open);
@@ -4534,14 +4608,23 @@ window.__ModuleLoader__.load({
 				this.liveFold = void 0;
 				this.update({
 					open,
-					transcript: void 0,
-					loadingTranscript: true,
+					transcript: hit?.transcript,
+					loadingTranscript: hit === void 0,
 					loadingOlder: false,
 					live: noLive(),
 					delivery: void 0
 				});
+				if (hit !== void 0) {
+					hit.usedAt = Date.now();
+					this.notify((observer) => {
+						observer.loaded(open, hit.transcript);
+					});
+					if (this.runningOf(open)) this.refreshLive(open);
+					return;
+				}
 				try {
 					const { transcript, live } = await getJson(`${ROUTE_PREFIX}/transcript?machine=${encodeURIComponent(machineName)}&session=${encodeURIComponent(sessionId)}`);
+					this.rememberTranscript(key, transcript);
 					this.notify((observer) => {
 						observer.loaded(open, transcript);
 					});
@@ -4621,14 +4704,17 @@ window.__ModuleLoader__.load({
 						return;
 					}
 					if (older.events.length > 0) {
+						const merged = {
+							...held,
+							events: mergeEvents(held.events, older.events),
+							hasMore: older.hasMore
+						};
 						this.update({
-							transcript: {
-								...held,
-								events: mergeEvents(held.events, older.events),
-								hasMore: older.hasMore
-							},
+							transcript: merged,
 							loadingOlder: false
 						});
+						const cached = this.cachedTranscripts.get(transcriptKeyOf(open));
+						if (cached !== void 0) cached.transcript = merged;
 						this.notify((observer) => {
 							observer.older(open, older);
 						});
@@ -4640,13 +4726,16 @@ window.__ModuleLoader__.load({
 						return;
 					}
 					if (!older.hasMore) {
+						const merged = {
+							...held,
+							hasMore: false
+						};
 						this.update({
-							transcript: {
-								...held,
-								hasMore: false
-							},
+							transcript: merged,
 							loadingOlder: false
 						});
+						const cached = this.cachedTranscripts.get(transcriptKeyOf(open));
+						if (cached !== void 0) cached.transcript = merged;
 						return;
 					}
 					await new Promise((resolve) => {
@@ -4768,10 +4857,12 @@ window.__ModuleLoader__.load({
 						stream: "open",
 						...reset ? { mirrorResets: snapshot.mirrorResets + 1 } : {}
 					});
+					if (!first) this.markTranscriptsStale();
 					if (!first) this.refresh();
 				};
 				source.onerror = () => {
 					this.update({ stream: "connecting" });
+					this.markTranscriptsStale();
 				};
 				source.onmessage = (event) => {
 					let frame;
@@ -4855,13 +4946,29 @@ window.__ModuleLoader__.load({
 						...complete ? { approvals: frame.state.approvals ?? [] } : {}
 					});
 					if (previous.published !== state.published) this.refreshSessions();
+					const published = /* @__PURE__ */ new Set();
+					for (const machine of state.machines) for (const session of machine.sessions) published.add(transcriptKeyOf({
+						machineName: machine.machineName,
+						sessionId: session.sessionId
+					}));
+					for (const key of [...this.cachedTranscripts.keys()]) if (!published.has(key)) this.cachedTranscripts.delete(key);
 					return;
 				}
 				if (frame.type === "events") {
 					const snapshot = this.store.getSnapshot();
 					const open = snapshot.open;
-					if (open === void 0) return;
-					if (open.machineName !== frame.machineName || open.sessionId !== frame.sessionId) return;
+					const key = transcriptKeyOf({
+						machineName: frame.machineName,
+						sessionId: frame.sessionId
+					});
+					const cached = this.cachedTranscripts.get(key);
+					if (!(open !== void 0 && open.machineName === frame.machineName && open.sessionId === frame.sessionId)) {
+						if (cached !== void 0) cached.transcript = {
+							...cached.transcript,
+							events: mergeEvents(cached.transcript.events, frame.events)
+						};
+						return;
+					}
 					const transcript = snapshot.transcript;
 					if (transcript === void 0) return;
 					this.notify((observer) => {
@@ -4869,13 +4976,15 @@ window.__ModuleLoader__.load({
 					});
 					const settled = frame.events.some(isSettlement);
 					if (settled) this.liveFold = void 0;
+					const merged = {
+						...transcript,
+						events: mergeEvents(transcript.events, frame.events)
+					};
 					this.update({
-						transcript: {
-							...transcript,
-							events: mergeEvents(transcript.events, frame.events)
-						},
+						transcript: merged,
 						...settled ? { live: noLive() } : {}
 					});
+					if (cached !== void 0) cached.transcript = merged;
 					return;
 				}
 				if (frame.type === "stream") {
