@@ -9,8 +9,8 @@
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
 | 版本 | **`0.10.58`**（切换会话复用已读窗口，不再重拉 transcript；含 0.10.55-0.10.57 的实时流/贴底/切换/feed 防护） |
-| 部署面 | **2026-11-27 12:42 UTC**：服务器已上 0.10.57（重启 `dsh-web.service`，3080 与 8792 在听，客户端 sha256 `8b634068…`）；本机 `desktop` profile 仍钉 `#v0.10.54`，**要重启 App 才会加载新版**。实时读数用 `scripts/deploy-status.ps1` |
-| 服务器（远端） | **已上线 `0.10.57`**（依赖 `#v0.10.57`）· DSH **`0.2.2-rc.5`**（2026-11-19 升级，unit 备份 `.bak-20261119-141436`）· unit `dsh-web.service` active · 3080（绑 `127.0.0.1`）与 8791（nginx→8792）都在听 |
+| 部署面 | **2026-11-27 14:22 UTC**：服务器已上 0.10.58（重启 `dsh-web.service`，3080 与 8792 在听，客户端 sha256 `16006bdb…`）；本机 `desktop` profile 仍钉 `#v0.10.54`，**要重启 App 才会加载新版**。实时读数用 `scripts/deploy-status.ps1` |
+| 服务器（远端） | **已上线 `0.10.58`**（依赖 `#v0.10.58`）· DSH **`0.2.2-rc.5`**（2026-11-19 升级，unit 备份 `.bak-20261119-141436`）· unit `dsh-web.service` active · 3080（绑 `127.0.0.1`）与 8791（nginx→8792）都在听 |
 | 本机宿主 | **这个 GUI 跑的是打包版** `DeepSeek Harness.exe`（`resources\app.asar\dsh`，DSH 0.2.0-rc.1），**不是源码 checkout**；它加载的 profile 是 `~/.dsh/profiles/desktop`。`profiles/web` 与 `profiles/desktop` 两个 profile 里都装着本插件 |
 | 本机 DSH checkout | **此刻不存在**：`C:\Users\14339\Desktop\git\deepseek-harness` 已不在盘上（2026-11-19 实测 `Test-Path` = False），`node_modules` 也不在 ⇒ 构建、`typecheck`、`release.ps1`、`deploy-status -VerifyBuild` 都会拒绝；只有编码门禁与纯 node 测试能跑。要改产物得先把 checkout 与依赖装回来 |
 | 设置层真源 | **profile 的 `cordis.patch.yml`**（不是 `~/.dsh/settings.yaml`）。实测：迁移成功，`~/.dsh/dsh-session-sync.json` 已归档为 `dsh-session-sync.json.imported-2026-09-30T12-45-17-595Z.json`，值出现在 `profiles/desktop/cordis.patch.yml` 的 `session-sync` 行里 |
@@ -114,9 +114,23 @@
   baseline，几 KB），不重读窗口；非运行会话连这个都不发。
 - 会话从机器列表消失时删掉它的缓存；超过 8 个按最久未用淘汰。
 
-**判据**：`npm test` 222 通过 / 0 失败；`npm run build` 成功。**浏览器判据待部署后跑**：
-切换 A→B→A 时 `/transcript` 请求数应停在 2，第三次不再出现；running 会话切回时应只有
-一条 `/live`；SSE 断开重连后切回必须重新拉取。
+**判据**：`npm test` 222 通过 / 0 失败；`npm run build` 成功。**部署后浏览器实测
+（2026-11-27 14:22 UTC，线上控制台）**：
+
+| 场景 | 结果 |
+| --- | --- |
+| 打开 A、再打开 B | `/transcript` 共 2 次 |
+| 切回 A | **0 次请求**，1.2s 后无 loading，标题立即是 A |
+| 控制台 error | 无 |
+| 切回运行中的会话 | 只有 1 次 `/live`，**没有** `/transcript` |
+
+SSE 断开重连后缓存标 stale、下次打开重新拉取这条没有在线上制造断流验证，按代码路径保留。
+
+**部署（2026-11-27 14:22 UTC）**：tag `v0.10.58` = `f3843d1`（已推 origin）；服务器
+profile 改为 `#v0.10.58`（package.json / pnpm-lock 按时间戳备份），重启后 active，
+3080 与 8792 在听，安装 `client.js` sha256 `16006bdb…` 与工作树一致。
+
+### v0.10.56：重复的 step start 不再进入自带 feed（2026-11-27）
 
 ### v0.10.56：重复的 step start 不再进入自带 feed（2026-11-27）
 
