@@ -8,9 +8,9 @@
 | 项 | 值 |
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
-| 版本 | **`0.10.56`**（重复 `step/start` 在投递前被过滤；0.10.55 的实时流/贴底/切换/feed 防护） |
-| 部署面 | **2026-11-26 15:46 UTC**：服务器已上 0.10.55（重启 `dsh-web.service`，3080 与 8792 在听，客户端 sha256 `3215d65e…`）；本机 `desktop` profile 仍钉 `#v0.10.54`，**要重启 App 才会加载 0.10.55**。实时读数用 `scripts/deploy-status.ps1` |
-| 服务器（远端） | **已上线 `0.10.55`**（依赖 `#v0.10.55`）· DSH **`0.2.2-rc.5`**（2026-11-19 升级，unit 备份 `.bak-20261119-141436`）· unit `dsh-web.service` active · 3080（绑 `127.0.0.1`）与 8791（nginx→8792）都在听 |
+| 版本 | **`0.10.56`**（重复 `step/start` 在投递前被过滤；0.10.55 的实时流/贴底/切换/feed 防护）· tag `v0.10.56` = `73e0874`，已推 origin |
+| 部署面 | **2026-11-27 12:39 UTC**：服务器已上 0.10.56（重启 `dsh-web.service`，3080 与 8792 在听，客户端 sha256 `dadd4ef5…`）；本机 `desktop` profile 仍钉 `#v0.10.54`，**要重启 App 才会加载新版**。实时读数用 `scripts/deploy-status.ps1` |
+| 服务器（远端） | **已上线 `0.10.56`**（依赖 `#v0.10.56`）· DSH **`0.2.2-rc.5`**（2026-11-19 升级，unit 备份 `.bak-20261119-141436`）· unit `dsh-web.service` active · 3080（绑 `127.0.0.1`）与 8791（nginx→8792）都在听 |
 | 本机宿主 | **这个 GUI 跑的是打包版** `DeepSeek Harness.exe`（`resources\app.asar\dsh`，DSH 0.2.0-rc.1），**不是源码 checkout**；它加载的 profile 是 `~/.dsh/profiles/desktop`。`profiles/web` 与 `profiles/desktop` 两个 profile 里都装着本插件 |
 | 本机 DSH checkout | **此刻不存在**：`C:\Users\14339\Desktop\git\deepseek-harness` 已不在盘上（2026-11-19 实测 `Test-Path` = False），`node_modules` 也不在 ⇒ 构建、`typecheck`、`release.ps1`、`deploy-status -VerifyBuild` 都会拒绝；只有编码门禁与纯 node 测试能跑。要改产物得先把 checkout 与依赖装回来 |
 | 设置层真源 | **profile 的 `cordis.patch.yml`**（不是 `~/.dsh/settings.yaml`）。实测：迁移成功，`~/.dsh/dsh-session-sync.json` 已归档为 `dsh-session-sync.json.imported-2026-09-30T12-45-17-595Z.json`，值出现在 `profiles/desktop/cordis.patch.yml` 的 `session-sync` 行里 |
@@ -123,6 +123,15 @@ update 之后 start 被拒；`turn/start` 后的只带 `step` 的 start 能正�
 `npm test` = **222 通过 / 0 失败**（55 suites）；`npm run build` 成功：`lib/index.js`
 284,025 B、`client/client.js` 425,621 B。**未复现**：线上没有拿到触发该异常的稳定序列
 （它依赖竞态），所以这条仍是"按契约防御"而非对照实验；部署后需观察是否再出现。
+
+**部署（2026-11-27 12:39 UTC）**：`main` 与 tag `v0.10.56` 已推 origin（tag
+`12e176b` → `73e0874`）；服务器 profile 改为 `#v0.10.56`（package.json / pnpm-lock 已
+按时间戳备份），`systemctl restart dsh-web.service` 后 active，3080 与
+8792 在听，安装 `client.js` sha256 `dadd4ef5…` 与工作树一致。无头 Chrome 线上复验：
+新 bundle 已加载；打开运行中会话 `top = floor = 10611`；打开另一会话
+`top = floor = 3373`；过程中 **没有** assembler 错误，也 **没有**触发
+`dropped a duplicate step start`（说明这段采样里 durable start 先于 live chunk 到达，
+未走到该竞态）。**仍需观察**：真正的触发序列没有复现样本，部署后看是否再报。
 
 ### v0.10.55：实时输出改走官方 assistant 流（2026-11-25）
 
