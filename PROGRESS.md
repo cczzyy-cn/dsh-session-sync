@@ -8,8 +8,8 @@
 | 项 | 值 |
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
-| 版本 | **`0.10.57`**（重复 `step/start` 投递前过滤；含 0.10.55 的实时流/贴底/切换/feed 防护） |
-| 部署面 | **2026-11-27 12:39 UTC**：服务器已上 0.10.57（重启 `dsh-web.service`，3080 与 8792 在听，客户端 sha256 `8b634068…`）；本机 `desktop` profile 仍钉 `#v0.10.54`，**要重启 App 才会加载新版**。实时读数用 `scripts/deploy-status.ps1` |
+| 版本 | **`0.10.57`**（重复 `step/start` 投递前过滤；含 0.10.55 的实时流/贴底/切换/feed 防护）· tag `v0.10.57` = `21e7b59`，已推 origin |
+| 部署面 | **2026-11-27 12:42 UTC**：服务器已上 0.10.57（重启 `dsh-web.service`，3080 与 8792 在听，客户端 sha256 `8b634068…`）；本机 `desktop` profile 仍钉 `#v0.10.54`，**要重启 App 才会加载新版**。实时读数用 `scripts/deploy-status.ps1` |
 | 服务器（远端） | **已上线 `0.10.57`**（依赖 `#v0.10.57`）· DSH **`0.2.2-rc.5`**（2026-11-19 升级，unit 备份 `.bak-20261119-141436`）· unit `dsh-web.service` active · 3080（绑 `127.0.0.1`）与 8791（nginx→8792）都在听 |
 | 本机宿主 | **这个 GUI 跑的是打包版** `DeepSeek Harness.exe`（`resources\app.asar\dsh`，DSH 0.2.0-rc.1），**不是源码 checkout**；它加载的 profile 是 `~/.dsh/profiles/desktop`。`profiles/web` 与 `profiles/desktop` 两个 profile 里都装着本插件 |
 | 本机 DSH checkout | **此刻不存在**：`C:\Users\14339\Desktop\git\deepseek-harness` 已不在盘上（2026-11-19 实测 `Test-Path` = False），`node_modules` 也不在 ⇒ 构建、`typecheck`、`release.ps1`、`deploy-status -VerifyBuild` 都会拒绝；只有编码门禁与纯 node 测试能跑。要改产物得先把 checkout 与依赖装回来 |
@@ -128,14 +128,18 @@ update 之后 start 被拒；`turn/start` 后的只带 `step` 的 start 能正�
 `step`、不带 `turn` 的 durable `step/start` 也能归到正确的 `turn:step` 并被守卫拒绝——
 这是 live chunk 先到、durable start 后到时最可能漏掉的一种形状。测试补了这条（共 7 例）。
 
-**部署（2026-11-27 12:39 UTC）**：`main` 与 tag `v0.10.56` 已推 origin（tag
-`12e176b` → `73e0874`）；服务器 profile 改为 `#v0.10.56`（package.json / pnpm-lock 已
+**部署（2026-11-27 12:42 UTC）**：`main` 与 tag `v0.10.57` 已推 origin（tag
+`f7a1d2e` → `21e7b59`）；服务器 profile 改为 `#v0.10.57`（package.json / pnpm-lock 已
 按时间戳备份），`systemctl restart dsh-web.service` 后 active，3080 与
-8792 在听，安装 `client.js` sha256 `dadd4ef5…` 与工作树一致。无头 Chrome 线上复验：
-新 bundle 已加载；打开运行中会话 `top = floor = 10611`；打开另一会话
-`top = floor = 3373`；过程中 **没有** assembler 错误，也 **没有**触发
-`dropped a duplicate step start`（说明这段采样里 durable start 先于 live chunk 到达，
-未走到该竞态）。**仍需观察**：真正的触发序列没有复现样本，部署后看是否再报。
+8792 在听，安装 `client.js` sha256 `8b634068…` 与工作树一致。
+
+**线上复验——守卫真的拦下了那条事件**：无头 Chrome 打开运行中会话，控制台出现
+`warning: dsh-session-sync: dropped a duplicate step start at seq 4302`，**没有**再出现
+`event feed subscriber failed` / assembler 异常；会话仍 `top = floor = 3646`，continue
+更新。这是比"没复现"更强的证据：同一条重复 start 以前会抛异常并拖死整条 feed，现在被
+投递前丢掉，面板继续工作。**仍有边界**：这条只覆盖 `step/start`；如果下次的 start 来自
+别的 event 类型，或 identity 仍无法命名，`feedSafely` 只能吞掉异常但订阅者可能已被摘掉，
+届时需要新的 event 类型样本。
 
 ### v0.10.55：实时输出改走官方 assistant 流（2026-11-25）
 
