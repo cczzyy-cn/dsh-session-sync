@@ -5247,6 +5247,7 @@ window.__ModuleLoader__.load({
 			*/
 			noteLive(turn, step) {
 				if (!Number.isSafeInteger(turn) || !Number.isSafeInteger(step) || turn < 0 || step < 0) return;
+				this.currentTurn = turn;
 				this.active.add(stepKeyOf({
 					turn,
 					step

@@ -126,6 +126,10 @@ export class StepStartGuard {
    */
   noteLive(turn: number, step: number): void {
     if (!Number.isSafeInteger(turn) || !Number.isSafeInteger(step) || turn < 0 || step < 0) return
+    // The live attempt is the newest turn, so a durable `step/start` that carries
+    // only `step` is attributed to it — which is exactly the start that can race
+    // the live chunks that made this step active.
+    this.currentTurn = turn
     this.active.add(stepKeyOf({ turn, step }))
   }
 }

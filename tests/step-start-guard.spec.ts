@@ -44,6 +44,9 @@ describe('the step-start guard', () => {
     const guard = new StepStartGuard()
     guard.noteLive(5, 6)
     assert.equal(guard.refuses(stepStart(5, 6).type, stepStart(5, 6).data), true)
+    // A durable start that carries only the step is attributed to the live turn.
+    const stepOnly = { type: 'step/start', data: { step: 6 } }
+    assert.equal(guard.refuses(stepOnly.type, stepOnly.data), true)
     // A start for another step is still legal.
     assert.equal(guard.refuses(stepStart(5, 7).type, stepStart(5, 7).data), false)
   })

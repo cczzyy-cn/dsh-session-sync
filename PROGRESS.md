@@ -8,15 +8,15 @@
 | 项 | 值 |
 | --- | --- |
 | 仓库 | `C:\Users\14339\Desktop\git\dsh-session-sync` |
-| 版本 | **`0.10.56`**（重复 `step/start` 在投递前被过滤；0.10.55 的实时流/贴底/切换/feed 防护）· tag `v0.10.56` = `73e0874`，已推 origin |
-| 部署面 | **2026-11-27 12:39 UTC**：服务器已上 0.10.56（重启 `dsh-web.service`，3080 与 8792 在听，客户端 sha256 `dadd4ef5…`）；本机 `desktop` profile 仍钉 `#v0.10.54`，**要重启 App 才会加载新版**。实时读数用 `scripts/deploy-status.ps1` |
-| 服务器（远端） | **已上线 `0.10.56`**（依赖 `#v0.10.56`）· DSH **`0.2.2-rc.5`**（2026-11-19 升级，unit 备份 `.bak-20261119-141436`）· unit `dsh-web.service` active · 3080（绑 `127.0.0.1`）与 8791（nginx→8792）都在听 |
+| 版本 | **`0.10.57`**（重复 `step/start` 投递前过滤；含 0.10.55 的实时流/贴底/切换/feed 防护） |
+| 部署面 | **2026-11-27 12:39 UTC**：服务器已上 0.10.57（重启 `dsh-web.service`，3080 与 8792 在听，客户端 sha256 `8b634068…`）；本机 `desktop` profile 仍钉 `#v0.10.54`，**要重启 App 才会加载新版**。实时读数用 `scripts/deploy-status.ps1` |
+| 服务器（远端） | **已上线 `0.10.57`**（依赖 `#v0.10.57`）· DSH **`0.2.2-rc.5`**（2026-11-19 升级，unit 备份 `.bak-20261119-141436`）· unit `dsh-web.service` active · 3080（绑 `127.0.0.1`）与 8791（nginx→8792）都在听 |
 | 本机宿主 | **这个 GUI 跑的是打包版** `DeepSeek Harness.exe`（`resources\app.asar\dsh`，DSH 0.2.0-rc.1），**不是源码 checkout**；它加载的 profile 是 `~/.dsh/profiles/desktop`。`profiles/web` 与 `profiles/desktop` 两个 profile 里都装着本插件 |
 | 本机 DSH checkout | **此刻不存在**：`C:\Users\14339\Desktop\git\deepseek-harness` 已不在盘上（2026-11-19 实测 `Test-Path` = False），`node_modules` 也不在 ⇒ 构建、`typecheck`、`release.ps1`、`deploy-status -VerifyBuild` 都会拒绝；只有编码门禁与纯 node 测试能跑。要改产物得先把 checkout 与依赖装回来 |
 | 设置层真源 | **profile 的 `cordis.patch.yml`**（不是 `~/.dsh/settings.yaml`）。实测：迁移成功，`~/.dsh/dsh-session-sync.json` 已归档为 `dsh-session-sync.json.imported-2026-09-30T12-45-17-595Z.json`，值出现在 `profiles/desktop/cordis.patch.yml` 的 `session-sync` 行里 |
 | 测试 | **222 例：222 通过 / 0 失败**（55 suites，约 11 秒，`node --test --experimental-transform-types --test-concurrency=1 "tests/*.spec.ts"`，2026-11-25 实跑） |
 | 真机验证 | 仍停在 0.10.5 那批：提问竞速（0.10.4）、控制台**放行**与**拒绝**审批（0.10.5）见 §2。**0.10.29–0.10.31 无真机验证** |
-| 产物 | `lib/index.js` **284,025 B**（sha256 `9fa750d630ca…`）· `client/client.js` **425,621 B**（sha256 `dadd4ef58b1e…`）；2026-11-26 实跑 `npm run build` |
+| 产物 | `lib/index.js` **284,025 B**（sha256 `9fa750d630ca…`）· `client/client.js` **425,650 B**（sha256 `8b6340683e13…`）；2026-11-26 实跑 `npm run build` |
 | 编码门禁 | `node scripts/check-encoding.mjs` **clean（70 文件）**（2026-11-25 实跑） |
 | 类型 | `npm run typecheck` = 67 文件 / 752 诊断 / **undeclared 0 · relative imports 全解析 · 类型不匹配 0**（752 全是无 bundler 解析时的 JSX/上游项） |
 | 控制台路线 | **`scope`**：服务器上 `dsh-api-session-controller/lib/client.js` 命中 `retainAgentScope` ⇒ 特性探测确定走它；`adopt` 在任何已发布构建里都不存在（该路线已从代码删除） |
@@ -121,8 +121,12 @@ assembler 的 context，所以只能在投递前拒绝。
 update 之后 start 被拒；`turn/start` 后的只带 `step` 的 start 能正确归属；不同 step
 互不影响；live 标记让后续 durable start 被拒；identity 不完整时不误伤；`reset` 清空。
 `npm test` = **222 通过 / 0 失败**（55 suites）；`npm run build` 成功：`lib/index.js`
-284,025 B、`client/client.js` 425,621 B。**未复现**：线上没有拿到触发该异常的稳定序列
+284,025 B、`client/client.js` 425,650 B。**未复现**：线上没有拿到触发该异常的稳定序列
 （它依赖竞态），所以这条仍是"按契约防御"而非对照实验；部署后需观察是否再出现。
+
+**0.10.57 补丁**：`noteLive` 现在同时把该 live attempt 的 turn 记为最新 turn，于是只带
+`step`、不带 `turn` 的 durable `step/start` 也能归到正确的 `turn:step` 并被守卫拒绝——
+这是 live chunk 先到、durable start 后到时最可能漏掉的一种形状。测试补了这条（共 7 例）。
 
 **部署（2026-11-27 12:39 UTC）**：`main` 与 tag `v0.10.56` 已推 origin（tag
 `12e176b` → `73e0874`）；服务器 profile 改为 `#v0.10.56`（package.json / pnpm-lock 已
@@ -224,7 +228,7 @@ origin；服务器 profile 的依赖改为 `#v0.10.55`（`pnpm add`，package.js
 
 **验证**：`npm test` = **222 通过 / 0 失败**（55 suites，10.8 s，2026-11-25）；其中“real link”
 一例起真监听者 + 真 `OriginLink`，断言 `start → chunks → baseline` 与 settlement 清行。
-`npm run build` 成功：`lib/index.js` 284,025 B、`client/client.js` 425,621 B；
+`npm run build` 成功：`lib/index.js` 284,025 B、`client/client.js` 425,650 B；
 `check-encoding` clean（70 文件）。**流契约对照**：下载并解包
 `@deepseek-ai/dsh-api-session-controller@0.2.3-alpha.1`，其 `src/types.ts` 的
 `SessionFollowFrame` / `SessionAssistantStreamFrame` 与当前安装的 `0.2.2-rc.5` 相同
