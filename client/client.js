@@ -5152,6 +5152,108 @@ window.__ModuleLoader__.load({
 			return current === void 0 || seq > current ? seq : current;
 		}
 		//#endregion
+		//#region src/client/step-start-guard.ts
+		/** The key the assembler uses for a trajectory step context. */
+		function stepKeyOf(identity) {
+			return `${String(identity.turn)}:${String(identity.step)}`;
+		}
+		/**
+		* Whether one event is a step's start match.
+		* @param type - the Session event type.
+		* @returns true for `step/start`.
+		*/
+		function isStepStart(type) {
+			return type === "step/start";
+		}
+		/**
+		* Tracks which steps have been started and which have already been touched.
+		*
+		* Both marks matter: a start is legal only when neither exists, and the second
+		* start is exactly the one the assembler refuses.
+		*/
+		var StepStartGuard = class {
+			currentTurn = -1;
+			started = /* @__PURE__ */ new Set();
+			active = /* @__PURE__ */ new Set();
+			/** Forget every mark, for a window that replaces the whole conversation. */
+			reset() {
+				this.currentTurn = -1;
+				this.started.clear();
+				this.active.clear();
+			}
+			/**
+			* Read one event's step identity.
+			*
+			* `step/start` may carry only `step`; the turn is then the one the preceding
+			* `turn/start` established. An event whose step and turn are both unknown names
+			* no identity, and the guard stays out of its way.
+			* @param data - the event's data payload.
+			* @returns the identity, or undefined when it cannot be named.
+			*/
+			identityOf(data) {
+				if (typeof data !== "object" || data === null || Array.isArray(data)) return void 0;
+				const record = data;
+				const step = record["step"];
+				if (typeof step !== "number" || !Number.isSafeInteger(step)) return void 0;
+				const turn = typeof record["turn"] === "number" && Number.isSafeInteger(record["turn"]) ? record["turn"] : this.currentTurn;
+				if (turn < 0) return void 0;
+				return {
+					turn,
+					step
+				};
+			}
+			/**
+			* Whether this event is the start the assembler would refuse.
+			*
+			* Called before the event is filed, so a duplicate start can be dropped without
+			* advancing the window: the next batch must not retry it, and the window must
+			* not claim to hold an event it never fed.
+			* @param type - the Session event type.
+			* @param data - the event's data payload.
+			* @returns true when the event must not reach the source.
+			*/
+			refuses(type, data) {
+				if (!isStepStart(type)) return false;
+				const identity = this.identityOf(data);
+				if (identity === void 0) return false;
+				const key = stepKeyOf(identity);
+				return this.started.has(key) || this.active.has(key);
+			}
+			/**
+			* Record what one accepted event says about its step.
+			* @param type - the Session event type.
+			* @param data - the event's data payload.
+			*/
+			note(type, data) {
+				if (type === "turn/start" && typeof data === "object" && data !== null) {
+					const turn = data["turn"];
+					if (typeof turn === "number" && Number.isSafeInteger(turn)) this.currentTurn = turn;
+				}
+				if (type === "turn/start" || type === "turn/end") return;
+				const identity = this.identityOf(data);
+				if (identity === void 0) return;
+				const key = stepKeyOf(identity);
+				if (isStepStart(type)) this.started.add(key);
+				else this.active.add(key);
+			}
+			/**
+			* Mark one step active from the live stream, before any durable event for it.
+			*
+			* A live attempt reaches the pane through its own queue; the durable start may
+			* arrive a batch later. Marking the step here is what makes that late start a
+			* duplicate instead of a refusal.
+			* @param turn - the live attempt's turn.
+			* @param step - the live attempt's step.
+			*/
+			noteLive(turn, step) {
+				if (!Number.isSafeInteger(turn) || !Number.isSafeInteger(step) || turn < 0 || step < 0) return;
+				this.active.add(stepKeyOf({
+					turn,
+					step
+				}));
+			}
+		};
+		//#endregion
 		//#region src/client/official-views.ts
 		/**
 		* Which shipped conversation page the console can ask for.
@@ -5326,6 +5428,10 @@ window.__ModuleLoader__.load({
 			transient = 0;
 			/** Refused feeds so far, counted so a repeated refusal is logged once. */
 			feedFailures = 0;
+			/** Steps already started or touched, so a second start is never fed. */
+			stepStarts = new StepStartGuard();
+			/** Duplicate step starts dropped, for one warning. */
+			droppedStarts = 0;
 			/** Highest durable sequence seen, the base of a transient row's position. */
 			lastSeq = -1;
 			/**
@@ -5386,6 +5492,8 @@ window.__ModuleLoader__.load({
 				this.liveAttempt = void 0;
 				const events = transcript.events.filter((event) => !isPanelOnly(event));
 				this.fed = new Set(events.map((event) => event.seq));
+				this.stepStarts.reset();
+				for (const event of events) this.stepStarts.note(event.type, event.data);
 				this.highestFed = events.reduce((highest, event) => highest === void 0 || event.seq > highest ? event.seq : highest, void 0);
 				this.transient = 0;
 				this.lastSeq = -1;
@@ -5422,6 +5530,12 @@ window.__ModuleLoader__.load({
 						continue;
 					}
 					if (this.fed.has(event.seq)) continue;
+					if (this.stepStarts.refuses(event.type, event.data)) {
+						this.droppedStarts += 1;
+						if (this.droppedStarts <= 3) console.warn(`dsh-session-sync: dropped a duplicate step start at seq ${String(event.seq)}`);
+						continue;
+					}
+					this.stepStarts.note(event.type, event.data);
 					if (envelopePlacement(event.seq, this.highestFed, this.fed) === "history") {
 						history.push(event);
 						continue;
@@ -5519,6 +5633,7 @@ window.__ModuleLoader__.load({
 						this.liveAttempt = live.attemptId;
 						this.liveTurn = live.turn;
 						this.liveStep = live.step;
+						this.stepStarts.noteLive(live.turn, live.step);
 						for (const chunk of live.chunks) this.feedChunk(live.attemptId, chunk);
 						return;
 					case "start":
@@ -5526,6 +5641,7 @@ window.__ModuleLoader__.load({
 						this.liveAttempt = live.attemptId;
 						this.liveTurn = live.turn;
 						this.liveStep = live.step;
+						this.stepStarts.noteLive(live.turn, live.step);
 						return;
 					case "chunks":
 						if (this.liveAttempt !== live.attemptId) return;
@@ -5582,6 +5698,7 @@ window.__ModuleLoader__.load({
 			* @param frame - the dense chunk frame.
 			*/
 			feedChunk(attemptId, frame) {
+				this.stepStarts.noteLive(this.liveTurn, this.liveStep);
 				this.transient += 1;
 				this.feedSafely(() => this.source?.append({
 					type: "transient",

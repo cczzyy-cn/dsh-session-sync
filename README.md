@@ -570,7 +570,9 @@ DSH 围绕镜像会话自己的外壳，而在构建提供 `ctx.sessions.retainA
   置底按钮，并把自带那一枚隐藏，避免出现两个。判据在 `SyncPanel.tsx` 的 pane effect
   与 `.paneToBottom`。自带 assembler 在一条 Match 反序时还会抛异常并拖死整条
   `session-controller` event feed——控制台把每次投递包在 `feedSafely` 里，丢弃那一条
-  而不是让整块面板停更。
+  而不是让整块面板停更；而对 `trajectory-assistant-step` 只能接受一次的 start，另在
+  投递前按 `turn:step` 过滤重复的 `step/start`（重试与 live/durable 竞态都会造出它），
+  见 `step-start-guard.ts`。
 - **一个机器名只能有一个源站。** 两个用同一个 `本机名称` 配置的源站会互相覆盖镜像。
 - **一条接管 prompt 两分钟后过期**，且同一时刻最多 32 条可以等待一台机器。两个上限都是
   有意的；超出它们的排队 prompt 会被报告为 `expired`，而不是迟到地被投递。

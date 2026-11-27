@@ -25,6 +25,7 @@ import {
   type SyncTransportObserver,
 } from './api.ts'
 import { envelopePlacement, highestOf } from './envelope-placement.ts'
+import { StepStartGuard } from './step-start-guard.ts'
 import { nextWatermark } from './footer-projections.ts'
 import { CHAT_VIEW } from './official-views.ts'
 import { scopeCapable } from './routing.ts'
@@ -338,6 +339,10 @@ export class OfficialMirror {
   private transient = 0
   /** Refused feeds so far, counted so a repeated refusal is logged once. */
   private feedFailures = 0
+  /** Steps already started or touched, so a second start is never fed. */
+  private readonly stepStarts = new StepStartGuard()
+  /** Duplicate step starts dropped, for one warning. */
+  private droppedStarts = 0
   /** Highest durable sequence seen, the base of a transient row's position. */
   private lastSeq = -1
   /**
@@ -408,6 +413,10 @@ export class OfficialMirror {
     // sequence is what a live row's position is measured against.
     const events = transcript.events.filter(event => !isPanelOnly(event))
     this.fed = new Set(events.map(event => event.seq))
+    // Rebuild the step guard from the window: a step may already be started, or
+    // already touched by events whose start sits below the window.
+    this.stepStarts.reset()
+    for (const event of events) this.stepStarts.note(event.type, event.data)
     // The window this call installs is what the assembler has taken so far.
     this.highestFed = events.reduce<number | undefined>(
       (highest, event) => (highest === undefined || event.seq > highest ? event.seq : highest),
@@ -452,6 +461,20 @@ export class OfficialMirror {
         continue
       }
       if (this.fed.has(event.seq)) continue
+      // A step's start is legal only once. A retried step writes a second one,
+      // and the live stream can make a step active before the durable batch that
+      // carries its start; the assembler refuses either with a throw that fails
+      // the whole event feed. The start is dropped instead of the pane — see
+      // `StepStartGuard`, which also explains why the step still renders from its
+      // matches.
+      if (this.stepStarts.refuses(event.type, event.data)) {
+        this.droppedStarts += 1
+        if (this.droppedStarts <= 3) {
+          console.warn(`dsh-session-sync: dropped a duplicate step start at seq ${String(event.seq)}`)
+        }
+        continue
+      }
+      this.stepStarts.note(event.type, event.data)
       // Where this belongs is decided by `envelopePlacement`, which exists as its
       // own module because getting it wrong is what broke "load older": see the
       // note there. Only `newer` may be appended — everything else is merged in
@@ -592,6 +615,7 @@ export class OfficialMirror {
         this.liveAttempt = live.attemptId
         this.liveTurn = live.turn
         this.liveStep = live.step
+        this.stepStarts.noteLive(live.turn, live.step)
         for (const chunk of live.chunks) this.feedChunk(live.attemptId, chunk)
         return
       }
@@ -600,6 +624,7 @@ export class OfficialMirror {
         this.liveAttempt = live.attemptId
         this.liveTurn = live.turn
         this.liveStep = live.step
+        this.stepStarts.noteLive(live.turn, live.step)
         return
       }
       case 'chunks': {
@@ -672,6 +697,11 @@ export class OfficialMirror {
    * @param frame - the dense chunk frame.
    */
   private feedChunk(attemptId: string, frame: LiveChunkFrame): void {
+    // The live queue is independent of the durable one, so these chunks can reach
+    // the assembler before the step's durable start. Marking the step here turns
+    // that late start into a duplicate the guard drops, instead of a refusal that
+    // kills the feed.
+    this.stepStarts.noteLive(this.liveTurn, this.liveStep)
     this.transient += 1
     this.feedSafely(() => this.source?.append({
       type: 'transient',
